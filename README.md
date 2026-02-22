@@ -27,7 +27,8 @@ A healthcare management system built for practicing full-stack development with 
 | **Forms** | Zod | Schema validation + TypeScript type inference |
 | **Authentication** | OIDC + OAuth 2.0 | `oidc-client-ts` library, Identity Server 4 |
 | **HTTP** | Axios | Auth token interceptors, global error handling |
-| **Styling** | Tailwind CSS | Utility-first classes |
+| **Styling** | Tailwind CSS | Utility-first classes — **always prefer Tailwind over custom CSS** |
+| **Class Utilities** | clsx + tailwind-merge | `clsxMerge` util for conditional + conflict-free class composition |
 | **Components** | shadcn/ui | Pre-built accessible components |
 
 **Code Patterns**
