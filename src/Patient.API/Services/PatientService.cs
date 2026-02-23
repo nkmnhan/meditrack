@@ -146,21 +146,31 @@ public class PatientService : IPatientService
             patient.SetInsurance(insurance);
         }
 
-        _dbContext.Patients.Add(patient);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-
-        _logger.LogInformation("Created patient {PatientId}: {PatientName}", patient.Id, patient.FullName);
-
-        // Publish integration event
-        var integrationEvent = new PatientRegisteredIntegrationEvent
+        await using var createTransaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+        try
         {
-            PatientId = patient.Id,
-            FirstName = patient.FirstName,
-            LastName = patient.LastName,
-            Email = patient.Email,
-            PhoneNumber = patient.PhoneNumber
-        };
-        await _eventBus.PublishAsync(integrationEvent, cancellationToken);
+            _dbContext.Patients.Add(patient);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Created patient {PatientId}: {PatientName}", patient.Id, patient.FullName);
+
+            var integrationEvent = new PatientRegisteredIntegrationEvent
+            {
+                PatientId = patient.Id,
+                FirstName = patient.FirstName,
+                LastName = patient.LastName,
+                Email = patient.Email,
+                PhoneNumber = patient.PhoneNumber
+            };
+            await _eventBus.PublishAsync(integrationEvent, cancellationToken);
+
+            await createTransaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await createTransaction.RollbackAsync(CancellationToken.None);
+            throw;
+        }
 
         return _mapper.Map<PatientResponse>(patient);
     }
@@ -223,20 +233,30 @@ public class PatientService : IPatientService
             patient.SetInsurance(insurance);
         }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
-
-        _logger.LogInformation("Updated patient {PatientId}: {PatientName}", patient.Id, patient.FullName);
-
-        // Publish integration event
-        var integrationEvent = new PatientUpdatedIntegrationEvent
+        await using var updateTransaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+        try
         {
-            PatientId = patient.Id,
-            FirstName = patient.FirstName,
-            LastName = patient.LastName,
-            Email = patient.Email,
-            PhoneNumber = patient.PhoneNumber
-        };
-        await _eventBus.PublishAsync(integrationEvent, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Updated patient {PatientId}: {PatientName}", patient.Id, patient.FullName);
+
+            var integrationEvent = new PatientUpdatedIntegrationEvent
+            {
+                PatientId = patient.Id,
+                FirstName = patient.FirstName,
+                LastName = patient.LastName,
+                Email = patient.Email,
+                PhoneNumber = patient.PhoneNumber
+            };
+            await _eventBus.PublishAsync(integrationEvent, cancellationToken);
+
+            await updateTransaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await updateTransaction.RollbackAsync(CancellationToken.None);
+            throw;
+        }
 
         return _mapper.Map<PatientResponse>(patient);
     }

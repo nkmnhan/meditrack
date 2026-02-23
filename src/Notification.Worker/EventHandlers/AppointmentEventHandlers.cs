@@ -54,8 +54,8 @@ public sealed class AppointmentCreatedIntegrationEventHandler : IIntegrationEven
             Channel = NotificationChannel.Email,
             Metadata = new Dictionary<string, string>
             {
-                ["appointmentId"] = integrationEvent.AppointmentId.ToString(),
-                ["patientId"] = integrationEvent.PatientId.ToString()
+                [NotificationMetadataKeys.AppointmentId] = integrationEvent.AppointmentId.ToString(),
+                [NotificationMetadataKeys.PatientId] = integrationEvent.PatientId.ToString()
             }
         };
 
@@ -108,8 +108,8 @@ public sealed class AppointmentConfirmedIntegrationEventHandler : IIntegrationEv
             Channel = NotificationChannel.Email,
             Metadata = new Dictionary<string, string>
             {
-                ["appointmentId"] = integrationEvent.AppointmentId.ToString(),
-                ["patientId"] = integrationEvent.PatientId.ToString()
+                [NotificationMetadataKeys.AppointmentId] = integrationEvent.AppointmentId.ToString(),
+                [NotificationMetadataKeys.PatientId] = integrationEvent.PatientId.ToString()
             }
         };
 
@@ -163,8 +163,8 @@ public sealed class AppointmentRescheduledIntegrationEventHandler : IIntegration
             Channel = NotificationChannel.Email,
             Metadata = new Dictionary<string, string>
             {
-                ["appointmentId"] = integrationEvent.AppointmentId.ToString(),
-                ["patientId"] = integrationEvent.PatientId.ToString()
+                [NotificationMetadataKeys.AppointmentId] = integrationEvent.AppointmentId.ToString(),
+                [NotificationMetadataKeys.PatientId] = integrationEvent.PatientId.ToString()
             }
         };
 
@@ -218,8 +218,8 @@ public sealed class AppointmentCancelledIntegrationEventHandler : IIntegrationEv
             Channel = NotificationChannel.Email,
             Metadata = new Dictionary<string, string>
             {
-                ["appointmentId"] = integrationEvent.AppointmentId.ToString(),
-                ["patientId"] = integrationEvent.PatientId.ToString()
+                [NotificationMetadataKeys.AppointmentId] = integrationEvent.AppointmentId.ToString(),
+                [NotificationMetadataKeys.PatientId] = integrationEvent.PatientId.ToString()
             }
         };
 
@@ -275,9 +275,9 @@ public sealed class AppointmentReminderIntegrationEventHandler : IIntegrationEve
             Channel = NotificationChannel.Email,
             Metadata = new Dictionary<string, string>
             {
-                ["appointmentId"] = integrationEvent.AppointmentId.ToString(),
-                ["patientId"] = integrationEvent.PatientId.ToString(),
-                ["hoursUntil"] = integrationEvent.HoursUntilAppointment.ToString()
+                [NotificationMetadataKeys.AppointmentId] = integrationEvent.AppointmentId.ToString(),
+                [NotificationMetadataKeys.PatientId] = integrationEvent.PatientId.ToString(),
+                [NotificationMetadataKeys.HoursUntil] = integrationEvent.HoursUntilAppointment.ToString()
             }
         };
 

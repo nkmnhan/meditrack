@@ -28,6 +28,10 @@ public sealed class AppointmentConfiguration : IEntityTypeConfiguration<Appointm
             .IsRequired()
             .HasMaxLength(200);
 
+        builder.Property(a => a.PatientEmail)
+            .IsRequired()
+            .HasMaxLength(256);
+
         builder.Property(a => a.ProviderName)
             .IsRequired()
             .HasMaxLength(200);

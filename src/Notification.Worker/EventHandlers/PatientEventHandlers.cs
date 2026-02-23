@@ -56,7 +56,7 @@ public sealed class PatientRegisteredIntegrationEventHandler : IIntegrationEvent
             Channel = NotificationChannel.Email,
             Metadata = new Dictionary<string, string>
             {
-                ["patientId"] = integrationEvent.PatientId.ToString()
+                [NotificationMetadataKeys.PatientId] = integrationEvent.PatientId.ToString()
             }
         };
 
@@ -105,7 +105,7 @@ public sealed class PatientUpdatedIntegrationEventHandler : IIntegrationEventHan
             Channel = NotificationChannel.Email,
             Metadata = new Dictionary<string, string>
             {
-                ["patientId"] = integrationEvent.PatientId.ToString()
+                [NotificationMetadataKeys.PatientId] = integrationEvent.PatientId.ToString()
             }
         };
 

@@ -95,7 +95,7 @@ public sealed class NotificationService : INotificationService
         await Task.Delay(50, cancellationToken);
     }
 
-    private async Task SaveInAppNotificationAsync(NotificationMessage notification, CancellationToken cancellationToken)
+    private Task SaveInAppNotificationAsync(NotificationMessage notification, CancellationToken cancellationToken)
     {
         // TODO: Save to database for in-app notification feed
         _logger.LogInformation(
@@ -103,6 +103,6 @@ public sealed class NotificationService : INotificationService
             notification.Recipient,
             notification.Subject);
 
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 }

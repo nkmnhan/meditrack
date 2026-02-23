@@ -35,6 +35,9 @@ services:
       - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
       - ConnectionStrings__PatientDb=Server=sqlserver,1433;Database=PatientDb;User Id=sa;Password=MediTrack_Dev@2026!;TrustServerCertificate=true;
       - IdentityUrl=http://identity-api:8080
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
     volumes:
       - ./dev-certs/certs:/certs:ro
@@ -50,6 +53,9 @@ services:
       - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
       - ConnectionStrings__AppointmentDb=Server=sqlserver,1433;Database=AppointmentDb;User Id=sa;Password=MediTrack_Dev@2026!;TrustServerCertificate=true;
       - IdentityUrl=http://identity-api:8080
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
     volumes:
       - ./dev-certs/certs:/certs:ro
@@ -65,6 +71,9 @@ services:
       - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
       - ConnectionStrings__MedicalRecordsDb=Server=sqlserver,1433;Database=MedicalRecordsDb;User Id=sa;Password=MediTrack_Dev@2026!;TrustServerCertificate=true;
       - IdentityUrl=http://identity-api:8080
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
     volumes:
       - ./dev-certs/certs:/certs:ro

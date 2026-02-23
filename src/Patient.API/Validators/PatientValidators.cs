@@ -3,12 +3,16 @@ using Patient.API.Dtos;
 
 namespace Patient.API.Validators;
 
-public class CreatePatientRequestValidator : AbstractValidator<CreatePatientRequest>
+internal static class PatientValidationConstants
 {
-    private static readonly string[] ValidGenders = ["Male", "Female", "Non-Binary", "Other", "Prefer not to say"];
-    private static readonly string[] ValidBloodTypes = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+    public static readonly string[] ValidGenders = ["Male", "Female", "Non-Binary", "Other", "Prefer not to say"];
+    public static readonly string[] ValidBloodTypes = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+}
 
-    public CreatePatientRequestValidator()
+public abstract class PatientRequestValidatorBase<T> : AbstractValidator<T>
+    where T : IPatientUpsertRequest
+{
+    protected PatientRequestValidatorBase()
     {
         // Personal Information
         RuleFor(request => request.FirstName)
@@ -26,7 +30,8 @@ public class CreatePatientRequestValidator : AbstractValidator<CreatePatientRequ
 
         RuleFor(request => request.Gender)
             .NotEmpty().WithMessage("Gender is required")
-            .Must(gender => ValidGenders.Contains(gender)).WithMessage($"Gender must be one of: {string.Join(", ", ValidGenders)}");
+            .Must(gender => PatientValidationConstants.ValidGenders.Contains(gender))
+            .WithMessage($"Gender must be one of: {string.Join(", ", PatientValidationConstants.ValidGenders)}");
 
         RuleFor(request => request.SocialSecurityNumber)
             .Matches(@"^\d{3}-\d{2}-\d{4}$")
@@ -49,9 +54,9 @@ public class CreatePatientRequestValidator : AbstractValidator<CreatePatientRequ
 
         // Medical Information
         RuleFor(request => request.BloodType)
-            .Must(bloodType => ValidBloodTypes.Contains(bloodType))
+            .Must(bloodType => PatientValidationConstants.ValidBloodTypes.Contains(bloodType))
             .When(request => !string.IsNullOrEmpty(request.BloodType))
-            .WithMessage($"Blood type must be one of: {string.Join(", ", ValidBloodTypes)}");
+            .WithMessage($"Blood type must be one of: {string.Join(", ", PatientValidationConstants.ValidBloodTypes)}");
 
         RuleFor(request => request.Allergies)
             .MaximumLength(2000).WithMessage("Allergies cannot exceed 2000 characters");
@@ -75,76 +80,12 @@ public class CreatePatientRequestValidator : AbstractValidator<CreatePatientRequ
     }
 }
 
-public class UpdatePatientRequestValidator : AbstractValidator<UpdatePatientRequest>
+public class CreatePatientRequestValidator : PatientRequestValidatorBase<CreatePatientRequest>
 {
-    private static readonly string[] ValidGenders = ["Male", "Female", "Non-Binary", "Other", "Prefer not to say"];
-    private static readonly string[] ValidBloodTypes = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+}
 
-    public UpdatePatientRequestValidator()
-    {
-        // Personal Information
-        RuleFor(request => request.FirstName)
-            .NotEmpty().WithMessage("First name is required")
-            .MaximumLength(100).WithMessage("First name cannot exceed 100 characters");
-
-        RuleFor(request => request.LastName)
-            .NotEmpty().WithMessage("Last name is required")
-            .MaximumLength(100).WithMessage("Last name cannot exceed 100 characters");
-
-        RuleFor(request => request.DateOfBirth)
-            .NotEmpty().WithMessage("Date of birth is required")
-            .LessThan(DateOnly.FromDateTime(DateTime.Today)).WithMessage("Date of birth must be in the past")
-            .GreaterThan(DateOnly.FromDateTime(DateTime.Today.AddYears(-150))).WithMessage("Date of birth is invalid");
-
-        RuleFor(request => request.Gender)
-            .NotEmpty().WithMessage("Gender is required")
-            .Must(gender => ValidGenders.Contains(gender)).WithMessage($"Gender must be one of: {string.Join(", ", ValidGenders)}");
-
-        RuleFor(request => request.SocialSecurityNumber)
-            .Matches(@"^\d{3}-\d{2}-\d{4}$")
-            .When(request => !string.IsNullOrEmpty(request.SocialSecurityNumber))
-            .WithMessage("SSN must be in format XXX-XX-XXXX");
-
-        // Contact Information
-        RuleFor(request => request.Email)
-            .NotEmpty().WithMessage("Email is required")
-            .EmailAddress().WithMessage("Invalid email format")
-            .MaximumLength(256).WithMessage("Email cannot exceed 256 characters");
-
-        RuleFor(request => request.PhoneNumber)
-            .NotEmpty().WithMessage("Phone number is required")
-            .Matches(@"^\+?[\d\s\-\(\)]{10,20}$").WithMessage("Invalid phone number format");
-
-        RuleFor(request => request.Address)
-            .NotNull().WithMessage("Address is required")
-            .SetValidator(new AddressDtoValidator());
-
-        // Medical Information
-        RuleFor(request => request.BloodType)
-            .Must(bloodType => ValidBloodTypes.Contains(bloodType))
-            .When(request => !string.IsNullOrEmpty(request.BloodType))
-            .WithMessage($"Blood type must be one of: {string.Join(", ", ValidBloodTypes)}");
-
-        RuleFor(request => request.Allergies)
-            .MaximumLength(2000).WithMessage("Allergies cannot exceed 2000 characters");
-
-        RuleFor(request => request.MedicalNotes)
-            .MaximumLength(4000).WithMessage("Medical notes cannot exceed 4000 characters");
-
-        // Emergency Contact (optional but validated if provided)
-        When(request => request.EmergencyContact != null, () =>
-        {
-            RuleFor(request => request.EmergencyContact!)
-                .SetValidator(new EmergencyContactDtoValidator());
-        });
-
-        // Insurance (optional but validated if provided)
-        When(request => request.Insurance != null, () =>
-        {
-            RuleFor(request => request.Insurance!)
-                .SetValidator(new InsuranceDtoValidator());
-        });
-    }
+public class UpdatePatientRequestValidator : PatientRequestValidatorBase<UpdatePatientRequest>
+{
 }
 
 public class AddressDtoValidator : AbstractValidator<AddressDto>

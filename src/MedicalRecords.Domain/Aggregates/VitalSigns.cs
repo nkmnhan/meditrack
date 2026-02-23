@@ -2,7 +2,7 @@ using MediTrack.MedicalRecords.Domain.SeedWork;
 
 namespace MediTrack.MedicalRecords.Domain.Aggregates;
 
-public class VitalSigns : Entity
+public sealed class VitalSigns : Entity
 {
     public Guid MedicalRecordId { get; private set; }
     public decimal? BloodPressureSystolic { get; private set; }
@@ -62,9 +62,9 @@ public class VitalSigns : Entity
         if (!weight.HasValue || !height.HasValue || height.Value == 0)
             return null;
 
-        // BMI = weight (kg) / height (m)^2
-        // Height is stored in cm, so convert to meters
-        var heightInMeters = height.Value / 100m;
-        return Math.Round(weight.Value / (heightInMeters * heightInMeters), 1);
+        // Height in inches, weight in lbs — imperial BMI formula
+        // Imperial BMI: 703 × weight(lbs) / height(inches)²
+        var bmi = 703m * weight.Value / (height.Value * height.Value);
+        return Math.Round(bmi, 1);
     }
 }

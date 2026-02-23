@@ -76,16 +76,16 @@ public static class PatientsApi
         var patient = await patientService.GetByIdAsync(id, cancellationToken);
 
         return patient is null
-            ? Results.NotFound(new { Message = $"Patient with ID {id} not found" })
+            ? Results.NotFound(new { message = $"Patient with ID {id} not found" })
             : Results.Ok(patient);
     }
 
     private static async Task<IResult> SearchPatients(
-        [FromQuery] string query,
+        [FromQuery] string searchTerm,
         IPatientService patientService,
         CancellationToken cancellationToken)
     {
-        var patients = await patientService.SearchAsync(query, cancellationToken);
+        var patients = await patientService.SearchAsync(searchTerm, cancellationToken);
         return Results.Ok(patients);
     }
 
@@ -105,7 +105,7 @@ public static class PatientsApi
         // Check for duplicate email
         if (await patientService.EmailExistsAsync(request.Email, cancellationToken: cancellationToken))
         {
-            return Results.Conflict(new { Message = $"A patient with email {request.Email} already exists" });
+            return Results.Conflict(new { message = $"A patient with email {request.Email} already exists" });
         }
 
         var patient = await patientService.CreateAsync(request, cancellationToken);
@@ -130,13 +130,13 @@ public static class PatientsApi
         // Check if patient exists
         if (!await patientService.ExistsAsync(id, cancellationToken))
         {
-            return Results.NotFound(new { Message = $"Patient with ID {id} not found" });
+            return Results.NotFound(new { message = $"Patient with ID {id} not found" });
         }
 
         // Check for duplicate email (excluding current patient)
         if (await patientService.EmailExistsAsync(request.Email, id, cancellationToken))
         {
-            return Results.Conflict(new { Message = $"A patient with email {request.Email} already exists" });
+            return Results.Conflict(new { message = $"A patient with email {request.Email} already exists" });
         }
 
         var patient = await patientService.UpdateAsync(id, request, cancellationToken);
@@ -153,7 +153,7 @@ public static class PatientsApi
 
         return success
             ? Results.NoContent()
-            : Results.NotFound(new { Message = $"Patient with ID {id} not found" });
+            : Results.NotFound(new { message = $"Patient with ID {id} not found" });
     }
 
     private static async Task<IResult> ActivatePatient(
@@ -165,6 +165,6 @@ public static class PatientsApi
 
         return success
             ? Results.NoContent()
-            : Results.NotFound(new { Message = $"Patient with ID {id} not found" });
+            : Results.NotFound(new { message = $"Patient with ID {id} not found" });
     }
 }

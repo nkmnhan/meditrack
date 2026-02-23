@@ -17,12 +17,15 @@ public abstract class Entity
         protected set => _id = value;
     }
 
+    private static readonly IReadOnlyCollection<IDomainEvent> EmptyDomainEvents =
+        new List<IDomainEvent>().AsReadOnly();
+
     private List<IDomainEvent>? _domainEvents;
 
     /// <summary>
     /// Domain events raised by this entity.
     /// </summary>
-    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents?.AsReadOnly() ?? new List<IDomainEvent>().AsReadOnly();
+    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents?.AsReadOnly() ?? EmptyDomainEvents;
 
     /// <summary>
     /// Adds a domain event to this entity.

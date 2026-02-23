@@ -112,6 +112,9 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__PatientDb=Server=sqlserver,1433;Database=PatientDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;
       - IdentityUrl=http://identity-api:8080
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
       - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     depends_on:
       sqlserver:
@@ -130,6 +133,9 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__AppointmentDb=Server=sqlserver,1433;Database=AppointmentDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;
       - IdentityUrl=http://identity-api:8080
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
       - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     depends_on:
       sqlserver:
@@ -148,6 +154,9 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__MedicalRecordsDb=Server=sqlserver,1433;Database=MedicalRecordsDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;
       - IdentityUrl=http://identity-api:8080
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
       - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     depends_on:
       sqlserver:

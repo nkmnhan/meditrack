@@ -1,5 +1,22 @@
 namespace Patient.API.Dtos;
 
+public interface IPatientUpsertRequest
+{
+    string FirstName { get; }
+    string LastName { get; }
+    DateOnly DateOfBirth { get; }
+    string Gender { get; }
+    string? SocialSecurityNumber { get; }
+    string Email { get; }
+    string PhoneNumber { get; }
+    AddressDto Address { get; }
+    string? BloodType { get; }
+    string? Allergies { get; }
+    string? MedicalNotes { get; }
+    EmergencyContactDto? EmergencyContact { get; }
+    InsuranceDto? Insurance { get; }
+}
+
 public record CreatePatientRequest(
     // Personal Information
     string FirstName,
@@ -21,7 +38,7 @@ public record CreatePatientRequest(
     // Related entities (optional on creation)
     EmergencyContactDto? EmergencyContact,
     InsuranceDto? Insurance
-);
+) : IPatientUpsertRequest;
 
 public record UpdatePatientRequest(
     // Personal Information
@@ -44,7 +61,7 @@ public record UpdatePatientRequest(
     // Related entities
     EmergencyContactDto? EmergencyContact,
     InsuranceDto? Insurance
-);
+) : IPatientUpsertRequest;
 
 public record AddressDto(
     string Street,

@@ -285,6 +285,9 @@ public sealed class MedicalRecord : Entity, IAggregateRoot
     /// </summary>
     public void MarkRequiresFollowUp()
     {
+        if (Status == RecordStatus.Archived)
+            throw new InvalidOperationException("Cannot modify an archived medical record.");
+
         Status = RecordStatus.RequiresFollowUp;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
@@ -294,6 +297,9 @@ public sealed class MedicalRecord : Entity, IAggregateRoot
     /// </summary>
     public void Archive()
     {
+        if (Status == RecordStatus.Archived)
+            throw new InvalidOperationException("Record is already archived.");
+
         Status = RecordStatus.Archived;
         UpdatedAt = DateTimeOffset.UtcNow;
     }

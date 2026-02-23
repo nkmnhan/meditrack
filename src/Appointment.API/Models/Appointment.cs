@@ -31,6 +31,11 @@ public class Appointment
     public string PatientName { get; private set; } = string.Empty;
 
     /// <summary>
+    /// Patient's email address (denormalized for notification delivery).
+    /// </summary>
+    public string PatientEmail { get; private set; } = string.Empty;
+
+    /// <summary>
     /// Scheduled date and time of the appointment (UTC).
     /// </summary>
     public DateTime ScheduledDateTime { get; private set; }
@@ -113,6 +118,7 @@ public class Appointment
     public Appointment(
         Guid patientId,
         string patientName,
+        string patientEmail,
         Guid providerId,
         string providerName,
         DateTime scheduledDateTime,
@@ -125,6 +131,7 @@ public class Appointment
         Id = Guid.NewGuid();
         PatientId = patientId;
         PatientName = patientName;
+        PatientEmail = patientEmail;
         ProviderId = providerId;
         ProviderName = providerName;
         ScheduledDateTime = scheduledDateTime;
@@ -265,6 +272,7 @@ public class Appointment
         var newAppointment = new Appointment(
             PatientId,
             PatientName,
+            PatientEmail,
             ProviderId,
             ProviderName,
             newDateTime,
@@ -311,8 +319,8 @@ public class Appointment
 
         Type = type;
         Reason = reason;
-        PatientNotes = patientNotes;
-        Location = location;
+        if (patientNotes is not null) PatientNotes = patientNotes;
+        if (location is not null) Location = location;
         UpdatedAt = DateTime.UtcNow;
     }
 

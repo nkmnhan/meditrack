@@ -1,4 +1,5 @@
 using MediTrack.MedicalRecords.API.Application.Models;
+using MediTrack.MedicalRecords.Domain.Aggregates;
 using FluentValidation;
 
 namespace MediTrack.MedicalRecords.API.Application.Validations;
@@ -78,17 +79,6 @@ public sealed class UpdateDiagnosisRequestValidator : AbstractValidator<UpdateDi
 /// </summary>
 public sealed class AddClinicalNoteRequestValidator : AbstractValidator<AddClinicalNoteRequest>
 {
-    private static readonly string[] ValidNoteTypes =
-    [
-        "Progress Note",
-        "SOAP Note",
-        "Assessment",
-        "Plan",
-        "Procedure Note",
-        "Consultation Note",
-        "Discharge Summary"
-    ];
-
     public AddClinicalNoteRequestValidator()
     {
         RuleFor(request => request.NoteType)
@@ -96,8 +86,8 @@ public sealed class AddClinicalNoteRequestValidator : AbstractValidator<AddClini
             .WithMessage("Note type is required.")
             .MaximumLength(50)
             .WithMessage("Note type cannot exceed 50 characters.")
-            .Must(type => ValidNoteTypes.Contains(type))
-            .WithMessage($"Note type must be one of: {string.Join(", ", ValidNoteTypes)}");
+            .Must(type => ClinicalNoteTypes.AllValid.Contains(type))
+            .WithMessage($"Note type must be one of: {string.Join(", ", ClinicalNoteTypes.AllValid)}");
 
         RuleFor(request => request.Content)
             .NotEmpty()
