@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EventBus\EventBus.csproj" />
+    <ProjectReference Include="..\EventBusRabbitMQ\EventBusRabbitMQ.csproj" />
     <ProjectReference Include="..\MediTrack.ServiceDefaults\MediTrack.ServiceDefaults.csproj" />
     <ProjectReference Include="..\MediTrack.Shared\MediTrack.Shared.csproj" />
   </ItemGroup>

@@ -4,8 +4,6 @@
     <OutputType>Library</OutputType>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\MediTrack.Shared\MediTrack.Shared.csproj" />
-  </ItemGroup>
+  <!-- Domain layer has ZERO project references per Clean Architecture -->
 
 </Project>

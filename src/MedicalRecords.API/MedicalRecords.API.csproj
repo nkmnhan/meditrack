@@ -1,9 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="AutoMapper" />
+    <PackageReference Include="MediatR" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EventBusRabbitMQ\EventBusRabbitMQ.csproj" />
     <ProjectReference Include="..\MedicalRecords.Domain\MedicalRecords.Domain.csproj" />
     <ProjectReference Include="..\MedicalRecords.Infrastructure\MedicalRecords.Infrastructure.csproj" />
     <ProjectReference Include="..\MediTrack.ServiceDefaults\MediTrack.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\MediTrack.Shared\MediTrack.Shared.csproj" />
   </ItemGroup>
 
 </Project>

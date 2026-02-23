@@ -1,12 +1,38 @@
+using Appointment.API.Apis;
+using Appointment.API.Infrastructure;
+using Appointment.API.Mapping;
+using Appointment.API.Services;
+using Appointment.API.Validators;
+using FluentValidation;
+using MediTrack.EventBusRabbitMQ;
 using MediTrack.ServiceDefaults;
 using MediTrack.ServiceDefaults.Extensions;
+using Microsoft.EntityFrameworkCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults("appointment-api");
 
+// Database
+builder.Services.AddDbContext<AppointmentDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("AppointmentDb")));
+
+// Authentication & Authorization
 builder.Services.AddDefaultAuthentication(builder.Configuration);
-builder.Services.AddControllers();
+
+// Services
+builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+
+// AutoMapper
+builder.Services.AddAutoMapper(config => config.AddProfile<AppointmentMappingProfile>());
+
+// FluentValidation
+builder.Services.AddValidatorsFromAssemblyContaining<CreateAppointmentRequestValidator>();
+
+// RabbitMQ EventBus
+builder.Services.AddRabbitMQEventBus(builder.Configuration);
+
+// API Explorer for OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 
 WebApplication app = builder.Build();
@@ -14,6 +40,8 @@ WebApplication app = builder.Build();
 app.MapDefaultEndpoints();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
+
+// Map Minimal APIs
+app.MapAppointmentsApi();
 
 await app.RunAsync();

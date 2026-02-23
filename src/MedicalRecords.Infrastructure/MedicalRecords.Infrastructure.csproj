@@ -13,8 +13,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Infrastructure references Domain only per Clean Architecture -->
     <ProjectReference Include="..\MedicalRecords.Domain\MedicalRecords.Domain.csproj" />
-    <ProjectReference Include="..\IntegrationEventLogEF\IntegrationEventLogEF.csproj" />
   </ItemGroup>
 
 </Project>

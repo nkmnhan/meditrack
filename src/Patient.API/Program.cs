@@ -1,12 +1,38 @@
+using FluentValidation;
+using MediTrack.EventBusRabbitMQ;
 using MediTrack.ServiceDefaults;
 using MediTrack.ServiceDefaults.Extensions;
+using Microsoft.EntityFrameworkCore;
+using Patient.API.Apis;
+using Patient.API.Infrastructure;
+using Patient.API.Mapping;
+using Patient.API.Services;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults("patient-api");
 
+// Database
+builder.Services.AddDbContext<PatientDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("PatientDb")));
+
+// Services
+builder.Services.AddScoped<IPatientService, PatientService>();
+
+// AutoMapper
+builder.Services.AddAutoMapper(configuration =>
+    configuration.AddProfile<PatientMappingProfile>());
+
+// FluentValidation
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
+// Authentication & Authorization
 builder.Services.AddDefaultAuthentication(builder.Configuration);
-builder.Services.AddControllers();
+
+// RabbitMQ EventBus
+builder.Services.AddRabbitMQEventBus(builder.Configuration);
+
+// OpenAPI / Swagger
 builder.Services.AddEndpointsApiExplorer();
 
 WebApplication app = builder.Build();
@@ -14,6 +40,8 @@ WebApplication app = builder.Build();
 app.MapDefaultEndpoints();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
+
+// Map APIs
+app.MapPatientsApi();
 
 await app.RunAsync();
