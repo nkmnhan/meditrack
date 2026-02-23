@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\MedicalRecords.Domain\MedicalRecords.Domain.csproj" />
+    <ProjectReference Include="..\MedicalRecords.Infrastructure\MedicalRecords.Infrastructure.csproj" />
+    <ProjectReference Include="..\MediTrack.ServiceDefaults\MediTrack.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>

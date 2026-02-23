@@ -91,6 +91,52 @@ import { clsxMerge } from "@/shared/utils/clsxMerge";
 
 ---
 
+## NuGet Package Management (MANDATORY)
+
+This project uses **Central Package Management (CPM)** via two MSBuild props files at the repo root:
+
+| File | Purpose |
+|---|---|
+| `Directory.Build.props` | Shared MSBuild properties for every project (TFM, Nullable, etc.) |
+| `Directory.Packages.props` | Single source of truth for **all** NuGet package versions |
+
+### Rules
+
+- **NEVER** put a `Version` attribute on a `<PackageReference>` inside any `.csproj` file
+- **ALWAYS** declare new packages in `Directory.Packages.props` first, then reference them version-free in the `.csproj`
+- **NEVER** run `dotnet add package` — it writes a version directly into the csproj, violating CPM
+
+```xml
+<!-- BAD — version inside csproj -->
+<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+
+<!-- GOOD — version lives only in Directory.Packages.props -->
+<PackageReference Include="Newtonsoft.Json" />
+```
+
+### Adding a New Package — Required Steps
+
+1. Add a `<PackageVersion>` entry to `Directory.Packages.props`:
+   ```xml
+   <PackageVersion Include="Some.Package" Version="x.y.z" />
+   ```
+2. Add the version-free `<PackageReference>` to the relevant `.csproj`:
+   ```xml
+   <PackageReference Include="Some.Package" />
+   ```
+3. Never add the same package to `Directory.Packages.props` twice.
+
+### Framework Packages
+
+For packages that are part of the ASP.NET Core shared framework (`Microsoft.AspNetCore.App`), prefer a `<FrameworkReference>` over a `<PackageReference>` in projects that need ASP.NET Core types — this avoids the NU1510 "unnecessary package" warning:
+
+```xml
+<!-- In a class library that needs ASP.NET Core types -->
+<FrameworkReference Include="Microsoft.AspNetCore.App" />
+```
+
+---
+
 ## Backend Code Patterns
 
 - One Web API project per microservice; no cross-service DB access

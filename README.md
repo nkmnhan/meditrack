@@ -474,10 +474,10 @@ RABBITMQ_PASSWORD=guest
 
 ### Phase 1: Foundation
 - [x] Project setup & README
-- [ ] Docker Compose with SQL Server + RabbitMQ
-- [ ] `MediTrack.ServiceDefaults` — shared health checks, OpenTelemetry, Polly
-- [ ] `EventBus` + `EventBusRabbitMQ` + `IntegrationEventLogEF` infrastructure
-- [ ] `Directory.Build.props` + `Directory.Packages.props` central config
+- [x] Docker Compose with SQL Server + RabbitMQ
+- [x] `MediTrack.ServiceDefaults` — shared health checks, OpenTelemetry, Polly
+- [x] `EventBus` + `EventBusRabbitMQ` + `IntegrationEventLogEF` infrastructure
+- [x] `Directory.Build.props` + `Directory.Packages.props` central config
 
 ### Phase 2: Identity & Auth
 - [ ] Duende IdentityServer configuration (clients, scopes, roles)

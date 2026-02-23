@@ -1,0 +1,84 @@
+services:
+  sqlserver:
+    environment:
+      SA_PASSWORD: MediTrack_Dev@2026!
+      MSSQL_PID: Express
+
+  rabbitmq:
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  jaeger:
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+
+  identity-api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+    volumes:
+      - ~/.aspnet/https:/root/.aspnet/https:ro
+      - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro
+    depends_on:
+      jaeger:
+        condition: service_healthy
+
+  patient-api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__PatientDb=Server=sqlserver,1433;Database=PatientDb;User Id=sa;Password=MediTrack_Dev@2026!;TrustServerCertificate=true;
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+    volumes:
+      - ~/.aspnet/https:/root/.aspnet/https:ro
+      - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro
+    depends_on:
+      jaeger:
+        condition: service_healthy
+
+  appointment-api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__AppointmentDb=Server=sqlserver,1433;Database=AppointmentDb;User Id=sa;Password=MediTrack_Dev@2026!;TrustServerCertificate=true;
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+    volumes:
+      - ~/.aspnet/https:/root/.aspnet/https:ro
+      - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro
+    depends_on:
+      jaeger:
+        condition: service_healthy
+
+  medicalrecords-api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__MedicalRecordsDb=Server=sqlserver,1433;Database=MedicalRecordsDb;User Id=sa;Password=MediTrack_Dev@2026!;TrustServerCertificate=true;
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+    volumes:
+      - ~/.aspnet/https:/root/.aspnet/https:ro
+      - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro
+    depends_on:
+      jaeger:
+        condition: service_healthy
+
+  notification-worker:
+    environment:
+      - DOTNET_ENVIRONMENT=Development
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+    depends_on:
+      jaeger:
+        condition: service_healthy
+
+  web:
+    environment:
+      - VITE_IDENTITY_URL=http://localhost:5001
+      - VITE_PATIENT_API_URL=http://localhost:5002
+      - VITE_APPOINTMENT_API_URL=http://localhost:5003
+      - VITE_MEDICALRECORDS_API_URL=http://localhost:5004

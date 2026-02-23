@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <PackageReference Include="Duende.IdentityServer" />
+    <PackageReference Include="Duende.IdentityServer.AspNetIdentity" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MediTrack.ServiceDefaults\MediTrack.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>
