@@ -175,6 +175,33 @@ main {
     display: none;
 }
 
+.logout-card {
+    text-align: center;
+}
+
+.logout-card .return-link {
+    font-size: 0.875rem;
+    color: #374151;
+    margin-bottom: 0.25rem;
+}
+
+.logout-card .return-link a {
+    color: #4338ca;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.logout-card .return-link a:hover {
+    text-decoration: underline;
+}
+
+.redirect-notice {
+    margin-top: 1.5rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+    text-align: center;
+}
+
 .register-link {
     margin-top: 1.25rem;
     text-align: center;
