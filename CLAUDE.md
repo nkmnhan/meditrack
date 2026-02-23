@@ -230,13 +230,178 @@ For packages that are part of the ASP.NET Core shared framework (`Microsoft.AspN
 
 ---
 
-## Backend Code Patterns
+## Clean Architecture (MANDATORY)
+
+> Reference: [dotnet/eShop](https://github.com/dotnet/eShop) — Microsoft's official microservices reference app.
+
+### The Dependency Rule
+
+Dependencies point **inward**. Outer layers depend on inner layers, never the reverse.
+
+```
+API (outermost) → Domain (innermost)
+                → Infrastructure
+```
+
+- **Domain** knows nothing about Infrastructure or API — **zero project references**
+- **Infrastructure** implements interfaces defined in Domain
+- **API** is the composition root — wires everything via DI, contains the Application layer as a folder
+
+### Layer Responsibilities
+
+#### Domain Layer (`<Service>.Domain` — separate project)
+
+- Aggregate Roots and Entities
+- Value Objects
+- Domain Events
+- Repository Interfaces (contracts only — no implementations)
+- Domain Exceptions
+- SeedWork (base classes: `Entity`, `ValueObject`, `Enumeration`)
+- **NO dependencies** on any other project
+
+#### Application Layer (`<Service>.API/Application/` — folder inside API)
+
+Following eShop's pattern, the Application layer lives **inside the API project** as a folder (not a separate project). This keeps the solution lean while maintaining logical separation.
+
+- `Commands/` — write operations (CQRS command side)
+- `Queries/` — read operations (CQRS query side)
+- `Behaviors/` — MediatR pipeline behaviors (validation, logging, transaction)
+- `Validations/` — FluentValidation validators for commands
+- `Models/` — DTOs and view models
+- `DomainEventHandlers/` — handlers for domain events
+- `IntegrationEvents/` — integration event definitions and handlers
+
+#### Infrastructure Layer (`<Service>.Infrastructure` — separate project)
+
+- EF Core DbContext and entity configurations
+- Repository implementations
+- External service clients (email, blob storage, etc.)
+- References: **Domain only**
+
+#### API Layer (`<Service>.API` — separate project)
+
+- `Apis/` or `Controllers/` — thin endpoint definitions
+- `Application/` — application logic (see above)
+- `Extensions/` — DI registration helpers
+- `Program.cs` — composition root
+- References: **Domain, Infrastructure**
+
+### Project Structure — Complex Service (eShop Ordering pattern)
+
+For services with rich domain logic (MedicalRecords, Patient):
+
+```
+src/<Service>.Domain/                        ← separate project, zero references
+├── AggregatesModel/
+│   └── <Aggregate>/
+│       ├── <AggregateRoot>.cs
+│       ├── I<Aggregate>Repository.cs
+│       └── <ValueObject>.cs
+├── Events/
+├── Exceptions/
+├── SeedWork/
+│   ├── Entity.cs
+│   ├── ValueObject.cs
+│   ├── IAggregateRoot.cs
+│   └── IUnitOfWork.cs
+└── <Service>.Domain.csproj
+
+src/<Service>.Infrastructure/                ← references Domain only
+├── Data/
+│   ├── <Service>DbContext.cs
+│   └── EntityConfigurations/
+├── Repositories/
+│   └── <Aggregate>Repository.cs
+└── <Service>.Infrastructure.csproj
+
+src/<Service>.API/                           ← references Domain + Infrastructure
+├── Apis/ or Controllers/
+│   └── <Aggregate>Api.cs
+├── Application/
+│   ├── Commands/
+│   │   └── Create<Entity>/
+│   │       ├── Create<Entity>Command.cs
+│   │       └── Create<Entity>CommandHandler.cs
+│   ├── Queries/
+│   │   └── Get<Entity>ById/
+│   │       ├── Get<Entity>ByIdQuery.cs
+│   │       └── Get<Entity>ByIdQueryHandler.cs
+│   ├── Behaviors/
+│   │   ├── LoggingBehavior.cs
+│   │   ├── ValidatorBehavior.cs
+│   │   └── TransactionBehavior.cs
+│   ├── Validations/
+│   ├── Models/
+│   ├── DomainEventHandlers/
+│   └── IntegrationEvents/
+│       ├── Events/
+│       └── EventHandlers/
+├── Extensions/
+├── Infrastructure/                          ← API-level infra (middleware, filters)
+├── Program.cs
+└── <Service>.API.csproj
+```
+
+### Project Structure — Simple Service (eShop Catalog pattern)
+
+For services with little domain logic (Appointment, Identity):
+
+```
+src/<Service>.API/                           ← single project, all-in-one
+├── Apis/ or Controllers/
+├── Model/                                   ← entities directly in API
+├── Services/                                ← business logic
+├── Infrastructure/                          ← DbContext, data access
+├── IntegrationEvents/
+├── Extensions/
+├── Program.cs
+└── <Service>.API.csproj
+```
+
+### When to Use Full vs. Simplified Layering
+
+| Complexity | Layering | MediTrack Example | eShop Example |
+|---|---|---|---|
+| Rich domain logic, aggregates, domain events | 3 projects: Domain + Infrastructure + API (with Application folder) | MedicalRecords, Patient | Ordering |
+| Simple CRUD, thin business rules | 1 project: API with folders | Appointment, Identity | Catalog, Basket |
+
+Apply YAGNI: start simple (single project). Extract Domain + Infrastructure only when you have real aggregates, domain events, or invariants that justify the separation.
+
+### Controller / API Endpoint Rules
+
+Endpoints are **thin**. They only:
+1. Receive the HTTP request
+2. Delegate to MediatR (command/query handler)
+3. Return the HTTP response
+
+```csharp
+// GOOD — thin endpoint, delegates to Application layer
+[HttpPost]
+public async Task<IActionResult> Create(CreatePatientCommand command)
+{
+    var result = await _mediator.Send(command);
+    return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+}
+
+// BAD — business logic in controller
+[HttpPost]
+public async Task<IActionResult> Create(CreatePatientRequest request)
+{
+    var patient = new Patient(request.Name, request.DateOfBirth);
+    await _dbContext.Patients.AddAsync(patient);
+    await _dbContext.SaveChangesAsync();
+    return Ok(patient);
+}
+```
+
+### Cross-Cutting Rules
 
 - One Web API project per microservice; no cross-service DB access
 - `MediTrack.ServiceDefaults` project reference on every service (health, tracing, resilience)
 - `EventBus` interfaces only in services; `EventBusRabbitMQ` is the injected implementation
-- DDD layering only on `MedicalRecords` (Domain / Infrastructure separation)
-- FluentValidation for all input; AutoMapper for DTO <> Domain mapping
+- FluentValidation for all command DTOs (via `ValidatorBehavior` in MediatR pipeline)
+- AutoMapper for DTO <> Entity mapping
+- Integration events use the outbox pattern (`IntegrationEventLogEF`)
 
 ---
 

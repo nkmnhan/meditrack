@@ -16,15 +16,53 @@ services:
       start_period: 30s
       timeout: 5s
 
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    depends_on:
+      jaeger:
+        condition: service_healthy
+
   jaeger:
     image: jaegertracing/all-in-one:latest
+    user: "root"
     ports:
       - "16686:16686"
-      - "4317:4317"
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
+      SPAN_STORAGE_TYPE: badger
+      BADGER_EPHEMERAL: "false"
+      BADGER_DIRECTORY_VALUE: /tmp/badger/data
+      BADGER_DIRECTORY_KEY: /tmp/badger/key
+      METRICS_STORAGE_TYPE: prometheus
+      PROMETHEUS_SERVER_URL: http://prometheus:9090
+      PROMETHEUS_QUERY_NORMALIZE_CALLS: "true"
+      PROMETHEUS_QUERY_NORMALIZE_DURATION: "true"
+    volumes:
+      - jaeger-data:/tmp/badger
+    depends_on:
+      prometheus:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:14269/"]
+      interval: 10s
+      retries: 5
+      start_period: 10s
+      timeout: 5s
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
       interval: 10s
       retries: 5
       start_period: 10s
@@ -142,3 +180,5 @@ services:
 volumes:
   sqlserver-data:
   rabbitmq-data:
+  prometheus-data:
+  jaeger-data:

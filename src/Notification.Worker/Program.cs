@@ -4,6 +4,7 @@ using MediTrack.ServiceDefaults.Extensions;
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddDefaultHealthChecks();
+builder.Services.AddDefaultOpenTelemetry("notification-worker");
 
 builder.Services.AddHostedService<NotificationWorker>();
 
