@@ -423,6 +423,142 @@ public async Task<IActionResult> Create(CreatePatientRequest request)
 
 ---
 
+## Quality Checklist (MANDATORY)
+
+Review every change against this checklist before submitting. Each item comes from real bugs caught in code review.
+
+### React / Frontend
+
+#### No Side Effects During Render
+
+- **NEVER** call functions with side effects (redirects, API calls, subscriptions) directly in the render body
+- Side effects belong in `useEffect`, event handlers, or callbacks
+- React may call render multiple times (especially in Strict Mode) — side effects in render cause duplicate executions
+
+```tsx
+// BAD — fires on every render
+if (!auth.isAuthenticated) {
+  auth.signinRedirect(); // side effect in render
+  return <p>Redirecting...</p>;
+}
+
+// GOOD — side effect in useEffect
+useEffect(() => {
+  if (!auth.isLoading && !auth.isAuthenticated && !auth.error) {
+    signinRedirect();
+  }
+}, [auth.isLoading, auth.isAuthenticated, auth.error, signinRedirect]);
+```
+
+#### Stale Closures in Callbacks
+
+- When a callback is registered **once** (e.g., axios interceptors, event listeners) but depends on values that change over time, use a `useRef` to always read the latest value
+- A closure captured at registration time will **not** update when the component re-renders
+
+```tsx
+// BAD — captures auth.user from first render forever
+configureAxiosAuth(() => auth.user);
+
+// GOOD — ref always holds the latest value
+const userRef = useRef(auth.user);
+userRef.current = auth.user; // sync on every render
+configureAxiosAuth(() => userRef.current);
+```
+
+#### DRY — No Duplicate Logic Across Files
+
+- Before writing a utility function, check if an equivalent already exists in a hook or shared module
+- If two files need the same logic, extract it into a single shared hook or utility — not two copies
+
+#### `useEffect` Dependencies
+
+- Only include values that should **trigger** the effect when they change
+- Destructure stable references (e.g., `const { signinRedirect } = auth`) to avoid depending on the entire parent object
+- Never include a whole object when you only need specific properties from it
+
+```tsx
+// BAD — auth changes reference every render, effect fires too often
+useEffect(() => { ... }, [auth]);
+
+// GOOD — depend on the specific values and stable function reference
+const { signinRedirect } = auth;
+useEffect(() => { ... }, [auth.isLoading, auth.isAuthenticated, auth.error, signinRedirect]);
+```
+
+#### `readonly` Props — Pick One Approach
+
+- Use `readonly` on interface fields **OR** `Readonly<>` on the function parameter, not both
+- Project convention: use `readonly` on interface fields
+
+```tsx
+// BAD — redundant double wrapping
+interface Props { readonly children: ReactNode; }
+function Component({ children }: Readonly<Props>) {}
+
+// GOOD — readonly on interface only
+interface Props { readonly children: ReactNode; }
+function Component({ children }: Props) {}
+```
+
+### Backend (C# / ASP.NET Core)
+
+#### No Magic Strings
+
+- **NEVER** hardcode role names, claim types, policy names, or config keys as inline strings
+- Define them as `const` in a dedicated constants class (e.g., `UserRoles.Patient`)
+- Keep backend constants in sync with frontend equivalents (e.g., `UserRoles.cs` ↔ `roles.ts`)
+
+```csharp
+// BAD
+await _userManager.AddToRoleAsync(user, "Patient");
+
+// GOOD
+await _userManager.AddToRoleAsync(user, UserRoles.Patient);
+```
+
+#### Multi-Step Mutations — Handle Partial Failures
+
+- When a sequence of mutations must all succeed (e.g., create user + assign role), check each result and roll back on failure
+- Don't assume step N+1 will succeed just because step N did
+
+```csharp
+// BAD — if AddToRoleAsync fails, user exists without a role
+var result = await _userManager.CreateAsync(user, password);
+if (result.Succeeded)
+{
+    await _userManager.AddToRoleAsync(user, UserRoles.Patient);
+    await _signInManager.SignInAsync(user, isPersistent: false);
+}
+
+// GOOD — roll back on partial failure
+var result = await _userManager.CreateAsync(user, password);
+if (result.Succeeded)
+{
+    var roleResult = await _userManager.AddToRoleAsync(user, UserRoles.Patient);
+    if (!roleResult.Succeeded)
+    {
+        await _userManager.DeleteAsync(user);
+        // return errors to the caller
+    }
+}
+```
+
+#### Document Deliberate Trade-offs
+
+- When making a conscious product decision (e.g., skip email verification, auto sign-in after registration), leave a comment explaining **why**
+- Future developers shouldn't have to guess whether it was intentional or an oversight
+
+### HTML / Forms
+
+#### Always Set `autocomplete` Attributes
+
+- `autocomplete="email"` on email inputs
+- `autocomplete="new-password"` on registration password fields
+- `autocomplete="current-password"` on login password fields
+- Helps password managers and improves UX
+
+---
+
 ## Commands
 
 ```bash

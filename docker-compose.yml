@@ -189,3 +189,4 @@ volumes:
   rabbitmq-data:
   prometheus-data:
   jaeger-data:
+  identity-dataprotection-keys:

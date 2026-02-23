@@ -1,3 +1,4 @@
+using MediTrack.Identity.Constants;
 using MediTrack.Identity.Models;
 using Microsoft.AspNetCore.Identity;
 
@@ -5,15 +6,12 @@ namespace MediTrack.Identity.Data;
 
 public static class UsersSeed
 {
-    public static readonly string[] Roles =
-        ["Admin", "Doctor", "Nurse", "Receptionist", "Patient"];
-
     public static async Task SeedAsync(
         UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager,
         ILogger logger)
     {
-        foreach (string role in Roles)
+        foreach (string role in UserRoles.All)
         {
             if (!await roleManager.RoleExistsAsync(role))
             {
@@ -28,7 +26,7 @@ public static class UsersSeed
             password: "Admin123!",
             firstName: "System",
             lastName: "Administrator",
-            role: "Admin");
+            role: UserRoles.Admin);
 
         await EnsureUserAsync(
             userManager, logger,
@@ -36,7 +34,7 @@ public static class UsersSeed
             password: "Doctor123!",
             firstName: "Jane",
             lastName: "Smith",
-            role: "Doctor");
+            role: UserRoles.Doctor);
     }
 
     private static async Task EnsureUserAsync(

@@ -1,0 +1,49 @@
+@page
+@model MediTrack.Identity.Pages.Account.Register.Index
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="login-page">
+    <div class="login-card">
+        <div class="login-header">
+            <h1>MediTrack</h1>
+            <p>Create your account</p>
+        </div>
+
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+            <div class="form-group">
+                <label asp-for="Input.Email">Email</label>
+                <input asp-for="Input.Email" class="form-input" placeholder="you@example.com" autocomplete="email" autofocus />
+                <span asp-validation-for="Input.Email" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Input.FirstName">First Name</label>
+                <input asp-for="Input.FirstName" class="form-input" placeholder="John" />
+                <span asp-validation-for="Input.FirstName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Input.LastName">Last Name</label>
+                <input asp-for="Input.LastName" class="form-input" placeholder="Doe" />
+                <span asp-validation-for="Input.LastName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Input.Password">Password</label>
+                <input asp-for="Input.Password" class="form-input" type="password" placeholder="Enter your password" autocomplete="new-password" />
+                <span asp-validation-for="Input.Password" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Input.ConfirmPassword">Confirm Password</label>
+                <input asp-for="Input.ConfirmPassword" class="form-input" type="password" placeholder="Confirm your password" autocomplete="new-password" />
+                <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-primary">Register</button>
+
+            <div class="register-link">
+                <p>Already have an account? <a asp-page="/Account/Login/Index">Sign in</a></p>
+            </div>
+        </form>
+    </div>
+</div>

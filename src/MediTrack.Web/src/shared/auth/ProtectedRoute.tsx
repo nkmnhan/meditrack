@@ -1,12 +1,19 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { useAuth } from "react-oidc-context";
 
 interface ProtectedRouteProps {
-  children: ReactNode;
+  readonly children: ReactNode;
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const auth = useAuth();
+  const { signinRedirect } = auth;
+
+  useEffect(() => {
+    if (!auth.isLoading && !auth.isAuthenticated && !auth.error) {
+      signinRedirect();
+    }
+  }, [auth.isLoading, auth.isAuthenticated, auth.error, signinRedirect]);
 
   if (auth.isLoading) {
     return (
@@ -34,7 +41,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!auth.isAuthenticated) {
-    auth.signinRedirect();
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <p className="text-lg text-gray-500">Redirecting to login...</p>

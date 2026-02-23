@@ -1,23 +1,20 @@
 import type { ReactNode } from "react";
-import { useAuth } from "react-oidc-context";
+import type { UserRoleType } from "./roles";
+import { useRoles } from "./useRoles";
 
 interface RoleGuardProps {
-  allowedRoles: string[];
-  children: ReactNode;
+  readonly allowedRoles: UserRoleType[];
+  readonly children: ReactNode;
 }
 
 export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
-  const auth = useAuth();
+  const { isAuthenticated, hasAnyRole } = useRoles();
 
-  if (!auth.isAuthenticated || !auth.user) {
+  if (!isAuthenticated) {
     return null;
   }
 
-  const userRoles = getUserRoles(auth.user.profile);
-
-  const hasRequiredRole = allowedRoles.some((role) => userRoles.includes(role));
-
-  if (!hasRequiredRole) {
+  if (!hasAnyRole(allowedRoles)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -31,18 +28,4 @@ export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
   }
 
   return <>{children}</>;
-}
-
-function getUserRoles(profile: Record<string, unknown>): string[] {
-  const roleClaim = profile.role;
-
-  if (typeof roleClaim === "string") {
-    return [roleClaim];
-  }
-
-  if (Array.isArray(roleClaim)) {
-    return roleClaim.filter((role): role is string => typeof role === "string");
-  }
-
-  return [];
 }

@@ -20,6 +20,7 @@ services:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
     volumes:
       - ./dev-certs/certs:/certs:ro
+      - identity-dataprotection-keys:/root/.aspnet/DataProtection-Keys
     depends_on:
       sqlserver:
         condition: service_healthy

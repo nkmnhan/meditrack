@@ -35,6 +35,10 @@
 
                 <button class="btn btn-primary" name="Input.Button" value="login">Sign In</button>
 
+                <div class="register-link">
+                    <p>Don't have an account? <a asp-page="/Account/Register/Index" asp-route-returnUrl="@Model.Input.ReturnUrl">Register here</a></p>
+                </div>
+
                 @if (Model.View.VisibleExternalProviders.Any())
                 {
                     <div class="external-providers">

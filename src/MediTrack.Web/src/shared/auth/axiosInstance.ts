@@ -1,9 +1,14 @@
 import axios from "axios";
-import { User } from "oidc-client-ts";
+import type { User } from "oidc-client-ts";
 
 const apiClient = axios.create();
 
-export function configureAxiosAuth(getUser: () => User | null | undefined) {
+interface AxiosAuthConfig {
+  readonly getUser: () => User | null | undefined;
+  readonly onUnauthorized?: () => void;
+}
+
+export function configureAxiosAuth({ getUser, onUnauthorized }: AxiosAuthConfig) {
   apiClient.interceptors.request.use((config) => {
     const user = getUser();
 
@@ -18,7 +23,7 @@ export function configureAxiosAuth(getUser: () => User | null | undefined) {
     (response) => response,
     (error) => {
       if (axios.isAxiosError(error) && error.response?.status === 401) {
-        window.location.href = "/";
+        onUnauthorized?.();
       }
       return Promise.reject(error);
     },
