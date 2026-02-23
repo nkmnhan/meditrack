@@ -4,6 +4,99 @@
 
 Act as a **senior full-stack developer** on this project. Apply enterprise-grade patterns, strong typing, and clean architecture principles at all times.
 
+---
+
+## Backend Principles (MANDATORY)
+
+### SOLID
+
+- **Single Responsibility** — One class, one reason to change. A `PatientService` handles patient logic, not email sending.
+- **Open/Closed** — Extend behavior via abstractions (interfaces, base classes), not by modifying existing code.
+- **Liskov Substitution** — Subtypes must be substitutable for their base types without breaking correctness.
+- **Interface Segregation** — Prefer small, focused interfaces. Don't force classes to implement methods they don't use.
+- **Dependency Inversion** — Depend on abstractions (`IPatientRepository`), not concretions (`SqlPatientRepository`). Inject via constructor DI.
+
+### DRY — Don't Repeat Yourself
+
+- Extract shared logic into services or base classes. But don't over-abstract for a single use case.
+
+### KISS — Keep It Simple
+
+- Choose the simplest solution that works. Don't add layers, patterns, or abstractions until complexity demands it.
+
+### YAGNI — You Aren't Gonna Need It
+
+- Don't build features, configurations, or extensibility points for hypothetical future requirements. Build for what's needed now.
+
+### Fail Fast
+
+- Validate inputs at the boundary (controllers, event handlers). Throw early with meaningful exceptions rather than letting bad data propagate through layers.
+- Use FluentValidation for all request DTOs. Return structured error responses immediately.
+
+### Principle of Least Privilege
+
+- Services and users get only the minimum permissions they need.
+- API endpoints are locked down by role/scope by default — explicitly opt in to access, never opt out.
+- Database connections use least-privilege accounts. No `sa` in application code.
+- Secrets never appear in code or logs.
+
+---
+
+## Frontend Principles (MANDATORY)
+
+### Composition over Inheritance
+
+- Build UIs by composing small components, not extending base classes.
+- Use `children`, render props, and hooks for reuse.
+
+### Single Responsibility (Components)
+
+- Each component does one thing. A `PatientCard` renders a patient. A `PatientList` manages the list. A `usePatients` hook fetches the data.
+
+### DRY
+
+- Reuse via custom hooks (shared logic) and shared components (shared UI).
+- Don't over-abstract too early — three similar lines are better than a premature abstraction.
+
+### Separation of Concerns
+
+| Layer | Responsibility |
+|-------|----------------|
+| **UI Components** | Rendering and styling only |
+| **Hooks** | State and side effects |
+| **Services** | API calls and data transformation |
+| **Types** | Shared contracts and interfaces |
+
+### Unidirectional Data Flow
+
+- Data flows **down** via props, events flow **up** via callbacks.
+- Never mutate props or reach up the component tree.
+
+### Colocation
+
+- Keep related code together. Styles, tests, types, and sub-components live next to the component that uses them, not in distant folders.
+
+### Least Privilege (State)
+
+- Keep state as local as possible. Only lift state when a sibling or parent genuinely needs it.
+- Don't default to global state.
+
+### KISS / YAGNI
+
+- Don't add Redux slices, context providers, or complex patterns until the simpler approach breaks down.
+- RTK Query handles server state — don't duplicate it with `useEffect` + `useState`.
+
+### Immutability
+
+- Never mutate state directly. Always return new objects/arrays.
+- This is how React detects changes and re-renders correctly.
+
+### Declarative over Imperative
+
+- Describe **what** the UI should look like for a given state, not **how** to manipulate the DOM step by step.
+
+---
+
 ## Naming Conventions (MANDATORY)
 
 - **Variables, functions, and parameters must have meaningful, intention-revealing names**
@@ -128,7 +221,7 @@ This project uses **Central Package Management (CPM)** via two MSBuild props fil
 
 ### Framework Packages
 
-For packages that are part of the ASP.NET Core shared framework (`Microsoft.AspNetCore.App`), prefer a `<FrameworkReference>` over a `<PackageReference>` in projects that need ASP.NET Core types — this avoids the NU1510 "unnecessary package" warning:
+For packages that are part of the ASP.NET Core shared framework (`Microsoft.AspNetCore.App`), prefer a `<FrameworkReference>` over a `<PackageReference>` — this avoids the NU1510 warning:
 
 ```xml
 <!-- In a class library that needs ASP.NET Core types -->
@@ -143,4 +236,43 @@ For packages that are part of the ASP.NET Core shared framework (`Microsoft.AspN
 - `MediTrack.ServiceDefaults` project reference on every service (health, tracing, resilience)
 - `EventBus` interfaces only in services; `EventBusRabbitMQ` is the injected implementation
 - DDD layering only on `MedicalRecords` (Domain / Infrastructure separation)
-- FluentValidation for all input; AutoMapper for DTO ↔ Domain mapping
+- FluentValidation for all input; AutoMapper for DTO <> Domain mapping
+
+---
+
+## Tech Stack
+
+### Backend
+- ASP.NET Core (.NET 10), Entity Framework Core, FluentValidation, AutoMapper
+- RabbitMQ (EventBus abstraction), SQL Server, Duende IdentityServer
+- Docker + Docker Compose
+
+### Frontend
+- React 19 + Vite, TypeScript, Tailwind CSS, shadcn/ui
+- Redux Toolkit + RTK Query, React Router v7, Zod, Axios
+- oidc-client-ts + react-oidc-context
+
+### Package Manager
+- Backend: NuGet (Central Package Management)
+- Frontend: npm
+
+---
+
+## Commands
+
+```bash
+# Docker
+docker-compose up -d              # Start all services
+docker-compose up -d --build      # Rebuild and start
+docker-compose down               # Stop all services
+docker-compose logs -f <service>  # Tail logs
+
+# Frontend (src/MediTrack.Web/)
+npm run dev                       # Dev server
+npm run build                     # Production build
+npm run lint                      # ESLint
+
+# Backend
+dotnet build                      # Build solution
+dotnet test                       # Run tests
+```

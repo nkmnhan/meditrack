@@ -49,7 +49,7 @@ A healthcare management system built for practicing full-stack development with 
 
 | Category | Technology | Details |
 |---|---|---|
-| **Framework** | ASP.NET Core (.NET 8) | One Web API per microservice |
+| **Framework** | ASP.NET Core (.NET 10) | One Web API per microservice |
 | **ORM** | Entity Framework Core | Code-first migrations, per-service DB context |
 | **Validation** | FluentValidation | Input validation per service |
 | **Mapping** | AutoMapper | DTO ↔ Domain mapping |
@@ -318,7 +318,7 @@ meditrack/
 
 - **Docker Desktop** — all services run in containers
 - Node.js 18+ — only needed for local frontend development outside Docker
-- .NET 8 SDK — only needed for running/debugging services outside Docker
+- .NET 10 SDK — only needed for running/debugging services outside Docker
 - Visual Studio 2022 / VS Code / Rider
 
 ### Quick Start (Docker)
