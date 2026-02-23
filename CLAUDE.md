@@ -146,15 +146,77 @@ Always group classes in this order inside `clsxMerge`:
 
 ```tsx
 className={clsxMerge(
-  "flex items-center justify-center",  // Layout
-  "w-full h-12 px-4 py-2",             // Sizing/Spacing
-  "rounded-lg border border-gray-200", // Shape/Border
-  "bg-white text-gray-900",            // Colors
-  "transition-all duration-200",       // Animation
-  "hover:bg-gray-50 focus:ring-2",     // States
-  props.className                       // Caller overrides — always last
+  "flex items-center justify-center",     // Layout
+  "w-full h-12 px-4 py-2",                // Sizing/Spacing
+  "rounded-lg border border-neutral-200", // Shape/Border
+  "bg-white text-neutral-900",            // Colors
+  "transition-all duration-200",          // Animation
+  "hover:bg-neutral-50 focus:ring-2",     // States
+  props.className                         // Caller overrides — always last
 )}
 ```
+
+### Color Palette (MANDATORY)
+
+Use project design tokens — **never** hardcode hex values or use Tailwind's default colors (e.g., `blue-500`).
+
+| Category | Token | Usage |
+|----------|-------|-------|
+| **Primary** | `primary-700` | Buttons, headers, links |
+| **Secondary** | `secondary-700` | Secondary actions, accents |
+| **Accent** | `accent-500` | Violet CTAs only (sparingly!) |
+| **Text** | `neutral-900` | Headings |
+| **Text** | `neutral-700` | Body text |
+| **Text** | `neutral-500` | Secondary/muted text |
+| **Background** | `neutral-50` | Page background |
+| **Background** | `white` | Cards, modals |
+| **Border** | `neutral-200` | Dividers, card borders |
+| **Success** | `success-500` | Confirmations |
+| **Warning** | `warning-500` | Alerts |
+| **Error** | `error-500` | Errors, destructive |
+| **Info** | `info-500` | Informational messages (sky blue, distinct from primary) |
+| **Status** | `status-scheduled` / `completed` / etc. | Appointment workflow states |
+| **Triage** | `triage-critical` / `urgent` / `routine` | Medical urgency levels |
+
+**Contrast rule:** `-500` and lighter shades fail WCAG AA on white backgrounds (~3:1). Use `-600` or darker for text. Only use `-500` and lighter for backgrounds, borders, or large text (24px+).
+
+```tsx
+// GOOD — uses project tokens
+<button className="bg-primary-700 hover:bg-primary-800 text-white">Save</button>
+<p className="text-neutral-700">Patient details</p>
+<div className="bg-error-50 text-error-700 border border-error-200">Error message</div>
+
+// BAD — uses default Tailwind colors
+<button className="bg-blue-600 text-white">Save</button>
+<p className="text-gray-700">Patient details</p>
+```
+
+> Full color documentation: see `README.md` → **🎨 UX/UI Design System**
+
+### Icons (MANDATORY)
+
+Use **Lucide React** (`lucide-react`) for all icons — the same library used by shadcn/ui.
+
+- **NEVER** use raw SVGs, Font Awesome, or other icon libraries
+- Standard size: `h-5 w-5` for UI, `h-4 w-4` for inline with text
+- Color via `text-*` utility classes
+
+```tsx
+import { Stethoscope, CalendarDays } from "lucide-react";
+
+<Stethoscope className="h-5 w-5 text-primary-700" />
+```
+
+### Spacing & Layout
+
+- **Page container:** `mx-auto max-w-7xl px-4 sm:px-6 lg:px-8`
+- **Section spacing:** `space-y-8`
+- **Card padding:** `p-6`
+- **Card grid gap:** `gap-6`
+- **Form field gap:** `space-y-4`
+- **Inline icon + text gap:** `gap-2`
+
+> Full spacing and component pattern docs: see `README.md` → **🎨 UX/UI Design System**
 
 ### `clsxMerge` Utility
 

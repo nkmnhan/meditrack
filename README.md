@@ -98,7 +98,323 @@ A healthcare management system built for practicing full-stack development with 
 
 ---
 
-## 🏥 Domain: Healthcare Management
+## � UX/UI Design System
+
+> Inspired by [Mayo Clinic](https://www.mayoclinic.org/), [One Medical](https://www.onemedical.com/), [Mass General Brigham](https://www.massgeneralbrigham.org/) and other leading healthcare websites.
+
+### Design Philosophy
+
+- **Clean & Minimal** — Lots of white space for readability (healthcare data is dense)
+- **Calming Colors** — Blues and teals evoke trust, professionalism, and healing
+- **Accessible** — High contrast ratios, clear typography, WCAG 2.1 AA compliant
+- **Professional** — Medical applications require a serious, trustworthy aesthetic
+- **Action-Oriented** — Clear CTAs with visual hierarchy
+
+### Color Design System
+
+Located in `tailwind.config.ts` — all colors are available as Tailwind utilities.
+
+#### 1. Primary Colors (Brand Identity)
+
+**Medical Blue** — trust, professionalism, calm
+
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `primary-50` | `#eff6ff` | Subtle backgrounds, hover states |
+| `primary-100` | `#dbeafe` | Alert backgrounds, badges |
+| `primary-500` | `#3b82f6` | Default primary |
+| `primary-700` | `#1d4ed8` | **Buttons, headers, links** |
+| `primary-900` | `#1e3a8a` | Dark mode, footer |
+
+```tsx
+<button className="bg-primary-700 hover:bg-primary-800 text-white">
+  Schedule Appointment
+</button>
+```
+
+#### 2. Secondary Colors (Supporting Elements)
+
+**Healthcare Teal** — healing, clarity, freshness
+
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `secondary-50` | `#f0fdfa` | Card backgrounds |
+| `secondary-500` | `#14b8a6` | Default secondary |
+| `secondary-700` | `#0f766e` | **Secondary buttons, accents** |
+| `secondary-900` | `#134e4a` | Dark accents |
+
+```tsx
+<span className="text-secondary-700">View medical history</span>
+```
+
+#### 3. Accent Colors (Visual Interest)
+
+**Violet** — CTAs, innovation, calm authority (preferred over orange in healthcare — less alarming)
+
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `accent-400` | `#c084fc` | Notifications |
+| `accent-500` | `#a855f7` | **Primary CTAs, highlights** |
+| `accent-600` | `#9333ea` | Hover state |
+| `accent-700` | `#7c3aed` | Strong emphasis |
+
+```tsx
+<button className="bg-accent-500 hover:bg-accent-600 text-white">
+  Book Now — Limited Slots
+</button>
+```
+
+#### 4. Neutral Colors (Foundation)
+
+**Slate Grays** — text, backgrounds, borders
+
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `neutral-50` | `#f8fafc` | **Page background** |
+| `neutral-100` | `#f1f5f9` | Card backgrounds |
+| `neutral-200` | `#e2e8f0` | Borders, dividers |
+| `neutral-400` | `#94a3b8` | Placeholder text |
+| `neutral-500` | `#64748b` | Secondary text |
+| `neutral-700` | `#334155` | **Body text** |
+| `neutral-900` | `#0f172a` | **Headings** |
+
+```tsx
+<p className="text-neutral-700">Patient information</p>
+<h1 className="text-neutral-900 font-bold">Dashboard</h1>
+```
+
+#### 5. Semantic Colors (Feedback & Status)
+
+| Category | Token | Hex | Usage |
+|----------|-------|-----|-------|
+| **Success** | `success-500` | `#22c55e` | Confirmations, completed |
+| **Warning** | `warning-500` | `#f59e0b` | Alerts, pending actions |
+| **Error** | `error-500` | `#ef4444` | Errors, destructive actions |
+| **Info** | `info-500` | `#0ea5e9` | Informational messages (sky blue — distinct from primary) |
+
+```tsx
+<div className="bg-success-50 border border-success-200 text-success-700 p-4 rounded-lg">
+  ✓ Appointment confirmed for March 15, 2026 at 10:00 AM
+</div>
+
+<div className="bg-error-50 border border-error-200 text-error-700 p-4 rounded-lg">
+  ✗ Failed to save patient record. Please try again.
+</div>
+```
+
+#### 6. Medical Status Colors (Domain-Specific)
+
+Appointment states and triage levels — use with Tailwind's opacity modifier for subtle backgrounds (e.g., `bg-[#3b82f6]/10`).
+
+**Appointment Status**
+
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `status-scheduled` | `#3b82f6` | Upcoming appointments |
+| `status-inProgress` | `#f59e0b` | Currently active |
+| `status-completed` | `#22c55e` | Finished |
+| `status-cancelled` | `#94a3b8` | Inactive/cancelled |
+| `status-noShow` | `#ef4444` | Missed appointments |
+
+**Triage Levels**
+
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `triage-critical` | `#dc2626` | Immediate attention required |
+| `triage-urgent` | `#ea580c` | Needs priority handling |
+| `triage-routine` | `#3b82f6` | Standard scheduling |
+
+```tsx
+<span className="inline-flex items-center rounded-full bg-[#3b82f6]/10 px-2.5 py-0.5 text-xs font-medium text-status-scheduled">
+  Scheduled
+</span>
+<span className="inline-flex items-center rounded-full bg-[#22c55e]/10 px-2.5 py-0.5 text-xs font-medium text-status-completed">
+  Completed
+</span>
+```
+
+### Color Usage Rules
+
+| Guideline | Do | Don't |
+|-----------|-----|--------|
+| **Primary for key actions** | `bg-primary-700` on "Save", "Submit" | Multiple primary buttons competing |
+| **Accent for urgency only** | `bg-accent-500` on "Book Now - 2 slots left" | Accent on regular navigation |
+| **Neutral for text** | `text-neutral-700` for body | Pure black (`#000`) for text |
+| **Semantic for feedback** | `text-error-600` on validation errors | Red for non-error elements |
+| **Sufficient contrast** | `text-white` on `bg-primary-700` | Light text on light backgrounds |
+| **-500 and lighter = backgrounds only** | `bg-primary-50`, `border-primary-200` | `text-primary-500` on white (fails AA ~3:1) |
+| **-600 or darker for text** | `text-primary-700` for links | `text-secondary-500` for body text |
+| **Consistent backgrounds** | `bg-neutral-50` page, `bg-white` cards | Random background colors |
+
+### Typography
+
+**`font-sans`** (Inter) — default for all UI. **`font-serif`** (Georgia/Merriweather) — for medical documents and printable reports.
+
+| Element | Class | Weight | Size |
+|---------|-------|--------|------|
+| H1 | `text-3xl font-bold text-neutral-900` | 700 | 30px |
+| H2 | `text-2xl font-semibold text-neutral-900` | 600 | 24px |
+| H3 | `text-xl font-semibold text-neutral-800` | 600 | 20px |
+| Body | `text-base text-neutral-700` | 400 | 16px |
+| Small | `text-sm text-neutral-500` | 400 | 14px |
+| Label | `text-sm font-medium text-neutral-700` | 500 | 14px |
+| Document | `font-serif text-base text-neutral-800` | 400 | 16px |
+
+### Elevation (Box Shadows)
+
+Keep shadows subtle — heavy shadows feel dated in healthcare UI.
+
+| Level | Class | Usage |
+|-------|-------|-------|
+| **Low** | `shadow-sm` | Cards, subtle lift |
+| **Medium** | `shadow-md` | Dropdowns, popovers |
+| **High** | `shadow-lg` | Modals, dialogs |
+
+### Spacing & Layout
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| **Page max-width** | `max-w-7xl` (80rem) | Main content container |
+| **Page padding** | `px-4 sm:px-6 lg:px-8` | Responsive horizontal padding |
+| **Section spacing** | `space-y-8` | Between major page sections |
+| **Card padding** | `p-6` | Standard card interior |
+| **Card gap** | `gap-6` | Between cards in a grid |
+| **Form gap** | `space-y-4` | Between form fields |
+| **Inline spacing** | `gap-2` / `gap-3` | Between icons and text, badges |
+
+**Breakpoints** (Tailwind defaults):
+
+| Prefix | Width | Typical usage |
+|--------|-------|---------------|
+| `sm` | 640px | Single → two columns |
+| `md` | 768px | Sidebar appears |
+| `lg` | 1024px | Full desktop layout |
+| `xl` | 1280px | Wide dashboard grids |
+
+```tsx
+// Page layout
+<main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+  <div className="space-y-8">
+    {/* sections */}
+  </div>
+</main>
+
+// Responsive card grid
+<div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+  {/* cards */}
+</div>
+```
+
+### Icons
+
+Use [Lucide React](https://lucide.dev/) — the icon library used by shadcn/ui. Tree-shakeable, consistent 24px grid, includes medical icons.
+
+```bash
+npm install lucide-react
+```
+
+```tsx
+import { Stethoscope, CalendarDays, FileText, AlertTriangle } from "lucide-react";
+
+// Standard icon size in UI
+<Stethoscope className="h-5 w-5 text-primary-700" />
+
+// Icon + text pattern
+<div className="flex items-center gap-2">
+  <CalendarDays className="h-4 w-4 text-neutral-500" />
+  <span className="text-sm text-neutral-700">March 15, 2026</span>
+</div>
+```
+
+### Component Patterns
+
+```tsx
+// Card
+<div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-6">
+  <h3 className="text-lg font-semibold text-neutral-900">Patient Details</h3>
+  <p className="mt-2 text-neutral-600">John Doe • DOB: 1985-03-15</p>
+</div>
+
+// Metric card (dashboard KPI)
+<div className="bg-white rounded-lg border border-neutral-200 shadow-sm p-6">
+  <p className="text-sm font-medium text-neutral-500">Appointments Today</p>
+  <p className="mt-1 text-3xl font-bold text-neutral-900">12</p>
+  <p className="mt-1 text-sm text-success-600">+3 from yesterday</p>
+</div>
+
+// Status badge
+<span className="inline-flex items-center rounded-full bg-[#3b82f6]/10 px-2.5 py-0.5 text-xs font-medium text-status-scheduled">
+  Scheduled
+</span>
+<span className="inline-flex items-center rounded-full bg-[#22c55e]/10 px-2.5 py-0.5 text-xs font-medium text-status-completed">
+  Completed
+</span>
+<span className="inline-flex items-center rounded-full bg-[#ef4444]/10 px-2.5 py-0.5 text-xs font-medium text-status-noShow">
+  No Show
+</span>
+
+// Alert banner
+<div className="flex items-center gap-3 rounded-lg border border-warning-200 bg-warning-50 p-4">
+  <AlertTriangle className="h-5 w-5 shrink-0 text-warning-600" />
+  <div>
+    <p className="text-sm font-medium text-warning-800">Allergy Alert</p>
+    <p className="text-sm text-warning-700">Patient is allergic to Penicillin.</p>
+  </div>
+</div>
+
+// Button variants
+<button className="bg-primary-700 hover:bg-primary-800 text-white px-4 py-2 rounded-lg">
+  Primary
+</button>
+<button className="bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 px-4 py-2 rounded-lg">
+  Secondary
+</button>
+<button className="text-primary-700 hover:text-primary-800 underline">
+  Link
+</button>
+
+// Input
+<input
+  className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+  placeholder="Enter patient name"
+/>
+
+// Data table row (alternating)
+<table className="w-full text-left text-sm">
+  <thead>
+    <tr className="border-b border-neutral-200 text-neutral-500">
+      <th className="px-4 py-3 font-medium">Patient</th>
+      <th className="px-4 py-3 font-medium">Date</th>
+      <th className="px-4 py-3 font-medium">Status</th>
+    </tr>
+  </thead>
+  <tbody className="divide-y divide-neutral-100">
+    <tr className="hover:bg-neutral-50">
+      <td className="px-4 py-3 text-neutral-900">Jane Smith</td>
+      <td className="px-4 py-3 text-neutral-600">2026-03-15</td>
+      <td className="px-4 py-3">
+        <span className="inline-flex items-center rounded-full bg-[#22c55e]/10 px-2.5 py-0.5 text-xs font-medium text-status-completed">
+          Completed
+        </span>
+      </td>
+    </tr>
+  </tbody>
+</table>
+```
+
+### Design Inspiration
+
+| Website | What to Reference |
+|---------|-------------------|
+| [Mayo Clinic](https://www.mayoclinic.org/) | Content cards with subtle shadows, blue-700 nav, generous whitespace between sections |
+| [One Medical](https://www.onemedical.com/) | Sticky CTA bar on mobile, rounded card corners, teal accent links |
+| [Mass General Brigham](https://www.massgeneralbrigham.org/) | Blue-700 navbar with white text, teal secondary highlights, mega-menu navigation |
+| [Maven Clinic](https://www.mavenclinic.com/) | Soft violet accents, floating header with blur backdrop, calming gradient hero |
+| [Crossroads Integrative](https://crossroadsintegrative.com/) | Calming green palette, lazy-load scroll animations, nature imagery |
+
+---
+
+## �🏥 Domain: Healthcare Management
 
 ### Core Features (Planned)
 

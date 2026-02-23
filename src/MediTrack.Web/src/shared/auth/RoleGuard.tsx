@@ -16,10 +16,10 @@ export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
 
   if (!hasAnyRole(allowedRoles)) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Access Denied</h1>
-          <p className="mt-2 text-gray-500">
+          <h1 className="text-2xl font-bold text-neutral-900">Access Denied</h1>
+          <p className="mt-2 text-neutral-500">
             You do not have permission to view this page.
           </p>
         </div>
