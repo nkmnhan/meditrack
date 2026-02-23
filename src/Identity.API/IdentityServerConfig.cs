@@ -1,35 +1,72 @@
+using Duende.IdentityServer;
 using Duende.IdentityServer.Models;
+using IdentityModel;
 
 namespace MediTrack.Identity;
 
 public static class IdentityServerConfig
 {
-    public static IEnumerable<IdentityResource> IdentityResources =>
+    public static IEnumerable<IdentityResource> GetIdentityResources() =>
     [
         new IdentityResources.OpenId(),
-        new IdentityResources.Profile()
+        new IdentityResources.Profile(),
+        new IdentityResource("roles", "User roles", [JwtClaimTypes.Role])
     ];
 
-    public static IEnumerable<ApiScope> ApiScopes =>
+    public static IEnumerable<ApiScope> GetApiScopes() =>
     [
         new ApiScope("patient-api", "Patient API"),
         new ApiScope("appointment-api", "Appointment API"),
         new ApiScope("medicalrecords-api", "Medical Records API")
     ];
 
-    public static IEnumerable<Client> Clients =>
-    [
-        new Client
-        {
-            ClientId = "meditrack-web",
-            ClientName = "MediTrack Web App",
-            AllowedGrantTypes = GrantTypes.Code,
-            RequirePkce = true,
-            RequireClientSecret = false,
-            RedirectUris = ["http://localhost:3000/callback"],
-            PostLogoutRedirectUris = ["http://localhost:3000"],
-            AllowedCorsOrigins = ["http://localhost:3000"],
-            AllowedScopes = ["openid", "profile", "patient-api", "appointment-api", "medicalrecords-api"]
-        }
-    ];
+    public static IEnumerable<Client> GetClients(IConfiguration configuration)
+    {
+        string webClientUrl = configuration["WebClientUrl"] ?? "https://localhost:3000";
+
+        return
+        [
+            // Interactive SPA client (Authorization Code + PKCE)
+            new Client
+            {
+                ClientId = "meditrack-web",
+                ClientName = "MediTrack Web App",
+                AllowedGrantTypes = GrantTypes.Code,
+                RequirePkce = true,
+                RequireClientSecret = false,
+                RedirectUris = [$"{webClientUrl}/callback"],
+                PostLogoutRedirectUris = [webClientUrl],
+                AllowedCorsOrigins = [webClientUrl],
+                AllowOfflineAccess = true,
+                AlwaysIncludeUserClaimsInIdToken = true,
+                AccessTokenLifetime = 1800, // 30 minutes
+                AllowedScopes =
+                [
+                    IdentityServerConstants.StandardScopes.OpenId,
+                    IdentityServerConstants.StandardScopes.Profile,
+                    IdentityServerConstants.StandardScopes.OfflineAccess,
+                    "roles",
+                    "patient-api",
+                    "appointment-api",
+                    "medicalrecords-api"
+                ]
+            },
+
+            // Service-to-service client (Client Credentials)
+            new Client
+            {
+                ClientId = "meditrack-service",
+                ClientName = "MediTrack Service-to-Service",
+                AllowedGrantTypes = GrantTypes.ClientCredentials,
+                ClientSecrets = [new Secret("service-secret".Sha256())],
+                AccessTokenLifetime = 1800,
+                AllowedScopes =
+                [
+                    "patient-api",
+                    "appointment-api",
+                    "medicalrecords-api"
+                ]
+            }
+        ];
+    }
 }

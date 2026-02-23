@@ -1,0 +1,35 @@
+@page
+@model MediTrack.Identity.Pages.Account.Logout.LoggedOut
+
+<div class="logout-page">
+    <div class="login-card">
+        <div class="login-header">
+            <h1>Logged Out</h1>
+            <p>You have been successfully signed out.</p>
+        </div>
+
+        @if (Model.View.PostLogoutRedirectUri is not null)
+        {
+            <p>
+                Click <a href="@Model.View.PostLogoutRedirectUri">here</a> to return to
+                <strong>@(Model.View.ClientName ?? Model.View.PostLogoutRedirectUri)</strong>.
+            </p>
+        }
+
+        @if (Model.View.SignOutIframeUrl is not null)
+        {
+            <iframe width="0" height="0" class="signout" src="@Model.View.SignOutIframeUrl"></iframe>
+        }
+    </div>
+</div>
+
+@section scripts {
+    @if (Model.View is { AutomaticRedirectAfterSignOut: true, PostLogoutRedirectUri: not null })
+    {
+        <script>
+            window.addEventListener("load", function () {
+                window.location = "@Model.View.PostLogoutRedirectUri";
+            });
+        </script>
+    }
+}

@@ -12,24 +12,31 @@ services:
   identity-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_URLS=http://+:8080;https://+:8443
+      - Kestrel__Certificates__Default__Path=/certs/localhost.pem
+      - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
+      - ConnectionStrings__IdentityDb=Server=sqlserver,1433;Database=IdentityDb;User Id=sa;Password=MediTrack_Dev@2026!;TrustServerCertificate=true;
+      - WebClientUrl=https://localhost:3000
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
     volumes:
-      - ~/.aspnet/https:/root/.aspnet/https:ro
-      - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro
+      - ./dev-certs/certs:/certs:ro
     depends_on:
+      sqlserver:
+        condition: service_healthy
       otel-collector:
         condition: service_started
 
   patient-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_URLS=http://+:8080;https://+:8443
+      - Kestrel__Certificates__Default__Path=/certs/localhost.pem
+      - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
       - ConnectionStrings__PatientDb=Server=sqlserver,1433;Database=PatientDb;User Id=sa;Password=MediTrack_Dev@2026!;TrustServerCertificate=true;
+      - IdentityUrl=http://identity-api:8080
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
     volumes:
-      - ~/.aspnet/https:/root/.aspnet/https:ro
-      - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro
+      - ./dev-certs/certs:/certs:ro
     depends_on:
       otel-collector:
         condition: service_started
@@ -37,12 +44,14 @@ services:
   appointment-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_URLS=http://+:8080;https://+:8443
+      - Kestrel__Certificates__Default__Path=/certs/localhost.pem
+      - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
       - ConnectionStrings__AppointmentDb=Server=sqlserver,1433;Database=AppointmentDb;User Id=sa;Password=MediTrack_Dev@2026!;TrustServerCertificate=true;
+      - IdentityUrl=http://identity-api:8080
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
     volumes:
-      - ~/.aspnet/https:/root/.aspnet/https:ro
-      - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro
+      - ./dev-certs/certs:/certs:ro
     depends_on:
       otel-collector:
         condition: service_started
@@ -50,12 +59,14 @@ services:
   medicalrecords-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_URLS=http://+:8080;https://+:8443
+      - Kestrel__Certificates__Default__Path=/certs/localhost.pem
+      - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
       - ConnectionStrings__MedicalRecordsDb=Server=sqlserver,1433;Database=MedicalRecordsDb;User Id=sa;Password=MediTrack_Dev@2026!;TrustServerCertificate=true;
+      - IdentityUrl=http://identity-api:8080
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
     volumes:
-      - ~/.aspnet/https:/root/.aspnet/https:ro
-      - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro
+      - ./dev-certs/certs:/certs:ro
     depends_on:
       otel-collector:
         condition: service_started
@@ -73,7 +84,9 @@ services:
 
   web:
     environment:
-      - VITE_IDENTITY_URL=http://localhost:5001
-      - VITE_PATIENT_API_URL=http://localhost:5002
-      - VITE_APPOINTMENT_API_URL=http://localhost:5003
-      - VITE_MEDICALRECORDS_API_URL=http://localhost:5004
+      - VITE_IDENTITY_URL=https://localhost:5001
+      - VITE_PATIENT_API_URL=https://localhost:5002
+      - VITE_APPOINTMENT_API_URL=https://localhost:5003
+      - VITE_MEDICALRECORDS_API_URL=https://localhost:5004
+    volumes:
+      - ./dev-certs/certs:/certs:ro

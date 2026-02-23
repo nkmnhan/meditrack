@@ -13,18 +13,21 @@ export default defineConfig({
     port: 3000,
     proxy: {
       "/api/patients": {
-        target: process.env.VITE_PATIENT_API_URL ?? "http://localhost:5002",
+        target: process.env.VITE_PATIENT_API_URL ?? "https://localhost:5002",
         changeOrigin: true,
+        secure: false,
         rewrite: (urlPath) => urlPath.replace(/^\/api\/patients/, ""),
       },
       "/api/appointments": {
-        target: process.env.VITE_APPOINTMENT_API_URL ?? "http://localhost:5003",
+        target: process.env.VITE_APPOINTMENT_API_URL ?? "https://localhost:5003",
         changeOrigin: true,
+        secure: false,
         rewrite: (urlPath) => urlPath.replace(/^\/api\/appointments/, ""),
       },
       "/api/medicalrecords": {
-        target: process.env.VITE_MEDICALRECORDS_API_URL ?? "http://localhost:5004",
+        target: process.env.VITE_MEDICALRECORDS_API_URL ?? "https://localhost:5004",
         changeOrigin: true,
+        secure: false,
         rewrite: (urlPath) => urlPath.replace(/^\/api\/medicalrecords/, ""),
       },
     },

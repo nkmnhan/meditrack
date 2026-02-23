@@ -25,9 +25,13 @@
     <!-- Resilience & Health -->
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.3.0" />
 
-    <!-- Identity -->
+    <!-- Authentication & Identity -->
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.3" />
+    <PackageVersion Include="IdentityModel" Version="7.0.0" />
     <PackageVersion Include="Duende.IdentityServer" Version="7.4.6" />
     <PackageVersion Include="Duende.IdentityServer.AspNetIdentity" Version="7.4.6" />
+    <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.AspNetCore.Identity.UI" Version="10.0.3" />
 
     <!-- Validation & Mapping -->
     <PackageVersion Include="FluentValidation" Version="12.1.1" />

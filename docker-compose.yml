@@ -92,10 +92,14 @@ services:
       context: .
       dockerfile: src/Identity.API/Dockerfile
     ports:
-      - "5001:8080"
+      - "5001:8443"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__IdentityDb=Server=sqlserver,1433;Database=IdentityDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;
       - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    depends_on:
+      sqlserver:
+        condition: service_healthy
 
   patient-api:
     image: ${DOCKER_REGISTRY:-meditrack}/patient-api:${TAG:-latest}
@@ -103,10 +107,11 @@ services:
       context: .
       dockerfile: src/Patient.API/Dockerfile
     ports:
-      - "5002:8080"
+      - "5002:8443"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__PatientDb=Server=sqlserver,1433;Database=PatientDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;
+      - IdentityUrl=http://identity-api:8080
       - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     depends_on:
       sqlserver:
@@ -120,10 +125,11 @@ services:
       context: .
       dockerfile: src/Appointment.API/Dockerfile
     ports:
-      - "5003:8080"
+      - "5003:8443"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__AppointmentDb=Server=sqlserver,1433;Database=AppointmentDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;
+      - IdentityUrl=http://identity-api:8080
       - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     depends_on:
       sqlserver:
@@ -137,10 +143,11 @@ services:
       context: .
       dockerfile: src/MedicalRecords.API/Dockerfile
     ports:
-      - "5004:8080"
+      - "5004:8443"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__MedicalRecordsDb=Server=sqlserver,1433;Database=MedicalRecordsDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;
+      - IdentityUrl=http://identity-api:8080
       - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     depends_on:
       sqlserver:
@@ -168,12 +175,12 @@ services:
       context: src/MediTrack.Web
       dockerfile: Dockerfile
     ports:
-      - "3000:80"
+      - "3000:443"
     environment:
-      - VITE_IDENTITY_URL=http://localhost:5001
-      - VITE_PATIENT_API_URL=http://localhost:5002
-      - VITE_APPOINTMENT_API_URL=http://localhost:5003
-      - VITE_MEDICALRECORDS_API_URL=http://localhost:5004
+      - VITE_IDENTITY_URL=https://localhost:5001
+      - VITE_PATIENT_API_URL=https://localhost:5002
+      - VITE_APPOINTMENT_API_URL=https://localhost:5003
+      - VITE_MEDICALRECORDS_API_URL=https://localhost:5004
     depends_on:
       - identity-api
 
