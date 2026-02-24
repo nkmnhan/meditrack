@@ -271,10 +271,31 @@ public class PatientService : IPatientService
             return false;
         }
 
-        patient.Deactivate();
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await using var deactivateTransaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            patient.Deactivate();
+            await _dbContext.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Deactivated patient {PatientId}: {PatientName}", patient.Id, patient.FullName);
+            _logger.LogInformation("Deactivated patient {PatientId}: {PatientName}", patient.Id, patient.FullName);
+
+            var integrationEvent = new PatientDeactivatedIntegrationEvent
+            {
+                PatientId = patient.Id,
+                FirstName = patient.FirstName,
+                LastName = patient.LastName,
+                MedicalRecordNumber = patient.MedicalRecordNumber,
+                DeactivatedAt = DateTime.UtcNow
+            };
+            await _eventBus.PublishAsync(integrationEvent, cancellationToken);
+
+            await deactivateTransaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await deactivateTransaction.RollbackAsync(CancellationToken.None);
+            throw;
+        }
 
         return true;
     }

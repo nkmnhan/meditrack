@@ -1,4 +1,5 @@
 using FluentValidation;
+using MediTrack.ServiceDefaults;
 using MediTrack.Shared.Common;
 using MediTrack.Shared.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -49,13 +50,17 @@ public static class PatientsApi
         group.MapPost("/{id:guid}/deactivate", DeactivatePatient)
             .WithName("DeactivatePatient")
             .WithSummary("Deactivate a patient (soft delete)")
+            .RequireAuthorization(AuthorizationPolicies.RequireAdminOrReceptionist)
             .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapPost("/{id:guid}/activate", ActivatePatient)
             .WithName("ActivatePatient")
             .WithSummary("Reactivate a deactivated patient")
+            .RequireAuthorization(AuthorizationPolicies.RequireAdminOrReceptionist)
             .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
         return endpoints;

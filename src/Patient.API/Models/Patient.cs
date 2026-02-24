@@ -6,6 +6,9 @@ namespace Patient.API.Models;
 public class Patient
 {
     public Guid Id { get; private set; }
+    
+    // Medical Record Number (MRN) - unique identifier for patient
+    public string MedicalRecordNumber { get; private set; } = null!;
 
     // Personal Information
     public string FirstName { get; private set; } = null!;
@@ -46,6 +49,7 @@ public class Patient
         Address address)
     {
         Id = Guid.NewGuid();
+        MedicalRecordNumber = GenerateMedicalRecordNumber();
         FirstName = firstName;
         LastName = lastName;
         DateOfBirth = dateOfBirth;
@@ -55,6 +59,17 @@ public class Patient
         Address = address;
         CreatedAt = DateTime.UtcNow;
         IsActive = true;
+    }
+
+    /// <summary>
+    /// Generates a unique Medical Record Number in format: MRN-YYYYMMDD-XXXX
+    /// where XXXX is derived from a GUID to ensure uniqueness.
+    /// </summary>
+    private static string GenerateMedicalRecordNumber()
+    {
+        var date = DateTime.UtcNow.ToString("yyyyMMdd");
+        var uniqueId = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+        return $"MRN-{date}-{uniqueId}";
     }
 
     public string FullName => $"{FirstName} {LastName}";

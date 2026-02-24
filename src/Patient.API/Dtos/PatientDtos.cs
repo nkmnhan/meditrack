@@ -90,6 +90,7 @@ public record InsuranceDto(
 
 public record PatientResponse(
     Guid Id,
+    string MedicalRecordNumber,
     string FirstName,
     string LastName,
     string FullName,
@@ -111,6 +112,7 @@ public record PatientResponse(
 
 public record PatientListItemResponse(
     Guid Id,
+    string MedicalRecordNumber,
     string FullName,
     DateOnly DateOfBirth,
     int Age,

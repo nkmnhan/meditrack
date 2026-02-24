@@ -14,6 +14,14 @@ public class PatientConfiguration : IEntityTypeConfiguration<Models.Patient>
         builder.Property(patient => patient.Id)
             .ValueGeneratedNever();
 
+        // Medical Record Number — unique identifier for the patient
+        builder.Property(patient => patient.MedicalRecordNumber)
+            .HasMaxLength(50)
+            .IsRequired();
+
+        builder.HasIndex(patient => patient.MedicalRecordNumber)
+            .IsUnique();
+
         // Personal Information
         builder.Property(patient => patient.FirstName)
             .HasMaxLength(100)

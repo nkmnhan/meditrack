@@ -7,3 +7,4 @@ export { oidcConfig } from "./authConfig";
 export { useRoles } from "./useRoles";
 export { UserRole, AllRoles, StaffRoles, MedicalRoles } from "./roles";
 export type { UserRoleType } from "./roles";
+export { getOidcAccessToken } from "./getOidcAccessToken";

@@ -17,15 +17,19 @@ public abstract class PatientRequestValidatorBase<T> : AbstractValidator<T>
         // Personal Information
         RuleFor(request => request.FirstName)
             .NotEmpty().WithMessage("First name is required")
-            .MaximumLength(100).WithMessage("First name cannot exceed 100 characters");
+            .MaximumLength(100).WithMessage("First name cannot exceed 100 characters")
+            .Matches(@"^[a-zA-Z\s'-]+$").WithMessage("First name can only contain letters, spaces, hyphens, and apostrophes");
 
         RuleFor(request => request.LastName)
             .NotEmpty().WithMessage("Last name is required")
-            .MaximumLength(100).WithMessage("Last name cannot exceed 100 characters");
+            .MaximumLength(100).WithMessage("Last name cannot exceed 100 characters")
+            .Matches(@"^[a-zA-Z\s'-]+$").WithMessage("Last name can only contain letters, spaces, hyphens, and apostrophes");
 
         RuleFor(request => request.DateOfBirth)
             .NotEmpty().WithMessage("Date of birth is required")
             .LessThan(DateOnly.FromDateTime(DateTime.Today)).WithMessage("Date of birth must be in the past")
+            .Must(dob => dob <= DateOnly.FromDateTime(DateTime.Today.AddDays(-1)))
+            .WithMessage("Patient must be at least 1 day old")
             .GreaterThan(DateOnly.FromDateTime(DateTime.Today.AddYears(-150))).WithMessage("Date of birth is invalid");
 
         RuleFor(request => request.Gender)

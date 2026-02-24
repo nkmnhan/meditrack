@@ -11,6 +11,7 @@ public class PatientMappingProfile : Profile
         // Patient -> PatientResponse
         CreateMap<Models.Patient, PatientResponse>()
             .ForCtorParam("Id", options => options.MapFrom(source => source.Id))
+            .ForCtorParam("MedicalRecordNumber", options => options.MapFrom(source => source.MedicalRecordNumber))
             .ForCtorParam("FirstName", options => options.MapFrom(source => source.FirstName))
             .ForCtorParam("LastName", options => options.MapFrom(source => source.LastName))
             .ForCtorParam("FullName", options => options.MapFrom(source => source.FullName))
@@ -32,6 +33,7 @@ public class PatientMappingProfile : Profile
         // Patient -> PatientListItemResponse
         CreateMap<Models.Patient, PatientListItemResponse>()
             .ForCtorParam("Id", options => options.MapFrom(source => source.Id))
+            .ForCtorParam("MedicalRecordNumber", options => options.MapFrom(source => source.MedicalRecordNumber))
             .ForCtorParam("FullName", options => options.MapFrom(source => source.FullName))
             .ForCtorParam("DateOfBirth", options => options.MapFrom(source => source.DateOfBirth))
             .ForCtorParam("Age", options => options.MapFrom(source => source.Age))

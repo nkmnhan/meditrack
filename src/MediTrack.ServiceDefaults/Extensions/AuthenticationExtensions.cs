@@ -35,7 +35,9 @@ public static class AuthenticationExtensions
                 };
             });
 
-        services.AddAuthorization();
+        services.AddAuthorizationBuilder()
+            .AddPolicy(AuthorizationPolicies.RequireAdminOrReceptionist, policy =>
+                policy.RequireRole("Admin", "Receptionist"));
 
         return services;
     }
