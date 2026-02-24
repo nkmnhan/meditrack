@@ -1,0 +1,49 @@
+@page
+@model MediTrack.Identity.Pages.Account.Logout.LoggedOut
+
+<div class="logout-page">
+    <div class="login-card logout-card">
+        <div class="login-header">
+            <h1>Logged Out</h1>
+            <p>You have been successfully signed out.</p>
+        </div>
+
+        @if (Model.View.PostLogoutRedirectUri is not null)
+        {
+            <p class="return-link">
+                Click <a href="@Model.View.PostLogoutRedirectUri">here</a> to return to
+                <strong>@(Model.View.ClientName ?? Model.View.ClientOrigin ?? Model.View.PostLogoutRedirectUri)</strong>.
+            </p>
+        }
+
+        @if (Model.View.SignOutIframeUrl is not null)
+        {
+            <iframe width="0" height="0" class="signout" src="@Model.View.SignOutIframeUrl"></iframe>
+        }
+
+        <p class="redirect-notice">
+            Redirecting in <span id="logout-countdown">5</span> second(s)&hellip;
+        </p>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        (function () {
+            var remaining = 5;
+            var countdownEl = document.getElementById("logout-countdown");
+            var redirectTarget = "@Model.View.AutoRedirectTarget";
+
+            var timer = setInterval(function () {
+                remaining -= 1;
+                if (countdownEl) {
+                    countdownEl.textContent = remaining;
+                }
+                if (remaining <= 0) {
+                    clearInterval(timer);
+                    window.location.href = redirectTarget;
+                }
+            }, 1000);
+        }());
+    </script>
+}

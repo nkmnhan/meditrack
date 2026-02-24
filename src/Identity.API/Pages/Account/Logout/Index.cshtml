@@ -1,0 +1,16 @@
+@page
+@model MediTrack.Identity.Pages.Account.Logout.Index
+
+<div class="logout-page">
+    <div class="login-card">
+        <div class="login-header">
+            <h1>Logout</h1>
+            <p>Would you like to sign out?</p>
+        </div>
+
+        <form asp-page="/Account/Logout/Index" method="post">
+            <input type="hidden" name="LogoutId" value="@Model.LogoutId" />
+            <button class="btn btn-primary" type="submit">Yes, Sign Out</button>
+        </form>
+    </div>
+</div>

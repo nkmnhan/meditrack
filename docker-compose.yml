@@ -1,0 +1,210 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: ${SA_PASSWORD}
+      MSSQL_PID: ${MSSQL_PID:-Express}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $$SA_PASSWORD -Q 'SELECT 1' -C || exit 1"]
+      interval: 10s
+      retries: 10
+      start_period: 30s
+      timeout: 5s
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    depends_on:
+      jaeger:
+        condition: service_healthy
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    user: "root"
+    ports:
+      - "16686:16686"
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+      SPAN_STORAGE_TYPE: badger
+      BADGER_EPHEMERAL: "false"
+      BADGER_DIRECTORY_VALUE: /tmp/badger/data
+      BADGER_DIRECTORY_KEY: /tmp/badger/key
+      METRICS_STORAGE_TYPE: prometheus
+      PROMETHEUS_SERVER_URL: http://prometheus:9090
+      PROMETHEUS_QUERY_NORMALIZE_CALLS: "true"
+      PROMETHEUS_QUERY_NORMALIZE_DURATION: "true"
+    volumes:
+      - jaeger-data:/tmp/badger
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:14269/"]
+      interval: 10s
+      retries: 5
+      start_period: 10s
+      timeout: 5s
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      retries: 5
+      start_period: 10s
+      timeout: 5s
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST:-/}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      retries: 10
+      start_period: 30s
+      timeout: 5s
+
+  identity-api:
+    image: ${DOCKER_REGISTRY:-meditrack}/identity-api:${TAG:-latest}
+    build:
+      context: .
+      dockerfile: src/Identity.API/Dockerfile
+    ports:
+      - "5001:8443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__IdentityDb=Server=sqlserver,1433;Database=IdentityDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  patient-api:
+    image: ${DOCKER_REGISTRY:-meditrack}/patient-api:${TAG:-latest}
+    build:
+      context: .
+      dockerfile: src/Patient.API/Dockerfile
+    ports:
+      - "5002:8443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__PatientDb=Server=sqlserver,1433;Database=PatientDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;
+      - IdentityUrl=http://identity-api:8080
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      identity-api:
+        condition: service_started
+
+  appointment-api:
+    image: ${DOCKER_REGISTRY:-meditrack}/appointment-api:${TAG:-latest}
+    build:
+      context: .
+      dockerfile: src/Appointment.API/Dockerfile
+    ports:
+      - "5003:8443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__AppointmentDb=Server=sqlserver,1433;Database=AppointmentDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;
+      - IdentityUrl=http://identity-api:8080
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      identity-api:
+        condition: service_started
+
+  medicalrecords-api:
+    image: ${DOCKER_REGISTRY:-meditrack}/medicalrecords-api:${TAG:-latest}
+    build:
+      context: .
+      dockerfile: src/MedicalRecords.API/Dockerfile
+    ports:
+      - "5004:8443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__MedicalRecordsDb=Server=sqlserver,1433;Database=MedicalRecordsDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;
+      - IdentityUrl=http://identity-api:8080
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      identity-api:
+        condition: service_started
+
+  notification-worker:
+    image: ${DOCKER_REGISTRY:-meditrack}/notification-worker:${TAG:-latest}
+    build:
+      context: .
+      dockerfile: src/Notification.Worker/Dockerfile
+    environment:
+      - DOTNET_ENVIRONMENT=Production
+      - ConnectionStrings__AuditDatabase=Server=sqlserver,1433;Database=AuditDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  web:
+    image: ${DOCKER_REGISTRY:-meditrack}/web:${TAG:-latest}
+    build:
+      context: src/MediTrack.Web
+      dockerfile: Dockerfile
+    ports:
+      - "3000:443"
+    environment:
+      - VITE_IDENTITY_URL=https://localhost:5001
+      - VITE_PATIENT_API_URL=https://localhost:5002
+      - VITE_APPOINTMENT_API_URL=https://localhost:5003
+      - VITE_MEDICALRECORDS_API_URL=https://localhost:5004
+    depends_on:
+      - identity-api
+
+volumes:
+  sqlserver-data:
+  rabbitmq-data:
+  prometheus-data:
+  jaeger-data:
+  identity-dataprotection-keys:
