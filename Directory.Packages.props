@@ -44,5 +44,8 @@
 
     <!-- Serialization -->
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+
+    <!-- Test Data Generation -->
+    <PackageVersion Include="Bogus" Version="35.6.2" />
   </ItemGroup>
 </Project>

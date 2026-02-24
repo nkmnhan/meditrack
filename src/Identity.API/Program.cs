@@ -3,6 +3,7 @@ using MediTrack.Identity.Data;
 using MediTrack.Identity.Models;
 using MediTrack.Identity.Services;
 using MediTrack.ServiceDefaults;
+using MediTrack.ServiceDefaults.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -42,6 +43,9 @@ builder.Services
     .AddAspNetIdentity<ApplicationUser>()
     .AddProfileService<ProfileService>();
 
+// CORS
+builder.Services.AddDefaultCors(builder.Configuration, builder.Environment);
+
 builder.Services.AddRazorPages();
 
 WebApplication app = builder.Build();
@@ -63,6 +67,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapDefaultEndpoints();
+app.UseCors(CorsExtensions.PolicyName);
 app.UseStaticFiles();
 app.UseIdentityServer();
 app.UseAuthorization();

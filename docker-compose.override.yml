@@ -42,6 +42,12 @@ services:
     volumes:
       - ./dev-certs/certs:/certs:ro
     depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      identity-api:
+        condition: service_started
       otel-collector:
         condition: service_started
 
@@ -60,6 +66,12 @@ services:
     volumes:
       - ./dev-certs/certs:/certs:ro
     depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      identity-api:
+        condition: service_started
       otel-collector:
         condition: service_started
 
@@ -78,17 +90,28 @@ services:
     volumes:
       - ./dev-certs/certs:/certs:ro
     depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      identity-api:
+        condition: service_started
       otel-collector:
         condition: service_started
 
   notification-worker:
     environment:
       - DOTNET_ENVIRONMENT=Development
+      - ConnectionStrings__AuditDatabase=Server=sqlserver,1433;Database=AuditDb;User Id=sa;Password=MediTrack_Dev@2026!;TrustServerCertificate=true;
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__UserName=guest
       - RabbitMQ__Password=guest
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
     depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
       otel-collector:
         condition: service_started
 

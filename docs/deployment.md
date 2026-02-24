@@ -30,11 +30,11 @@ npm run dev
 
 | Service | URL |
 |---|---|
-| Frontend | http://localhost:3000 |
-| Identity | http://localhost:5001 |
-| Patient API | http://localhost:5002/health |
-| Appointment API | http://localhost:5003/health |
-| MedicalRecords API | http://localhost:5004/health |
+| Frontend | https://localhost:3000 |
+| Identity | https://localhost:5001 |
+| Patient API | https://localhost:5002/health |
+| Appointment API | https://localhost:5003/health |
+| MedicalRecords API | https://localhost:5004/health |
 | RabbitMQ UI | http://localhost:15672 (guest/guest) |
 
 ## Environment Variables

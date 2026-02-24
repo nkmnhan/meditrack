@@ -1,10 +1,13 @@
 // Centralized auth token retrieval for OIDC
 // Used by both axios interceptor and RTK Query
+//
+// oidc-client-ts v3 stores the user in sessionStorage by default.
 
 export function getOidcAccessToken(): string | null {
-  const storageKey = `oidc.user:${import.meta.env.VITE_IDENTITY_URL}:${import.meta.env.VITE_CLIENT_ID}`;
-  const oidcStorage = localStorage.getItem(storageKey);
-  
+  const identityUrl = import.meta.env.VITE_IDENTITY_URL ?? "https://localhost:5001";
+  const storageKey = `oidc.user:${identityUrl}:meditrack-web`;
+  const oidcStorage = sessionStorage.getItem(storageKey);
+
   if (oidcStorage) {
     try {
       const user = JSON.parse(oidcStorage);
@@ -13,6 +16,6 @@ export function getOidcAccessToken(): string | null {
       return null;
     }
   }
-  
+
   return null;
 }

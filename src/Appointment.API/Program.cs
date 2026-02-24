@@ -32,12 +32,24 @@ builder.Services.AddValidatorsFromAssemblyContaining<CreateAppointmentRequestVal
 // RabbitMQ EventBus
 builder.Services.AddRabbitMQEventBus(builder.Configuration);
 
+// CORS
+builder.Services.AddDefaultCors(builder.Configuration, builder.Environment);
+
 // API Explorer for OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 
 WebApplication app = builder.Build();
 
+// Create database on startup (DEVELOPMENT ONLY — use deployment pipeline in production)
+if (app.Environment.IsDevelopment())
+{
+    using IServiceScope scope = app.Services.CreateScope();
+    AppointmentDbContext dbContext = scope.ServiceProvider.GetRequiredService<AppointmentDbContext>();
+    await dbContext.Database.EnsureCreatedAsync();
+}
+
 app.MapDefaultEndpoints();
+app.UseCors(CorsExtensions.PolicyName);
 app.UseAuthentication();
 app.UseAuthorization();
 

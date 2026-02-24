@@ -657,12 +657,16 @@ docker-compose exec appointment-api dotnet ef database update
 docker-compose exec medicalrecords-api dotnet ef database update
 docker-compose exec identity-api dotnet ef database update
 
-# 5. Open the app
-# Frontend:          http://localhost:3000
-# Identity Server:   http://localhost:5001
-# Patient API:       http://localhost:5002
-# Appointment API:   http://localhost:5003
-# Records API:       http://localhost:5004
+# 5. Seed realistic test data (optional but recommended)
+curl -k -X POST "https://localhost:5002/api/dev/seed/patients?count=100"
+# See docs/SEEDING.md for more options
+
+# 6. Open the app
+# Frontend:          https://localhost:3000
+# Identity Server:   https://localhost:5001
+# Patient API:       https://localhost:5002
+# Appointment API:   https://localhost:5003
+# Records API:       https://localhost:5004
 # RabbitMQ UI:       http://localhost:15672  (guest/guest)
 ```
 
@@ -672,31 +676,31 @@ docker-compose exec identity-api dotnet ef database update
 services:
   web:
     build: src/MediTrack.Web
-    ports: ["3000:80"]
+    ports: ["3000:443"]
 
   identity-api:
     build: src/Identity.API
-    ports: ["5001:8080"]
+    ports: ["5001:8443"]
     depends_on: [sqlserver]
 
   patient-api:
     build: src/Patient.API
-    ports: ["5002:8080"]
-    depends_on: [sqlserver, rabbitmq]
+    ports: ["5002:8443"]
+    depends_on: [sqlserver, rabbitmq, identity-api]
 
   appointment-api:
     build: src/Appointment.API
-    ports: ["5003:8080"]
-    depends_on: [sqlserver, rabbitmq]
+    ports: ["5003:8443"]
+    depends_on: [sqlserver, rabbitmq, identity-api]
 
   medicalrecords-api:
     build: src/MedicalRecords.API
-    ports: ["5004:8080"]
-    depends_on: [sqlserver, rabbitmq]
+    ports: ["5004:8443"]
+    depends_on: [sqlserver, rabbitmq, identity-api]
 
   notification-worker:
     build: src/Notification.Worker
-    depends_on: [rabbitmq]
+    depends_on: [sqlserver, rabbitmq]
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -721,12 +725,10 @@ SA_PASSWORD=YourStrong@Password
 IDENTITY_URL=http://identity-api:8080
 
 # API URLs (used by frontend)
-VITE_IDENTITY_URL=http://localhost:5001
-VITE_PATIENT_API_URL=http://localhost:5002
-VITE_APPOINTMENT_API_URL=http://localhost:5003
-VITE_RECORDS_API_URL=http://localhost:5004
-VITE_CLIENT_ID=meditrack-web
-VITE_REDIRECT_URI=http://localhost:3000/callback
+VITE_IDENTITY_URL=https://localhost:5001
+VITE_PATIENT_API_URL=https://localhost:5002
+VITE_APPOINTMENT_API_URL=https://localhost:5003
+VITE_MEDICALRECORDS_API_URL=https://localhost:5004
 
 # RabbitMQ
 RABBITMQ_HOST=rabbitmq
@@ -783,6 +785,12 @@ RABBITMQ_PASSWORD=guest
 - HL7 FHIR (Fast Healthcare Interoperability Resources)
 - ICD-10 (Diagnosis codes)
 - CPT (Procedure codes)
+
+### Project Documentation
+- [Test Data Generation](docs/SEEDING.md) — Generate realistic patient data with Bogus library
+- [Business Logic & Rules](docs/business-logic.md) — Comprehensive business rules, workflows, and use cases
+- [MFA Design](docs/mfa-design.md) — Multi-factor authentication architecture
+- [Token Refresh Design](docs/token-refresh-design.md) — Token lifecycle and silent renewal strategy
 
 ---
 

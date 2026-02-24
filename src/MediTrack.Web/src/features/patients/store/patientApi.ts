@@ -9,7 +9,7 @@ import type {
 import { getOidcAccessToken } from "@/shared/auth/getOidcAccessToken";
 
 // Base URL from environment variable
-const PATIENT_API_URL = import.meta.env.VITE_PATIENT_API_URL || "http://localhost:5002";
+const PATIENT_API_URL = import.meta.env.VITE_PATIENT_API_URL || "https://localhost:5002";
 
 export const patientApi = createApi({
   reducerPath: "patientApi",

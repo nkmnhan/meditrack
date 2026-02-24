@@ -19,6 +19,7 @@ builder.Services.AddDbContext<PatientDbContext>(options =>
 
 // Services
 builder.Services.AddScoped<IPatientService, PatientService>();
+builder.Services.AddScoped<PatientSeeder>();
 
 // AutoMapper
 builder.Services.AddAutoMapper(configuration =>
@@ -36,16 +37,34 @@ builder.Services.AddRabbitMQEventBus(builder.Configuration);
 // PHI Audit Logging
 builder.Services.AddPHIAuditLogging();
 
+// CORS
+builder.Services.AddDefaultCors(builder.Configuration, builder.Environment);
+
 // OpenAPI / Swagger
 builder.Services.AddEndpointsApiExplorer();
 
 WebApplication app = builder.Build();
 
+// Create database on startup (DEVELOPMENT ONLY — use deployment pipeline in production)
+if (app.Environment.IsDevelopment())
+{
+    using IServiceScope scope = app.Services.CreateScope();
+    PatientDbContext dbContext = scope.ServiceProvider.GetRequiredService<PatientDbContext>();
+    await dbContext.Database.EnsureCreatedAsync();
+}
+
 app.MapDefaultEndpoints();
+app.UseCors(CorsExtensions.PolicyName);
 app.UseAuthentication();
 app.UseAuthorization();
 
 // Map APIs
 app.MapPatientsApi();
+
+// Development-only endpoints
+if (app.Environment.IsDevelopment())
+{
+    app.MapDevSeederApi();
+}
 
 await app.RunAsync();

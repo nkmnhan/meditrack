@@ -121,6 +121,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      identity-api:
+        condition: service_started
 
   appointment-api:
     image: ${DOCKER_REGISTRY:-meditrack}/appointment-api:${TAG:-latest}
@@ -142,6 +144,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      identity-api:
+        condition: service_started
 
   medicalrecords-api:
     image: ${DOCKER_REGISTRY:-meditrack}/medicalrecords-api:${TAG:-latest}
@@ -163,6 +167,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      identity-api:
+        condition: service_started
 
   notification-worker:
     image: ${DOCKER_REGISTRY:-meditrack}/notification-worker:${TAG:-latest}
@@ -171,10 +177,13 @@ services:
       dockerfile: src/Notification.Worker/Dockerfile
     environment:
       - DOTNET_ENVIRONMENT=Production
+      - ConnectionStrings__AuditDatabase=Server=sqlserver,1433;Database=AuditDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
       - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
     depends_on:
+      sqlserver:
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
 
