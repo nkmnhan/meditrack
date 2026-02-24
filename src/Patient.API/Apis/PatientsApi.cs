@@ -1,4 +1,6 @@
 using FluentValidation;
+using MediTrack.Shared.Common;
+using MediTrack.Shared.Services;
 using Microsoft.AspNetCore.Mvc;
 using Patient.API.Dtos;
 using Patient.API.Services;
@@ -71,21 +73,58 @@ public static class PatientsApi
     private static async Task<IResult> GetPatientById(
         Guid id,
         IPatientService patientService,
+        IPHIAuditService auditService,
+        ILogger<Program> logger,
         CancellationToken cancellationToken)
     {
         var patient = await patientService.GetByIdAsync(id, cancellationToken);
 
-        return patient is null
-            ? Results.NotFound(new { message = $"Patient with ID {id} not found" })
-            : Results.Ok(patient);
+        if (patient is null)
+        {
+            // 404 is not a security event — don't log failed PHI access for missing resources
+            return Results.NotFound(new { message = $"Patient with ID {id} not found" });
+        }
+
+        // Log successful PHI access (fire-and-forget — don't break happy path if audit fails)
+        // Use CancellationToken.None: audit must complete even if the client disconnects
+        _ = SafePublishAuditAsync(
+            () => auditService.PublishAccessAsync(
+                resourceType: AuditResourceTypes.Patient,
+                resourceId: id.ToString(),
+                patientId: id,
+                action: AuditActions.Read,
+                accessedFields: PatientAuditFields.AllFields,
+                success: true,
+                cancellationToken: CancellationToken.None),
+            logger,
+            "GetPatientById");
+
+        return Results.Ok(patient);
     }
 
     private static async Task<IResult> SearchPatients(
         [FromQuery] string searchTerm,
         IPatientService patientService,
+        IPHIAuditService auditService,
+        ILogger<Program> logger,
         CancellationToken cancellationToken)
     {
         var patients = await patientService.SearchAsync(searchTerm, cancellationToken);
+
+        // Log PHI search operation (fire-and-forget)
+        _ = SafePublishAuditAsync(
+            () => auditService.PublishAccessAsync(
+                resourceType: AuditResourceTypes.Patient,
+                resourceId: "search",
+                patientId: Guid.Empty, // Search doesn't target a specific patient
+                action: AuditActions.Search,
+                accessedFields: PatientAuditFields.AllFields,
+                success: true,
+                additionalContext: new { SearchTerm = searchTerm, ResultCount = patients.Count },
+                cancellationToken: CancellationToken.None),
+            logger,
+            "SearchPatients");
+
         return Results.Ok(patients);
     }
 
@@ -93,6 +132,8 @@ public static class PatientsApi
         CreatePatientRequest request,
         IValidator<CreatePatientRequest> validator,
         IPatientService patientService,
+        IPHIAuditService auditService,
+        ILogger<Program> logger,
         CancellationToken cancellationToken)
     {
         // Validate request
@@ -110,6 +151,20 @@ public static class PatientsApi
 
         var patient = await patientService.CreateAsync(request, cancellationToken);
 
+        // Log PHI creation (fire-and-forget)
+        _ = SafePublishAuditAsync(
+            () => auditService.PublishModificationAsync(
+                resourceType: AuditResourceTypes.Patient,
+                resourceId: patient.Id.ToString(),
+                patientId: patient.Id,
+                action: AuditActions.Create,
+                modifiedFields: PatientAuditFields.AllFields,
+                success: true,
+                additionalContext: new { Operation = "PatientRegistration" },
+                cancellationToken: CancellationToken.None),
+            logger,
+            "CreatePatient");
+
         return Results.CreatedAtRoute("GetPatientById", new { id = patient.Id }, patient);
     }
 
@@ -118,6 +173,8 @@ public static class PatientsApi
         UpdatePatientRequest request,
         IValidator<UpdatePatientRequest> validator,
         IPatientService patientService,
+        IPHIAuditService auditService,
+        ILogger<Program> logger,
         CancellationToken cancellationToken)
     {
         // Validate request
@@ -130,6 +187,7 @@ public static class PatientsApi
         // Check if patient exists
         if (!await patientService.ExistsAsync(id, cancellationToken))
         {
+            // 404 is not a security event — missing resource, not failed PHI access
             return Results.NotFound(new { message = $"Patient with ID {id} not found" });
         }
 
@@ -141,19 +199,53 @@ public static class PatientsApi
 
         var patient = await patientService.UpdateAsync(id, request, cancellationToken);
 
+        // Log PHI modification (fire-and-forget)
+        _ = SafePublishAuditAsync(
+            () => auditService.PublishModificationAsync(
+                resourceType: AuditResourceTypes.Patient,
+                resourceId: id.ToString(),
+                patientId: id,
+                action: AuditActions.Update,
+                modifiedFields: $"{PatientAuditFields.FirstName},{PatientAuditFields.LastName},{PatientAuditFields.Email},{PatientAuditFields.PhoneNumber},{PatientAuditFields.Address},{PatientAuditFields.EmergencyContact}",
+                success: true,
+                additionalContext: new { Operation = "ProfileUpdate" },
+                cancellationToken: CancellationToken.None),
+            logger,
+            "UpdatePatient");
+
         return Results.Ok(patient);
     }
 
     private static async Task<IResult> DeactivatePatient(
         Guid id,
         IPatientService patientService,
+        IPHIAuditService auditService,
+        ILogger<Program> logger,
         CancellationToken cancellationToken)
     {
         var success = await patientService.DeactivateAsync(id, cancellationToken);
 
-        return success
-            ? Results.NoContent()
-            : Results.NotFound(new { message = $"Patient with ID {id} not found" });
+        if (!success)
+        {
+            // 404 is not a security event
+            return Results.NotFound(new { message = $"Patient with ID {id} not found" });
+        }
+
+        // Log PHI deactivation (soft delete) — fire-and-forget
+        _ = SafePublishAuditAsync(
+            () => auditService.PublishDeletionAsync(
+                resourceType: AuditResourceTypes.Patient,
+                resourceId: id.ToString(),
+                patientId: id,
+                deletionReason: "Patient deactivation requested",
+                isSoftDelete: true,
+                success: true,
+                additionalContext: new { Operation = "PatientDeactivation" },
+                cancellationToken: CancellationToken.None),
+            logger,
+            "DeactivatePatient");
+
+        return Results.NoContent();
     }
 
     private static async Task<IResult> ActivatePatient(
@@ -166,5 +258,26 @@ public static class PatientsApi
         return success
             ? Results.NoContent()
             : Results.NotFound(new { message = $"Patient with ID {id} not found" });
+    }
+
+    /// <summary>
+    /// Safely publish an audit event without crashing the happy path.
+    /// Audit logging is critical for compliance, but should never break business operations.
+    /// </summary>
+    private static async Task SafePublishAuditAsync(
+        Func<Task> auditAction,
+        ILogger logger,
+        string operationName)
+    {
+        try
+        {
+            await auditAction();
+        }
+        catch (Exception ex)
+        {
+            // Log the audit failure but don't throw — the business operation already succeeded
+            logger.LogError(ex, "Failed to publish audit event for {Operation}. Audit logging failed but operation completed successfully.", operationName);
+            // TODO: Consider storing failed audit events in a dead-letter queue for retry
+        }
     }
 }

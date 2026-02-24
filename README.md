@@ -796,25 +796,25 @@ RABBITMQ_PASSWORD=guest
 - [x] `Directory.Build.props` + `Directory.Packages.props` central config
 
 ### Phase 2: Identity & Auth
-- [ ] Duende IdentityServer configuration (clients, scopes, roles)
-- [ ] Database schema for identity
-- [ ] User registration and login
-- [ ] RBAC — role claims in tokens
-- [ ] React OIDC integration (`oidc-client-ts`, `ProtectedRoute`, `RoleGuard`)
+- [x] Duende IdentityServer configuration (clients, scopes, roles)
+- [x] Database schema for identity
+- [x] User registration and login
+- [x] RBAC — role claims in tokens
+- [x] React OIDC integration (`oidc-client-ts`, `ProtectedRoute`, `RoleGuard`)
 
 ### Phase 3: Domain Services
-- [ ] Patient.API — CRUD, EF Core, FluentValidation
-- [ ] Appointment.API — scheduling, availability
-- [ ] MedicalRecords.API + Domain + Infrastructure — EHR with DDD
-- [ ] Notification.Worker — consume events, appointment reminders
-- [ ] Integration events between services via RabbitMQ
+- [x] Patient.API — CRUD, EF Core, FluentValidation
+- [x] Appointment.API — scheduling, availability
+- [x] MedicalRecords.API + Domain + Infrastructure — EHR with DDD
+- [x] Notification.Worker — consume events, appointment reminders
+- [x] Integration events between services via RabbitMQ
 
-### Phase 4: Security & Compliance
-- [ ] Comprehensive PHI audit logging (via outbox + Notification.Worker)
-- [ ] Data encryption at rest (SQL Server TDE)
-- [ ] Multi-factor authentication (MFA)
-- [ ] Token refresh + silent renew in React
-- [ ] HIPAA compliance checklist
+### Phase 4: Security & Compliance ✅
+- [x] Comprehensive PHI audit logging (via outbox + Notification.Worker)
+- [x] Data encryption at rest (SQL Server TDE) — *documentation + scripts*
+- [x] Multi-factor authentication (MFA) — *[design documentation](docs/mfa-design.md)*
+- [x] Token refresh + silent renew in React — *[design documentation](docs/token-refresh-design.md)*
+- [x] HIPAA compliance checklist
 
 ### Phase 5: Frontend Features
 - [ ] Patient management UI (feature-based: component + hook + service + store)

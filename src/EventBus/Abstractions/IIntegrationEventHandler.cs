@@ -1,5 +1,3 @@
-using MediTrack.Shared.Events;
-
 namespace MediTrack.EventBus.Abstractions;
 
 public interface IIntegrationEventHandler<in TIntegrationEvent>

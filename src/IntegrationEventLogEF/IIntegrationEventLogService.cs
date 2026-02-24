@@ -1,4 +1,4 @@
-using MediTrack.Shared.Events;
+using MediTrack.EventBus.Abstractions;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace MediTrack.IntegrationEventLogEF;

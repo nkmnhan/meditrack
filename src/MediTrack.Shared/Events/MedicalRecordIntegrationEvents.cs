@@ -1,3 +1,5 @@
+using MediTrack.EventBus.Abstractions;
+
 namespace MediTrack.Shared.Events;
 
 /// <summary>

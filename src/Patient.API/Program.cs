@@ -2,6 +2,7 @@ using FluentValidation;
 using MediTrack.EventBusRabbitMQ;
 using MediTrack.ServiceDefaults;
 using MediTrack.ServiceDefaults.Extensions;
+using MediTrack.Shared.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Patient.API.Apis;
 using Patient.API.Infrastructure;
@@ -31,6 +32,9 @@ builder.Services.AddDefaultAuthentication(builder.Configuration);
 
 // RabbitMQ EventBus
 builder.Services.AddRabbitMQEventBus(builder.Configuration);
+
+// PHI Audit Logging
+builder.Services.AddPHIAuditLogging();
 
 // OpenAPI / Swagger
 builder.Services.AddEndpointsApiExplorer();

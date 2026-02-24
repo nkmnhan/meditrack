@@ -1,5 +1,5 @@
 using System.Reflection;
-using MediTrack.Shared.Events;
+using MediTrack.EventBus.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 

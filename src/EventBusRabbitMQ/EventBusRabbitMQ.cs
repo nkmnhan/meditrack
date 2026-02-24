@@ -1,7 +1,6 @@
 using System.Text;
 using MediTrack.EventBus;
 using MediTrack.EventBus.Abstractions;
-using MediTrack.Shared.Events;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;

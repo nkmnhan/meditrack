@@ -1,4 +1,4 @@
-using MediTrack.Shared.Events;
+using MediTrack.EventBus.Abstractions;
 using Newtonsoft.Json;
 
 namespace MediTrack.IntegrationEventLogEF;
