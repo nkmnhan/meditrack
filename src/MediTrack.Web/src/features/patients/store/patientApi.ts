@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
 import type {
   Patient,
   PatientListItem,
@@ -6,28 +6,13 @@ import type {
   UpdatePatientRequest,
   PatientSearchParams,
 } from "../types";
-import { getOidcAccessToken } from "@/shared/auth/getOidcAccessToken";
+import { createBaseQueryWithReauth } from "@/shared/auth/baseQueryWithReauth";
 
-// Base URL from environment variable
 const PATIENT_API_URL = import.meta.env.VITE_PATIENT_API_URL || "https://localhost:5002";
 
 export const patientApi = createApi({
   reducerPath: "patientApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${PATIENT_API_URL}/api`,
-    prepareHeaders: (headers) => {
-      // Get token from centralized auth utility
-      // Note: RTK Query uses fetch, not the axios instance, so we can't reuse
-      // the axios interceptor directly. This utility centralizes the storage key logic.
-      const token = getOidcAccessToken();
-      
-      if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
-      }
-      
-      return headers;
-    },
-  }),
+  baseQuery: createBaseQueryWithReauth(`${PATIENT_API_URL}/api`),
   tagTypes: ["Patient"],
   endpoints: (builder) => ({
     // Get all patients

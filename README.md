@@ -84,11 +84,10 @@ Patient   Appointment  MedicalRec  EmergenAI.API  Notification
 | Tool | Purpose | License |
 |------|---------|---------|
 | Docker + Docker Compose | Container orchestration | Apache 2.0 |
-| SQL Server 2022 | Database (current) | **Commercial** (free Developer/Express) |
+| PostgreSQL 17 + pgvector | Database + vector embeddings | PostgreSQL License (free) |
 | RabbitMQ | Message broker | MPL 2.0 |
-| PostgreSQL | Database (planned migration) | PostgreSQL License (free) |
 
-> **Licensing note**: Duende IdentityServer and SQL Server are the only non-free dependencies. PostgreSQL migration is planned to eliminate the SQL Server dependency. See [plans/replace-mssql-with-postgres.md](plans/replace-mssql-with-postgres.md).
+> **Licensing note**: Duende IdentityServer is the only non-free dependency (free for companies < $1M revenue).
 
 ---
 
@@ -134,7 +133,7 @@ Doctor's phone (mic) ──► SignalR ──► Speech-to-Text (diarization)
 | 4. Security & Compliance | Done | PHI audit, TDE, MFA design, HIPAA checklist |
 | 5. Patient Management UI | Done | React feature, business rules, dev seeding |
 | **6. Emergen AI MVP** | **Next** | 8-10 weeks to functional AI clinical companion. See [MVP plan](plans/emergen-ai-mvp-plan.md) |
-| 6a. PostgreSQL + pgvector | In Progress | Migrate from SQL Server, enable vector embeddings (1 week) |
+| 6a. PostgreSQL + pgvector | Done | Migrated from SQL Server, pgvector ready for embeddings |
 | 6b. EmergenAI.API | Planned | Core service: MCP tools + agent + SignalR + Deepgram (4-5 weeks, 8 milestones) |
 | 6c. Doctor Dashboard UI | Planned | Live transcript, suggestion cards, audio recording (2-3 weeks) |
 | 7. Remaining Frontend | Planned | Appointment UI, Records viewer, SignalR notifications |
@@ -149,7 +148,7 @@ Doctor's phone (mic) ──► SignalR ──► Speech-to-Text (diarization)
 ```bash
 # Clone and configure
 git clone https://github.com/nkmnhan/meditrack.git && cd meditrack
-cp .env.example .env  # edit with your SA_PASSWORD
+cp .env.example .env  # edit with your POSTGRES_PASSWORD
 
 # Start all services
 docker-compose up -d --build
@@ -181,7 +180,7 @@ curl -k -X POST "https://localhost:5002/api/dev/seed/patients?count=100"
 | [EMR Compliance Status](docs/emr-compliance-status.md) | ONC/USCDI v3 scorecard and gap tracking |
 | [HIPAA Compliance](docs/hipaa-compliance-checklist.md) | PHI handling requirements and checklist |
 | [Observability](docs/observability.md) | OpenTelemetry, tracing, and monitoring |
-| [TDE Configuration](docs/tde-configuration.md) | SQL Server Transparent Data Encryption |
+| [TDE Configuration (Archived)](docs/tde-configuration.md) | SQL Server TDE — obsolete after PostgreSQL migration |
 | [MFA Design](docs/mfa-design.md) | Multi-factor authentication architecture |
 | [Token Refresh Design](docs/token-refresh-design.md) | Token lifecycle and silent renewal |
 | [Test Data Seeding](docs/SEEDING.md) | Bogus library data generation |
@@ -192,8 +191,6 @@ curl -k -X POST "https://localhost:5002/api/dev/seed/patients?count=100"
 | Plan | Description |
 |------|-------------|
 | [Emergen AI MVP](plans/emergen-ai-mvp-plan.md) | 8-10 week implementation plan for AI clinical companion. Defines minimal feature set, 8 milestones, acceptance criteria. |
-| [Replace MSSQL with PostgreSQL](plans/replace-mssql-with-postgres.md) | Migrate all services from SQL Server to PostgreSQL |
-| [Fix RTK Query Auth](plans/fix-rtk-query-auth.md) | Resolve token handling gap between Axios and RTK Query |
 | [OWASP Top 10 Hardening](plans/owasp-top-ten-hardening.md) | Systematic security hardening against OWASP Top 10 (2021) |
 | [EMR Compliance Roadmap](plans/emr-compliance-roadmap.md) | FHIR R4, SMART on FHIR, USCDI v3 adoption plan |
 

@@ -3,10 +3,13 @@
 //
 // oidc-client-ts v3 stores the user in sessionStorage by default.
 
-export function getOidcAccessToken(): string | null {
+function getOidcStorageKey(): string {
   const identityUrl = import.meta.env.VITE_IDENTITY_URL ?? "https://localhost:5001";
-  const storageKey = `oidc.user:${identityUrl}:meditrack-web`;
-  const oidcStorage = sessionStorage.getItem(storageKey);
+  return `oidc.user:${identityUrl}:meditrack-web`;
+}
+
+export function getOidcAccessToken(): string | null {
+  const oidcStorage = sessionStorage.getItem(getOidcStorageKey());
 
   if (oidcStorage) {
     try {
@@ -18,4 +21,8 @@ export function getOidcAccessToken(): string | null {
   }
 
   return null;
+}
+
+export function clearOidcSession(): void {
+  sessionStorage.removeItem(getOidcStorageKey());
 }

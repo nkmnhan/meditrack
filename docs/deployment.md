@@ -15,7 +15,7 @@
 cp .env.example .env
 
 # 2. Start infrastructure
-docker-compose up -d sqlserver rabbitmq
+docker-compose up -d postgres rabbitmq
 
 # 3. Start all services
 docker-compose up -d --build
@@ -49,18 +49,14 @@ See `.env.example` for a full list of required variables.
 
 ## Production Considerations
 
-- Use managed SQL (Azure SQL / AWS RDS) instead of containerized SQL Server
+- Use managed PostgreSQL (Azure Database for PostgreSQL / AWS RDS) instead of containerized PostgreSQL
 - Use managed RabbitMQ (CloudAMQP / Azure Service Bus adapter) for reliability
 - Enable TLS termination at the load balancer / ingress
 - Set `ASPNETCORE_ENVIRONMENT=Production` on all services
 
 ## Planned Infrastructure Changes
 
-The following changes are planned for upcoming phases:
-
 | Change | Phase | Notes |
 |--------|-------|-------|
-| **PostgreSQL migration** | 6a | Replace SQL Server with PostgreSQL across all services. See [replace-mssql-with-postgres.md](../plans/replace-mssql-with-postgres.md). |
-| **pgvector extension** | 6a | Enable pgvector on PostgreSQL for knowledge base embeddings (RAG). |
-| **EmergenAI.API service** | 6b | Single .NET service hosting all MCP tools + agent + SignalR. Replaces original plan of 3 separate MCP servers. Total containers: 7 (vs. 10+ in original plan). Saves ~$210-420/mo. |
+| **EmergenAI.API service** | 6b | Single .NET service hosting all MCP tools + agent + SignalR. Total containers: 7 (vs. 10+ in original plan). |
 | **SMART on FHIR OAuth2** | 8 | Layer 2 auth configuration for external EMR integration (Epic, Cerner). Requires service credential management. |

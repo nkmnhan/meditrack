@@ -80,8 +80,8 @@ MCP servers hold service credentials registered with EMR backends. Authenticatio
 
 ## Infrastructure
 
-- **Database**: SQL Server 2022 (current) — one database per service (database-per-service pattern). PostgreSQL migration planned.
-- **Vector Database**: PostgreSQL + pgvector (planned) — knowledge base embeddings for RAG.
+- **Database**: PostgreSQL 17 (pgvector/pgvector:pg17) — one database per service (database-per-service pattern). EF Core `MigrateAsync()` handles database and schema creation on startup.
+- **Vector Database**: pgvector extension (pre-installed) — knowledge base embeddings for RAG.
 - **Message Broker**: RabbitMQ 4 — async integration events.
 - **Observability**: OpenTelemetry → OTLP exporter (compatible with Jaeger, Grafana Tempo, etc.).
 
