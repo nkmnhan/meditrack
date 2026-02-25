@@ -132,9 +132,13 @@ Doctor's phone (mic) ──► SignalR ──► Speech-to-Text (diarization)
 | 3. Domain Services | Done | Patient, Appointment, MedicalRecords, Notification |
 | 4. Security & Compliance | Done | PHI audit, TDE, MFA design, HIPAA checklist |
 | 5. Patient Management UI | Done | React feature, business rules, dev seeding |
-| **6. AI Clinical Companion + MCP** | **Next** | Emergen AI agent, MCP servers (FHIR, Knowledge, Session) |
+| **6a. PostgreSQL + pgvector** | **Next** | Migrate from SQL Server, enable vector embeddings |
+| 6b. FHIR R4 Facade | Planned | Thin FHIR facade on domain APIs (Patient, Observation, Condition, MedicationRequest) |
+| 6c. MCP Servers | Planned | Build FHIR, Knowledge, Session MCP servers (.NET) |
+| 6d. Emergen AI Agent | Planned | MCP client orchestration, clinical skills, agent prompts |
+| 6e. Doctor Dashboard UI | Planned | Live transcript, suggestion cards, Emergen AI button |
 | 7. Remaining Frontend | Planned | Appointment UI, Records viewer, SignalR notifications |
-| 8. EMR Standards | Planned | FHIR R4 facade, SMART on FHIR, USCDI v3 compliance |
+| 8. EMR Standards | Planned | SMART on FHIR, external EMR auth (Epic/Cerner), USCDI v3 |
 | 9. Cloud Deployment | Planned | Azure, CI/CD, Key Vault, App Insights |
 
 ---

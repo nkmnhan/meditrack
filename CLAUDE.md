@@ -496,7 +496,7 @@ All AI features go through the **Model Context Protocol (MCP)**. The architectur
 
 | Server | Responsibility | Tools |
 |--------|---------------|-------|
-| **FHIR MCP Server** | Maps domain models to FHIR R4. Provider pattern for multi-EMR auth. | `fhir_read`, `fhir_search`, `fhir_create`, `fhir_update` |
+| **FHIR MCP Server** | Standalone service — calls domain APIs via HTTP, exposes FHIR R4. Provider pattern for multi-EMR auth. | `fhir_read`, `fhir_search`, `fhir_create`, `fhir_update` |
 | **Knowledge MCP Server** | RAG pipeline — embed medical docs, pgvector search. Clinical skills library. | `knowledge_search`, `knowledge_upload`, `knowledge_list` |
 | **Session MCP Server** | Real-time audio → STT → transcript + speaker diarization. Chat history. | `session_start`, `session_transcript`, `session_suggest` |
 
@@ -509,7 +509,7 @@ All AI features go through the **Model Context Protocol (MCP)**. The architectur
 
 ### Clinical Skills Convention
 
-Skills = structured YAML front matter + Markdown body files that guide the AI agent through clinical workflows. Stored in `skills/core/`, never hardcoded in source code.
+Skills = structured YAML front matter + Markdown body files that guide the AI agent through clinical workflows. Hybrid storage: default skills in `skills/core/` (repo), seeded into DB on startup, admin edits at runtime via UI. DB overrides take precedence. Only Admin role can edit skills.
 
 ### AI Naming Conventions
 
@@ -520,7 +520,8 @@ Skills = structured YAML front matter + Markdown body files that guide the AI ag
 ### Rules
 
 - **Prompts and skills** stored in DB/MCP resources, **never** hardcoded in source code
-- **PHI audit**: Every MCP tool call touching patient data must be audit-logged (fire-and-forget, SHA256 token hash, truncated resource IDs)
+- **PHI audit**: Every MCP tool call touching patient data must be audit-logged (fire-and-forget, SHA256 token hash, truncated resource IDs, `operation_context` to distinguish AI vs manual access)
+- **Layer 2 token lifecycle**: `IFhirProvider` implementations must cache tokens with proactive refresh (60s before expiry), retry once on 401 with force-refresh
 - **No LLM vendor names** in architecture code — use MCP abstractions only
 
 ---

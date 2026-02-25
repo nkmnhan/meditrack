@@ -28,9 +28,9 @@ MediTrack is an MCP-native EMR platform with an AI clinical companion (**Emergen
 | Service | Bounded Context | Responsibility |
 |---|---|---|
 | Emergen AI Agent | AI Orchestration | MCP client — orchestrates clinical workflows via MCP tool calls |
-| FHIR MCP Server | Interoperability | Maps domain models to FHIR R4, multi-EMR auth provider pattern |
-| Knowledge MCP Server | Knowledge | RAG pipeline (pgvector), clinical skills library |
-| Session MCP Server | Consultation | Real-time audio → STT → transcript, chat history |
+| FHIR MCP Server | Interoperability | Standalone service — calls domain APIs via HTTP, exposes FHIR R4, multi-EMR auth provider pattern |
+| Knowledge MCP Server | Knowledge | RAG pipeline (pgvector), clinical skills library (hybrid: YAML files seed DB, admin edits at runtime) |
+| Session MCP Server | Consultation | Real-time audio → STT → transcript with speaker diarization, chat history |
 
 ## MCP Architecture Layer
 
@@ -76,7 +76,7 @@ MCP servers hold service credentials registered with EMR backends. Authenticatio
 | **Cerner** | OAuth2 Client Credentials Flow |
 | **MediTrack internal** | Direct API calls (no external OAuth needed initially) |
 
-**FHIR provider pattern**: Each EMR backend implements `IFhirProvider` with its own auth strategy. Token caching with thread-safe double-check locking.
+**FHIR provider pattern**: Each EMR backend implements `IFhirProvider` with its own auth strategy. Token caching with thread-safe `SemaphoreSlim` double-check locking. Proactive refresh 60s before expiry; retry once on 401 with force-refresh.
 
 ## Infrastructure
 
