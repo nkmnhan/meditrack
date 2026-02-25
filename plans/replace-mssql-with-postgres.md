@@ -4,7 +4,7 @@
 
 - **SQL Server** requires a commercial license for production (Developer/Express editions have limitations)
 - **PostgreSQL** is fully open-source (PostgreSQL License — permissive, free for all use)
-- The upcoming Medical AI Secretary feature needs **pgvector** (PostgreSQL extension) for vector similarity search — running PostgreSQL already eliminates the need for a separate vector database
+- The upcoming **Emergen AI** feature needs **pgvector** (PostgreSQL extension) for vector similarity search — running PostgreSQL already eliminates the need for a separate vector database
 - One database engine across the entire stack simplifies infrastructure and Docker Compose
 
 ## Current State

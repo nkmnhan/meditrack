@@ -240,7 +240,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 
 - [Business Logic & Rules](./business-logic.md) — All business rules enforced by seeder
 - [Bogus Documentation](https://github.com/bchavez/Bogus) — Full Bogus library reference
-- [Testing Strategy](./testing.md) — How to use seeded data in tests (TODO: Phase 6)
+- Testing Strategy — planned for a future phase
 
 ---
 

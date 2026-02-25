@@ -53,3 +53,15 @@ See `.env.example` for a full list of required variables.
 - Use managed RabbitMQ (CloudAMQP / Azure Service Bus adapter) for reliability
 - Enable TLS termination at the load balancer / ingress
 - Set `ASPNETCORE_ENVIRONMENT=Production` on all services
+
+## Planned Infrastructure Changes
+
+The following changes are planned for upcoming phases:
+
+| Change | Phase | Notes |
+|--------|-------|-------|
+| **PostgreSQL migration** | 6–7 | Replace SQL Server with PostgreSQL across all services. See [replace-mssql-with-postgres.md](../plans/replace-mssql-with-postgres.md). |
+| **pgvector extension** | 6 | Enable pgvector on PostgreSQL for knowledge base embeddings (RAG). |
+| **MCP servers** | 6 | FHIR MCP Server, Knowledge MCP Server, Session MCP Server — all .NET containers. |
+| **FHIR R4 API** | 8 | FHIR facade endpoints on existing services. No new containers. |
+| **SMART on FHIR OAuth2** | 8 | Layer 2 auth configuration for external EMR integration (Epic, Cerner). Requires service credential management. |

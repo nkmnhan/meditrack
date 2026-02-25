@@ -355,7 +355,7 @@ This checklist maps MediTrack's implementation to HIPAA Security Rule requiremen
 
 **Implemented:**
 - Identity Server authentication
-- MFA enrollment and verification (see `docs/mfa-implementation.md`)
+- MFA enrollment and verification (see `docs/mfa-design.md`)
 - TOTP with QR code enrollment
 
 ### §164.312(e)(1) — Transmission Security (R)

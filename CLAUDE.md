@@ -190,9 +190,6 @@ Use project design tokens — **never** hardcode hex values or use Tailwind's de
 <button className="bg-blue-600 text-white">Save</button>
 <p className="text-gray-700">Patient details</p>
 ```
-
-> Full color documentation: see `README.md` → **🎨 UX/UI Design System**
-
 ### Icons (MANDATORY)
 
 Use **Lucide React** (`lucide-react`) for all icons — the same library used by shadcn/ui.
@@ -215,9 +212,6 @@ import { Stethoscope, CalendarDays } from "lucide-react";
 - **Card grid gap:** `gap-6`
 - **Form field gap:** `space-y-4`
 - **Inline icon + text gap:** `gap-2`
-
-> Full spacing and component pattern docs: see `README.md` → **🎨 UX/UI Design System**
-
 ### `clsxMerge` Utility
 
 Located at `src/MediTrack.Web/src/shared/utils/clsxMerge.ts`.
@@ -485,6 +479,52 @@ public async Task<IActionResult> Create(CreatePatientRequest request)
 
 ---
 
+## MCP & AI Architecture (MANDATORY)
+
+### MCP-Native Principle
+
+All AI features go through the **Model Context Protocol (MCP)**. The architecture is **LLM-agnostic** — no vendor lock-in, any model works behind the protocol.
+
+### Two-Layer Security
+
+| Layer | Flow | Mechanism |
+|-------|------|-----------|
+| **Layer 1** | User ↔ MCP Client (Emergen AI Agent) | OIDC via Duende IdentityServer — user session + consent |
+| **Layer 2** | MCP Server ↔ EMR Backend | SMART on FHIR / OAuth2 provider pattern (Epic JWT, Cerner OAuth2, internal direct) |
+
+### Our MCP Servers (all .NET)
+
+| Server | Responsibility | Tools |
+|--------|---------------|-------|
+| **FHIR MCP Server** | Maps domain models to FHIR R4. Provider pattern for multi-EMR auth. | `fhir_read`, `fhir_search`, `fhir_create`, `fhir_update` |
+| **Knowledge MCP Server** | RAG pipeline — embed medical docs, pgvector search. Clinical skills library. | `knowledge_search`, `knowledge_upload`, `knowledge_list` |
+| **Session MCP Server** | Real-time audio → STT → transcript + speaker diarization. Chat history. | `session_start`, `session_transcript`, `session_suggest` |
+
+### FHIR Provider Pattern
+
+`IFhirProvider` interface with per-EMR auth implementations:
+- **Epic**: JWT Bearer Grant (RS384-signed JWT → exchange for access token)
+- **Cerner**: OAuth2 Client Credentials Flow
+- **MediTrack internal**: Direct API calls (no external OAuth needed initially)
+
+### Clinical Skills Convention
+
+Skills = structured YAML front matter + Markdown body files that guide the AI agent through clinical workflows. Stored in `skills/core/`, never hardcoded in source code.
+
+### AI Naming Conventions
+
+- MCP server classes: `*McpServer` suffix (e.g., `FhirMcpServer`)
+- SignalR hubs: `*Hub` suffix (e.g., `SessionHub`)
+- User-facing product name: **Emergen AI**
+
+### Rules
+
+- **Prompts and skills** stored in DB/MCP resources, **never** hardcoded in source code
+- **PHI audit**: Every MCP tool call touching patient data must be audit-logged (fire-and-forget, SHA256 token hash, truncated resource IDs)
+- **No LLM vendor names** in architecture code — use MCP abstractions only
+
+---
+
 ## Quality Checklist (MANDATORY)
 
 Review every change against this checklist before submitting. Each item comes from real bugs caught in code review.
@@ -618,6 +658,40 @@ if (result.Succeeded)
 - `autocomplete="new-password"` on registration password fields
 - `autocomplete="current-password"` on login password fields
 - Helps password managers and improves UX
+
+---
+
+## OWASP Top 10 Awareness (MANDATORY)
+
+Every code change must be reviewed against the [OWASP Top 10 (2021)](https://owasp.org/www-project-top-ten/). Do not introduce any of these vulnerabilities.
+
+| # | Risk | What to watch for |
+|---|------|-------------------|
+| A01 | **Broken Access Control** | Every endpoint MUST have `[Authorize]` or `.RequireAuthorization()` with specific role/policy. Always check resource ownership (IDOR) — a Patient must not access another Patient's data. Client-side role checks (RoleGuard) are UX only, never security. |
+| A02 | **Cryptographic Failures** | Never hardcode secrets, passwords, or API keys in source code. Use environment variables or Key Vault. Validate TLS certificates in production. Use strong hashing (bcrypt/Argon2 for passwords, SHA-256+ for tokens). |
+| A03 | **Injection** | Always use parameterized queries (EF Core LINQ). Never use `FromSqlRaw` with string concatenation. Validate and sanitize all user input at the boundary. Never use `dangerouslySetInnerHTML` in React. |
+| A04 | **Insecure Design** | Apply defense-in-depth. Rate-limit authentication endpoints. Implement account lockout. Use CAPTCHA on public forms. Design for abuse scenarios. |
+| A05 | **Security Misconfiguration** | Set `AllowedHosts` to specific hosts (never `*` in production). Add security headers (CSP, HSTS, X-Frame-Options, X-Content-Type-Options). Never expose stack traces or exception details to clients. |
+| A06 | **Vulnerable Components** | Keep dependencies updated. Run `npm audit` and `dotnet list package --vulnerable` regularly. Prefer actively maintained packages. |
+| A07 | **Auth Failures** | Enforce strong passwords. Implement rate limiting on login. Use multi-factor authentication. Invalidate sessions on logout. Handle token refresh failures gracefully. |
+| A08 | **Integrity Failures** | Validate deserialized types against allowlists. Use SRI for external scripts. Verify package integrity in CI/CD. Never deserialize untrusted data without type validation. |
+| A09 | **Logging & Monitoring** | Log all security events (failed logins, access denials, PHI access). Never log secrets, passwords, or tokens. Use structured logging. Send audit events via EventBus. |
+| A10 | **SSRF** | Never fetch user-controlled URLs server-side without validation. Allowlist permitted hosts. Block internal IP ranges (127.0.0.1, 10.x, 169.254.x, etc.). |
+
+### Security Headers Checklist
+
+Every backend service `Program.cs` and the frontend `nginx.conf` must include:
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `Strict-Transport-Security: max-age=31536000; includeSubDomains`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Content-Security-Policy` (appropriate for the service)
+
+### Secrets Rule
+
+- **NEVER** commit secrets to source — use environment variables or Docker secrets
+- Credentials in `appsettings.json` must be placeholders (e.g., `${RABBITMQ_PASSWORD}`) overridden by env vars in `docker-compose.override.yml`
+- Client secrets for IdentityServer must come from `IConfiguration`, not inline strings
 
 ---
 

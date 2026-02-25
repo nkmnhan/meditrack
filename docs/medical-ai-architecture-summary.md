@@ -1,8 +1,10 @@
-# Medical AI Secretary — Architecture Summary
+# Emergen AI — MCP-Native Clinical Companion Architecture
 
-## Project Overview
+## Overview
 
-A real-time AI-powered medical assistant that listens to doctor-patient conversations, identifies each speaker, and provides live clinical suggestions to the doctor — acting like an AI secretary in the room.
+**Emergen AI** is a real-time AI clinical companion that listens to doctor-patient conversations, identifies each speaker, and provides live clinical suggestions to the doctor. Built on the Model Context Protocol (MCP) for LLM-agnostic operation — any model works behind the protocol.
+
+> **Educational Project**: Reference architecture for MCP-native healthcare AI. Not intended for production use with real patient data.
 
 ---
 
@@ -11,372 +13,297 @@ A real-time AI-powered medical assistant that listens to doctor-patient conversa
 ```
 Doctor places phone in room → records live conversation
         ↓
-Audio streamed in real-time to backend
+Audio streamed in real-time to Session MCP Server
         ↓
 Speech-to-Text converts audio → transcript with speaker labels
         ↓
-AI identifies who is Doctor vs Patient from context
-        ↓
-AI generates clinical suggestions based on patient's words
+Emergen AI Agent orchestrates MCP tool calls:
+  → FHIR MCP Server: patient context, history, medications
+  → Knowledge MCP Server: RAG search for clinical guidance
+  → Session MCP Server: transcript context, session memory
         ↓
 Suggestions appear live on Doctor's dashboard (tablet/PC)
+Doctor can press "Emergen AI" button for on-demand analysis
 ```
 
 ---
 
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Frontend | React (monorepo — doctor app + admin app) |
-| Real-time transport | SignalR (ASP.NET Core) |
-| Backend | ASP.NET Core Web API |
-| ORM | EF Core |
-| Database | PostgreSQL + pgvector extension |
-| Speech-to-Text | AssemblyAI or Deepgram (real-time + speaker diarization) |
-| AI / LLM | OpenAI GPT-4o or Claude API |
-| Embeddings | OpenAI `text-embedding-3-small` |
-| Message Bus | RabbitMQ |
-| Architecture base | eShop microservices pattern (replace Blazor → React) |
-
----
-
-## Architecture (Microservices)
-
-Based on the **dotnet/eShop** reference architecture, adapted for real-time AI use:
+## System Architecture
 
 ```
-┌──────────────────────────────────────────────────────┐
-│                   REACT CLIENTS                       │
-│  Doctor Phone (recording) | Doctor Dashboard (live)   │
-│  Admin Panel                                          │
-└──────────────────────┬───────────────────────────────┘
-                       ↓
-┌──────────────────────────────────────────────────────┐
-│           API GATEWAY (YARP / Ocelot)                │
-│      Auth, Routing, Rate Limiting, HTTPS             │
-└────────┬────────────────┬────────────────┬───────────┘
-         ↓                ↓                ↓
-  ┌────────────┐  ┌──────────────┐  ┌──────────────┐
-  │  Session   │  │  AI Agent    │  │    Admin     │
-  │  Service   │  │  Service     │  │   Service    │
-  │            │  │              │  │              │
-  │ SignalR    │  │ OpenAI/      │  │ Knowledge    │
-  │ Audio STT  │  │ Claude       │  │ Base CRUD    │
-  │ Transcript │  │ RAG (pgvec) │  │ AgentConfig  │
-  │            │  │              │  │              │
-  │ SQL DB     │  │ PostgreSQL   │  │ SQL DB       │
-  │            │  │ + pgvector   │  │              │
-  └─────┬──────┘  └──────┬───────┘  └──────────────┘
-        │                │
-        └───────┬─────────┘
-                ↓
-       ┌─────────────────┐
-       │   RabbitMQ      │
-       │  Message Bus    │
-       │ transcript →    │
-       │ AI processing   │
-       └─────────────────┘
+┌───────────────────────────────────────────────────────────────┐
+│                Doctor Dashboard / Mobile App                    │
+│              Live transcript · Emergen AI button                │
+│                    Suggestion cards                              │
+└──────────────────────┬────────────────────────────────────────┘
+                       │ SignalR (real-time)
+┌──────────────────────▼────────────────────────────────────────┐
+│              Emergen AI Agent (MCP Client)                      │
+│   Orchestrates clinical workflows via MCP tool calls            │
+│   LLM-agnostic — calls any model behind MCP protocol            │
+│   On-demand trigger + batched (every 5 utterances / 30s)       │
+│   Clinical skills library guides agent behavior                 │
+└───────┬──────────────┬──────────────┬─────────────────────────┘
+        │ MCP          │ MCP          │ MCP
+        ▼              ▼              ▼
+  ┌───────────┐  ┌──────────────┐  ┌──────────────┐
+  │ FHIR MCP  │  │ Knowledge    │  │ Session MCP  │
+  │ Server    │  │ MCP Server   │  │ Server       │
+  │ (.NET)    │  │ (.NET)       │  │ (.NET)       │
+  │           │  │              │  │              │
+  │ fhir_read │  │ Embed query  │  │ Audio stream │
+  │ fhir_     │  │ → pgvector   │  │ → STT        │
+  │ search    │  │ → top-K      │  │ → transcript │
+  │ fhir_     │  │ relevant     │  │ → speaker ID │
+  │ create    │  │ medical docs │  │              │
+  │ fhir_     │  │              │  │ Chat history │
+  │ update    │  │ Clinical     │  │ management   │
+  │           │  │ skills lib   │  │              │
+  └─────┬─────┘  └──────┬───────┘  └──────────────┘
+        │               │
+        ▼               ▼
+  MediTrack          PostgreSQL
+  Domain APIs        + pgvector
+  (Patient, Appt,    (knowledge base)
+   Records)
 ```
 
 ---
 
-## Key Components
+## Two-Layer Security Model
 
-### Session Service
-- Receives audio chunks from doctor's phone via **SignalR Hub**
-- Forwards audio to AssemblyAI/Deepgram for real-time transcription
-- Saves `TranscriptLine` records via EF Core
-- Publishes transcript events to RabbitMQ
-- Pushes AI suggestions back to doctor's dashboard via SignalR
+Inspired by the SMART on FHIR standard and LangCare's provider pattern.
 
-### AI Agent Service (RAG Pattern)
-- Subscribes to transcript events from RabbitMQ
-- Embeds patient utterances → searches pgvector for relevant medical knowledge
-- Sends context + transcript to OpenAI/Claude
-- Returns suggestions: questions to ask, warnings, observations
-- Calls AI every ~5 patient utterances (not on every word) to control latency and cost
+```
+Layer 1: User ↔ MCP Client          Layer 2: MCP Server ↔ EMR Backend
+┌──────────┐    OIDC/JWT    ┌──────────┐    SMART on FHIR    ┌──────────┐
+│  Doctor   │──────────────►│ Emergen  │    OAuth2            │  EMR     │
+│  (User)   │   session     │ AI Agent │───────────────────►│  (Epic/  │
+│           │◄──────────────│ (MCP     │   Bearer token       │  Cerner/ │
+│           │   consent     │  Client) │◄───────────────────│  FHIR)   │
+└──────────┘                └──────────┘                      └──────────┘
+```
 
-### Admin Service
-- CRUD for knowledge base documents (medical guidelines, protocols, drug references)
-- Chunks and embeds uploaded documents → stores in pgvector
-- Manages `AgentConfig` (system prompt, model, suggestion frequency, thresholds)
-- Session monitoring and suggestion review
+**Layer 1** — User authenticates via Duende IdentityServer (OIDC). Agent gets user context + consent.
+
+**Layer 2** — MCP server holds service credentials registered with EMR. Authenticates via:
+- **Epic**: JWT Bearer Grant (RS384-signed JWT → exchange for access token)
+- **Cerner**: OAuth2 Client Credentials Flow
+- **MediTrack internal**: Direct API calls (no external OAuth needed initially)
 
 ---
 
-## Database Schema (EF Core)
+## MCP Servers (All .NET, Built By Us)
 
-### Session & Transcript (SQL)
+### FHIR MCP Server
+
+Maps MediTrack domain models to FHIR R4 resources. Provider pattern for multi-EMR auth.
+
+| Tool | Description |
+|------|-------------|
+| `fhir_read` | Read a FHIR resource by type and ID |
+| `fhir_search` | Search FHIR resources with query parameters |
+| `fhir_create` | Create a new FHIR resource |
+| `fhir_update` | Update an existing FHIR resource |
+
+**FHIR Provider Pattern** — `IFhirProvider` interface with per-EMR implementations:
+
+| Provider | Auth Strategy | Token Handling |
+|----------|--------------|----------------|
+| Epic | JWT Bearer Grant (RS384) | Token cache with thread-safe double-check locking |
+| Cerner | OAuth2 Client Credentials | Token cache with expiry tracking |
+| Generic | Bearer / Basic / None | Configurable per-instance |
+| MediTrack internal | Direct API calls | JWT from Layer 1 auth |
+
+### Knowledge MCP Server
+
+RAG pipeline — embed medical docs, pgvector search. Hosts the clinical skills library.
+
+| Tool | Description |
+|------|-------------|
+| `knowledge_search` | Embed query → pgvector cosine similarity → top-K relevant chunks |
+| `knowledge_upload` | Chunk document → embed → store in pgvector |
+| `knowledge_list` | List available knowledge base documents and categories |
+
+### Session MCP Server
+
+Real-time audio → STT → transcript with speaker diarization. Chat history and session memory.
+
+| Tool | Description |
+|------|-------------|
+| `session_start` | Initialize a new consultation session |
+| `session_transcript` | Get current transcript with speaker labels |
+| `session_suggest` | Get AI suggestions for current session context |
+
+---
+
+## Clinical Skills Library
+
+Skills are structured Markdown/YAML files that guide the AI agent through clinical workflows. Not code — they teach the agent **what MCP tools to call and how to interpret results**.
+
+### Format
+
+```yaml
+---
+id: medication-reconciliation
+category: medication-management
+fhir_resources: [MedicationRequest, MedicationStatement, AllergyIntolerance]
+terminologies: [RxNorm, SNOMED CT]
+---
+
+# Medication Reconciliation
+
+## When to activate
+- New patient encounter
+- Patient reports medication changes
+- Discrepancies detected between reported and recorded medications
+
+## Workflow
+1. Call `fhir_search` for active MedicationRequests
+2. Call `fhir_search` for MedicationStatements
+3. Compare lists for discrepancies
+4. Check `fhir_search` for AllergyIntolerance
+5. Flag drug-drug interactions using knowledge base
+```
+
+### Skill Categories (Reference)
+
+| Category | Examples |
+|----------|---------|
+| **Medication Management** | Reconciliation, drug interactions, adherence scoring |
+| **Clinical Decision Support** | Sepsis screening (SOFA), cardiovascular risk (ASCVD), VTE risk |
+| **Documentation** | SOAP notes, H&P, discharge summaries |
+| **Patient Data Summary** | Demographics, problem list, allergies, clinical summary |
+| **Care Coordination** | Discharge planning, referrals, care gaps |
+
+Skills use standard terminologies: SNOMED CT, LOINC, RxNorm, ICD-10.
+
+---
+
+## Agent Prompt Architecture
+
+Agent prompts follow a structured pattern. Prompts are stored in DB/MCP resources, never hardcoded in source code.
+
+| Section | Purpose |
+|---------|---------|
+| **Operational Guidelines** | Privacy rules, data accuracy, workflow patterns |
+| **Tool Reference** | 4 FHIR tools + knowledge + session tools with input schemas and examples |
+| **Common Resource Types** | Patient, Observation, Condition, MedicationRequest |
+| **Search Patterns** | FHIR query parameter syntax |
+| **Workflow Patterns** | Search Flow, Create/Update Flow, Clinical Data Review, Clinical Documentation |
+| **Privacy Guidelines** | Partial identifiers, PHI handling, HIPAA compliance |
+| **Error Handling** | Empty results, missing data, unusual values |
+
+### Batching Strategy
+
+Do NOT call the AI on every word. Use this logic:
+- Call AI every **5 patient utterances** OR every **30 seconds**, whichever comes first
+- **On-demand trigger**: Doctor presses "Emergen AI" button — overrides batch timer, immediate analysis
+- Include last 10 transcript lines + top-K RAG chunks as context
+
+---
+
+## PHI Audit Logging
+
+Every MCP tool call that touches patient data gets audit-logged:
+
+```
+[AUDIT] PHI_ACCESS operation=fhir_read resource_type=Patient resource_id=erXuFY...
+        user=<user_id> token_hash=<sha256> status=success
+```
+
+- Resource IDs truncated (first 8 chars + "...")
+- Tokens stored as SHA256 hash only
+- PHI scrubbing enabled by default
+- Fire-and-forget pattern (audit never crashes business operations)
+- Uses existing `PHIAuditEventHandlerBase<T>` pattern from Notification.Worker
+
+---
+
+## Database Schema (Planned)
+
+### Session & Transcript (PostgreSQL)
+
 ```
 Session         { Id, DoctorId, PatientId, StartedAt, EndedAt, Status }
 TranscriptLine  { Id, SessionId, Speaker, Text, Timestamp }
-Suggestion      { Id, SessionId, Content, TriggeredAt, Type }
+Suggestion      { Id, SessionId, Content, TriggeredAt, Type, Source }
 ```
 
 ### Knowledge Base (PostgreSQL + pgvector)
+
 ```
-KnowledgeChunk  { Id, DocumentName, Content, Embedding(vector 1536), Category, CreatedAt }
-AgentConfig     { Id, SystemPrompt, ModelName, Temperature, SuggestionEveryNLines,
-                  MinRelevanceScore, EnableWarnings, EnableQuestions, UpdatedAt }
+KnowledgeChunk  { Id, DocumentName, Content, Embedding(vector), Category, CreatedAt }
+ClinicalSkill   { Id, SkillId, Category, Content, Version, UpdatedAt }
 Document        { Id, FileName, UploadedAt, ChunkCount }
 ```
 
----
-
-## RAG Flow (AI Agent Service)
+### Agent Configuration (PostgreSQL)
 
 ```
-Admin uploads medical document
-        ↓
-Chunk into ~500 token pieces
-        ↓
-Embed each chunk via OpenAI → store in pgvector
-
---- During live session ---
-
-Patient says: "I have chest pain for 3 days"
-        ↓
-Embed patient text → cosine similarity search in pgvector
-        ↓
-Retrieve top 3 relevant knowledge chunks
-        ↓
-Send to OpenAI/Claude:
-  "Medical context: {relevant chunks}
-   Conversation: {last 10 lines}
-   Give doctor 1-2 concise suggestions."
-        ↓
-Doctor sees: "💡 Consider asking about radiation to arm/jaw"
-             "⚠️  Rule out cardiac event"
+AgentConfig     { Id, SystemPrompt, SuggestionEveryNLines,
+                  MinRelevanceScore, EnableWarnings, EnableQuestions, UpdatedAt }
+AgentPrompt     { Id, Section, Content, Version, UpdatedAt }
 ```
 
 ---
 
-## Admin Panel Features
+## Product Features
 
-- **Knowledge Base** — upload/view/delete medical guidelines, protocols, drug references
-- **Agent Config** — edit system prompt, choose model (GPT-4o / Claude), set temperature, suggestion frequency, confidence threshold
-- **Session Monitor** — view live and past sessions, transcripts, suggestions generated
-- **Suggestion Review** — mark suggestions as good/bad for feedback loop
+### Doctor Experience
+- **Live transcript** — real-time conversation display with speaker labels
+- **Emergen AI button** — on-demand trigger overrides batch timer for immediate analysis
+- **Suggestion cards** — contextual clinical suggestions with urgency levels
+- **Mobile voice capture** — Web Audio API, PWA-ready
 
----
+### Admin Experience
+- **AI management panel** — agent config, clinical skills editor, usage dashboard
+- **Knowledge base CRUD** — upload/manage medical guidelines, protocols, drug references
+- **Session monitoring** — view live and past sessions, transcripts, suggestions
+- **Suggestion review** — mark suggestions as good/bad for feedback loop
 
-## React Project Structure
-
-```
-/react-client (monorepo — Turborepo or Nx)
-  /apps
-    /doctor-app        ← mobile-first: recording + live suggestions panel
-    /admin-app         ← knowledge base, agent config, session monitoring
-  /packages
-    /ui                ← shared components (SuggestionCard, TranscriptViewer)
-    /signalr-client    ← shared SignalR connection hook
-    /api-client        ← auto-generated from .NET OpenAPI spec
-```
+### Session Memory
+- **Transcript persistence** — full conversation stored per session
+- **Cross-session patient memory** — agent recalls relevant history from prior visits
+- **Chat history management** — via Session MCP Server tools
 
 ---
 
-## .NET Backend Structure
+## Key Design Decisions
 
-```
-/Solution
-  /ApiGateway              ← YARP or Ocelot
-  /Services
-    /SessionService
-      /Hubs
-        ConversationHub.cs         ← SignalR: receives audio, pushes suggestions
-      /Services
-        SpeechToTextService.cs     ← AssemblyAI / Deepgram streaming
-        ConversationService.cs     ← business logic
-      /Domain
-        Session.cs, TranscriptLine.cs, Suggestion.cs
-      AppDbContext.cs
-    /AIAgentService
-      /Services
-        EmbeddingService.cs        ← OpenAI embeddings API
-        VectorSearchService.cs     ← pgvector cosine similarity search
-        AISuggestionService.cs     ← Claude / OpenAI chat completions
-        DocumentChunkerService.cs  ← splits docs into chunks
-    /AdminService
-      /Controllers
-        AdminController.cs         ← document upload, agent config CRUD
-        KnowledgeController.cs     ← manage knowledge base
-        SessionMonitorController.cs
-      /Services
-        AgentConfigService.cs
-```
+**Why MCP over direct API calls?** — LLM-agnostic. No vendor lock-in. Any model works behind the protocol. Tools are discoverable and self-documenting.
+
+**Why build our own MCP servers?** — Full control over FHIR tools, knowledge base, clinical skills, and agent orchestration. Reference patterns from LangCare and AgentCare inform design, but implementation is our own .NET code.
+
+**Why SMART on FHIR?** — OAuth2 industry standard for healthcare. Required for Epic/Cerner integration. Two-layer security separates user auth from backend auth.
+
+**Why SignalR over raw WebSocket?** — Built into ASP.NET Core, handles reconnections, React client library available (`@microsoft/signalr`).
+
+**Why batch AI calls?** — Don't call the LLM on every word. Batch every 5 patient utterances or every 30 seconds to reduce latency and API costs. On-demand button overrides this.
+
+**Why pgvector over a separate vector DB?** — Keeps the stack simple (one PostgreSQL instance), EF Core support via `pgvector-dotnet`, no extra infrastructure.
+
+**Audio not stored** — only transcript text hits the database. Important for HIPAA compliance.
 
 ---
 
-## Important Design Decisions
+## Reference Sources
 
-**Why SignalR over raw WebSocket?** — Built into ASP.NET Core, handles reconnections, React client library available (`@microsoft/signalr`), less boilerplate.
+| Source | What we take from it |
+|--------|---------------------|
+| [LangCare MCP FHIR](https://github.com/langcare/langcare-mcp-fhir) | 4 generic FHIR tools, provider pattern, two-layer security, clinical skills library (40+), agent prompt architecture, PHI audit logging |
+| [AgentCare MCP](https://mcp.so/server/agentcare-mcp) | 13 FHIR tools, OAuth2 auth flow, PubMed/ClinicalTrials/FDA research tools |
+| [Keragon MCP for EMRs](https://www.keragon.com/blog/ai-agents-and-mcp-for-emrs) | MCP as EMR interoperability layer concept |
+| [SMART on FHIR](https://build.fhir.org/ig/HL7/smart-app-launch/) | OAuth2 authorization framework for healthcare |
 
-**Why batch AI calls?** — Don't call OpenAI/Claude on every word. Batch every 5 patient utterances or every 30 seconds to reduce latency and API costs.
-
-**Why pgvector over a separate vector DB?** — Keeps the stack simple (one PostgreSQL instance), EF Core support via `pgvector-dotnet`, no extra infrastructure to manage.
-
-**Speaker identification** — AssemblyAI/Deepgram return "Speaker A / Speaker B" labels. Claude/OpenAI infers which is doctor vs patient from context (doctor asks clinical questions, patient describes symptoms). Optional: doctor says a trigger phrase at session start.
-
-**Audio not stored** — only transcript text hits the database. Important for medical data privacy (HIPAA/GDPR compliance depending on market).
-
----
-
-## Key Packages / Libraries
-
-| Package | Purpose |
-|---|---|
-| `@microsoft/signalr` | React SignalR client |
-| `react-speech-recognition` | Optional fallback mic capture |
-| `pgvector-dotnet` | EF Core pgvector integration |
-| `AssemblyAI .NET SDK` | Real-time STT + diarization |
-| `Azure.AI.OpenAI` or `Anthropic SDK` | LLM calls |
-| `MassTransit` | RabbitMQ abstraction for .NET |
-| `YARP` | API Gateway / reverse proxy |
+**All implementations will be our own .NET code** — these are reference patterns only.
 
 ---
 
-## AI Model Definition — How to Make the AI Understand the Conversation
+## Open Questions
 
-This is about **prompt engineering + context design**: telling the model its role, what to do with the conversation, and what format to respond in.
-
-### The 4 Layers
-
-| Layer | What it defines |
-|---|---|
-| **Role** | What is the AI? (clinical assistant, not a doctor itself) |
-| **Task** | What should it do? (analyze patient speech, suggest to doctor) |
-| **Format** | How should it respond? (JSON, concise, urgency flag) |
-| **Examples** | 1-2 ideal input/output pairs so it knows exactly what you expect |
-
-All 4 layers live inside `AgentConfig` in the database — the admin can tune them without touching code.
-
----
-
-### Layer 1 — System Prompt (stored in AgentConfig)
-
-```
-You are a clinical assistant AI helping a doctor during a live patient consultation.
-
-Your job:
-- The conversation below is between a DOCTOR and a PATIENT
-- Analyze what the PATIENT says (symptoms, history, complaints)
-- Generate brief, clinically relevant suggestions FOR THE DOCTOR
-
-Rules:
-- Never address the patient directly
-- Be concise — max 2 suggestions per response
-- Flag urgent symptoms immediately (chest pain, difficulty breathing, etc.)
-- Output as JSON: { "suggestions": [...], "urgency": "low|medium|high" }
-- If unsure, say nothing rather than guess
-
-Speaker context:
-- DOCTOR typically asks questions, uses medical terminology
-- PATIENT typically describes symptoms, answers questions, uses lay terms
-```
-
----
-
-### Layer 2 — Conversation Format (built dynamically per API call)
-
-Feed the transcript in a clean, consistent structure every time:
-
-```
-[SPEAKER_A]: I've had chest pain for 3 days now, mostly on the left side
-[SPEAKER_B]: Does it radiate to your arm or jaw?
-[SPEAKER_A]: Sometimes to my left arm yes, especially at night
-[SPEAKER_B]: Any shortness of breath or sweating?
-[SPEAKER_A]: Yes, I get sweaty when it happens
-```
-
-The model infers doctor vs patient from context automatically. After a few lines you can reinforce:
-
-```
-Note: Based on the conversation, SPEAKER_A appears to be the PATIENT
-and SPEAKER_B appears to be the DOCTOR.
-```
-
----
-
-### Layer 3 — Full Prompt Structure Per API Call
-
-```
-┌─────────────────────────────────────────────────┐
-│ SYSTEM (static, from AgentConfig)               │
-│   "You are a clinical assistant..."             │
-├─────────────────────────────────────────────────┤
-│ USER (dynamic, built each call)                 │
-│                                                 │
-│  Medical context (from pgvector RAG search):   │
-│  {top 3 relevant knowledge chunks}             │
-│                                                 │
-│  Conversation so far:                          │
-│  [SPEAKER_A]: I have chest pain for 3 days...  │
-│  [SPEAKER_B]: Where exactly?                   │
-│  [SPEAKER_A]: Left side, sometimes my arm...   │
-│                                                 │
-│  Based on what the PATIENT just said,          │
-│  give the doctor 1-2 concise suggestions.      │
-└─────────────────────────────────────────────────┘
-```
-
----
-
-### Layer 4 — Few-Shot Examples (inside system prompt)
-
-Add 1-2 examples directly in the system prompt to lock in the expected output format:
-
-```
-Example input:
-  Patient says: "I've had a fever for 5 days and a dry cough"
-
-Good response:
-  {
-    "suggestions": [
-      "Ask about travel history and exposure to sick contacts",
-      "Consider ordering CBC and chest X-ray"
-    ],
-    "urgency": "medium"
-  }
-```
-
-This dramatically improves output consistency — the model stops guessing format.
-
----
-
-### Model Selection
-
-| Model | Strength | Best for |
-|---|---|---|
-| **GPT-4o** | Fast, great structured JSON output, strong instruction following | Production default, real-time suggestions |
-| **Claude Sonnet** | Better nuance, longer context, strong medical reasoning | Complex cases, long sessions |
-| **Claude Haiku** | Very fast, cheap | High-frequency calls, simple triage suggestions |
-
-**Recommendation:** GPT-4o or Claude Sonnet for real-time medical suggestions. Speed matters because the doctor is waiting.
-
----
-
-### Batching Strategy (in AISuggestionService.cs)
-
-Do NOT call the AI on every word. Use this logic:
-
-```csharp
-// Call AI every 5 patient utterances OR every 30 seconds, whichever comes first
-if (patientLineCount % 5 == 0 || timeSinceLastCall > TimeSpan.FromSeconds(30))
-{
-    var recentLines = GetRecentTranscriptLines(sessionId, last: 10);
-    var ragChunks   = await VectorSearchService.SearchAsync(latestPatientText, topK: 3);
-    var suggestion  = await AISuggestionService.CallAsync(recentLines, ragChunks);
-    await SaveAndBroadcastSuggestion(suggestion);
-}
-```
-
----
-
-## Open Questions for Planning
-
-1. Is there a specific compliance requirement? (HIPAA, GDPR, local medical data laws in target market)
-2. Should audio ever be stored, or transcript-only?
-3. Single clinic or multi-tenant (multiple clinics, each with their own knowledge base)?
-4. Does the doctor need suggestions in a specific language?
-5. Should suggestions be shown during the session only, or also generate a post-session report?
+1. Which STT provider? (AssemblyAI, Deepgram, or open-source Whisper)
+2. Single clinic or multi-tenant (multiple clinics, each with their own knowledge base)?
+3. Should suggestions generate a post-session summary report?
+4. Target languages for multilingual support?
+5. PubMed/ClinicalTrials.gov/openFDA integration priority?

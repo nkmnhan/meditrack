@@ -2,9 +2,9 @@
 
 > **Last updated**: 2026-02-25
 
-A healthcare management platform with an **AI-powered medical secretary** that listens to doctor-patient conversations in real time and provides live clinical suggestions to the doctor.
+An **MCP-native EMR platform** with an AI clinical companion (**Emergen AI**) that listens to doctor-patient conversations in real time and provides live clinical suggestions to the doctor.
 
-Built with microservices architecture, HIPAA-compliant patterns, and modern full-stack technologies.
+Built with microservices architecture, MCP (Model Context Protocol), HIPAA-compliant patterns, and modern full-stack technologies.
 
 > **Educational Project**: Personal learning project for full-stack development, AI integration, and healthcare data standards. Not intended for production use with real patient data.
 
@@ -15,9 +15,9 @@ Built with microservices architecture, HIPAA-compliant patterns, and modern full
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                    React Frontend (Vite)                      │
-│         Doctor Dashboard  ·  Admin Panel  ·  Patient UI      │
+│    Doctor Dashboard · Emergen AI · Admin Panel · Patient UI  │
 └─────────────────────────┬────────────────────────────────────┘
-                          │ OIDC / JWT
+                          │ OIDC / JWT + SignalR
 ┌─────────────────────────▼────────────────────────────────────┐
 │                    Identity.API (Duende IS)                   │
 │            OAuth 2.0 + RBAC + Token Management               │
@@ -25,9 +25,10 @@ Built with microservices architecture, HIPAA-compliant patterns, and modern full
                           │ JWT Bearer
   ┌───────────┬───────────┼───────────┬──────────────┐
   ▼           ▼           ▼           ▼              ▼
-Patient   Appointment  MedicalRec  Session       AI Agent
- .API       .API        .API       Service       Service
-                                  (SignalR)    (RAG + LLM)
+Patient   Appointment  MedicalRec  Emergen AI    MCP Servers
+ .API       .API        .API       Agent         (FHIR,
+                                  (MCP Client)    Knowledge,
+                                                  Session)
   │           │           │           │              │
   └───────────┴───────────┴───────────┴──────┬───────┘
                                              ▼
@@ -73,6 +74,15 @@ Patient   Appointment  MedicalRec  Session       AI Agent
 | oidc-client-ts + react-oidc-context | Auth | Apache 2.0 / MIT |
 | Axios | HTTP client | MIT |
 
+### AI & Interoperability (Planned)
+
+| Technology | Purpose | License |
+|------------|---------|---------|
+| MCP (Model Context Protocol) | LLM-agnostic AI tool protocol | MIT |
+| FHIR R4 | Healthcare interoperability standard (planned) | HL7 (free) |
+| SMART on FHIR | OAuth2 framework for EMR auth (planned) | HL7 (free) |
+| pgvector | Vector embeddings for RAG knowledge base | PostgreSQL License (free) |
+
 ### Infrastructure
 
 | Tool | Purpose | License |
@@ -86,9 +96,9 @@ Patient   Appointment  MedicalRec  Session       AI Agent
 
 ---
 
-## Current Focus: Medical AI Secretary
+## Current Focus: AI Clinical Companion (Emergen AI)
 
-Real-time AI clinical assistant — see [full design](docs/medical-ai-architecture-summary.md).
+Real-time AI clinical assistant built on MCP — see [full design](docs/medical-ai-architecture-summary.md).
 
 ```
 Doctor's phone (mic) ──► SignalR ──► Speech-to-Text (diarization)
@@ -96,17 +106,20 @@ Doctor's phone (mic) ──► SignalR ──► Speech-to-Text (diarization)
                                     Transcript + speaker labels
                                           │
                               ┌───────────▼────────────┐
-                              │  RAG: pgvector search   │
-                              │  + LLM (Claude / GPT)   │
-                              └───────────┬────────────┘
-                                          │
-                           Live suggestions on Doctor's dashboard
+                              │  Emergen AI Agent       │
+                              │  (MCP Client)           │
+                              │  LLM-agnostic via MCP   │
+                              └───┬───────┬─────────┬──┘
+                                  │       │         │
+                            FHIR MCP  Knowledge  Session MCP
+                            Server    MCP Server Server
 ```
 
 **Key components:**
-- **Session Service** — SignalR hub, audio streaming, transcript storage
-- **AI Agent Service** — RAG pipeline with pgvector, LLM suggestions
-- **Admin Service** — Knowledge base CRUD, agent config, suggestion review
+- **Emergen AI Agent** — MCP client orchestrating clinical workflows, LLM-agnostic
+- **FHIR MCP Server** — Maps domain models to FHIR R4, provider pattern for multi-EMR auth
+- **Knowledge MCP Server** — RAG pipeline with pgvector, clinical skills library
+- **Session MCP Server** — Audio streaming, STT, transcript + speaker diarization
 
 ---
 
@@ -119,9 +132,10 @@ Doctor's phone (mic) ──► SignalR ──► Speech-to-Text (diarization)
 | 3. Domain Services | Done | Patient, Appointment, MedicalRecords, Notification |
 | 4. Security & Compliance | Done | PHI audit, TDE, MFA design, HIPAA checklist |
 | 5. Patient Management UI | Done | React feature, business rules, dev seeding |
-| **6. Medical AI Secretary** | **Next** | Real-time AI clinical assistant |
+| **6. AI Clinical Companion + MCP** | **Next** | Emergen AI agent, MCP servers (FHIR, Knowledge, Session) |
 | 7. Remaining Frontend | Planned | Appointment UI, Records viewer, SignalR notifications |
-| 8. Cloud Deployment | Planned | Azure, CI/CD, Key Vault, App Insights |
+| 8. EMR Standards | Planned | FHIR R4 facade, SMART on FHIR, USCDI v3 compliance |
+| 9. Cloud Deployment | Planned | Azure, CI/CD, Key Vault, App Insights |
 
 ---
 
@@ -156,16 +170,16 @@ curl -k -X POST "https://localhost:5002/api/dev/seed/patients?count=100"
 
 | Document | Description |
 |----------|-------------|
-| [Medical AI Architecture](docs/medical-ai-architecture-summary.md) | AI Secretary full design — services, RAG, STT, schema |
+| [Medical AI Architecture](docs/medical-ai-architecture-summary.md) | Emergen AI — MCP-native clinical companion design |
 | [Business Logic & Rules](docs/business-logic.md) | Domain rules, workflows, and use cases |
-| [Architecture](docs/architecture.md) | System overview and service boundaries |
+| [Architecture](docs/architecture.md) | System overview, MCP layer, and service boundaries |
+| [EMR Compliance Status](docs/emr-compliance-status.md) | ONC/USCDI v3 scorecard and gap tracking |
 | [HIPAA Compliance](docs/hipaa-compliance-checklist.md) | PHI handling requirements and checklist |
 | [Observability](docs/observability.md) | OpenTelemetry, tracing, and monitoring |
 | [TDE Configuration](docs/tde-configuration.md) | SQL Server Transparent Data Encryption |
 | [MFA Design](docs/mfa-design.md) | Multi-factor authentication architecture |
 | [Token Refresh Design](docs/token-refresh-design.md) | Token lifecycle and silent renewal |
 | [Test Data Seeding](docs/SEEDING.md) | Bogus library data generation |
-| [Security](docs/security.md) | Security policies and practices |
 | [Deployment](docs/deployment.md) | Deployment guide |
 
 ### Plans
@@ -174,6 +188,8 @@ curl -k -X POST "https://localhost:5002/api/dev/seed/patients?count=100"
 |------|-------------|
 | [Replace MSSQL with PostgreSQL](plans/replace-mssql-with-postgres.md) | Migrate all services from SQL Server to PostgreSQL |
 | [Fix RTK Query Auth](plans/fix-rtk-query-auth.md) | Resolve token handling gap between Axios and RTK Query |
+| [OWASP Top 10 Hardening](plans/owasp-top-ten-hardening.md) | Systematic security hardening against OWASP Top 10 (2021) |
+| [EMR Compliance Roadmap](plans/emr-compliance-roadmap.md) | FHIR R4, SMART on FHIR, USCDI v3 adoption plan |
 
 ---
 
