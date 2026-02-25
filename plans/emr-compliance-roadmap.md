@@ -4,32 +4,34 @@
 
 ---
 
-## Tier 1 — Enables AI + MCP (Phase 6–7)
+## Tier 1 — Enables AI + MCP (Phase 6)
 
-These items are prerequisites for the FHIR MCP Server and Emergen AI.
+Minimal prerequisites for Emergen AI MVP.
 
 | Item | Description | Status |
 |------|-------------|--------|
-| **FHIR R4 API facade** | Expose MediTrack domain APIs as FHIR R4 endpoints (Patient, Observation, Condition, MedicationRequest, AllergyIntolerance). Thin facade over existing services — no domain model changes. | Planned |
-| **FHIR provider pattern** | `IFhirProvider` interface with auth strategy per EMR. Initial implementation: MediTrack internal (direct API calls). | Planned |
-| **SMART on FHIR auth flow** | OAuth2 authorization for external EMR integration. Layer 2 of two-layer security model. | Planned |
+| **FHIR tools in MCP server** | `fhir_read`, `fhir_search`, `fhir_create`, `fhir_update` tools call domain APIs via HTTP, return FHIR R4 JSON. No separate facade service. | Planned |
+| **FHIR provider pattern** | `IFhirProvider` interface with MediTrack internal implementation only (direct API calls with existing JWT). | Planned |
 | **USCDI v3 patient demographics** | Map existing Patient model to USCDI v3 required fields (name, DOB, sex, race, ethnicity, address, phone, email, preferred language). | Planned |
 | **Standard terminologies** | Add SNOMED CT, LOINC, RxNorm code fields to relevant domain models. Start with Condition (SNOMED CT) and Observation (LOINC). | Planned |
 | **PostgreSQL + pgvector** | Migrate from SQL Server. Required for knowledge base embeddings. See [replace-mssql-with-postgres.md](replace-mssql-with-postgres.md). | Planned |
 
 ---
 
-## Tier 2 — EMR Features (Phase 8)
+## Tier 2 — External EMR Integration (Phase 8)
 
-Standard EMR capabilities beyond AI. Build after core MCP infrastructure is working.
+External system integration. Build after Emergen AI MVP is working with internal data.
 
 | Item | Description | Status |
 |------|-------------|--------|
+| **SMART on FHIR auth flow** | OAuth2 authorization framework for external EMR integration. Layer 2 of two-layer security model. | Planned |
+| **External EMR OAuth2** | Epic JWT Bearer Grant (RS384), Cerner Client Credentials Flow. Enables multi-EMR data access. | Planned |
+| **Epic provider** | `EpicFhirProvider` implementation with JWT bearer grant, token cache, RS384 signing. | Planned |
+| **Cerner provider** | `CernerFhirProvider` implementation with OAuth2 client credentials flow. | Planned |
 | **Patient portal** | Patient-facing views for records, appointments, medications, lab results. | Planned |
 | **Clinical Decision Support (CDS)** | Drug interaction checking via NLM RxNav API (free). Alert doctors to contraindications. | Planned |
 | **Break-the-glass** | Emergency access override for PHI with mandatory audit logging and justification. | Planned |
-| **External EMR OAuth2** | Epic JWT Bearer Grant (RS384), Cerner Client Credentials Flow. Enables multi-EMR data access. | Planned |
-| **Medical research tools** | PubMed (free), ClinicalTrials.gov (free), openFDA (free) integration via Knowledge MCP Server. | Planned |
+| **Medical research tools** | PubMed (free), ClinicalTrials.gov (free), openFDA (free) integration via EmergenAI.API knowledge tools. | Planned |
 | **ICD-10 coding** | Add ICD-10 codes to diagnoses for billing and reporting. | Planned |
 | **RxNorm medication coding** | Standardize medication data using RxNorm codes. | Planned |
 
@@ -56,7 +58,7 @@ Advanced EMR capabilities. Scope to be refined based on real usage.
 ```
 Tier 1 (AI + MCP enablers)
   ├── PostgreSQL migration (prerequisite for pgvector)
-  ├── FHIR R4 facade (prerequisite for FHIR MCP Server)
+  ├── FHIR tools in EmergenAI.API (prerequisite for clinical AI)
   └── FHIR provider pattern (prerequisite for multi-EMR)
 
 Tier 2 (EMR features)

@@ -492,24 +492,33 @@ All AI features go through the **Model Context Protocol (MCP)**. The architectur
 | **Layer 1** | User ↔ MCP Client (Emergen AI Agent) | OIDC via Duende IdentityServer — user session + consent |
 | **Layer 2** | MCP Server ↔ EMR Backend | SMART on FHIR / OAuth2 provider pattern (Epic JWT, Cerner OAuth2, internal direct) |
 
-### Our MCP Servers (all .NET)
+### Our MCP Server (single .NET project)
 
-| Server | Responsibility | Tools |
-|--------|---------------|-------|
-| **FHIR MCP Server** | Standalone service — calls domain APIs via HTTP, exposes FHIR R4. Provider pattern for multi-EMR auth. | `fhir_read`, `fhir_search`, `fhir_create`, `fhir_update` |
-| **Knowledge MCP Server** | RAG pipeline — embed medical docs, pgvector search. Clinical skills library. | `knowledge_search`, `knowledge_upload`, `knowledge_list` |
-| **Session MCP Server** | Real-time audio → STT → transcript + speaker diarization. Chat history. | `session_start`, `session_transcript`, `session_suggest` |
+**EmergenAI.API** — single service hosting all MCP tools, agent orchestration, and SignalR hub:
+
+| Tool Category | Tools | Responsibility |
+|---------------|-------|----------------|
+| **FHIR Tools** | `fhir_read`, `fhir_search`, `fhir_create`, `fhir_update` | Calls domain APIs via HTTP, returns FHIR R4 JSON. Provider pattern for multi-EMR auth. |
+| **Knowledge Tools** | `knowledge_search`, `knowledge_upload`, `knowledge_list` | RAG pipeline — embed medical docs, pgvector search. |
+| **Session Tools** | `session_start`, `session_transcript`, `session_suggest` | Real-time audio → STT → transcript + speaker diarization. |
+
+**Rationale**: At 3,000 users (~30 concurrent sessions, 1.5 vector QPS), there is zero performance justification for separate containers. Single process handles this trivially. Split later only if a specific tool category needs independent scaling.
 
 ### FHIR Provider Pattern
 
 `IFhirProvider` interface with per-EMR auth implementations:
-- **Epic**: JWT Bearer Grant (RS384-signed JWT → exchange for access token)
-- **Cerner**: OAuth2 Client Credentials Flow
-- **MediTrack internal**: Direct API calls (no external OAuth needed initially)
+- **MediTrack internal**: Direct API calls using existing JWT from Duende IdentityServer (Phase 6)
+- **Epic**: JWT Bearer Grant (RS384-signed JWT → exchange for access token) — deferred to Phase 8
+- **Cerner**: OAuth2 Client Credentials Flow — deferred to Phase 8
+- **Generic**: Bearer/Basic/None configurable — deferred to Phase 8
+
+**Rationale**: Interface exists for extensibility (costs nothing). Implement only MediTrack internal provider initially. Build Epic/Cerner implementations when you have real integration partner with credentials (YAGNI).
 
 ### Clinical Skills Convention
 
-Skills = structured YAML front matter + Markdown body files that guide the AI agent through clinical workflows. Hybrid storage: default skills in `skills/core/` (repo), seeded into DB on startup, admin edits at runtime via UI. DB overrides take precedence. Only Admin role can edit skills.
+Skills = structured YAML front matter + Markdown body files that guide the AI agent through clinical workflows. Stored as files in `skills/core/` (repo), loaded into memory at startup. No DB persistence, no admin UI for MVP — skills change rarely (they're medical workflows), deployments update them.
+
+**Future enhancement** (Phase 8+): Add DB persistence + admin UI when you have a real admin who needs to edit skills without deploying.
 
 ### AI Naming Conventions
 
@@ -523,6 +532,38 @@ Skills = structured YAML front matter + Markdown body files that guide the AI ag
 - **PHI audit**: Every MCP tool call touching patient data must be audit-logged (fire-and-forget, SHA256 token hash, truncated resource IDs, `operation_context` to distinguish AI vs manual access)
 - **Layer 2 token lifecycle**: `IFhirProvider` implementations must cache tokens with proactive refresh (60s before expiry), retry once on 401 with force-refresh
 - **No LLM vendor names** in architecture code — use MCP abstractions only
+
+### Cost & Performance at Scale (3,000 Users)
+
+At 3,000 users (~300 doctors, ~30 concurrent sessions, ~4,500 sessions/day, ~1,125 audio hours/day):
+
+**Monthly Cost (Mid-Tier Scenario)**:
+- **STT (Deepgram)**: $6,385/mo (~$0.258/hr)
+- **LLM (tiered)**: $1,400/mo (GPT-4o-mini for routine 90%, Sonnet for on-demand 10%)
+- **Embeddings**: $3/mo (text-embedding-3-small)
+- **Infrastructure**: $1,270/mo (PostgreSQL, RabbitMQ, 7 App Service instances, Redis, monitoring)
+- **Total**: ~$9,000/mo = **$30/doctor/mo** or **$3/user/mo**
+
+**Tiered LLM Strategy** (critical for cost control):
+- Routine batched suggestions: GPT-4o-mini ($0.15 in, $0.60 out per 1M tokens) — 90% of calls
+- On-demand "Emergen AI" button: Claude Sonnet 4 ($3 in, $15 out per 1M tokens) — 10% of calls
+- Saves 70-91% vs. using Sonnet for all calls
+
+**Batching Refinement**:
+- Trigger: Every 5 **patient** utterances OR 60 seconds, whichever comes first
+- Focus on patient speech (symptoms, complaints), not doctor questions
+- Adaptive: Increase interval during low activity, decrease during high symptom density
+- Immediate: Bypass batching for urgent keywords ("chest pain", "can't breathe", "severe bleeding")
+
+**Performance Bottlenecks**:
+- **SignalR concurrent sessions**: Scale Session service horizontally with Redis backplane (2-3 instances) for 30 concurrent streams
+- **pgvector**: ~1.5 QPS for 67K queries/day — trivial for single PostgreSQL instance with HNSW index
+- **FHIR reads**: Cache patient demographics (Redis, 5-min TTL) — eliminates 80% of HTTP calls to domain APIs
+
+**Scaling Decisions**:
+- Single EmergenAI.API service until sustained >50 concurrent sessions
+- PostgreSQL read replicas not needed until >5K users
+- Self-hosted Whisper ROI: 9-month payback (~$5K savings/mo, but 2-3 months engineering time)
 
 ---
 

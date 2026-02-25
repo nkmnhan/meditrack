@@ -25,17 +25,13 @@ Built with microservices architecture, MCP (Model Context Protocol), HIPAA-compl
                           │ JWT Bearer
   ┌───────────┬───────────┼───────────┬──────────────┐
   ▼           ▼           ▼           ▼              ▼
-Patient   Appointment  MedicalRec  Emergen AI    MCP Servers
- .API       .API        .API       Agent         (FHIR,
-                                  (MCP Client)    Knowledge,
-                                                  Session)
+Patient   Appointment  MedicalRec  EmergenAI.API  Notification
+ .API       .API        .API       (MCP + Agent     .Worker
+                                    + SignalR)    (Audit·Alerts)
   │           │           │           │              │
   └───────────┴───────────┴───────────┴──────┬───────┘
                                              ▼
                                     RabbitMQ (EventBus)
-                                             │
-                                    Notification.Worker
-                                   (Audit · Reminders)
 ```
 
 > Full architecture details: [docs/architecture.md](docs/architecture.md) · AI design: [docs/medical-ai-architecture-summary.md](docs/medical-ai-architecture-summary.md)
@@ -109,17 +105,22 @@ Doctor's phone (mic) ──► SignalR ──► Speech-to-Text (diarization)
                               │  Emergen AI Agent       │
                               │  (MCP Client)           │
                               │  LLM-agnostic via MCP   │
-                              └───┬───────┬─────────┬──┘
-                                  │       │         │
-                            FHIR MCP  Knowledge  Session MCP
-                            Server    MCP Server Server
+                              └───────────┬────────────┘
+                                          │
+                              ┌───────────▼────────────┐
+                              │    EmergenAI.API        │
+                              │  fhir_* · knowledge_*  │
+                              │  session_* MCP tools   │
+                              └───┬───────────────┬────┘
+                                  │               │
+                            MediTrack        PostgreSQL
+                            Domain APIs      + pgvector
 ```
 
 **Key components:**
-- **Emergen AI Agent** — MCP client orchestrating clinical workflows, LLM-agnostic
-- **FHIR MCP Server** — Maps domain models to FHIR R4, provider pattern for multi-EMR auth
-- **Knowledge MCP Server** — RAG pipeline with pgvector, clinical skills library
-- **Session MCP Server** — Audio streaming, STT, transcript + speaker diarization
+- **EmergenAI.API** — Single service hosting: MCP tools (FHIR, Knowledge, Session), agent orchestration, SignalR hub. Rationale: ~30 concurrent sessions at 3K users — no performance justification for separate containers.
+- **Clinical skills** — YAML files in `skills/core/` loaded into memory (no DB/admin UI for MVP)
+- **IFhirProvider** — MediTrack internal implementation only (Epic/Cerner deferred to Phase 8)
 
 ---
 
@@ -132,14 +133,14 @@ Doctor's phone (mic) ──► SignalR ──► Speech-to-Text (diarization)
 | 3. Domain Services | Done | Patient, Appointment, MedicalRecords, Notification |
 | 4. Security & Compliance | Done | PHI audit, TDE, MFA design, HIPAA checklist |
 | 5. Patient Management UI | Done | React feature, business rules, dev seeding |
-| **6a. PostgreSQL + pgvector** | **Next** | Migrate from SQL Server, enable vector embeddings |
-| 6b. FHIR R4 Facade | Planned | Thin FHIR facade on domain APIs (Patient, Observation, Condition, MedicationRequest) |
-| 6c. MCP Servers | Planned | Build FHIR, Knowledge, Session MCP servers (.NET) |
-| 6d. Emergen AI Agent | Planned | MCP client orchestration, clinical skills, agent prompts |
-| 6e. Doctor Dashboard UI | Planned | Live transcript, suggestion cards, Emergen AI button |
+| **6. Emergen AI MVP** | **Next** | 8-10 weeks to functional AI clinical companion. See [MVP plan](plans/emergen-ai-mvp-plan.md) |
+| 6a. PostgreSQL + pgvector | In Progress | Migrate from SQL Server, enable vector embeddings (1 week) |
+| 6b. EmergenAI.API | Planned | Core service: MCP tools + agent + SignalR + Deepgram (4-5 weeks, 8 milestones) |
+| 6c. Doctor Dashboard UI | Planned | Live transcript, suggestion cards, audio recording (2-3 weeks) |
 | 7. Remaining Frontend | Planned | Appointment UI, Records viewer, SignalR notifications |
-| 8. EMR Standards | Planned | SMART on FHIR, external EMR auth (Epic/Cerner), USCDI v3 |
-| 9. Cloud Deployment | Planned | Azure, CI/CD, Key Vault, App Insights |
+| 8. External EMR Integration | Planned | Epic/Cerner providers, SMART on FHIR, USCDI v3 compliance |
+| 9. Advanced Features | Planned | Skills admin UI, adaptive batching, self-hosted Whisper |
+| 10. Cloud Deployment + HA | Planned | Azure HA (2× instances + Redis backplane), CI/CD, Key Vault |
 
 ---
 
@@ -190,6 +191,7 @@ curl -k -X POST "https://localhost:5002/api/dev/seed/patients?count=100"
 
 | Plan | Description |
 |------|-------------|
+| [Emergen AI MVP](plans/emergen-ai-mvp-plan.md) | 8-10 week implementation plan for AI clinical companion. Defines minimal feature set, 8 milestones, acceptance criteria. |
 | [Replace MSSQL with PostgreSQL](plans/replace-mssql-with-postgres.md) | Migrate all services from SQL Server to PostgreSQL |
 | [Fix RTK Query Auth](plans/fix-rtk-query-auth.md) | Resolve token handling gap between Axios and RTK Query |
 | [OWASP Top 10 Hardening](plans/owasp-top-ten-hardening.md) | Systematic security hardening against OWASP Top 10 (2021) |

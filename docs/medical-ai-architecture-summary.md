@@ -13,14 +13,14 @@
 ```
 Doctor places phone in room → records live conversation
         ↓
-Audio streamed in real-time to Session MCP Server
+Audio streamed in real-time to EmergenAI.API (session tools)
         ↓
 Speech-to-Text converts audio → transcript with speaker labels
         ↓
 Emergen AI Agent orchestrates MCP tool calls:
-  → FHIR MCP Server: patient context, history, medications
-  → Knowledge MCP Server: RAG search for clinical guidance
-  → Session MCP Server: transcript context, session memory
+  → fhir_* tools: patient context, history, medications
+  → knowledge_* tools: RAG search for clinical guidance
+  → session_* tools: transcript context, session memory
         ↓
 Suggestions appear live on Doctor's dashboard (tablet/PC)
 Doctor can press "Emergen AI" button for on-demand analysis
@@ -38,34 +38,15 @@ Doctor can press "Emergen AI" button for on-demand analysis
 └──────────────────────┬────────────────────────────────────────┘
                        │ SignalR (real-time)
 ┌──────────────────────▼────────────────────────────────────────┐
-│              Emergen AI Agent (MCP Client)                      │
-│   Orchestrates clinical workflows via MCP tool calls            │
-│   LLM-agnostic — calls any model behind MCP protocol            │
-│   On-demand trigger + batched (every 5 utterances / 30s)       │
-│   Clinical skills library guides agent behavior                 │
-└───────┬──────────────┬──────────────┬─────────────────────────┘
-        │ MCP          │ MCP          │ MCP
-        ▼              ▼              ▼
-  ┌───────────┐  ┌──────────────┐  ┌──────────────┐
-  │ FHIR MCP  │  │ Knowledge    │  │ Session MCP  │
-  │ Server    │  │ MCP Server   │  │ Server       │
-  │ (.NET)    │  │ (.NET)       │  │ (.NET)       │
-  │           │  │              │  │              │
-  │ fhir_read │  │ Embed query  │  │ Audio stream │
-  │ fhir_     │  │ → pgvector   │  │ → STT        │
-  │ search    │  │ → top-K      │  │ → transcript │
-  │ fhir_     │  │ relevant     │  │ → speaker ID │
-  │ create    │  │ medical docs │  │              │
-  │ fhir_     │  │              │  │ Chat history │
-  │ update    │  │ Clinical     │  │ management   │
-  │           │  │ skills lib   │  │              │
-  └─────┬─────┘  └──────┬───────┘  └──────────────┘
-        │               │
-        ▼               ▼
-  MediTrack          PostgreSQL
-  Domain APIs        + pgvector
-  (Patient, Appt,    (knowledge base)
-   Records)
+│                    EmergenAI.API                                │
+│  • MCP Server (fhir_*, knowledge_*, session_* tools)           │
+│  • Agent orchestration (batched + on-demand)                    │
+│  • SignalR hub (real-time transcript)                          │
+│  • Clinical skills from YAML files                              │
+└───────┬──────────────────────────────────────────────────────┘
+        │              
+        ▼              
+  MediTrack APIs + PostgreSQL + pgvector
 ```
 
 ---
@@ -109,11 +90,13 @@ Request → Check cache → Token valid? → Use it
 
 ---
 
-## MCP Servers (All .NET, Built By Us)
+## MCP Server (Single .NET Service)
 
-### FHIR MCP Server (Standalone Service)
+### EmergenAI.API — Unified MCP + Agent + SignalR Service
 
-Standalone .NET service that maps MediTrack domain models to FHIR R4 resources. Calls existing domain APIs (Patient.API, MedicalRecords.API, etc.) via HTTP internally and exposes FHIR R4 externally. Domain services stay clean — no FHIR pollution in their code.
+Single .NET service hosting all MCP tools, agent orchestration, and real-time communication. At 3,000 users (~30 concurrent sessions, 1.5 vector QPS), there is zero performance justification for separate containers. Split later only if a specific tool category needs independent scaling.
+
+**FHIR Tools** — maps MediTrack domain models to FHIR R4 resources:
 
 | Tool | Description |
 |------|-------------|
@@ -122,18 +105,17 @@ Standalone .NET service that maps MediTrack domain models to FHIR R4 resources. 
 | `fhir_create` | Create a new FHIR resource |
 | `fhir_update` | Update an existing FHIR resource |
 
-**FHIR Provider Pattern** — `IFhirProvider` interface with per-EMR implementations:
+Calls existing domain APIs (Patient.API, MedicalRecords.API) via HTTP, returns FHIR R4 JSON. Domain services stay clean.
 
-| Provider | Auth Strategy | Token Handling |
-|----------|--------------|----------------|
-| Epic | JWT Bearer Grant (RS384) | Token cache with thread-safe double-check locking |
-| Cerner | OAuth2 Client Credentials | Token cache with expiry tracking |
-| Generic | Bearer / Basic / None | Configurable per-instance |
-| MediTrack internal | Direct API calls | JWT from Layer 1 auth |
+**FHIR Provider Pattern** — `IFhirProvider` interface:
 
-### Knowledge MCP Server
+| Provider | Auth Strategy | Status |
+|----------|--------------|--------|
+| MediTrack internal | Direct API calls with existing JWT | Phase 6 |
+| Epic | JWT Bearer Grant (RS384) | Phase 8 (YAGNI until real credentials) |
+| Cerner | OAuth2 Client Credentials | Phase 8 (YAGNI until real credentials) |
 
-RAG pipeline — embed medical docs, pgvector search. Hosts the clinical skills library.
+**Knowledge Tools** — RAG pipeline with pgvector:
 
 | Tool | Description |
 |------|-------------|
@@ -141,13 +123,11 @@ RAG pipeline — embed medical docs, pgvector search. Hosts the clinical skills 
 | `knowledge_upload` | Chunk document → embed → store in pgvector |
 | `knowledge_list` | List available knowledge base documents and categories |
 
-### Session MCP Server
-
-Real-time audio → STT → transcript with speaker diarization. Chat history and session memory.
+**Session Tools** — real-time audio transcription:
 
 | Tool | Description |
 |------|-------------|
-| `session_start` | Initialize a new consultation session |
+| `session_start` | Initialize a new consultation session (SignalR hub) |
 | `session_transcript` | Get current transcript with speaker labels |
 | `session_suggest` | Get AI suggestions for current session context |
 
@@ -157,13 +137,13 @@ Real-time audio → STT → transcript with speaker diarization. Chat history an
 
 Skills are structured Markdown/YAML files that guide the AI agent through clinical workflows. Not code — they teach the agent **what MCP tools to call and how to interpret results**.
 
-### Storage Strategy (Hybrid)
+### Storage Strategy (MVP)
 
-1. **Default skills** ship as YAML files in `skills/core/` (version-controlled in repo)
-2. **Seed into DB** on startup — if a skill ID doesn't exist in `ClinicalSkill` table, insert it
-3. **Admin edits** stored in DB with version tracking — admin can edit, disable, or add skills via UI
-4. **Source files are the blessed defaults** — DB overrides take precedence at runtime
-5. **Only Admin role** can upload/edit skills (prevents prompt injection via skill content)
+**YAML files only** — stored in `skills/core/` (repo), loaded into memory at startup. No DB persistence, no admin UI for MVP.
+
+**Rationale**: Skills change rarely (they're medical workflows). A code deploy updates them. The complexity of DB seeding, version tracking, admin UI, and DB overrides is YAGNI for 3,000 users.
+
+**Future enhancement** (Phase 8+): Add `ClinicalSkill` DB table + admin UI when you have a real admin who needs to edit skills without deploying.
 
 ### Format
 
@@ -221,7 +201,7 @@ Agent prompts follow a structured pattern. Prompts are stored in DB/MCP resource
 ### Batching Strategy
 
 Do NOT call the AI on every word. Use this logic:
-- Call AI every **5 patient utterances** OR every **30 seconds**, whichever comes first
+- Call AI every **5 patient utterances** OR every **60 seconds**, whichever comes first
 - **On-demand trigger**: Doctor presses "Emergen AI" button — overrides batch timer, immediate analysis
 - Include last 10 transcript lines + top-K RAG chunks as context
 
@@ -264,9 +244,10 @@ Suggestion      { Id, SessionId, Content, TriggeredAt, Type, Source,
 ```
 KnowledgeChunk  { Id, DocumentName, Content, Embedding(vector), Category, CreatedAt,
                   ChunkIndex (int — ordering within source document) }
-ClinicalSkill   { Id, SkillId, Category, Content, Version, IsActive (bool), UpdatedAt }
 Document        { Id, FileName, UploadedAt, ChunkCount, UploadedBy (UserId) }
 ```
+
+Note: No `ClinicalSkill` table in MVP — skills are YAML files loaded into memory. Add DB persistence in Phase 8+ if needed.
 
 ### Agent Configuration (PostgreSQL)
 
@@ -295,7 +276,7 @@ AgentPrompt     { Id, Section, Content, Version, UpdatedAt }
 ### Session Memory
 - **Transcript persistence** — full conversation stored per session
 - **Cross-session patient memory** — agent recalls relevant history from prior visits
-- **Chat history management** — via Session MCP Server tools
+- **Chat history management** — via session_* MCP tools in EmergenAI.API
 
 ---
 
@@ -303,13 +284,21 @@ AgentPrompt     { Id, Section, Content, Version, UpdatedAt }
 
 **Why MCP over direct API calls?** — LLM-agnostic. No vendor lock-in. Any model works behind the protocol. Tools are discoverable and self-documenting.
 
-**Why build our own MCP servers?** — Full control over FHIR tools, knowledge base, clinical skills, and agent orchestration. Reference patterns from LangCare and AgentCare inform design, but implementation is our own .NET code.
+**Why single EmergenAI.API instead of 3 separate MCP servers?** — At 3,000 users (~30 concurrent sessions, 1.5 vector QPS), there is zero performance justification for separate containers. Single process handles this trivially. Adds: 3 fewer containers, simpler deployment, faster development, ~$210-420/mo infra savings. Split later only if a specific tool category needs independent scaling.
+
+**Why defer Epic/Cerner providers?** — No Epic sandbox access, no Cerner credentials. The `IFhirProvider` interface exists for future extensibility (costs nothing), but implementing providers for systems you don't have access to is pure waste. Build them when you have a real integration partner (YAGNI).
+
+**Why YAML files instead of DB + admin UI for skills?** — Skills change rarely (they're medical workflows). A code deploy updates them. The complexity of DB seeding, version tracking, admin UI, and DB overrides is YAGNI for 3,000 users. Add DB persistence only when you have a real admin who needs to edit skills without deploying.
+
+**Why no separate FHIR R4 facade?** — The MCP server's `fhir_*` tools ARE the FHIR interface. They call domain APIs directly and return FHIR R4 JSON. Building a separate REST FHIR API that the MCP server then calls is an extra layer with no value.
+
+**Why SMART on FHIR in Phase 8 not Phase 6?** — SMART on FHIR is only needed for external EMR integration (Epic, Cerner). MediTrack internal calls use existing JWT from Duende IdentityServer. No point building OAuth2 flows for systems you're not integrating with yet.
 
 **Why SMART on FHIR?** — OAuth2 industry standard for healthcare. Required for Epic/Cerner integration. Two-layer security separates user auth from backend auth.
 
 **Why SignalR over raw WebSocket?** — Built into ASP.NET Core, handles reconnections, React client library available (`@microsoft/signalr`).
 
-**Why batch AI calls?** — Don't call the LLM on every word. Batch every 5 patient utterances or every 30 seconds to reduce latency and API costs. On-demand button overrides this.
+**Why batch AI calls?** — Don't call the LLM on every word. Batch every 5 patient utterances or every 60 seconds to reduce latency and API costs. On-demand button overrides this.
 
 **Why pgvector over a separate vector DB?** — Keeps the stack simple (one PostgreSQL instance), EF Core support via `pgvector-dotnet`, no extra infrastructure.
 
@@ -320,6 +309,54 @@ AgentPrompt     { Id, Section, Content, Version, UpdatedAt }
 2. **Trigger phrase** (optional): "This is Dr. Smith beginning consultation"
 3. **LLM confirmation**: Doctor asks questions / uses medical terms; Patient describes symptoms
 4. **Stored mapping**: `SpeakerLabel → Role` persisted per session — once resolved, not re-inferred
+
+---
+
+## Cost Modeling (3,000 Users)
+
+### Assumptions
+
+| Metric | Value | Rationale |
+|--------|-------|-----------|
+| Total users | 3,000 | Given |
+| Doctors | 300 (10%) | 1 doctor per 10 users (typical clinic ratio) |
+| Peak concurrent sessions | ~30 | Not every online doctor is in live session |
+| Avg session duration | 15 min | Typical GP consultation |
+| Sessions per doctor/day | ~15 | Full day of consultations |
+| Total sessions/day | ~4,500 | 300 doctors × 15 sessions |
+| Total audio hours/day | ~1,125 hr | 4,500 × 15 min |
+
+### Monthly Cost Ranges
+
+| Scenario | STT | LLM | Infrastructure | Total | Per Doctor | Notes |
+|----------|-----|-----|----------------|-------|------------|-------|
+| **Budget** | $1,020 | $747 | $1,485 | **$3,252** | $10.84 | Self-hosted Whisper + mini only |
+| **Mid (recommended)** | $6,385 | $1,400 | $1,270 | **$9,055** | $30.18 | Deepgram + tiered LLM + adaptive batching |
+| **Premium** | $9,158 | $8,010 | $1,485 | **$18,653** | $62.18 | AssemblyAI + Sonnet for all calls |
+
+### Cost Drivers
+
+**STT (54-82% of AI costs)**: Deepgram Nova-2 Medical recommended for MVP ($6,385/mo). Self-hosted Whisper saves ~$5K/mo but requires 2-3 months engineering (real-time streaming + pyannote.audio for diarization). ROI: 9 months.
+
+**LLM (18-46% of AI costs)**: Tiered strategy is critical:
+- 90% routine batched calls → GPT-4o-mini: $1,122/mo
+- 10% on-demand doctor triggers → Claude Sonnet 4: $278/mo
+- Total: $1,400/mo (vs. $8,010/mo for all-Sonnet)
+
+**Embeddings**: Negligible (~$3/mo with text-embedding-3-small)
+
+**Infrastructure**: 7 containers (6 backend services + frontend), PostgreSQL, RabbitMQ, Redis cache for scaling
+
+### Call Volume Math
+
+With 5-patient-utterance batching:
+- Typical consultation: ~5-8 combined utterances/min
+- 5 patient utterances ≈ every 90 seconds
+- 15-min session = ~10 LLM calls (not 30)
+- 4,500 sessions/day × 10 = **45,000 calls/day** (not 135K)
+- With adaptive batching: **~27,000 calls/day** (40% reduction)
+
+This significantly reduces LLM costs from initial estimates.
 
 ---
 

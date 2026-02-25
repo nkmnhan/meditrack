@@ -60,8 +60,7 @@ The following changes are planned for upcoming phases:
 
 | Change | Phase | Notes |
 |--------|-------|-------|
-| **PostgreSQL migration** | 6–7 | Replace SQL Server with PostgreSQL across all services. See [replace-mssql-with-postgres.md](../plans/replace-mssql-with-postgres.md). |
-| **pgvector extension** | 6 | Enable pgvector on PostgreSQL for knowledge base embeddings (RAG). |
-| **MCP servers** | 6 | FHIR MCP Server, Knowledge MCP Server, Session MCP Server — all .NET containers. |
-| **FHIR R4 API** | 8 | FHIR facade endpoints on existing services. No new containers. |
+| **PostgreSQL migration** | 6a | Replace SQL Server with PostgreSQL across all services. See [replace-mssql-with-postgres.md](../plans/replace-mssql-with-postgres.md). |
+| **pgvector extension** | 6a | Enable pgvector on PostgreSQL for knowledge base embeddings (RAG). |
+| **EmergenAI.API service** | 6b | Single .NET service hosting all MCP tools + agent + SignalR. Replaces original plan of 3 separate MCP servers. Total containers: 7 (vs. 10+ in original plan). Saves ~$210-420/mo. |
 | **SMART on FHIR OAuth2** | 8 | Layer 2 auth configuration for external EMR integration (Epic, Cerner). Requires service credential management. |

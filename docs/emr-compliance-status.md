@@ -4,6 +4,8 @@
 
 **Last updated**: 2026-02-25
 
+**Note**: This is a **reference document**, not a roadmap deliverable with acceptance criteria. For an educational project at 3,000 users, full USCDI v3 compliance is scope creep. Use this scorecard to guide prioritization (Tier 1 items only), not as a checklist for completion.
+
 ---
 
 ## USCDI v3 Data Classes

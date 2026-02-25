@@ -23,18 +23,19 @@ MediTrack is an MCP-native EMR platform with an AI clinical companion (**Emergen
 | Notification.Worker | — | Cross-cutting | Background worker for notifications & PHI audit |
 | MediTrack.Web | 3000 | — | React SPA (doctor, admin, patient UIs) |
 
+**Total: 7 containers** (6 services + frontend)
+
 ### Planned Services
 
 | Service | Bounded Context | Responsibility |
 |---|---|---|
-| Emergen AI Agent | AI Orchestration | MCP client — orchestrates clinical workflows via MCP tool calls |
-| FHIR MCP Server | Interoperability | Standalone service — calls domain APIs via HTTP, exposes FHIR R4, multi-EMR auth provider pattern |
-| Knowledge MCP Server | Knowledge | RAG pipeline (pgvector), clinical skills library (hybrid: YAML files seed DB, admin edits at runtime) |
-| Session MCP Server | Consultation | Real-time audio → STT → transcript with speaker diarization, chat history |
+| EmergenAI.API | AI + Consultation | Single service hosting: MCP tools (FHIR, Knowledge, Session), agent orchestration, SignalR hub, real-time audio → STT. Rationale: At 3K users (~30 concurrent sessions), no performance justification for separate containers. |
+
+**Simplified from original plan**: Originally 3 separate MCP servers (FHIR, Knowledge, Session) + agent service = 4 containers. Now 1 container. Savings: ~$210-420/mo infra, simpler deployment, faster development.
 
 ## MCP Architecture Layer
 
-Emergen AI is the MCP client that orchestrates multiple MCP servers. All AI features go through the MCP protocol — the architecture is LLM-agnostic.
+Emergen AI is the MCP client orchestrating MCP tools. All AI features go through the MCP protocol — the architecture is LLM-agnostic. At 3,000 users, all MCP tools are hosted in a single service (EmergenAI.API) for simplicity.
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
@@ -44,20 +45,19 @@ Emergen AI is the MCP client that orchestrates multiple MCP servers. All AI feat
 └──────────────────────┬────────────────────────────────────────┘
                        │ SignalR (real-time)
 ┌──────────────────────▼────────────────────────────────────────┐
-│              Emergen AI Agent (MCP Client)                      │
-│   Orchestrates clinical workflows via MCP tool calls            │
-│   On-demand trigger + batched (every 5 utterances / 30s)       │
-└───────┬──────────────┬──────────────┬─────────────────────────┘
-        │ MCP          │ MCP          │ MCP
-        ▼              ▼              ▼
-  ┌───────────┐  ┌──────────────┐  ┌──────────────┐
-  │ FHIR MCP  │  │ Knowledge    │  │ Session MCP  │
-  │ Server    │  │ MCP Server   │  │ Server       │
-  └─────┬─────┘  └──────┬───────┘  └──────────────┘
-        │               │
-        ▼               ▼
+│                    EmergenAI.API                                │
+│  • MCP Server (fhir_*, knowledge_*, session_* tools)           │
+│  • Agent orchestration (MCP client)                             │
+│  • SignalR hub (real-time transcript)                          │
+│  • IFhirProvider (internal only for MVP)                        │
+│  • Skills loaded from YAML (skills/core/)                       │
+└───────┬──────────────┬──────────────────────────────────────────┘
+        │              │
+        ▼              ▼
   MediTrack          PostgreSQL
   Domain APIs        + pgvector
+  (Patient, Appt,    (knowledge base)
+   Records)
 ```
 
 ## Two-Layer Security Model
@@ -72,9 +72,9 @@ MCP servers hold service credentials registered with EMR backends. Authenticatio
 
 | Provider | Auth Strategy |
 |----------|--------------|
-| **Epic** | JWT Bearer Grant (RS384-signed JWT → exchange for access token) |
-| **Cerner** | OAuth2 Client Credentials Flow |
-| **MediTrack internal** | Direct API calls (no external OAuth needed initially) |
+| **MediTrack internal** | Direct API calls using existing JWT (Phase 6) |
+| **Epic** | JWT Bearer Grant (RS384) — deferred to Phase 8 |
+| **Cerner** | OAuth2 Client Credentials — deferred to Phase 8 |
 
 **FHIR provider pattern**: Each EMR backend implements `IFhirProvider` with its own auth strategy. Token caching with thread-safe `SemaphoreSlim` double-check locking. Proactive refresh 60s before expiry; retry once on 401 with force-refresh.
 
