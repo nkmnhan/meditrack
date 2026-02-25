@@ -621,6 +621,38 @@ if (result.Succeeded)
 
 ---
 
+## Library & Dependency Selection (MANDATORY)
+
+### Prefer Free / Open-Source First
+
+When choosing a library, SDK, or service to solve a requirement:
+
+1. **Always check the license** before recommending or adding a dependency
+2. **Prefer free and open-source** (MIT, Apache 2.0, BSD, ISC, MPL 2.0) over commercial/paid alternatives
+3. **If a paid library is the only viable option**, stop and discuss with the user before adding it — explain:
+   - Why the free alternatives don't work
+   - What the paid library costs (license model, pricing tiers)
+   - Whether there's a free tier sufficient for this project
+4. **Never silently add a commercially-licensed package** — the user must explicitly approve it
+5. **For cloud services / APIs** (OpenAI, AssemblyAI, Azure, etc.), note the pricing model and whether a free tier exists
+
+### Current Paid Dependencies (Approved)
+
+| Package | License | Why approved |
+|---------|---------|-------------|
+| Duende IdentityServer | Commercial (free < $1M) | Already in use; free for this project's scale |
+| SQL Server | Commercial (Developer Edition) | Being replaced by PostgreSQL (free) |
+
+### Evaluation Checklist
+
+Before adding any new package, answer:
+- Is it actively maintained? (last commit < 6 months)
+- What's the license? (MIT/Apache = go, commercial = discuss first)
+- Does it duplicate something already in the project?
+- Is it the simplest tool for the job? (KISS/YAGNI)
+
+---
+
 ## Commands
 
 ```bash
