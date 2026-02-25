@@ -15,9 +15,9 @@ public static class IdentityServerConfig
 
     public static IEnumerable<ApiScope> GetApiScopes() =>
     [
-        new ApiScope("patient-api", "Patient API"),
-        new ApiScope("appointment-api", "Appointment API"),
-        new ApiScope("medicalrecords-api", "Medical Records API")
+        new ApiScope("patient-api", "Patient API") { UserClaims = { JwtClaimTypes.Role } },
+        new ApiScope("appointment-api", "Appointment API") { UserClaims = { JwtClaimTypes.Role } },
+        new ApiScope("medicalrecords-api", "Medical Records API") { UserClaims = { JwtClaimTypes.Role } }
     ];
 
     public static IEnumerable<Client> GetClients(IConfiguration configuration)

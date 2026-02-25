@@ -162,7 +162,7 @@ namespace MediTrack.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AppointmentId")
-                        .HasFilter("[AppointmentId] IS NOT NULL");
+                        .HasFilter("\"AppointmentId\" IS NOT NULL");
 
                     b.HasIndex("DiagnosisCode");
 

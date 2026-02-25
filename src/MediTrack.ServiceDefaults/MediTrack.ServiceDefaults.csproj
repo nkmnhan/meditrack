@@ -17,4 +17,8 @@
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\MediTrack.Shared\MediTrack.Shared.csproj" />
+  </ItemGroup>
+
 </Project>

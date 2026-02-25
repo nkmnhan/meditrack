@@ -3,12 +3,14 @@ using MediTrack.EventBusRabbitMQ;
 using MediTrack.MedicalRecords.API.Apis;
 using MediTrack.MedicalRecords.API.Application.Commands;
 using MediTrack.MedicalRecords.API.Application.Mapping;
+using MediTrack.MedicalRecords.API.Application.Services;
 using MediTrack.MedicalRecords.API.Application.Validations;
 using MediTrack.MedicalRecords.Domain.Aggregates;
 using MediTrack.MedicalRecords.Infrastructure;
 using MediTrack.MedicalRecords.Infrastructure.Repositories;
 using MediTrack.ServiceDefaults;
 using MediTrack.ServiceDefaults.Extensions;
+using MediTrack.ServiceDefaults.Http;
 using Microsoft.EntityFrameworkCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -21,6 +23,19 @@ builder.Services.AddDbContext<MedicalRecordsDbContext>(options =>
 
 // Authentication & Authorization
 builder.Services.AddDefaultAuthentication(builder.Configuration);
+
+// Required for AuthenticationDelegatingHandler
+builder.Services.AddHttpContextAccessor();
+
+// HttpClient for cross-service communication (Patient.API)
+// AuthenticationDelegatingHandler forwards bearer token from current request
+builder.Services.AddTransient<AuthenticationDelegatingHandler>();
+builder.Services.AddHttpClient<IPatientResolver, PatientResolver>(client =>
+{
+    var patientApiUrl = builder.Configuration["PatientApiUrl"] ?? "http://patient-api:8080";
+    client.BaseAddress = new Uri(patientApiUrl);
+})
+.AddHttpMessageHandler<AuthenticationDelegatingHandler>();
 
 // Repositories
 builder.Services.AddScoped<IMedicalRecordRepository, MedicalRecordRepository>();
@@ -55,6 +70,7 @@ using (IServiceScope scope = app.Services.CreateScope())
 }
 
 app.MapDefaultEndpoints();
+app.UseSecurityHeaders();
 app.UseCors(CorsExtensions.PolicyName);
 app.UseAuthentication();
 app.UseAuthorization();

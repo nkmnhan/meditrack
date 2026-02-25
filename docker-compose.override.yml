@@ -17,6 +17,7 @@ services:
     volumes:
       - ./dev-certs/certs:/certs:ro
       - identity-dataprotection-keys:/root/.aspnet/DataProtection-Keys
+      - identity-signing-keys:/app/keys
     depends_on:
       postgres:
         condition: service_healthy

@@ -54,7 +54,10 @@ public class PatientSeeder
         {
             try
             {
-                await _patientService.CreateAsync(patientRequest, cancellationToken);
+                // Use a deterministic dev-only userId for seeded patients
+                //  In production, userId comes from authenticated user claims
+                var devUserId = Guid.NewGuid();
+                await _patientService.CreateAsync(devUserId, patientRequest, cancellationToken);
                 createdCount++;
 
                 if (createdCount % 10 == 0)

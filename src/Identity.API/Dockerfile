@@ -10,6 +10,8 @@ COPY ["Directory.Build.props", "./"]
 COPY ["Directory.Packages.props", "./"]
 COPY ["src/Identity.API/Identity.API.csproj", "src/Identity.API/"]
 COPY ["src/MediTrack.ServiceDefaults/MediTrack.ServiceDefaults.csproj", "src/MediTrack.ServiceDefaults/"]
+COPY ["src/MediTrack.Shared/MediTrack.Shared.csproj", "src/MediTrack.Shared/"]
+COPY ["src/EventBus/EventBus.csproj", "src/EventBus/"]
 
 RUN dotnet restore "src/Identity.API/Identity.API.csproj"
 

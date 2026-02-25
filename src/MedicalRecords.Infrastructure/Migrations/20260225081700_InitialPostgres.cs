@@ -156,7 +156,7 @@ namespace MediTrack.Migrations
                 name: "IX_MedicalRecords_AppointmentId",
                 table: "MedicalRecords",
                 column: "AppointmentId",
-                filter: "[AppointmentId] IS NOT NULL");
+                filter: "\"AppointmentId\" IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MedicalRecords_DiagnosisCode",

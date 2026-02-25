@@ -121,3 +121,7 @@ public record PatientListItemResponse(
     string PhoneNumber,
     bool IsActive
 );
+
+public record PatientIdResponse(
+    Guid PatientId
+);

@@ -1,12 +1,14 @@
-using MediTrack.Identity.Constants;
+using MediTrack.Shared.Common;
 using MediTrack.Identity.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.RateLimiting;
 using System.ComponentModel.DataAnnotations;
 
 namespace MediTrack.Identity.Pages.Account.Register;
 
+[EnableRateLimiting("register")]
 public class Index : PageModel
 {
     private readonly UserManager<ApplicationUser> _userManager;

@@ -87,6 +87,9 @@ namespace MediTrack.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("DateOfBirth");
@@ -100,6 +103,8 @@ namespace MediTrack.Migrations
 
                     b.HasIndex("MedicalRecordNumber")
                         .IsUnique();
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Patients", (string)null);
                 });

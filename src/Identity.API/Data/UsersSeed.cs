@@ -1,6 +1,7 @@
-using MediTrack.Identity.Constants;
+using MediTrack.Shared.Common;
 using MediTrack.Identity.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 
 namespace MediTrack.Identity.Data;
 
@@ -9,6 +10,7 @@ public static class UsersSeed
     public static async Task SeedAsync(
         UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager,
+        IConfiguration configuration,
         ILogger logger)
     {
         foreach (string role in UserRoles.All)
@@ -20,10 +22,12 @@ public static class UsersSeed
             }
         }
 
+        // Passwords are read from configuration (env vars / secrets in production).
+        // Fallback values are for local development only.
         await EnsureUserAsync(
             userManager, logger,
             email: "admin@meditrack.local",
-            password: "Admin123!",
+            password: configuration["SeedUsers:AdminPassword"] ?? "Admin123!",
             firstName: "System",
             lastName: "Administrator",
             role: UserRoles.Admin);
@@ -31,7 +35,7 @@ public static class UsersSeed
         await EnsureUserAsync(
             userManager, logger,
             email: "doctor@meditrack.local",
-            password: "Doctor123!",
+            password: configuration["SeedUsers:DoctorPassword"] ?? "Doctor123!",
             firstName: "Jane",
             lastName: "Smith",
             role: UserRoles.Doctor);
@@ -64,15 +68,25 @@ public static class UsersSeed
 
         IdentityResult result = await userManager.CreateAsync(user, password);
 
-        if (result.Succeeded)
+        if (!result.Succeeded)
         {
-            await userManager.AddToRoleAsync(user, role);
+            string errors = string.Join(", ", result.Errors.Select(error => error.Description));
+            logger.LogError("Failed to create user {Email}: {Errors}", email, errors);
+            return;
+        }
+
+        // Handle partial failure: if role assignment fails, roll back the user creation
+        IdentityResult roleResult = await userManager.AddToRoleAsync(user, role);
+
+        if (roleResult.Succeeded)
+        {
             logger.LogInformation("Created user {Email} with role {Role}", email, role);
         }
         else
         {
-            string errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            logger.LogError("Failed to create user {Email}: {Errors}", email, errors);
+            await userManager.DeleteAsync(user);
+            string errors = string.Join(", ", roleResult.Errors.Select(error => error.Description));
+            logger.LogError("Failed to assign role {Role} to {Email}, user rolled back: {Errors}", role, email, errors);
         }
     }
 }

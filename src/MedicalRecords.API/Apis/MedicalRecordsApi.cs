@@ -1,8 +1,11 @@
+using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using MediTrack.MedicalRecords.API.Application.Commands;
 using MediTrack.MedicalRecords.API.Application.Models;
 using MediTrack.MedicalRecords.API.Application.Queries;
+using MediTrack.MedicalRecords.API.Application.Services;
+using MediTrack.Shared.Common;
 
 namespace MediTrack.MedicalRecords.API.Apis;
 
@@ -77,9 +80,17 @@ public static class MedicalRecordsApi
 
     private static async Task<IResult> GetMedicalRecordById(
         Guid id,
+        ClaimsPrincipal user,
         IMediator mediator,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: check if user can access this medical record
+        if (!await CanAccessMedicalRecordAsync(user, id, mediator, patientResolver, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         var record = await mediator.Send(new GetMedicalRecordByIdQuery(id), cancellationToken);
 
         return record is null
@@ -89,9 +100,17 @@ public static class MedicalRecordsApi
 
     private static async Task<IResult> GetByPatientId(
         Guid patientId,
+        ClaimsPrincipal user,
         IMediator mediator,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: check if user can access this patient's records
+        if (!await CanAccessPatientRecordsAsync(user, patientId, patientResolver, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         var records = await mediator.Send(
             new GetMedicalRecordsByPatientIdQuery(patientId),
             cancellationToken);
@@ -101,9 +120,16 @@ public static class MedicalRecordsApi
 
     private static async Task<IResult> GetByDiagnosisCode(
         string diagnosisCode,
+        ClaimsPrincipal user,
         IMediator mediator,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: Only medical staff can query by diagnosis code (clinical reporting endpoint) (A01)
+        if (!UserRoles.Medical.Any(role => user.IsInRole(role)))
+        {
+            return Results.Forbid();
+        }
+
         var records = await mediator.Send(
             new GetMedicalRecordsByDiagnosisCodeQuery(diagnosisCode),
             cancellationToken);
@@ -113,10 +139,17 @@ public static class MedicalRecordsApi
 
     private static async Task<IResult> CreateMedicalRecord(
         CreateMedicalRecordRequest request,
+        ClaimsPrincipal user,
         IValidator<CreateMedicalRecordRequest> validator,
         IMediator mediator,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: Only medical staff can create medical records (A01)
+        if (!UserRoles.Medical.Any(role => user.IsInRole(role)))
+        {
+            return Results.Forbid();
+        }
+
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
         {
@@ -141,10 +174,18 @@ public static class MedicalRecordsApi
     private static async Task<IResult> UpdateDiagnosis(
         Guid id,
         UpdateDiagnosisRequest request,
+        ClaimsPrincipal user,
         IValidator<UpdateDiagnosisRequest> validator,
         IMediator mediator,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: check if user can access this medical record
+        if (!await CanAccessMedicalRecordAsync(user, id, mediator, patientResolver, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
         {
@@ -166,9 +207,17 @@ public static class MedicalRecordsApi
 
     private static async Task<IResult> ResolveMedicalRecord(
         Guid id,
+        ClaimsPrincipal user,
         IMediator mediator,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: check if user can access this medical record
+        if (!await CanAccessMedicalRecordAsync(user, id, mediator, patientResolver, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         try
         {
             var success = await mediator.Send(new ResolveMedicalRecordCommand(id), cancellationToken);
@@ -185,9 +234,17 @@ public static class MedicalRecordsApi
 
     private static async Task<IResult> MarkRequiresFollowUp(
         Guid id,
+        ClaimsPrincipal user,
         IMediator mediator,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: check if user can access this medical record
+        if (!await CanAccessMedicalRecordAsync(user, id, mediator, patientResolver, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         var success = await mediator.Send(new MarkRequiresFollowUpCommand(id), cancellationToken);
 
         return success
@@ -197,9 +254,17 @@ public static class MedicalRecordsApi
 
     private static async Task<IResult> ArchiveMedicalRecord(
         Guid id,
+        ClaimsPrincipal user,
         IMediator mediator,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: check if user can access this medical record
+        if (!await CanAccessMedicalRecordAsync(user, id, mediator, patientResolver, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         var success = await mediator.Send(new ArchiveMedicalRecordCommand(id), cancellationToken);
 
         return success
@@ -210,10 +275,18 @@ public static class MedicalRecordsApi
     private static async Task<IResult> AddClinicalNote(
         Guid id,
         AddClinicalNoteRequest request,
+        ClaimsPrincipal user,
         IValidator<AddClinicalNoteRequest> validator,
         IMediator mediator,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: check if user can access this medical record
+        if (!await CanAccessMedicalRecordAsync(user, id, mediator, patientResolver, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
         {
@@ -237,10 +310,18 @@ public static class MedicalRecordsApi
     private static async Task<IResult> AddPrescription(
         Guid id,
         AddPrescriptionRequest request,
+        ClaimsPrincipal user,
         IValidator<AddPrescriptionRequest> validator,
         IMediator mediator,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: check if user can access this medical record
+        if (!await CanAccessMedicalRecordAsync(user, id, mediator, patientResolver, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
         {
@@ -267,10 +348,18 @@ public static class MedicalRecordsApi
     private static async Task<IResult> RecordVitalSigns(
         Guid id,
         RecordVitalSignsRequest request,
+        ClaimsPrincipal user,
         IValidator<RecordVitalSignsRequest> validator,
         IMediator mediator,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: check if user can access this medical record
+        if (!await CanAccessMedicalRecordAsync(user, id, mediator, patientResolver, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
         {
@@ -300,10 +389,18 @@ public static class MedicalRecordsApi
     private static async Task<IResult> AddAttachment(
         Guid id,
         AddAttachmentRequest request,
+        ClaimsPrincipal user,
         IValidator<AddAttachmentRequest> validator,
         IMediator mediator,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: check if user can access this medical record
+        if (!await CanAccessMedicalRecordAsync(user, id, mediator, patientResolver, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
         {
@@ -325,5 +422,95 @@ public static class MedicalRecordsApi
         return attachment is null
             ? Results.NotFound(new { message = $"Medical record with ID {id} not found." })
             : Results.Created($"/api/medical-records/{id}/attachments/{attachment.Id}", attachment);
+    }
+
+    /// <summary>
+    /// Checks if the current user can access a specific medical record.
+    /// Medical staff (Admin, Doctor, Nurse) can access all records.
+    /// Patients can only access their own records.
+    /// (OWASP A01 - Broken Access Control: IDOR Prevention)
+    /// </summary>
+    private static async Task<bool> CanAccessMedicalRecordAsync(
+        ClaimsPrincipal user,
+        Guid medicalRecordId,
+        IMediator mediator,
+        IPatientResolver patientResolver,
+        CancellationToken cancellationToken)
+    {
+        // Medical staff can access all records
+        if (UserRoles.Medical.Any(role => user.IsInRole(role)))
+        {
+            return true;
+        }
+
+        // Patients can only access their own records
+        if (user.IsInRole(UserRoles.Patient))
+        {
+            var userIdClaim = user.FindFirst(JwtClaims.Subject)?.Value;
+            if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return false;
+            }
+
+            // Get the patient's PatientId from Patient.API
+            var patientId = await patientResolver.GetPatientIdByUserIdAsync(userId, cancellationToken);
+            if (patientId is null)
+            {
+                return false;
+            }
+
+            // Get the medical record and check if it belongs to this patient
+            var record = await mediator.Send(new GetMedicalRecordByIdQuery(medicalRecordId), cancellationToken);
+            if (record is null)
+            {
+                return false; // Not found
+            }
+
+            return record.PatientId == patientId.Value;
+        }
+
+        // Unknown role — deny access
+        return false;
+    }
+
+    /// <summary>
+    /// Checks if the current user can access medical records for a specific patient.
+    /// Medical staff can access all patients' records.
+    /// Patients can only access their own records.
+    /// (OWASP A01 - Broken Access Control: IDOR Prevention)
+    /// </summary>
+    private static async Task<bool> CanAccessPatientRecordsAsync(
+        ClaimsPrincipal user,
+        Guid patientId,
+        IPatientResolver patientResolver,
+        CancellationToken cancellationToken)
+    {
+        // Medical staff can access all records
+        if (UserRoles.Medical.Any(role => user.IsInRole(role)))
+        {
+            return true;
+        }
+
+        // Patients can only access their own records
+        if (user.IsInRole(UserRoles.Patient))
+        {
+            var userIdClaim = user.FindFirst(JwtClaims.Subject)?.Value;
+            if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return false;
+            }
+
+            // Get the patient's PatientId from Patient.API
+            var resolvedPatientId = await patientResolver.GetPatientIdByUserIdAsync(userId, cancellationToken);
+            if (resolvedPatientId is null)
+            {
+                return false;
+            }
+
+            return resolvedPatientId.Value == patientId;
+        }
+
+        // Unknown role — deny access
+        return false;
     }
 }

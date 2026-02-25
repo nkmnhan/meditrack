@@ -5,6 +5,7 @@ using MediTrack.Shared.Services;
 using Microsoft.AspNetCore.Mvc;
 using Patient.API.Dtos;
 using Patient.API.Services;
+using System.Security.Claims;
 
 namespace Patient.API.Apis;
 
@@ -25,6 +26,12 @@ public static class PatientsApi
             .WithName("GetPatientById")
             .WithSummary("Get a patient by ID")
             .Produces<PatientResponse>()
+            .Produces(StatusCodes.Status404NotFound);
+
+        group.MapGet("/by-user/{userId:guid}", GetPatientByUserId)
+            .WithName("GetPatientByUserId")
+            .WithSummary("Get a patient by Identity user ID (for cross-service IDOR checks)")
+            .Produces<PatientIdResponse>()
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapGet("/search", SearchPatients)
@@ -68,15 +75,23 @@ public static class PatientsApi
 
     private static async Task<IResult> GetAllPatients(
         [FromQuery] bool includeInactive,
+        ClaimsPrincipal user,
         IPatientService patientService,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: Only staff can enumerate all patients (A01)
+        if (!UserRoles.Staff.Any(role => user.IsInRole(role)))
+        {
+            return Results.Forbid();
+        }
+
         var patients = await patientService.GetAllAsync(includeInactive, cancellationToken);
         return Results.Ok(patients);
     }
 
     private static async Task<IResult> GetPatientById(
         Guid id,
+        ClaimsPrincipal user,
         IPatientService patientService,
         IPHIAuditService auditService,
         ILogger<Program> logger,
@@ -88,6 +103,12 @@ public static class PatientsApi
         {
             // 404 is not a security event — don't log failed PHI access for missing resources
             return Results.NotFound(new { message = $"Patient with ID {id} not found" });
+        }
+
+        // IDOR protection: Check if user can access this patient
+        if (!await CanAccessPatientAsync(user, id, patientService, cancellationToken))
+        {
+            return Results.Forbid();
         }
 
         // Log successful PHI access (fire-and-forget — don't break happy path if audit fails)
@@ -107,13 +128,51 @@ public static class PatientsApi
         return Results.Ok(patient);
     }
 
+    private static async Task<IResult> GetPatientByUserId(
+        Guid userId,
+        ClaimsPrincipal user,
+        IPatientService patientService,
+        CancellationToken cancellationToken)
+    {
+        // Security check: only medical staff or the user themselves can look up by user ID
+       var currentUserIdClaim = user.FindFirstValue(JwtClaims.Subject);
+        if (string.IsNullOrEmpty(currentUserIdClaim) || !Guid.TryParse(currentUserIdClaim, out var currentUserId))
+        {
+            return Results.Unauthorized();
+        }
+
+        bool isStaff = UserRoles.Staff.Any(role => user.IsInRole(role));
+        bool isOwnData = currentUserId == userId;
+
+        if (!isStaff && !isOwnData)
+        {
+            return Results.Forbid();
+        }
+
+        var patientId = await patientService.GetPatientIdByUserIdAsync(userId, cancellationToken);
+
+        if (patientId is null)
+        {
+            return Results.NotFound(new { message = $"No patient record found for user ID {userId}" });
+        }
+
+        return Results.Ok(new PatientIdResponse(patientId.Value));
+    }
+
     private static async Task<IResult> SearchPatients(
         [FromQuery] string searchTerm,
+        ClaimsPrincipal user,
         IPatientService patientService,
         IPHIAuditService auditService,
         ILogger<Program> logger,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: Only staff can search patients (A01)
+        if (!UserRoles.Staff.Any(role => user.IsInRole(role)))
+        {
+            return Results.Forbid();
+        }
+
         var patients = await patientService.SearchAsync(searchTerm, cancellationToken);
 
         // Log PHI search operation (fire-and-forget)
@@ -134,6 +193,7 @@ public static class PatientsApi
     }
 
     private static async Task<IResult> CreatePatient(
+        ClaimsPrincipal user,
         CreatePatientRequest request,
         IValidator<CreatePatientRequest> validator,
         IPatientService patientService,
@@ -141,6 +201,13 @@ public static class PatientsApi
         ILogger<Program> logger,
         CancellationToken cancellationToken)
     {
+        // Extract current user ID from claims
+        var userIdClaim = user.FindFirstValue(JwtClaims.Subject);
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Results.Unauthorized();
+        }
+
         // Validate request
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
@@ -154,7 +221,7 @@ public static class PatientsApi
             return Results.Conflict(new { message = $"A patient with email {request.Email} already exists" });
         }
 
-        var patient = await patientService.CreateAsync(request, cancellationToken);
+        var patient = await patientService.CreateAsync(userId, request, cancellationToken);
 
         // Log PHI creation (fire-and-forget)
         _ = SafePublishAuditAsync(
@@ -175,6 +242,7 @@ public static class PatientsApi
 
     private static async Task<IResult> UpdatePatient(
         Guid id,
+        ClaimsPrincipal user,
         UpdatePatientRequest request,
         IValidator<UpdatePatientRequest> validator,
         IPatientService patientService,
@@ -182,6 +250,12 @@ public static class PatientsApi
         ILogger<Program> logger,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: Check if user can access this patient
+        if (!await CanAccessPatientAsync(user, id, patientService, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         // Validate request
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
@@ -223,11 +297,15 @@ public static class PatientsApi
 
     private static async Task<IResult> DeactivatePatient(
         Guid id,
+        ClaimsPrincipal user,
         IPatientService patientService,
         IPHIAuditService auditService,
         ILogger<Program> logger,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: Admin/Receptionist role already enforced by RequireAuthorization policy on endpoint
+        // No additional check needed here since only staff can deactivate
+        
         var success = await patientService.DeactivateAsync(id, cancellationToken);
 
         if (!success)
@@ -258,6 +336,7 @@ public static class PatientsApi
         IPatientService patientService,
         CancellationToken cancellationToken)
     {
+        // Admin/Receptionist role already enforced by RequireAuthorization policy on endpoint
         var success = await patientService.ActivateAsync(id, cancellationToken);
 
         return success
@@ -284,5 +363,33 @@ public static class PatientsApi
             logger.LogError(ex, "Failed to publish audit event for {Operation}. Audit logging failed but operation completed successfully.", operationName);
             // TODO: Consider storing failed audit events in a dead-letter queue for retry
         }
+    }
+
+    /// <summary>
+    /// IDOR protection: Checks if the current user can access the specified patient record.
+    /// - Patients can only access their own records (UserId matches)
+    /// - Staff (Admin, Doctor, Nurse, Receptionist) can access all patient records
+    /// </summary>
+    private static async Task<bool> CanAccessPatientAsync(
+        ClaimsPrincipal user,
+        Guid patientId,
+        IPatientService patientService,
+        CancellationToken cancellationToken)
+    {
+        // Staff (including Receptionists for scheduling) can access all patients
+        if (UserRoles.Staff.Any(role => user.IsInRole(role)))
+        {
+            return true;
+        }
+
+        // Extract current user ID from claims
+        var userIdClaim = user.FindFirstValue(JwtClaims.Subject);
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return false;
+        }
+
+        // Check if the patient record belongs to the current user
+        return await patientService.IsOwnedByUserAsync(patientId, userId, cancellationToken);
     }
 }

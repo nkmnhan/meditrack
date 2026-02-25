@@ -3,6 +3,8 @@ using Appointment.API.Models;
 using Appointment.API.Services;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using MediTrack.Shared.Common;
+using System.Security.Claims;
 
 namespace Appointment.API.Apis;
 
@@ -93,18 +95,33 @@ public static class AppointmentsApi
 
     private static async Task<IResult> GetAllAppointments(
         [AsParameters] AppointmentSearchQuery query,
+        ClaimsPrincipal user,
         IAppointmentService appointmentService,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: Only staff can enumerate all appointments (A01)
+        if (!UserRoles.Staff.Any(role => user.IsInRole(role)))
+        {
+            return Results.Forbid();
+        }
+
         var appointments = await appointmentService.GetAllAsync(query, cancellationToken);
         return Results.Ok(appointments);
     }
 
     private static async Task<IResult> GetAppointmentById(
         Guid id,
+        ClaimsPrincipal user,
         IAppointmentService appointmentService,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: check if user can access this appointment
+        if (!await CanAccessAppointmentAsync(user, id, appointmentService, patientResolver, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         var appointment = await appointmentService.GetByIdAsync(id, cancellationToken);
 
         return appointment is null
@@ -114,18 +131,34 @@ public static class AppointmentsApi
 
     private static async Task<IResult> GetByPatientId(
         Guid patientId,
+        ClaimsPrincipal user,
         IAppointmentService appointmentService,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: check if user can access this patient's appointments
+        if (!await CanAccessPatientAppointmentsAsync(user, patientId, patientResolver, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         var appointments = await appointmentService.GetByPatientIdAsync(patientId, cancellationToken);
         return Results.Ok(appointments);
     }
 
     private static async Task<IResult> GetUpcomingByPatientId(
         Guid patientId,
+        ClaimsPrincipal user,
         IAppointmentService appointmentService,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: check if user can access this patient's appointments
+        if (!await CanAccessPatientAppointmentsAsync(user, patientId, patientResolver, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         var appointments = await appointmentService.GetUpcomingByPatientIdAsync(patientId, cancellationToken);
         return Results.Ok(appointments);
     }
@@ -159,10 +192,28 @@ public static class AppointmentsApi
 
     private static async Task<IResult> CreateAppointment(
         CreateAppointmentRequest request,
+        ClaimsPrincipal user,
         IValidator<CreateAppointmentRequest> validator,
         IAppointmentService appointmentService,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: Patient-role users can only create appointments for themselves (A01)
+        if (user.IsInRole(UserRoles.Patient))
+        {
+            var userIdClaim = user.FindFirst(JwtClaims.Subject)?.Value;
+            if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Results.Unauthorized();
+            }
+
+            var ownPatientId = await patientResolver.GetPatientIdByUserIdAsync(userId, cancellationToken);
+            if (ownPatientId is null || ownPatientId.Value != request.PatientId)
+            {
+                return Results.Forbid();
+            }
+        }
+
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
         {
@@ -189,10 +240,18 @@ public static class AppointmentsApi
     private static async Task<IResult> UpdateAppointment(
         Guid id,
         UpdateAppointmentRequest request,
+        ClaimsPrincipal user,
         IValidator<UpdateAppointmentRequest> validator,
         IAppointmentService appointmentService,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: check if user can access this appointment
+        if (!await CanAccessAppointmentAsync(user, id, appointmentService, patientResolver, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
         {
@@ -209,10 +268,18 @@ public static class AppointmentsApi
     private static async Task<IResult> RescheduleAppointment(
         Guid id,
         RescheduleAppointmentRequest request,
+        ClaimsPrincipal user,
         IValidator<RescheduleAppointmentRequest> validator,
         IAppointmentService appointmentService,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: check if user can access this appointment
+        if (!await CanAccessAppointmentAsync(user, id, appointmentService, patientResolver, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
         {
@@ -235,9 +302,17 @@ public static class AppointmentsApi
 
     private static async Task<IResult> ConfirmAppointment(
         Guid id,
+        ClaimsPrincipal user,
         IAppointmentService appointmentService,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: check if user can access this appointment
+        if (!await CanAccessAppointmentAsync(user, id, appointmentService, patientResolver, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         try
         {
             var appointment = await appointmentService.ConfirmAsync(id, cancellationToken);
@@ -254,9 +329,17 @@ public static class AppointmentsApi
 
     private static async Task<IResult> CheckInAppointment(
         Guid id,
+        ClaimsPrincipal user,
         IAppointmentService appointmentService,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: check if user can access this appointment
+        if (!await CanAccessAppointmentAsync(user, id, appointmentService, patientResolver, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         try
         {
             var appointment = await appointmentService.CheckInAsync(id, cancellationToken);
@@ -273,9 +356,17 @@ public static class AppointmentsApi
 
     private static async Task<IResult> StartAppointment(
         Guid id,
+        ClaimsPrincipal user,
         IAppointmentService appointmentService,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: check if user can access this appointment
+        if (!await CanAccessAppointmentAsync(user, id, appointmentService, patientResolver, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         try
         {
             var appointment = await appointmentService.StartAsync(id, cancellationToken);
@@ -293,10 +384,18 @@ public static class AppointmentsApi
     private static async Task<IResult> CompleteAppointment(
         Guid id,
         CompleteAppointmentRequest request,
+        ClaimsPrincipal user,
         IValidator<CompleteAppointmentRequest> validator,
         IAppointmentService appointmentService,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: check if user can access this appointment
+        if (!await CanAccessAppointmentAsync(user, id, appointmentService, patientResolver, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
         {
@@ -320,10 +419,18 @@ public static class AppointmentsApi
     private static async Task<IResult> CancelAppointment(
         Guid id,
         CancelAppointmentRequest request,
+        ClaimsPrincipal user,
         IValidator<CancelAppointmentRequest> validator,
         IAppointmentService appointmentService,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: check if user can access this appointment
+        if (!await CanAccessAppointmentAsync(user, id, appointmentService, patientResolver, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
         {
@@ -346,9 +453,17 @@ public static class AppointmentsApi
 
     private static async Task<IResult> MarkNoShow(
         Guid id,
+        ClaimsPrincipal user,
         IAppointmentService appointmentService,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: check if user can access this appointment
+        if (!await CanAccessAppointmentAsync(user, id, appointmentService, patientResolver, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         try
         {
             var appointment = await appointmentService.MarkNoShowAsync(id, cancellationToken);
@@ -366,10 +481,18 @@ public static class AppointmentsApi
     private static async Task<IResult> SetTelehealthLink(
         Guid id,
         SetTelehealthLinkRequest request,
+        ClaimsPrincipal user,
         IValidator<SetTelehealthLinkRequest> validator,
         IAppointmentService appointmentService,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: check if user can access this appointment
+        if (!await CanAccessAppointmentAsync(user, id, appointmentService, patientResolver, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
         {
@@ -386,10 +509,18 @@ public static class AppointmentsApi
     private static async Task<IResult> AddNotes(
         Guid id,
         AddNotesRequest request,
+        ClaimsPrincipal user,
         IValidator<AddNotesRequest> validator,
         IAppointmentService appointmentService,
+        IPatientResolver patientResolver,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: check if user can access this appointment
+        if (!await CanAccessAppointmentAsync(user, id, appointmentService, patientResolver, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
         {
@@ -401,5 +532,95 @@ public static class AppointmentsApi
         return appointment is null
             ? Results.NotFound(new { message = $"Appointment with ID {id} not found." })
             : Results.Ok(appointment);
+    }
+
+    /// <summary>
+    /// Checks if the current user can access an appointment.
+    /// Staff (Admin, Doctor, Nurse, Receptionist) can access all appointments.
+    /// Patients can only access their own appointments.
+    /// (OWASP A01 - Broken Access Control: IDOR Prevention)
+    /// </summary>
+    private static async Task<bool> CanAccessAppointmentAsync(
+        ClaimsPrincipal user,
+        Guid appointmentId,
+        IAppointmentService appointmentService,
+        IPatientResolver patientResolver,
+        CancellationToken cancellationToken)
+    {
+        // Staff (including Receptionists for scheduling) can access all appointments
+        if (UserRoles.Staff.Any(role => user.IsInRole(role)))
+        {
+            return true;
+        }
+
+        // Patients can only access their own appointments
+        if (user.IsInRole(UserRoles.Patient))
+        {
+            var userIdClaim = user.FindFirst(JwtClaims.Subject)?.Value;
+            if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return false;
+            }
+
+            // Get the patient's PatientId from Patient.API
+            var patientId = await patientResolver.GetPatientIdByUserIdAsync(userId, cancellationToken);
+            if (patientId is null)
+            {
+                return false;
+            }
+
+            // Get the appointment and check if it belongs to this patient
+            var appointment = await appointmentService.GetByIdAsync(appointmentId, cancellationToken);
+            if (appointment is null)
+            {
+                return false; // Not found
+            }
+
+            return appointment.PatientId == patientId.Value;
+        }
+
+        // Unknown role — deny access
+        return false;
+    }
+
+    /// <summary>
+    /// Checks if the current user can access appointments for a specific patient.
+    /// Staff (Admin, Doctor, Nurse, Receptionist) can access all patients' appointments.
+    /// Patients can only access their own appointments.
+    /// (OWASP A01 - Broken Access Control: IDOR Prevention)
+    /// </summary>
+    private static async Task<bool> CanAccessPatientAppointmentsAsync(
+        ClaimsPrincipal user,
+        Guid patientId,
+        IPatientResolver patientResolver,
+        CancellationToken cancellationToken)
+    {
+        // Staff (including Receptionists for scheduling) can access all appointments
+        if (UserRoles.Staff.Any(role => user.IsInRole(role)))
+        {
+            return true;
+        }
+
+        // Patients can only access their own appointments
+        if (user.IsInRole(UserRoles.Patient))
+        {
+            var userIdClaim = user.FindFirst(JwtClaims.Subject)?.Value;
+            if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return false;
+            }
+
+            // Get the patient's PatientId from Patient.API
+            var resolvedPatientId = await patientResolver.GetPatientIdByUserIdAsync(userId, cancellationToken);
+            if (resolvedPatientId is null)
+            {
+                return false;
+            }
+
+            return resolvedPatientId.Value == patientId;
+        }
+
+        // Unknown role — deny access
+        return false;
     }
 }

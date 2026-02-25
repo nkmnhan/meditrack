@@ -97,6 +97,8 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__IdentityDb=Host=postgres;Database=meditrack_identity;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD};
       - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    volumes:
+      - identity-signing-keys:/app/keys
     depends_on:
       postgres:
         condition: service_healthy
@@ -208,3 +210,4 @@ volumes:
   prometheus-data:
   jaeger-data:
   identity-dataprotection-keys:
+  identity-signing-keys:

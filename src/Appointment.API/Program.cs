@@ -7,6 +7,7 @@ using FluentValidation;
 using MediTrack.EventBusRabbitMQ;
 using MediTrack.ServiceDefaults;
 using MediTrack.ServiceDefaults.Extensions;
+using MediTrack.ServiceDefaults.Http;
 using Microsoft.EntityFrameworkCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -20,8 +21,21 @@ builder.Services.AddDbContext<AppointmentDbContext>(options =>
 // Authentication & Authorization
 builder.Services.AddDefaultAuthentication(builder.Configuration);
 
+// Required for AuthenticationDelegatingHandler
+builder.Services.AddHttpContextAccessor();
+
 // Services
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+
+// Patient resolver for cross-service IDOR checks
+// AuthenticationDelegatingHandler forwards bearer token from current request
+builder.Services.AddTransient<AuthenticationDelegatingHandler>();
+builder.Services.AddHttpClient<IPatientResolver, PatientResolver>(client =>
+{
+    var patientApiUrl = builder.Configuration["PatientApiUrl"] ?? "http://patient-api:8080";
+    client.BaseAddress = new Uri(patientApiUrl);
+})
+.AddHttpMessageHandler<AuthenticationDelegatingHandler>();
 
 // AutoMapper
 builder.Services.AddAutoMapper(config => config.AddProfile<AppointmentMappingProfile>());
@@ -48,6 +62,7 @@ using (IServiceScope scope = app.Services.CreateScope())
 }
 
 app.MapDefaultEndpoints();
+app.UseSecurityHeaders();
 app.UseCors(CorsExtensions.PolicyName);
 app.UseAuthentication();
 app.UseAuthorization();

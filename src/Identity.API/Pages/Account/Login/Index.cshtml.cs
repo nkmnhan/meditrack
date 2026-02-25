@@ -8,10 +8,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace MediTrack.Identity.Pages.Account.Login;
 
 [AllowAnonymous]
+[EnableRateLimiting("login")]
 public class Index : PageModel
 {
     private readonly SignInManager<ApplicationUser> _signInManager;

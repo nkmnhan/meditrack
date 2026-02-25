@@ -83,6 +83,7 @@ public class PatientService : IPatientService
     }
 
     public async Task<PatientResponse> CreateAsync(
+        Guid userId,
         CreatePatientRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -95,6 +96,7 @@ public class PatientService : IPatientService
             request.Address.Country);
 
         var patient = new Models.Patient(
+            userId,
             request.FirstName,
             request.LastName,
             request.DateOfBirth,
@@ -340,5 +342,33 @@ public class PatientService : IPatientService
         }
 
         return await query.AnyAsync(cancellationToken);
+    }
+
+    public async Task<Guid?> GetUserIdByPatientIdAsync(Guid patientId, CancellationToken cancellationToken = default)
+    {
+        var patient = await _dbContext.Patients
+            .AsNoTracking()
+            .Where(patient => patient.Id == patientId)
+            .Select(patient => new { patient.UserId })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return patient?.UserId;
+    }
+
+    public async Task<Guid?> GetPatientIdByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var patient = await _dbContext.Patients
+            .AsNoTracking()
+            .Where(patient => patient.UserId == userId)
+            .Select(patient => new { patient.Id })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return patient?.Id;
+    }
+
+    public async Task<bool> IsOwnedByUserAsync(Guid patientId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Patients
+            .AnyAsync(patient => patient.Id == patientId && patient.UserId == userId, cancellationToken);
     }
 }

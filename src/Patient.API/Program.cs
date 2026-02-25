@@ -53,6 +53,7 @@ using (IServiceScope scope = app.Services.CreateScope())
 }
 
 app.MapDefaultEndpoints();
+app.UseSecurityHeaders();
 app.UseCors(CorsExtensions.PolicyName);
 app.UseAuthentication();
 app.UseAuthorization();

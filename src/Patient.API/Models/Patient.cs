@@ -7,6 +7,9 @@ public class Patient
 {
     public Guid Id { get; private set; }
     
+    // Identity linkage - connects to AspNetUsers (IdentityServer)
+    public Guid UserId { get; private set; }
+    
     // Medical Record Number (MRN) - unique identifier for patient
     public string MedicalRecordNumber { get; private set; } = null!;
 
@@ -40,6 +43,7 @@ public class Patient
     private Patient() { }
 
     public Patient(
+        Guid userId,
         string firstName,
         string lastName,
         DateOnly dateOfBirth,
@@ -49,6 +53,7 @@ public class Patient
         Address address)
     {
         Id = Guid.NewGuid();
+        UserId = userId;
         MedicalRecordNumber = GenerateMedicalRecordNumber();
         FirstName = firstName;
         LastName = lastName;

@@ -77,7 +77,7 @@ public sealed class MedicalRecordConfiguration : IEntityTypeConfiguration<Medica
         builder.HasIndex(r => r.RecordedAt);
         builder.HasIndex(r => r.Status);
         builder.HasIndex(r => r.AppointmentId)
-            .HasFilter("[AppointmentId] IS NOT NULL");
+            .HasFilter("\"AppointmentId\" IS NOT NULL");
 
         // Ignore domain events collection
         builder.Ignore(r => r.DomainEvents);
