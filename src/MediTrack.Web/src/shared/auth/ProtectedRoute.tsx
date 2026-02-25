@@ -7,15 +7,18 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const auth = useAuth();
-  const { signinRedirect } = auth;
+  const { signinRedirect, activeNavigator } = auth;
 
   useEffect(() => {
-    if (!auth.isLoading && !auth.isAuthenticated && !auth.error) {
+    // Don't trigger signinRedirect during an active signout — otherwise the
+    // new navigation cancels the in-progress signoutRedirect and the user
+    // gets auto-signed-back-in because the Identity Server session is never cleared.
+    if (!auth.isLoading && !auth.isAuthenticated && !auth.error && !activeNavigator) {
       signinRedirect();
     }
-  }, [auth.isLoading, auth.isAuthenticated, auth.error, signinRedirect]);
+  }, [auth.isLoading, auth.isAuthenticated, auth.error, activeNavigator, signinRedirect]);
 
-  if (auth.isLoading) {
+  if (auth.isLoading || activeNavigator) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-neutral-50">
         <p className="text-lg text-neutral-500">Loading...</p>

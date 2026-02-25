@@ -35,26 +35,14 @@ public class Index : PageModel
     {
         LogoutId = logoutId;
 
-        bool showLogoutPrompt = true;
-
         if (User.Identity?.IsAuthenticated != true)
         {
-            showLogoutPrompt = false;
-        }
-        else
-        {
-            var logoutContext = await _interaction.GetLogoutContextAsync(logoutId);
-            if (logoutContext.ShowSignoutPrompt == false)
-            {
-                showLogoutPrompt = false;
-            }
-        }
-
-        if (!showLogoutPrompt)
-        {
+            // Already signed out — skip prompt, go straight to LoggedOut page
             return await OnPost();
         }
 
+        // Always show the logout confirmation so the user sees a clear sign-out page
+        // (even when id_token_hint is provided and Duende would skip the prompt)
         View = new LogoutViewModel { LogoutId = logoutId, ShowLogoutPrompt = true };
         return Page();
     }
