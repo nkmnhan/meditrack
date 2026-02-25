@@ -233,9 +233,35 @@ import { clsxMerge } from "@/shared/utils/clsxMerge";
 
 ## Performance
 
-- `React.memo` — prevent unnecessary re-renders on pure components
-- `useCallback` — stable function references passed as props
-- `useMemo` — cache expensive derived values
+### React Compiler (MANDATORY)
+
+This project uses **React Compiler** (stable since v1.0, Oct 2025). The compiler automatically handles memoization — do NOT manually add `React.memo`, `useCallback`, or `useMemo` unless you have a measured performance problem that the compiler doesn't solve.
+
+- **Do NOT** wrap components in `React.memo` by default — the compiler skips unnecessary re-renders automatically
+- **Do NOT** wrap functions in `useCallback` by default — the compiler stabilizes function references automatically
+- **Do NOT** wrap values in `useMemo` by default — the compiler memoizes expensive calculations automatically
+- **DO** write plain, simple code and let the compiler optimize it
+- **Exception**: If you profile a specific performance issue and confirm the compiler isn't handling it (e.g., third-party library boundary, complex cross-component dependency), then add manual memoization with a comment explaining why
+
+```tsx
+// BAD — unnecessary manual memoization (compiler handles this)
+const filteredPatients = useMemo(() =>
+  patients.filter(p => p.isActive), [patients]);
+const handleClick = useCallback(() => navigate('/patients'), [navigate]);
+const PatientCard = React.memo(({ patient }: Props) => { ... });
+
+// GOOD — plain code, compiler optimizes automatically
+const filteredPatients = patients.filter(p => p.isActive);
+const handleClick = () => navigate('/patients');
+function PatientCard({ patient }: Props) { ... }
+
+// GOOD — manual memoization WITH justification (rare)
+// React Compiler doesn't optimize across this chart library boundary
+const chartData = useMemo(() => transformData(rawData), [rawData]);
+```
+
+### Other Performance Rules
+
 - RTK Query — built-in caching; do not duplicate API calls with `useEffect`
 
 ---
@@ -766,6 +792,14 @@ Before adding any new package, answer:
 - What's the license? (MIT/Apache = go, commercial = discuss first)
 - Does it duplicate something already in the project?
 - Is it the simplest tool for the job? (KISS/YAGNI)
+
+### Stable Versions Only (MANDATORY)
+
+- **ALWAYS** use the latest **stable** release of any package
+- **NEVER** use preview, alpha, beta, RC (release candidate), or nightly versions
+- If the latest version is a preview (e.g., `9.0.0-preview.1`), use the latest stable version instead (e.g., `8.x.x`)
+- This applies to both NuGet (backend) and npm (frontend) packages
+- Check version status on NuGet Gallery or npm before adding
 
 ---
 

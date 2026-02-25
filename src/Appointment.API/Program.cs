@@ -15,7 +15,7 @@ builder.AddServiceDefaults("appointment-api");
 
 // Database
 builder.Services.AddDbContext<AppointmentDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("AppointmentDb")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("AppointmentDb")));
 
 // Authentication & Authorization
 builder.Services.AddDefaultAuthentication(builder.Configuration);
@@ -40,12 +40,11 @@ builder.Services.AddEndpointsApiExplorer();
 
 WebApplication app = builder.Build();
 
-// Create database on startup (DEVELOPMENT ONLY — use deployment pipeline in production)
-if (app.Environment.IsDevelopment())
+// Apply database migrations on startup
+using (IServiceScope scope = app.Services.CreateScope())
 {
-    using IServiceScope scope = app.Services.CreateScope();
     AppointmentDbContext dbContext = scope.ServiceProvider.GetRequiredService<AppointmentDbContext>();
-    await dbContext.Database.EnsureCreatedAsync();
+    await dbContext.Database.MigrateAsync();
 }
 
 app.MapDefaultEndpoints();

@@ -20,7 +20,7 @@ builder.Services.AddDbContext<AuditDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("AuditDatabase")
         ?? throw new InvalidOperationException("AuditDatabase connection string not found");
-    options.UseSqlServer(connectionString);
+    options.UseNpgsql(connectionString);
 });
 
 // Register services
@@ -56,15 +56,11 @@ builder.Services.AddHostedService<NotificationWorker>();
 
 IHost host = builder.Build();
 
-// Apply database migrations (DEVELOPMENT ONLY — use deployment pipeline in production)
-// Auto-migration requires DDL permissions which violates least privilege in production
-if (builder.Environment.IsDevelopment())
+// Apply database migrations on startup — EF Core handles this automatically
+using (var scope = host.Services.CreateScope())
 {
-    using (var scope = host.Services.CreateScope())
-    {
-        var auditDbContext = scope.ServiceProvider.GetRequiredService<AuditDbContext>();
-        await auditDbContext.Database.MigrateAsync();
-    }
+    var auditDbContext = scope.ServiceProvider.GetRequiredService<AuditDbContext>();
+    await auditDbContext.Database.MigrateAsync();
 }
 
 // Subscribe to integration events

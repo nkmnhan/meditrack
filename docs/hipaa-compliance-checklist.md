@@ -527,7 +527,7 @@ Store in `docs/compliance/`:
 
 ### Pre-Audit Checklist
 
-- [ ] Run TDE verification script (see `sql/setup-tde.sql`)
+- [ ] Enable encryption at rest (PostgreSQL: use cloud-managed encryption or filesystem encryption)
 - [ ] Export sample PHI audit logs
 - [ ] Test disaster recovery restore
 - [ ] Review all documentation for completeness

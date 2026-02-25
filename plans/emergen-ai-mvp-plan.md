@@ -38,8 +38,8 @@
 
 | Task | Output | Acceptance Criteria |
 |------|--------|---------------------|
-| Create migration scripts | SQL files in `/sql/migrate-to-postgres/` | All 6 DB schemas converted (Identity, Patient, Appointment, MedicalRecords, Audit, Emergen) |
-| Set up pgvector | `CREATE EXTENSION vector` | Vector column creates without errors |
+| Create EF Core migrations | Migration files in each service project | All 6 DB schemas converted (Identity, Patient, Appointment, MedicalRecords, Audit, Emergen) |
+| Set up pgvector | `CREATE EXTENSION vector` via init script | Vector column creates without errors |
 | Test EF Core provider | All existing APIs start successfully | Zero breaking changes to domain services |
 | Load test | Benchmark suite | Write: 1K inserts/sec, pgvector search: <50ms at 1.5 QPS |
 

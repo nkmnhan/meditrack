@@ -1,5 +1,7 @@
 # Plan: Replace SQL Server with PostgreSQL
 
+## Status: Complete
+
 ## Motivation
 
 - **SQL Server** requires a commercial license for production (Developer/Express editions have limitations)
@@ -7,38 +9,21 @@
 - The upcoming **Emergen AI** feature needs **pgvector** (PostgreSQL extension) for vector similarity search — running PostgreSQL already eliminates the need for a separate vector database
 - One database engine across the entire stack simplifies infrastructure and Docker Compose
 
-## Current State
+## What Changed
 
-| Service | Database | ORM Provider |
-|---------|----------|-------------|
-| Identity.API | SQL Server (`MediTrack.Identity`) | EF Core + `Microsoft.EntityFrameworkCore.SqlServer` |
-| Patient.API | SQL Server (`MediTrack.Patients`) | EF Core + `Microsoft.EntityFrameworkCore.SqlServer` |
-| Appointment.API | SQL Server (`MediTrack.Appointments`) | EF Core + `Microsoft.EntityFrameworkCore.SqlServer` |
-| MedicalRecords.API | SQL Server (`MediTrack.Records`) | EF Core + `Microsoft.EntityFrameworkCore.SqlServer` |
-| Notification.Worker | SQL Server (`MediTrack.Audit`) | EF Core + `Microsoft.EntityFrameworkCore.SqlServer` |
-| IntegrationEventLogEF | SQL Server (`MediTrack.Events`) | EF Core + `Microsoft.EntityFrameworkCore.SqlServer` |
-
-## Target State
-
-All services use **PostgreSQL** via `Npgsql.EntityFrameworkCore.PostgreSQL` (free, open-source, BSD-2-Clause license).
-
-AI Agent Service additionally uses **pgvector** via `pgvector-dotnet` (free, MIT license).
-
-## Migration Steps
-
-### 1. Update NuGet Packages
+### NuGet Packages
 
 **In `Directory.Packages.props`:**
-- Remove: `Microsoft.EntityFrameworkCore.SqlServer`
-- Add: `Npgsql.EntityFrameworkCore.PostgreSQL` (latest stable)
-- Add: `Npgsql.EntityFrameworkCore.PostgreSQL.Design` (if needed for tooling)
+- Removed: `Microsoft.EntityFrameworkCore.SqlServer`
+- Added: `Npgsql.EntityFrameworkCore.PostgreSQL` (stable)
+- Added: `Pgvector` + `Pgvector.EntityFrameworkCore` (for future Emergen AI)
 
 **In each `.csproj`:**
-- Replace `<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />` with `<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />`
+- `<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />` → `<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />`
 
-### 2. Update DbContext Configuration
+### DbContext Configuration
 
-In every `Program.cs` or DI extension, change:
+Every `Program.cs` changed from `UseSqlServer` to `UseNpgsql`:
 
 ```csharp
 // Before
@@ -48,126 +33,92 @@ options.UseSqlServer(connectionString);
 options.UseNpgsql(connectionString);
 ```
 
-### 3. Update Connection Strings
+### Database Creation — EF Core Handles Everything
 
-**In `appsettings.json` / `appsettings.Development.json`:**
+Each service creates its own database and schema on startup automatically. No init scripts needed:
 
-```json
-// Before
-"ConnectionStrings": {
-  "DefaultConnection": "Server=sqlserver;Database=MediTrack.Patients;User Id=sa;Password=...;TrustServerCertificate=true"
-}
-
-// After
-"ConnectionStrings": {
-  "DefaultConnection": "Host=postgres;Database=meditrack_patients;Username=meditrack;Password=...;"
+```csharp
+// EF Core creates the database if it doesn't exist, then creates the schema
+using (IServiceScope scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<MyDbContext>();
+    await dbContext.Database.EnsureCreatedAsync();
 }
 ```
 
-### 4. Update Docker Compose
+- 4 services use `EnsureCreatedAsync()` — creates DB + schema from the model snapshot
+- Notification.Worker uses `MigrateAsync()` — creates DB + applies EF migrations
 
-Replace the `sqlserver` service with `postgres`:
+**No Docker entrypoint scripts or SQL init files required.** Starting from a fresh PostgreSQL container, each service handles its own database.
+
+### Connection Strings
+
+```json
+// Before (SQL Server)
+"Server=sqlserver;Database=MediTrack.Patients;User Id=sa;Password=...;TrustServerCertificate=true"
+
+// After (PostgreSQL)
+"Host=postgres;Database=meditrack_patients;Username=meditrack;Password=...;"
+```
+
+### Docker Compose
+
+Replaced `sqlserver` service with `postgres`:
 
 ```yaml
-# Before
-sqlserver:
-  image: mcr.microsoft.com/mssql/server:2022-latest
-  environment:
-    ACCEPT_EULA: "Y"
-    SA_PASSWORD: "${SA_PASSWORD}"
-  ports:
-    - "1433:1433"
-
-# After
 postgres:
-  image: postgres:17
+  image: pgvector/pgvector:pg17
   environment:
-    POSTGRES_USER: meditrack
-    POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+    POSTGRES_USER: ${POSTGRES_USER:-meditrack}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     POSTGRES_DB: meditrack
   ports:
     - "5432:5432"
   volumes:
     - postgres-data:/var/lib/postgresql/data
-    - ./sql/init-databases.sql:/docker-entrypoint-initdb.d/init.sql
 ```
 
-Update all service `depends_on` from `sqlserver` to `postgres`.
+Using `pgvector/pgvector:pg17` image (PostgreSQL 17 with pgvector pre-installed) so the extension is available when Emergen AI needs it.
 
-### 5. Create Database Initialization Script
-
-Create `sql/init-databases.sql` to create per-service databases:
-
-```sql
-CREATE DATABASE meditrack_identity;
-CREATE DATABASE meditrack_patients;
-CREATE DATABASE meditrack_appointments;
-CREATE DATABASE meditrack_records;
-CREATE DATABASE meditrack_audit;
-CREATE DATABASE meditrack_events;
-```
-
-### 6. Handle SQL Server-Specific Code
-
-Search for and replace:
-- `NVARCHAR` → `VARCHAR` or `TEXT` (PostgreSQL uses `TEXT` natively)
-- `GETDATE()` / `GETUTCDATE()` → `NOW()` / `CURRENT_TIMESTAMP`
-- `IDENTITY` columns → PostgreSQL uses `SERIAL` / `GENERATED ALWAYS AS IDENTITY`
-- `[dbo].` schema prefixes → remove or use `public.`
-- String comparison collation differences
-- `NEWSEQUENTIALID()` → `gen_random_uuid()`
-- `BIT` type → `BOOLEAN`
-
-Note: EF Core handles most of these automatically when switching providers. Manual SQL in migration files or raw queries needs manual review.
-
-### 7. Recreate All Migrations
-
-```bash
-# Delete all existing migration files
-# Then regenerate for each service:
-dotnet ef migrations add InitialPostgres --project src/Patient.API
-dotnet ef migrations add InitialPostgres --project src/Appointment.API
-dotnet ef migrations add InitialPostgres --project src/MedicalRecords.Infrastructure
-dotnet ef migrations add InitialPostgres --project src/Identity.API
-dotnet ef migrations add InitialPostgres --project src/Notification.Worker
-```
-
-### 8. Update TDE Documentation
-
-SQL Server TDE (`sql/setup-tde.sql`) is no longer applicable. PostgreSQL equivalent:
-- Use `pgcrypto` extension for column-level encryption
-- Use filesystem encryption or cloud-managed encryption for at-rest encryption
-- Update `docs/tde-configuration.md` accordingly
-
-### 9. Update `.env.example`
+### Environment Variables
 
 ```env
 # Before
 SA_PASSWORD=YourStrong@Password
 
 # After
-POSTGRES_PASSWORD=YourStrong@Password
 POSTGRES_USER=meditrack
+POSTGRES_PASSWORD=YourStrong@Password
 ```
 
-### 10. Update Health Checks
+### Migrations
 
-In `MediTrack.ServiceDefaults`, update health check registration if it references SQL Server-specific health check packages.
+All existing SQL Server migrations were deleted and regenerated for PostgreSQL:
 
-## Files Affected
+```bash
+dotnet ef migrations add InitialPostgres --project src/<Service>
+```
+
+PostgreSQL-native types are used: `uuid`, `boolean`, `timestamp with time zone`, `text`, `character varying(N)`.
+
+### Removed
+
+- `sql/` folder — no SQL scripts needed; EF Core handles database creation
+- `docker/postgres-init.sh` — no Docker entrypoint scripts needed
+- SQL Server TDE (`setup-tde.sql`) — not applicable to PostgreSQL; use filesystem or cloud-managed encryption at rest instead
+
+## Files Changed
 
 | File | Change |
 |------|--------|
-| `Directory.Packages.props` | Swap SqlServer → Npgsql packages |
-| `docker-compose.yml` | Replace sqlserver service with postgres |
-| `docker-compose.override.yml` | Update connection strings |
-| `.env.example` | Update env vars |
-| `src/*/Program.cs` (all services) | `UseSqlServer` → `UseNpgsql` |
-| `src/*/appsettings*.json` (all services) | Update connection strings |
-| `src/*/Migrations/` (all services) | Delete and regenerate |
-| `sql/setup-tde.sql` | Remove or replace |
-| `sql/setup-audit-user.sql` | Rewrite for PostgreSQL |
-| `docs/tde-configuration.md` | Update for PostgreSQL |
+| `Directory.Packages.props` | SqlServer → Npgsql + pgvector packages |
+| `docker-compose.yml` | sqlserver → postgres service |
+| `docker-compose.override.yml` | Updated connection strings |
+| `.env.example` | `SA_PASSWORD` → `POSTGRES_USER` / `POSTGRES_PASSWORD` |
+| `src/*/Program.cs` (all services) | `UseSqlServer` → `UseNpgsql`, removed `IsDevelopment()` guard on DB creation |
+| `src/*/.csproj` (all services) | SqlServer → Npgsql package reference |
+| `src/*/appsettings*.json` (all services) | PostgreSQL connection strings |
+| `src/*/Migrations/` (all services) | Regenerated for PostgreSQL |
 
 ## Risks
 
@@ -178,6 +129,6 @@ In `MediTrack.ServiceDefaults`, update health check registration if it reference
 ## Benefits After Migration
 
 - Fully open-source database stack (no licensing concerns)
-- Native pgvector support for the AI Secretary feature
+- Native pgvector support for the Emergen AI feature
 - Simpler Docker Compose (PostgreSQL image is smaller and faster to start)
-- Better alignment with the Medical AI architecture design
+- No init scripts — each service is self-contained and creates its own database

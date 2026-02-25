@@ -11,9 +11,9 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults("identity-api");
 
-// EF Core + SQL Server
+// EF Core + PostgreSQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("IdentityDb")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("IdentityDb")));
 
 // ASP.NET Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -50,15 +50,15 @@ builder.Services.AddRazorPages();
 
 WebApplication app = builder.Build();
 
-// Migrate database and seed on startup (dev only)
-if (app.Environment.IsDevelopment())
+// Apply database migrations on startup
+using (IServiceScope scope = app.Services.CreateScope())
 {
-    using IServiceScope scope = app.Services.CreateScope();
     IServiceProvider services = scope.ServiceProvider;
 
     ApplicationDbContext dbContext = services.GetRequiredService<ApplicationDbContext>();
-    await dbContext.Database.EnsureCreatedAsync();
+    await dbContext.Database.MigrateAsync();
 
+    // Seed default users and roles
     UserManager<ApplicationUser> userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
     RoleManager<IdentityRole> roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     ILogger<Program> logger = services.GetRequiredService<ILogger<Program>>();

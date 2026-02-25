@@ -4,10 +4,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Entity Framework Core -->
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.3" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.3" />
+    <!-- Entity Framework Core - using 9.x for stable Npgsql support -->
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.0" />
+    
+    <!-- pgvector for AI embeddings -->
+    <PackageVersion Include="Pgvector" Version="0.4.0" />
+    <PackageVersion Include="Pgvector.EntityFrameworkCore" Version="0.4.0" />
 
     <!-- RabbitMQ -->
     <PackageVersion Include="RabbitMQ.Client" Version="7.2.0" />
@@ -27,12 +31,12 @@
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.3.0" />
 
     <!-- Authentication & Identity -->
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
     <PackageVersion Include="IdentityModel" Version="7.0.0" />
     <PackageVersion Include="Duende.IdentityServer" Version="7.4.6" />
     <PackageVersion Include="Duende.IdentityServer.AspNetIdentity" Version="7.4.6" />
-    <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.3" />
-    <PackageVersion Include="Microsoft.AspNetCore.Identity.UI" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.0" />
 
     <!-- Validation & Mapping -->
     <PackageVersion Include="FluentValidation" Version="12.1.1" />

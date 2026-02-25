@@ -1,9 +1,4 @@
 services:
-  sqlserver:
-    environment:
-      SA_PASSWORD: MediTrack_Dev@2026!
-      MSSQL_PID: Express
-
   rabbitmq:
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
@@ -15,7 +10,7 @@ services:
       - ASPNETCORE_URLS=http://+:8080;https://+:8443
       - Kestrel__Certificates__Default__Path=/certs/localhost.pem
       - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
-      - ConnectionStrings__IdentityDb=Server=sqlserver,1433;Database=IdentityDb;User Id=sa;Password=MediTrack_Dev@2026!;TrustServerCertificate=true;
+      - ConnectionStrings__IdentityDb=Host=postgres;Database=meditrack_identity;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
       - WebClientUrl=https://localhost:3000
       - ServiceClientSecret=${SERVICE_CLIENT_SECRET:-service-secret-dev}
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
@@ -23,7 +18,7 @@ services:
       - ./dev-certs/certs:/certs:ro
       - identity-dataprotection-keys:/root/.aspnet/DataProtection-Keys
     depends_on:
-      sqlserver:
+      postgres:
         condition: service_healthy
       otel-collector:
         condition: service_started
@@ -34,7 +29,7 @@ services:
       - ASPNETCORE_URLS=http://+:8080;https://+:8443
       - Kestrel__Certificates__Default__Path=/certs/localhost.pem
       - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
-      - ConnectionStrings__PatientDb=Server=sqlserver,1433;Database=PatientDb;User Id=sa;Password=MediTrack_Dev@2026!;TrustServerCertificate=true;
+      - ConnectionStrings__PatientDb=Host=postgres;Database=meditrack_patients;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
       - IdentityUrl=http://identity-api:8080
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
@@ -43,7 +38,7 @@ services:
     volumes:
       - ./dev-certs/certs:/certs:ro
     depends_on:
-      sqlserver:
+      postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -58,7 +53,7 @@ services:
       - ASPNETCORE_URLS=http://+:8080;https://+:8443
       - Kestrel__Certificates__Default__Path=/certs/localhost.pem
       - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
-      - ConnectionStrings__AppointmentDb=Server=sqlserver,1433;Database=AppointmentDb;User Id=sa;Password=MediTrack_Dev@2026!;TrustServerCertificate=true;
+      - ConnectionStrings__AppointmentDb=Host=postgres;Database=meditrack_appointments;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
       - IdentityUrl=http://identity-api:8080
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
@@ -67,7 +62,7 @@ services:
     volumes:
       - ./dev-certs/certs:/certs:ro
     depends_on:
-      sqlserver:
+      postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -82,7 +77,7 @@ services:
       - ASPNETCORE_URLS=http://+:8080;https://+:8443
       - Kestrel__Certificates__Default__Path=/certs/localhost.pem
       - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
-      - ConnectionStrings__MedicalRecordsDb=Server=sqlserver,1433;Database=MedicalRecordsDb;User Id=sa;Password=MediTrack_Dev@2026!;TrustServerCertificate=true;
+      - ConnectionStrings__MedicalRecordsDb=Host=postgres;Database=meditrack_records;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
       - IdentityUrl=http://identity-api:8080
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
@@ -91,7 +86,7 @@ services:
     volumes:
       - ./dev-certs/certs:/certs:ro
     depends_on:
-      sqlserver:
+      postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -103,13 +98,13 @@ services:
   notification-worker:
     environment:
       - DOTNET_ENVIRONMENT=Development
-      - ConnectionStrings__AuditDatabase=Server=sqlserver,1433;Database=AuditDb;User Id=sa;Password=MediTrack_Dev@2026!;TrustServerCertificate=true;
+      - ConnectionStrings__AuditDatabase=Host=postgres;Database=meditrack_audit;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
       - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
     depends_on:
-      sqlserver:
+      postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy

@@ -17,7 +17,7 @@ builder.AddServiceDefaults("medicalrecords-api");
 
 // Database
 builder.Services.AddDbContext<MedicalRecordsDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("MedicalRecordsDb")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("MedicalRecordsDb")));
 
 // Authentication & Authorization
 builder.Services.AddDefaultAuthentication(builder.Configuration);
@@ -47,12 +47,11 @@ builder.Services.AddEndpointsApiExplorer();
 
 WebApplication app = builder.Build();
 
-// Create database on startup (DEVELOPMENT ONLY — use deployment pipeline in production)
-if (app.Environment.IsDevelopment())
+// Apply database migrations on startup
+using (IServiceScope scope = app.Services.CreateScope())
 {
-    using IServiceScope scope = app.Services.CreateScope();
     MedicalRecordsDbContext dbContext = scope.ServiceProvider.GetRequiredService<MedicalRecordsDbContext>();
-    await dbContext.Database.EnsureCreatedAsync();
+    await dbContext.Database.MigrateAsync();
 }
 
 app.MapDefaultEndpoints();

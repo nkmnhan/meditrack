@@ -15,7 +15,7 @@ builder.AddServiceDefaults("patient-api");
 
 // Database
 builder.Services.AddDbContext<PatientDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("PatientDb")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("PatientDb")));
 
 // Services
 builder.Services.AddScoped<IPatientService, PatientService>();
@@ -45,12 +45,11 @@ builder.Services.AddEndpointsApiExplorer();
 
 WebApplication app = builder.Build();
 
-// Create database on startup (DEVELOPMENT ONLY — use deployment pipeline in production)
-if (app.Environment.IsDevelopment())
+// Apply database migrations on startup
+using (IServiceScope scope = app.Services.CreateScope())
 {
-    using IServiceScope scope = app.Services.CreateScope();
     PatientDbContext dbContext = scope.ServiceProvider.GetRequiredService<PatientDbContext>();
-    await dbContext.Database.EnsureCreatedAsync();
+    await dbContext.Database.MigrateAsync();
 }
 
 app.MapDefaultEndpoints();
