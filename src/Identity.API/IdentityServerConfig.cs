@@ -58,7 +58,7 @@ public static class IdentityServerConfig
                 ClientId = "meditrack-service",
                 ClientName = "MediTrack Service-to-Service",
                 AllowedGrantTypes = GrantTypes.ClientCredentials,
-                ClientSecrets = [new Secret("service-secret".Sha256())],
+                ClientSecrets = [new Secret((configuration["ServiceClientSecret"] ?? throw new InvalidOperationException("ServiceClientSecret is not configured")).Sha256())],
                 AccessTokenLifetime = 1800,
                 AllowedScopes =
                 [

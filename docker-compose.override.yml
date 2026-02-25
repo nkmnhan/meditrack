@@ -6,8 +6,8 @@ services:
 
   rabbitmq:
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
 
   identity-api:
     environment:
@@ -17,6 +17,7 @@ services:
       - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
       - ConnectionStrings__IdentityDb=Server=sqlserver,1433;Database=IdentityDb;User Id=sa;Password=MediTrack_Dev@2026!;TrustServerCertificate=true;
       - WebClientUrl=https://localhost:3000
+      - ServiceClientSecret=${SERVICE_CLIENT_SECRET:-service-secret-dev}
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
     volumes:
       - ./dev-certs/certs:/certs:ro
@@ -36,8 +37,8 @@ services:
       - ConnectionStrings__PatientDb=Server=sqlserver,1433;Database=PatientDb;User Id=sa;Password=MediTrack_Dev@2026!;TrustServerCertificate=true;
       - IdentityUrl=http://identity-api:8080
       - RabbitMQ__HostName=rabbitmq
-      - RabbitMQ__UserName=guest
-      - RabbitMQ__Password=guest
+      - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
     volumes:
       - ./dev-certs/certs:/certs:ro
@@ -60,8 +61,8 @@ services:
       - ConnectionStrings__AppointmentDb=Server=sqlserver,1433;Database=AppointmentDb;User Id=sa;Password=MediTrack_Dev@2026!;TrustServerCertificate=true;
       - IdentityUrl=http://identity-api:8080
       - RabbitMQ__HostName=rabbitmq
-      - RabbitMQ__UserName=guest
-      - RabbitMQ__Password=guest
+      - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
     volumes:
       - ./dev-certs/certs:/certs:ro
@@ -84,8 +85,8 @@ services:
       - ConnectionStrings__MedicalRecordsDb=Server=sqlserver,1433;Database=MedicalRecordsDb;User Id=sa;Password=MediTrack_Dev@2026!;TrustServerCertificate=true;
       - IdentityUrl=http://identity-api:8080
       - RabbitMQ__HostName=rabbitmq
-      - RabbitMQ__UserName=guest
-      - RabbitMQ__Password=guest
+      - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
     volumes:
       - ./dev-certs/certs:/certs:ro
@@ -104,8 +105,8 @@ services:
       - DOTNET_ENVIRONMENT=Development
       - ConnectionStrings__AuditDatabase=Server=sqlserver,1433;Database=AuditDb;User Id=sa;Password=MediTrack_Dev@2026!;TrustServerCertificate=true;
       - RabbitMQ__HostName=rabbitmq
-      - RabbitMQ__UserName=guest
-      - RabbitMQ__Password=guest
+      - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
     depends_on:
       sqlserver:
