@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import { Temporal } from "temporal-polyfill";
+import "temporal-polyfill/global";
 import { useCalendarApp } from "@schedule-x/react";
 import {
   createViewDay,
   createViewWeek,
   createViewMonthGrid,
-  toJSDate,
 } from "@schedule-x/calendar";
 import type { CalendarEvent } from "@schedule-x/calendar";
 import { createEventsServicePlugin } from "@schedule-x/events-service";
@@ -19,13 +18,15 @@ function appointmentToCalendarEvent(appointment: AppointmentListItem): CalendarE
   const startDate = new Date(appointment.scheduledDateTime);
   const endDate = new Date(startDate.getTime() + appointment.durationMinutes * 60_000);
 
+  const timeZone = Temporal.Now.timeZoneId();
+
   const startZdt = Temporal.ZonedDateTime.from({
     year: startDate.getFullYear(),
     month: startDate.getMonth() + 1,
     day: startDate.getDate(),
     hour: startDate.getHours(),
     minute: startDate.getMinutes(),
-    timeZone: Temporal.Now.timeZoneId(),
+    timeZone,
   });
 
   const endZdt = Temporal.ZonedDateTime.from({
@@ -34,7 +35,7 @@ function appointmentToCalendarEvent(appointment: AppointmentListItem): CalendarE
     day: endDate.getDate(),
     hour: endDate.getHours(),
     minute: endDate.getMinutes(),
-    timeZone: Temporal.Now.timeZoneId(),
+    timeZone,
   });
 
   return {
@@ -71,11 +72,12 @@ export function useAppointmentCalendar({
 
   const [dateRange, setDateRange] = useState<{ fromDate: string; toDate: string }>(() => {
     // Default: current month range with buffer
+    // Send UTC ISO strings — backend stores/queries in UTC
     const startOfMonth = today.with({ day: 1 }).subtract({ days: 7 });
     const endOfMonth = today.with({ day: 1 }).add({ months: 1, days: 7 });
     return {
-      fromDate: startOfMonth.toString(),
-      toDate: endOfMonth.toString(),
+      fromDate: `${startOfMonth.toString()}T00:00:00Z`,
+      toDate: `${endOfMonth.toString()}T23:59:59Z`,
     };
   });
 
@@ -113,32 +115,22 @@ export function useAppointmentCalendar({
         },
         onClickDateTime: (dateTime: Temporal.ZonedDateTime) => {
           if (onDateTimeClick) {
-            onDateTimeClick(toJSDate(dateTime.toString()));
+            // Convert Temporal.ZonedDateTime to JS Date via epoch milliseconds
+            onDateTimeClick(new Date(dateTime.epochMilliseconds));
           }
         },
         onRangeUpdate: (range) => {
-          const rangeStart = range.start;
-          const rangeEnd = range.end;
-
-          // Convert Temporal dates to ISO strings for the API
-          let fromDateStr: string;
-          let toDateStr: string;
-
-          if (rangeStart instanceof Temporal.ZonedDateTime) {
-            fromDateStr = rangeStart.toPlainDate().toString();
-          } else {
-            fromDateStr = rangeStart.toString();
-          }
-
-          if (rangeEnd instanceof Temporal.ZonedDateTime) {
-            toDateStr = rangeEnd.toPlainDate().toString();
-          } else {
-            toDateStr = rangeEnd.toString();
-          }
+          // Convert Temporal dates to UTC ISO strings for the backend
+          const fromPlainDate = range.start instanceof Temporal.ZonedDateTime
+            ? range.start.toPlainDate()
+            : range.start;
+          const toPlainDate = range.end instanceof Temporal.ZonedDateTime
+            ? range.end.toPlainDate()
+            : range.end;
 
           setDateRange({
-            fromDate: fromDateStr,
-            toDate: toDateStr,
+            fromDate: `${fromPlainDate.toString()}T00:00:00Z`,
+            toDate: `${toPlainDate.toString()}T23:59:59Z`,
           });
         },
       },

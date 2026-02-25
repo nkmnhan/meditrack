@@ -83,7 +83,7 @@ export const appointmentApi = createApi({
           : [{ type: "Appointment", id: "LIST" }],
     }),
 
-    checkConflicts: builder.query<AppointmentListItem[], ConflictCheckParams>({
+    checkConflicts: builder.query<{ hasConflict: boolean }, ConflictCheckParams>({
       query: (params) => ({
         url: "/appointments/conflicts",
         params: {

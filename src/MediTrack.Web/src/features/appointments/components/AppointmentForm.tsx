@@ -4,6 +4,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { X, Loader2, Save, AlertTriangle, Search } from "lucide-react";
 import { useAuth } from "react-oidc-context";
+
+/** Convert local date + time strings to a UTC ISO string for the API.
+ *  The user picks a local time (e.g. 2:30 PM EST) and we must send UTC to the backend. */
+function localDateTimeToUtcIso(date: string, time: string): string {
+  const localDate = new Date(`${date}T${time}:00`);
+  return localDate.toISOString();
+}
 import {
   useCreateAppointmentMutation,
   useUpdateAppointmentMutation,
@@ -172,16 +179,17 @@ export function AppointmentForm({
 
   useEffect(() => {
     if (!watchedDate || !watchedTime || !watchedProviderId) return;
-    const startTime = `${watchedDate}T${watchedTime}:00`;
-    const endDate = new Date(startTime);
+    // Convert local form values to UTC for the API
+    const startUtc = localDateTimeToUtcIso(watchedDate, watchedTime);
+    const endDate = new Date(startUtc);
     endDate.setMinutes(endDate.getMinutes() + watchedDuration);
-    const endTime = endDate.toISOString();
+    const endUtc = endDate.toISOString();
 
     const debounce = setTimeout(() => {
       checkConflicts({
         providerId: watchedProviderId,
-        startTime,
-        endTime,
+        startTime: startUtc,
+        endTime: endUtc,
         ...(editAppointmentId && { excludeAppointmentId: editAppointmentId }),
       });
     }, 500);
@@ -190,7 +198,8 @@ export function AppointmentForm({
 
   async function onSubmit(formData: AppointmentFormData) {
     try {
-      const scheduledDateTime = `${formData.date}T${formData.time}:00`;
+      // Convert local date/time to UTC ISO string for the backend
+      const scheduledDateTime = localDateTimeToUtcIso(formData.date, formData.time);
       const typeNumericValue = AppointmentTypeValue[formData.type as AppointmentType];
 
       if (isEditMode) {
@@ -226,7 +235,7 @@ export function AppointmentForm({
     }
   }
 
-  const hasConflicts = conflicts && conflicts.length > 0;
+  const hasConflicts = conflicts?.hasConflict ?? false;
   const inputClassName =
     "w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500";
 
@@ -267,7 +276,7 @@ export function AppointmentForm({
               <div>
                 <p className="text-sm font-medium text-warning-700">Scheduling Conflict</p>
                 <p className="text-xs text-warning-600">
-                  This provider has {conflicts.length} overlapping appointment(s) in this time slot.
+                  This provider has an overlapping appointment in this time slot.
                 </p>
               </div>
             </div>
