@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import { ProtectedRoute, CallbackPage } from "./shared/auth";
 import { Layout } from "./shared/components";
 import { PatientList, PatientDetail, PatientForm } from "./features/patients";
+import { AppointmentCalendarPage } from "./features/appointments";
 
 function Dashboard() {
   return (
@@ -13,9 +14,9 @@ function Dashboard() {
           <h3 className="text-lg font-semibold text-neutral-900">Patients</h3>
           <p className="mt-2 text-sm text-neutral-500">Manage patient records and information</p>
         </div>
-        <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm opacity-50">
+        <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
           <h3 className="text-lg font-semibold text-neutral-900">Appointments</h3>
-          <p className="mt-2 text-sm text-neutral-500">Coming soon</p>
+          <p className="mt-2 text-sm text-neutral-500">Schedule and manage appointments</p>
         </div>
         <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm opacity-50">
           <h3 className="text-lg font-semibold text-neutral-900">Medical Records</h3>
@@ -76,6 +77,16 @@ export default function App() {
           <ProtectedRoute>
             <Layout>
               <PatientForm />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/appointments"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <AppointmentCalendarPage />
             </Layout>
           </ProtectedRoute>
         }

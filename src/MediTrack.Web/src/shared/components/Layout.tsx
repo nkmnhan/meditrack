@@ -77,7 +77,7 @@ export function Layout({ children }: LayoutProps) {
   const navigation = [
     { to: "/", icon: LayoutDashboard, label: "Dashboard", disabled: false },
     { to: "/patients", icon: Users, label: "Patients", disabled: false },
-    { to: "/appointments", icon: Calendar, label: "Appointments", disabled: true },
+    { to: "/appointments", icon: Calendar, label: "Appointments", disabled: false },
     { to: "/medical-records", icon: FileText, label: "Medical Records", disabled: true },
   ];
 

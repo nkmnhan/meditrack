@@ -1,3 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ScheduleX calendar wrapper — needs explicit dimensions */
+.sx-calendar-wrapper {
+  width: 100%;
+  height: calc(100vh - 220px);
+  min-height: 500px;
+}
+
+@media (max-width: 768px) {
+  .sx-calendar-wrapper {
+    height: calc(100vh - 260px);
+    min-height: 400px;
+  }
+}
