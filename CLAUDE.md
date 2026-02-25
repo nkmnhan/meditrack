@@ -127,6 +127,36 @@ const onSubmit = () => {};
 
 ## Styling Guidelines
 
+### Mobile-First Design (MANDATORY)
+
+This project uses **mobile-first responsive design**. The AI clinical companion (Emergen AI) must work on phones — doctors use mobile devices in patient rooms.
+
+- **ALWAYS** design for mobile viewport first, then enhance for larger screens with responsive breakpoints (`sm:`, `md:`, `lg:`)
+- **NEVER** build desktop-only layouts — every component must be usable on a phone (320px minimum)
+- **Touch targets** must be at least `h-10 w-10` (40px) for buttons and interactive elements on mobile
+- **Use responsive breakpoints** — Tailwind's `sm:` (640px), `md:` (768px), `lg:` (1024px), `xl:` (1280px)
+- **Stack on mobile, side-by-side on desktop** — use `flex-col md:flex-row` pattern
+- **Hide non-essential elements on mobile** — use `hidden md:block` for secondary info, never hide primary actions
+
+```tsx
+// GOOD — mobile-first: stacked on mobile, side-by-side on desktop
+<div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-6">
+  <PatientInfo />
+  <ActionButtons />
+</div>
+
+// GOOD — responsive grid: 1 col mobile, 2 cols tablet, 3 cols desktop
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+  {patients.map(patient => <PatientCard key={patient.id} patient={patient} />)}
+</div>
+
+// BAD — desktop-only layout, unusable on phone
+<div className="flex items-center gap-6">
+  <div className="w-1/3">...</div>
+  <div className="w-2/3">...</div>
+</div>
+```
+
 ### Tailwind CSS First (MANDATORY)
 
 - **ALWAYS** use Tailwind CSS utility classes
