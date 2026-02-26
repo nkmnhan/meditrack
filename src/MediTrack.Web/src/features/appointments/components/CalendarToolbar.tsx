@@ -1,9 +1,10 @@
 import { Plus } from "lucide-react";
+import { ProviderSearchDropdown } from "./ProviderSearchDropdown";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
 
 interface CalendarToolbarProps {
-  readonly providerFilter: string;
-  readonly onProviderFilterChange: (providerId: string) => void;
+  readonly selectedProviderId: string | null;
+  readonly onProviderSelect: (providerId: string | null) => void;
   readonly onNewAppointment: () => void;
   readonly isStaff: boolean;
   readonly isPatient: boolean;
@@ -11,8 +12,8 @@ interface CalendarToolbarProps {
 }
 
 export function CalendarToolbar({
-  providerFilter,
-  onProviderFilterChange,
+  selectedProviderId,
+  onProviderSelect,
   onNewAppointment,
   isStaff,
   isPatient,
@@ -34,17 +35,9 @@ export function CalendarToolbar({
             <label htmlFor="provider-filter" className="text-sm font-medium text-neutral-700 whitespace-nowrap">
               Provider:
             </label>
-            <input
-              id="provider-filter"
-              type="text"
-              value={providerFilter}
-              onChange={(event) => onProviderFilterChange(event.target.value)}
-              placeholder="Filter by provider ID"
-              className={clsxMerge(
-                "w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm",
-                "focus:border-primary-500 focus:ring-2 focus:ring-primary-500",
-                "sm:w-64",
-              )}
+            <ProviderSearchDropdown
+              selectedProviderId={selectedProviderId}
+              onProviderSelect={onProviderSelect}
             />
           </div>
         )}

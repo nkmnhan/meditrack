@@ -5,13 +5,13 @@
 /* ScheduleX calendar wrapper — needs explicit dimensions */
 .sx-calendar-wrapper {
   width: 100%;
-  height: calc(100vh - 220px);
-  min-height: 500px;
+  height: calc(100vh - 180px);
+  min-height: 600px;
 }
 
 @media (max-width: 768px) {
   .sx-calendar-wrapper {
-    height: calc(100vh - 260px);
-    min-height: 400px;
+    height: calc(100vh - 200px);
+    min-height: 500px;
   }
 }

@@ -108,7 +108,7 @@ export function useAppointmentCalendar({
         end: "24:00",
       },
       weekOptions: {
-        gridHeight: 1200,
+        gridHeight: 1600,
         nDays: 5,
       },
       calendars: CALENDAR_STATUS_MAP,

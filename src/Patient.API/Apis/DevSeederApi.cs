@@ -23,6 +23,14 @@ public static class DevSeederApi
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest);
 
+        group.MapGet("/patient-summary", GetPatientSummary)
+            .WithName("GetPatientSummary")
+            .WithSummary("Get patient IDs and names for cross-service seeding")
+            .WithDescription(
+                "Returns a lightweight list of all patients (id, firstName, lastName, email) " +
+                "for use by Appointment and MedicalRecords seeders.")
+            .Produces(StatusCodes.Status200OK);
+
         return endpoints;
     }
 
@@ -78,5 +86,33 @@ public static class DevSeederApi
                 detail: ex.Message,
                 statusCode: StatusCodes.Status500InternalServerError);
         }
+    }
+
+    /// <summary>
+    /// Returns a lightweight patient summary for cross-service seeders.
+    /// Shape matches the PatientSummary record used by Appointment.API and MedicalRecords.API.
+    /// </summary>
+    private static async Task<IResult> GetPatientSummary(
+        IPatientService patientService,
+        CancellationToken cancellationToken)
+    {
+        var patients = await patientService.GetAllAsync(includeInactive: true, cancellationToken);
+
+        var summaries = patients.Select(patient =>
+        {
+            var nameParts = patient.FullName.Split(' ', 2);
+            var firstName = nameParts[0];
+            var lastName = nameParts.Length > 1 ? nameParts[1] : "";
+
+            return new
+            {
+                id = patient.Id,
+                firstName,
+                lastName,
+                email = patient.Email,
+            };
+        });
+
+        return Results.Ok(summaries);
     }
 }

@@ -156,6 +156,18 @@ public class PatientService : IPatientService
 
             _logger.LogInformation("Created patient {PatientId}: {PatientName}", patient.Id, patient.FullName);
 
+            await createTransaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await createTransaction.RollbackAsync(CancellationToken.None);
+            throw;
+        }
+
+        // Publish integration event outside the transaction — event bus failure
+        // must never roll back a successful patient creation
+        try
+        {
             var integrationEvent = new PatientRegisteredIntegrationEvent
             {
                 PatientId = patient.Id,
@@ -165,13 +177,13 @@ public class PatientService : IPatientService
                 PhoneNumber = patient.PhoneNumber
             };
             await _eventBus.PublishAsync(integrationEvent, cancellationToken);
-
-            await createTransaction.CommitAsync(cancellationToken);
         }
-        catch
+        catch (Exception eventBusException)
         {
-            await createTransaction.RollbackAsync(CancellationToken.None);
-            throw;
+            _logger.LogWarning(
+                eventBusException,
+                "Failed to publish PatientRegisteredIntegrationEvent for patient {PatientId}. Patient was created successfully.",
+                patient.Id);
         }
 
         return _mapper.Map<PatientResponse>(patient);

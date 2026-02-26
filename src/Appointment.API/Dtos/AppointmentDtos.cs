@@ -137,4 +137,11 @@ public sealed record ProviderAvailabilityResponse(
     DateTime Date,
     IReadOnlyList<TimeSlotResponse> TimeSlots);
 
+/// <summary>
+/// Distinct provider summary for search/filter dropdowns.
+/// </summary>
+public sealed record ProviderSummaryResponse(
+    Guid ProviderId,
+    string ProviderName);
+
 #endregion

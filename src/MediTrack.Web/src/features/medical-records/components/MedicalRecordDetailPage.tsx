@@ -1,12 +1,17 @@
-import { useParams } from "react-router-dom";
-import { AlertCircle } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
+import { AlertCircle, ArrowLeft } from "lucide-react";
 import { useGetMedicalRecordByIdQuery } from "../store/medicalRecordsApi";
 import { MedicalRecordDetail } from "../components/MedicalRecordDetail";
+import { Breadcrumb } from "@/shared/components";
+import { useGetPatientByIdQuery } from "@/features/patients/store/patientApi";
 
 export function MedicalRecordDetailPage() {
   const { id } = useParams<{ id: string }>();
 
   const { data: record, isLoading, error } = useGetMedicalRecordByIdQuery(id!);
+  const { data: patient } = useGetPatientByIdQuery(record?.patientId ?? "", {
+    skip: !record?.patientId,
+  });
 
   if (isLoading) {
     return (
@@ -33,5 +38,30 @@ export function MedicalRecordDetailPage() {
     );
   }
 
-  return <MedicalRecordDetail record={record} />;
+  const patientName = patient ? `${patient.firstName} ${patient.lastName}` : "Patient";
+
+  return (
+    <div>
+      <div className="flex items-center gap-3 mb-4">
+        <Link
+          to={`/patients/${record.patientId}/medical-records`}
+          className="rounded-lg border border-neutral-300 p-2 text-neutral-700 hover:bg-neutral-50 md:hidden"
+          aria-label="Back to medical records"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Link>
+        <div className="flex-1">
+          <Breadcrumb
+            items={[
+              { label: "Patients", href: "/patients" },
+              { label: patientName, href: `/patients/${record.patientId}` },
+              { label: "Medical Records", href: `/patients/${record.patientId}/medical-records` },
+              { label: record.chiefComplaint },
+            ]}
+          />
+        </div>
+      </div>
+      <MedicalRecordDetail record={record} />
+    </div>
+  );
 }

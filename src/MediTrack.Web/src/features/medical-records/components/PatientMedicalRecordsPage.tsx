@@ -1,15 +1,18 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
-import { Plus, Filter } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
+import { Plus, Filter, ArrowLeft } from "lucide-react";
 import { useGetMedicalRecordsByPatientIdQuery } from "../store/medicalRecordsApi";
 import { MedicalRecordList } from "../components/MedicalRecordList";
 import { RecordStatus, DiagnosisSeverity } from "../types";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
 import { useRoles } from "@/shared/auth/useRoles";
 import { UserRole } from "@/shared/auth/roles";
+import { Breadcrumb } from "@/shared/components";
+import { useGetPatientByIdQuery } from "@/features/patients/store/patientApi";
 
 export function PatientMedicalRecordsPage() {
   const { patientId } = useParams<{ patientId: string }>();
+  const { data: patient } = useGetPatientByIdQuery(patientId!);
   const { hasAnyRole } = useRoles();
   const isMedicalStaff = hasAnyRole([UserRole.Doctor, UserRole.Nurse]);
 
@@ -28,13 +31,30 @@ export function PatientMedicalRecordsPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <Breadcrumb
+        items={[
+          { label: "Patients", href: "/patients" },
+          { label: patient?.firstName ? `${patient.firstName} ${patient.lastName}` : "Patient", href: `/patients/${patientId}` },
+          { label: "Medical Records" },
+        ]}
+      />
+
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-neutral-900">Medical Records</h1>
-          <p className="text-sm text-neutral-600 mt-1">
-            {filteredRecords.length} {filteredRecords.length === 1 ? "record" : "records"} found
-          </p>
+        <div className="flex items-center gap-3">
+          <Link
+            to={`/patients/${patientId}`}
+            className="rounded-lg border border-neutral-300 p-2 text-neutral-700 hover:bg-neutral-50 md:hidden"
+            aria-label="Back to patient"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold text-neutral-900">Medical Records</h1>
+            <p className="text-sm text-neutral-600 mt-1">
+              {filteredRecords.length} {filteredRecords.length === 1 ? "record" : "records"} found
+            </p>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2">

@@ -488,6 +488,21 @@ public sealed class AppointmentService : IAppointmentService
         return _mapper.Map<AppointmentResponse>(appointment);
     }
 
+    public async Task<IReadOnlyList<ProviderSummaryResponse>> GetDistinctProvidersAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var providerKeys = await _dbContext.Appointments
+            .AsNoTracking()
+            .Select(appointment => new { appointment.ProviderId, appointment.ProviderName })
+            .Distinct()
+            .OrderBy(provider => provider.ProviderName)
+            .ToListAsync(cancellationToken);
+
+        return providerKeys
+            .Select(provider => new ProviderSummaryResponse(provider.ProviderId, provider.ProviderName))
+            .ToList();
+    }
+
     public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _dbContext.Appointments

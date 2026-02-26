@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import {
   X,
   Calendar,
@@ -9,6 +10,7 @@ import {
   Video,
   Loader2,
   AlertCircle,
+  ExternalLink,
 } from "lucide-react";
 import { useGetAppointmentByIdQuery } from "../store/appointmentApi";
 import { STATUS_CONFIG, TYPE_LABELS } from "../constants";
@@ -156,11 +158,17 @@ export function AppointmentDetailPanel({
 
               {/* Key info */}
               <div className="space-y-4">
-                <InfoRow
-                  icon={User}
-                  label="Patient"
-                  value={appointment.patientName}
-                />
+                <div className="flex items-start gap-3">
+                  <User className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500" />
+                  <Link
+                    to={`/patients/${appointment.patientId}`}
+                    className="inline-flex items-center gap-1 text-sm text-primary-700 hover:text-primary-800 hover:underline transition-colors"
+                  >
+                    {appointment.patientName}
+                    <ExternalLink className="h-3 w-3" />
+                  </Link>
+                  <p className="text-xs font-medium text-neutral-500">Patient</p>
+                </div>
                 <InfoRow
                   icon={Stethoscope}
                   label="Provider"

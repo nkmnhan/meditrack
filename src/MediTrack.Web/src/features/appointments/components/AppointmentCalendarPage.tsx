@@ -17,7 +17,7 @@ export function AppointmentCalendarPage() {
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formDefaultDate, setFormDefaultDate] = useState<Date | undefined>();
-  const [providerFilter, setProviderFilter] = useState("");
+  const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
 
   const {
     calendar,
@@ -25,7 +25,7 @@ export function AppointmentCalendarPage() {
     isFetching,
     error,
   } = useAppointmentCalendar({
-    providerId: providerFilter || undefined,
+    providerId: selectedProviderId ?? undefined,
     onEventClick: (appointmentId) => {
       setSelectedAppointmentId(appointmentId);
     },
@@ -88,8 +88,8 @@ export function AppointmentCalendarPage() {
     <div className="flex flex-col gap-6">
       {/* Toolbar */}
       <CalendarToolbar
-        providerFilter={providerFilter}
-        onProviderFilterChange={setProviderFilter}
+        selectedProviderId={selectedProviderId}
+        onProviderSelect={setSelectedProviderId}
         onNewAppointment={handleNewAppointment}
         isStaff={isStaff}
         isPatient={isPatient}

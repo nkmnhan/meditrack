@@ -54,6 +54,13 @@ public class PatientSeeder
         {
             try
             {
+                // Skip if email already exists (handles re-runs with deterministic seed)
+                if (await _patientService.EmailExistsAsync(patientRequest.Email, cancellationToken: cancellationToken))
+                {
+                    _logger.LogDebug("Skipping patient with existing email: {Email}", patientRequest.Email);
+                    continue;
+                }
+
                 // Use a deterministic dev-only userId for seeded patients
                 //  In production, userId comes from authenticated user claims
                 var devUserId = Guid.NewGuid();

@@ -26,6 +26,10 @@ builder.Services.AddHttpContextAccessor();
 
 // Services
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+builder.Services.AddScoped<AppointmentSeeder>();
+
+// HttpClient for dev seeder to fetch patient data (no auth, dev-only)
+builder.Services.AddHttpClient("PatientSeederClient");
 
 // Patient resolver for cross-service IDOR checks
 // AuthenticationDelegatingHandler forwards bearer token from current request
@@ -69,5 +73,11 @@ app.UseAuthorization();
 
 // Map Minimal APIs
 app.MapAppointmentsApi();
+
+// Development-only endpoints
+if (app.Environment.IsDevelopment())
+{
+    app.MapDevSeederApi();
+}
 
 await app.RunAsync();

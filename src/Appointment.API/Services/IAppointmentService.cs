@@ -125,6 +125,12 @@ public interface IAppointmentService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets distinct providers from existing appointments for search/filter UI.
+    /// </summary>
+    Task<IReadOnlyList<ProviderSummaryResponse>> GetDistinctProvidersAsync(
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Checks if an appointment exists.
     /// </summary>
     Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default);

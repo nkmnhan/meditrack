@@ -27,6 +27,10 @@ public static class AppointmentsApi
             .WithName("GetAllAppointments")
             .WithSummary("Get all appointments with optional filtering");
 
+        group.MapGet("/providers", GetDistinctProviders)
+            .WithName("GetDistinctProviders")
+            .WithSummary("Get distinct providers from existing appointments");
+
         group.MapGet("/{id:guid}", GetAppointmentById)
             .WithName("GetAppointmentById")
             .WithSummary("Get an appointment by ID");
@@ -107,6 +111,21 @@ public static class AppointmentsApi
 
         var appointments = await appointmentService.GetAllAsync(query, cancellationToken);
         return Results.Ok(appointments);
+    }
+
+    private static async Task<IResult> GetDistinctProviders(
+        ClaimsPrincipal user,
+        IAppointmentService appointmentService,
+        CancellationToken cancellationToken)
+    {
+        // IDOR protection: Only staff can list providers (A01)
+        if (!UserRoles.Staff.Any(role => user.IsInRole(role)))
+        {
+            return Results.Forbid();
+        }
+
+        var providers = await appointmentService.GetDistinctProvidersAsync(cancellationToken);
+        return Results.Ok(providers);
     }
 
     private static async Task<IResult> GetAppointmentById(

@@ -119,6 +119,11 @@ export interface SetTelehealthLinkRequest {
   readonly link: string;
 }
 
+export interface ProviderSummary {
+  readonly providerId: string;
+  readonly providerName: string;
+}
+
 export interface AppointmentSearchParams {
   readonly patientId?: string;
   readonly providerId?: string;

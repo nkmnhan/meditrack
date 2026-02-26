@@ -11,6 +11,7 @@ import type {
   SetTelehealthLinkRequest,
   AppointmentSearchParams,
   ConflictCheckParams,
+  ProviderSummary,
 } from "../types";
 import { createBaseQueryWithReauth } from "@/shared/auth/baseQueryWithReauth";
 
@@ -20,7 +21,7 @@ const APPOINTMENT_API_URL =
 export const appointmentApi = createApi({
   reducerPath: "appointmentApi",
   baseQuery: createBaseQueryWithReauth(`${APPOINTMENT_API_URL}/api`),
-  tagTypes: ["Appointment"],
+  tagTypes: ["Appointment", "Provider"],
   endpoints: (builder) => ({
     // --- Queries ---
 
@@ -95,6 +96,11 @@ export const appointmentApi = createApi({
           }),
         },
       }),
+    }),
+
+    getDistinctProviders: builder.query<ProviderSummary[], void>({
+      query: () => "/appointments/providers",
+      providesTags: [{ type: "Provider", id: "LIST" }],
     }),
 
     // --- Mutations ---
@@ -240,6 +246,7 @@ export const {
   useGetUpcomingByPatientQuery,
   useGetAppointmentsByProviderQuery,
   useLazyCheckConflictsQuery,
+  useGetDistinctProvidersQuery,
   useCreateAppointmentMutation,
   useUpdateAppointmentMutation,
   useRescheduleAppointmentMutation,

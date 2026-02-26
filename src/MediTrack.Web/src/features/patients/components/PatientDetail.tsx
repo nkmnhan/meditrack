@@ -22,6 +22,7 @@ import {
 import { clsxMerge } from "@/shared/utils/clsxMerge";
 import { useRoles } from "@/shared/auth/useRoles";
 import { UserRole } from "@/shared/auth/roles";
+import { Breadcrumb } from "@/shared/components";
 
 function InfoRow({ icon: Icon, label, value }: Readonly<{ icon: typeof Mail; label: string; value: string }>) {
   return (
@@ -51,6 +52,7 @@ export function PatientDetail() {
     ) {
       try {
         await deactivatePatient(id!).unwrap();
+        toast.success("Patient deactivated successfully.");
       } catch {
         toast.error("Failed to deactivate patient. Please try again.");
       }
@@ -60,6 +62,7 @@ export function PatientDetail() {
   const handleActivate = async () => {
     try {
       await activatePatient(id!).unwrap();
+      toast.success("Patient activated successfully.");
     } catch {
       toast.error("Failed to activate patient. Please try again.");
     }
@@ -108,6 +111,13 @@ export function PatientDetail() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb
+        items={[
+          { label: "Patients", href: "/patients" },
+          { label: `${patient.firstName} ${patient.lastName}` },
+        ]}
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
