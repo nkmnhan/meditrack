@@ -64,17 +64,8 @@ export function CalendarEvent({ calendarEvent }: CalendarEventProps) {
   const endTime = formatEventTime(calendarEvent.end);
   const details = parseDescription(calendarEvent.description);
 
-  // Native tooltip text (fallback)
-  const tooltipText = [
-    calendarEvent.title,
-    `${startTime} – ${endTime}`,
-    calendarEvent.description,
-  ]
-    .filter(Boolean)
-    .join("\n");
-
   return (
-    <div className="group relative h-full w-full" title={tooltipText}>
+    <div className="group relative h-full w-full">
       {/* Event card */}
       <div
         className={clsxMerge(
