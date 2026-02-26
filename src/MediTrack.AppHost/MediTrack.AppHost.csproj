@@ -1,0 +1,25 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.1.1">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Identity.API\Identity.API.csproj" />
+    <ProjectReference Include="..\MedicalRecords.API\MedicalRecords.API.csproj" />
+    <ProjectReference Include="..\Patient.API\Patient.API.csproj" />
+    <ProjectReference Include="..\Appointment.API\Appointment.API.csproj" />
+    <ProjectReference Include="..\Notification.Worker\Notification.Worker.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.RabbitMQ" />
+    <PackageReference Include="Aspire.Hosting.SqlServer" />
+    <PackageReference Include="Aspire.Hosting.NodeJs" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>c3fe4d2e-84f3-4fff-8b89-6ec70c288254</UserSecretsId>
+  </PropertyGroup>
+
+</Project>

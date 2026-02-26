@@ -44,21 +44,27 @@ public static class ServiceCollectionExtensions
         IConfiguration configuration)
     {
         var section = configuration.GetSection(RabbitMQConfigKeys.Section);
-        
-        var options = new RabbitMQEventBusOptions
-        {
-            HostName = section[RabbitMQConfigKeys.HostName] ?? "localhost",
-            Port = int.TryParse(section[RabbitMQConfigKeys.Port], out var port) ? port : 5672,
-            UserName = section[RabbitMQConfigKeys.UserName]
-                ?? throw new InvalidOperationException($"RabbitMQ:{RabbitMQConfigKeys.UserName} is required."),
-            Password = section[RabbitMQConfigKeys.Password]
-                ?? throw new InvalidOperationException($"RabbitMQ:{RabbitMQConfigKeys.Password} is required."),
-            VirtualHost = section[RabbitMQConfigKeys.VirtualHost] ?? "/",
-            SubscriptionQueueName = section[RabbitMQConfigKeys.SubscriptionQueueName] ?? "meditrack_queue",
-            MaxRetryAttempts = int.TryParse(section[RabbitMQConfigKeys.MaxRetryAttempts], out var retries) ? retries : 5
-        };
 
-        return services.AddRabbitMQEventBusCore(options);
+        RabbitMQEventBusOptions options = new();
+        var connectionString = configuration.GetConnectionString("rabbitmq");
+
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            options = new RabbitMQEventBusOptions
+            {
+                HostName = section[RabbitMQConfigKeys.HostName] ?? "localhost",
+                Port = int.TryParse(section[RabbitMQConfigKeys.Port], out var port) ? port : 5672,
+                UserName = section[RabbitMQConfigKeys.UserName]
+                ?? throw new InvalidOperationException($"RabbitMQ:{RabbitMQConfigKeys.UserName} is required."),
+                Password = section[RabbitMQConfigKeys.Password]
+                ?? throw new InvalidOperationException($"RabbitMQ:{RabbitMQConfigKeys.Password} is required."),
+                VirtualHost = section[RabbitMQConfigKeys.VirtualHost] ?? "/",
+                SubscriptionQueueName = section[RabbitMQConfigKeys.SubscriptionQueueName] ?? "meditrack_queue",
+                MaxRetryAttempts = int.TryParse(section[RabbitMQConfigKeys.MaxRetryAttempts], out var retries) ? retries : 5
+            };
+        }
+
+        return services.AddRabbitMQEventBusCore(options, connectionString);
     }
 
     /// <summary>
@@ -66,15 +72,25 @@ public static class ServiceCollectionExtensions
     /// </summary>
     private static IServiceCollection AddRabbitMQEventBusCore(
         this IServiceCollection services,
-        RabbitMQEventBusOptions options)
+        RabbitMQEventBusOptions options,
+        string? connectionString)
     {
-        services.AddSingleton<IConnectionFactory>(_ => new ConnectionFactory
+        services.AddSingleton<IConnectionFactory>(_ =>
         {
-            HostName = options.HostName,
-            Port = options.Port,
-            UserName = options.UserName,
-            Password = options.Password,
-            VirtualHost = options.VirtualHost
+            var factory = new ConnectionFactory();
+            if (!string.IsNullOrEmpty(connectionString))
+            {
+                factory.Uri = new Uri(connectionString);
+            }
+            else
+            {
+                factory.HostName = options.HostName;
+                factory.Port = options.Port;
+                factory.UserName = options.UserName;
+                factory.Password = options.Password;
+                factory.VirtualHost = options.VirtualHost;
+            }
+            return factory;
         });
 
         services.AddSingleton<RabbitMQPersistentConnection>(serviceProvider =>

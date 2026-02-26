@@ -47,5 +47,10 @@
 
     <!-- Test Data Generation -->
     <PackageVersion Include="Bogus" Version="35.6.2" />
+
+    <!-- Aspire Hosting -->
+    <PackageVersion Include="Aspire.Hosting.RabbitMQ" Version="13.1.1" />
+    <PackageVersion Include="Aspire.Hosting.SqlServer" Version="13.1.1" />
+    <PackageVersion Include="Aspire.Hosting.NodeJs" Version="9.5.2" />
   </ItemGroup>
 </Project>
