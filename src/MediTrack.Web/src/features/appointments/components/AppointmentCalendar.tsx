@@ -10,7 +10,7 @@ export function AppointmentCalendar({ calendar }: AppointmentCalendarProps) {
   if (!calendar) return null;
 
   return (
-    <div className="sx-calendar-wrapper">
+    <div className="relative min-h-[800px]">
       <ScheduleXCalendar calendarApp={calendar} />
     </div>
   );

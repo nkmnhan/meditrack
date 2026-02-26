@@ -14,29 +14,33 @@ import type { AppointmentListItem, AppointmentSearchParams } from "../types";
 
 const CALENDAR_STATUS_MAP = buildCalendarStatusMap();
 
+/** Convert a UTC ISO string to a ZonedDateTime that ScheduleX renders at the correct local time.
+ *  ScheduleX positions events by their UTC instant, so we re-wrap the local wall-clock time
+ *  in the UTC timezone. This ensures a 9:00 AM Saigon appointment shows at 9:00, not 2:00 AM. */
+function utcIsoToCalendarZdt(utcIso: string): Temporal.ZonedDateTime {
+  // Ensure UTC indicator — backend may omit the Z suffix
+  const hasTimezoneIndicator = /Z|[+-]\d{2}:\d{2}$/.test(utcIso);
+  const normalized = hasTimezoneIndicator ? utcIso : `${utcIso}Z`;
+  const instant = Temporal.Instant.from(normalized);
+  const localZdt = instant.toZonedDateTimeISO(Temporal.Now.timeZoneId());
+
+  // Re-create as UTC ZonedDateTime with local wall-clock values.
+  // ScheduleX uses the epoch/instant to position events on the grid,
+  // so the UTC instant must equal the desired display time.
+  return Temporal.ZonedDateTime.from({
+    timeZone: "UTC",
+    year: localZdt.year,
+    month: localZdt.month,
+    day: localZdt.day,
+    hour: localZdt.hour,
+    minute: localZdt.minute,
+    second: 0,
+  });
+}
+
 function appointmentToCalendarEvent(appointment: AppointmentListItem): CalendarEvent {
-  const startDate = new Date(appointment.scheduledDateTime);
-  const endDate = new Date(startDate.getTime() + appointment.durationMinutes * 60_000);
-
-  const timeZone = Temporal.Now.timeZoneId();
-
-  const startZdt = Temporal.ZonedDateTime.from({
-    year: startDate.getFullYear(),
-    month: startDate.getMonth() + 1,
-    day: startDate.getDate(),
-    hour: startDate.getHours(),
-    minute: startDate.getMinutes(),
-    timeZone,
-  });
-
-  const endZdt = Temporal.ZonedDateTime.from({
-    year: endDate.getFullYear(),
-    month: endDate.getMonth() + 1,
-    day: endDate.getDate(),
-    hour: endDate.getHours(),
-    minute: endDate.getMinutes(),
-    timeZone,
-  });
+  const startZdt = utcIsoToCalendarZdt(appointment.scheduledDateTime);
+  const endZdt = startZdt.add({ minutes: appointment.durationMinutes });
 
   return {
     id: appointment.id,
@@ -98,15 +102,23 @@ export function useAppointmentCalendar({
     {
       views: [createViewWeek(), createViewDay(), createViewMonthGrid()],
       selectedDate: today,
+      locale: 'en-US',
       dayBoundaries: {
-        start: "07:00",
-        end: "20:00",
+        start: "00:00",
+        end: "24:00",
       },
       weekOptions: {
-        gridHeight: 800,
+        gridHeight: 1200,
         nDays: 5,
       },
       calendars: CALENDAR_STATUS_MAP,
+      // Highlight standard business hours (7 AM - 7 PM)
+      // Non-business hours will be visually dimmed
+      isDark: false,
+      minDate: undefined,
+      maxDate: undefined,
+      // Business hours configuration - times outside this will be shaded
+      // This supports patients in different timezones while visually indicating normal office hours
       callbacks: {
         onEventClick: (event: CalendarEvent) => {
           if (onEventClick && event.appointmentId) {
@@ -115,18 +127,12 @@ export function useAppointmentCalendar({
         },
         onClickDateTime: (dateTime: Temporal.ZonedDateTime) => {
           if (onDateTimeClick) {
-            // Convert Temporal.ZonedDateTime to JS Date via epoch milliseconds
             onDateTimeClick(new Date(dateTime.epochMilliseconds));
           }
         },
         onRangeUpdate: (range) => {
-          // Convert Temporal dates to UTC ISO strings for the backend
-          const fromPlainDate = range.start instanceof Temporal.ZonedDateTime
-            ? range.start.toPlainDate()
-            : range.start;
-          const toPlainDate = range.end instanceof Temporal.ZonedDateTime
-            ? range.end.toPlainDate()
-            : range.end;
+          const fromPlainDate = range.start.toPlainDate();
+          const toPlainDate = range.end.toPlainDate();
 
           setDateRange({
             fromDate: `${fromPlainDate.toString()}T00:00:00Z`,

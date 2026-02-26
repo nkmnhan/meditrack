@@ -8,7 +8,9 @@ import { useAuth } from "react-oidc-context";
 /** Convert local date + time strings to a UTC ISO string for the API.
  *  The user picks a local time (e.g. 2:30 PM EST) and we must send UTC to the backend. */
 function localDateTimeToUtcIso(date: string, time: string): string {
-  const localDate = new Date(`${date}T${time}:00`);
+  const [year, month, day] = date.split("-").map(Number);
+  const [hours, minutes] = time.split(":").map(Number);
+  const localDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
   return localDate.toISOString();
 }
 import {
@@ -230,8 +232,24 @@ export function AppointmentForm({
         }).unwrap();
       }
       onClose();
-    } catch {
-      alert(`Failed to ${isEditMode ? "update" : "create"} appointment. Please try again.`);
+    } catch (error: unknown) {
+      // Display backend validation errors
+      let errorMessage = `Failed to ${isEditMode ? "update" : "create"} appointment.`;
+      
+      if (error && typeof error === "object" && "data" in error) {
+        const apiError = error as { data?: { errors?: Record<string, string[]>; message?: string } };
+        if (apiError.data?.errors) {
+          // FluentValidation errors
+          const errorList = Object.entries(apiError.data.errors)
+            .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
+            .join("\n");
+          errorMessage += `\n\n${errorList}`;
+        } else if (apiError.data?.message) {
+          errorMessage += `\n\n${apiError.data.message}`;
+        }
+      }
+      
+      alert(errorMessage);
     }
   }
 

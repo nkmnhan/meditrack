@@ -132,7 +132,10 @@ export const appointmentApi = createApi({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: [{ type: "Appointment", id: "LIST" }],
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "Appointment", id },
+        { type: "Appointment", id: "LIST" },
+      ],
     }),
 
     confirmAppointment: builder.mutation<void, string>({
