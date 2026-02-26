@@ -100,11 +100,16 @@ export function CalendarEvent({ calendarEvent }: CalendarEventProps) {
     setTooltipPosition(null);
   }
 
+  function handleMouseDown() {
+    setTooltipPosition(null);
+  }
+
   return (
     <div
       className="relative h-full w-full"
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      onMouseDown={handleMouseDown}
     >
       {/* Event card */}
       <div

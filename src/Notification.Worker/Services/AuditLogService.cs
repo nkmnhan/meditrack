@@ -85,22 +85,15 @@ public class AuditLogService : IAuditLogService
     }
 
     public async Task<IEnumerable<PHIAuditLog>> GetAuditLogsByUserAsync(
-        string userId, 
-        DateTimeOffset? startDate = null, 
-        DateTimeOffset? endDate = null, 
+        string userId,
+        DateTimeOffset? startDate = null,
+        DateTimeOffset? endDate = null,
         CancellationToken cancellationToken = default)
     {
-        var query = _context.AuditLogs.Where(log => log.UserId == userId);
-        
-        if (startDate.HasValue)
-        {
-            query = query.Where(log => log.Timestamp >= startDate.Value);
-        }
-        
-        if (endDate.HasValue)
-        {
-            query = query.Where(log => log.Timestamp <= endDate.Value);
-        }
+        var query = ApplyDateRangeFilter(
+            _context.AuditLogs.Where(log => log.UserId == userId),
+            startDate,
+            endDate);
 
         return await query
             .OrderByDescending(log => log.Timestamp)
@@ -108,22 +101,15 @@ public class AuditLogService : IAuditLogService
     }
 
     public async Task<IEnumerable<PHIAuditLog>> GetAuditLogsByPatientAsync(
-        Guid patientId, 
-        DateTimeOffset? startDate = null, 
-        DateTimeOffset? endDate = null, 
+        Guid patientId,
+        DateTimeOffset? startDate = null,
+        DateTimeOffset? endDate = null,
         CancellationToken cancellationToken = default)
     {
-        var query = _context.AuditLogs.Where(log => log.PatientId == patientId);
-        
-        if (startDate.HasValue)
-        {
-            query = query.Where(log => log.Timestamp >= startDate.Value);
-        }
-        
-        if (endDate.HasValue)
-        {
-            query = query.Where(log => log.Timestamp <= endDate.Value);
-        }
+        var query = ApplyDateRangeFilter(
+            _context.AuditLogs.Where(log => log.PatientId == patientId),
+            startDate,
+            endDate);
 
         return await query
             .OrderByDescending(log => log.Timestamp)
@@ -131,17 +117,13 @@ public class AuditLogService : IAuditLogService
     }
 
     public async Task<IEnumerable<PHIAuditLog>> GetUnauthorizedAccessAttemptsAsync(
-        DateTimeOffset? startDate = null, 
+        DateTimeOffset? startDate = null,
         CancellationToken cancellationToken = default)
     {
-        var query = _context.AuditLogs.Where(log => 
-            !log.Success && 
-            log.EventType.Contains("Unauthorized"));
-        
-        if (startDate.HasValue)
-        {
-            query = query.Where(log => log.Timestamp >= startDate.Value);
-        }
+        var query = ApplyDateRangeFilter(
+            _context.AuditLogs.Where(log => !log.Success && log.EventType.Contains(AuditActions.UnauthorizedAccess)),
+            startDate,
+            endDate: null);
 
         return await query
             .OrderByDescending(log => log.Timestamp)
@@ -157,22 +139,15 @@ public class AuditLogService : IAuditLogService
     }
 
     public async Task<PHIAuditStatistics> GetUserAuditStatisticsAsync(
-        string userId, 
-        DateTimeOffset? startDate = null, 
-        DateTimeOffset? endDate = null, 
+        string userId,
+        DateTimeOffset? startDate = null,
+        DateTimeOffset? endDate = null,
         CancellationToken cancellationToken = default)
     {
-        var query = _context.AuditLogs.Where(log => log.UserId == userId);
-        
-        if (startDate.HasValue)
-        {
-            query = query.Where(log => log.Timestamp >= startDate.Value);
-        }
-        
-        if (endDate.HasValue)
-        {
-            query = query.Where(log => log.Timestamp <= endDate.Value);
-        }
+        var query = ApplyDateRangeFilter(
+            _context.AuditLogs.Where(log => log.UserId == userId),
+            startDate,
+            endDate);
 
         // Use SQL aggregates instead of loading all logs into memory
         var statistics = await query
@@ -185,7 +160,7 @@ public class AuditLogService : IAuditLogService
                 TotalAccesses = g.Count(),
                 SuccessfulAccesses = g.Count(log => log.Success),
                 FailedAccesses = g.Count(log => !log.Success),
-                UnauthorizedAttempts = g.Count(log => !log.Success && log.EventType.Contains("Unauthorized")),
+                UnauthorizedAttempts = g.Count(log => !log.Success && log.EventType.Contains(AuditActions.UnauthorizedAccess)),
                 FirstAccess = g.Min(log => log.Timestamp),
                 LastAccess = g.Max(log => log.Timestamp)
             })
@@ -220,5 +195,23 @@ public class AuditLogService : IAuditLogService
             LastAccess = statistics.LastAccess,
             ResourceTypesAccessed = resourceTypes
         };
+    }
+
+    private static IQueryable<PHIAuditLog> ApplyDateRangeFilter(
+        IQueryable<PHIAuditLog> query,
+        DateTimeOffset? startDate,
+        DateTimeOffset? endDate)
+    {
+        if (startDate.HasValue)
+        {
+            query = query.Where(log => log.Timestamp >= startDate.Value);
+        }
+
+        if (endDate.HasValue)
+        {
+            query = query.Where(log => log.Timestamp <= endDate.Value);
+        }
+
+        return query;
     }
 }

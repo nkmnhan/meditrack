@@ -55,14 +55,21 @@ public static class BreachStatus
 /// </summary>
 public static class AuditClaimTypes
 {
-    /// <summary>Subject claim - user ID</summary>
+    /// <summary>Subject claim - user ID (JWT standard)</summary>
     public const string Subject = "sub";
-    
-    /// <summary>Name claim - username</summary>
+
+    /// <summary>Name claim - username (JWT standard)</summary>
     public const string Name = "name";
-    
-    /// <summary>Role claim - user role</summary>
+
+    /// <summary>Role claim - user role (JWT standard)</summary>
     public const string Role = "role";
+
+    // Legacy WS-Federation / XML-schema claim type URIs.
+    // ASP.NET Identity maps these to the short JWT names, but some middleware
+    // configurations leave them in their original URI form.
+    public const string SubjectLegacy = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
+    public const string NameLegacy = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name";
+    public const string RoleLegacy = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
 }
 
 /// <summary>

@@ -350,14 +350,14 @@ public class PHIAuditService : IPHIAuditService
         }
 
         var user = httpContext.User;
-        var userId = user.FindFirst(AuditClaimTypes.Subject)?.Value 
-                     ?? user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value 
+        var userId = user.FindFirst(AuditClaimTypes.Subject)?.Value
+                     ?? user.FindFirst(AuditClaimTypes.SubjectLegacy)?.Value
                      ?? SystemUsers.Unknown;
-        var username = user.FindFirst(AuditClaimTypes.Name)?.Value 
-                       ?? user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")?.Value 
+        var username = user.FindFirst(AuditClaimTypes.Name)?.Value
+                       ?? user.FindFirst(AuditClaimTypes.NameLegacy)?.Value
                        ?? "Unknown User";
-        var userRole = user.FindFirst(AuditClaimTypes.Role)?.Value 
-                       ?? user.FindFirst("http://schemas.microsoft.com/ws/2008/06/identity/claims/role")?.Value 
+        var userRole = user.FindFirst(AuditClaimTypes.Role)?.Value
+                       ?? user.FindFirst(AuditClaimTypes.RoleLegacy)?.Value
                        ?? "Unknown";
 
         var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString();

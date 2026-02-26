@@ -34,13 +34,13 @@ function PatientCard({ patient }: { readonly patient: PatientListItem }) {
           <h3 className="text-lg font-semibold text-neutral-900">
             {patient.fullName}
           </h3>
-          <div className="mt-1 flex items-center gap-4 text-sm text-neutral-500">
+          <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-neutral-500">
             <span>MRN: {patient.medicalRecordNumber}</span>
-            <span>•</span>
+            <span className="hidden sm:inline">•</span>
             <span>DOB: {formattedDOB}</span>
-            <span>•</span>
-            <span>{patient.email}</span>
-            <span>•</span>
+            <span className="hidden sm:inline">•</span>
+            <span className="hidden md:inline">{patient.email}</span>
+            <span className="hidden md:inline">•</span>
             <span>{patient.phoneNumber}</span>
           </div>
         </div>
@@ -88,14 +88,14 @@ export function PatientList() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-neutral-900">Patients</h1>
           <p className="mt-1 text-neutral-500">Manage patient records and information</p>
         </div>
         <Link
           to="/patients/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-primary-700 px-4 py-2 text-white hover:bg-primary-800"
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary-700 px-4 text-white hover:bg-primary-800 sm:w-auto"
         >
           <UserPlus className="h-5 w-5" />
           New Patient
@@ -112,14 +112,14 @@ export function PatientList() {
               triggerSearch({ searchTerm: searchTerm.trim() });
             }
           }}
-          className="flex gap-3"
+          className="flex flex-col gap-3 sm:flex-row"
         >
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400" />
             <input
               type="text"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(changeEvent) => setSearchTerm(changeEvent.target.value)}
               placeholder="Search by name, email, or phone number..."
               className="w-full rounded-lg border border-neutral-300 py-2 pl-10 pr-3 focus:border-primary-500 focus:ring-2 focus:ring-primary-500"
             />
@@ -127,7 +127,7 @@ export function PatientList() {
           <button
             type="submit"
             disabled={!searchTerm.trim() || isSearching}
-            className="rounded-lg bg-primary-700 px-6 py-2 text-white hover:bg-primary-800 disabled:bg-neutral-300"
+            className="h-10 rounded-lg bg-primary-700 px-6 text-white hover:bg-primary-800 disabled:bg-neutral-300"
           >
             Search
           </button>
@@ -135,7 +135,7 @@ export function PatientList() {
             <button
               type="button"
               onClick={handleClearSearch}
-              className="rounded-lg border border-neutral-300 px-6 py-2 text-neutral-700 hover:bg-neutral-50"
+              className="h-10 rounded-lg border border-neutral-300 px-6 text-neutral-700 hover:bg-neutral-50"
             >
               Clear
             </button>
