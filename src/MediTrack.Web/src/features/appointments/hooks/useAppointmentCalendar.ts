@@ -9,17 +9,14 @@ import {
 import type { CalendarEvent } from "@schedule-x/calendar";
 import { createEventsServicePlugin } from "@schedule-x/events-service";
 import { useGetAppointmentsQuery } from "../store/appointmentApi";
-import { buildCalendarStatusMap } from "../constants";
 import type { AppointmentListItem, AppointmentSearchParams } from "../types";
-
-const CALENDAR_STATUS_MAP = buildCalendarStatusMap();
 
 /** Convert a UTC ISO string to a ZonedDateTime that ScheduleX renders at the correct local time.
  *  ScheduleX positions events by their UTC instant, so we re-wrap the local wall-clock time
  *  in the UTC timezone. This ensures a 9:00 AM Saigon appointment shows at 9:00, not 2:00 AM. */
 function utcIsoToCalendarZdt(utcIso: string): Temporal.ZonedDateTime {
   // Ensure UTC indicator — backend may omit the Z suffix
-  const hasTimezoneIndicator = /Z|[+-]\d{2}:\d{2}$/.test(utcIso);
+  const hasTimezoneIndicator = /(Z|[+-]\d{2}:\d{2})$/.test(utcIso);
   const normalized = hasTimezoneIndicator ? utcIso : `${utcIso}Z`;
   const instant = Temporal.Instant.from(normalized);
   const localZdt = instant.toZonedDateTimeISO(Temporal.Now.timeZoneId());
@@ -42,19 +39,23 @@ function appointmentToCalendarEvent(appointment: AppointmentListItem): CalendarE
   const startZdt = utcIsoToCalendarZdt(appointment.scheduledDateTime);
   const endZdt = startZdt.add({ minutes: appointment.durationMinutes });
 
+  // Build description for hover tooltip (ScheduleX shows this on hover)
+  const descriptionParts = [
+    `Provider: ${appointment.providerName}`,
+    `Type: ${appointment.type}`,
+    `Status: ${appointment.status}`,
+    appointment.location ? `Location: ${appointment.location}` : null,
+  ].filter(Boolean);
+
   return {
     id: appointment.id,
     start: startZdt,
     end: endZdt,
     title: `${appointment.patientName} — ${appointment.reason}`,
-    location: appointment.location ?? undefined,
-    calendarId: appointment.status.toLowerCase(),
-    people: [appointment.providerName],
-    // Custom data for detail panel
+    // Description shows on hover tooltip (full details)
+    description: descriptionParts.join('\n'),
+    // Custom data for click handler and custom event component
     appointmentId: appointment.id,
-    patientName: appointment.patientName,
-    providerName: appointment.providerName,
-    appointmentType: appointment.type,
     appointmentStatus: appointment.status,
   };
 }
@@ -103,15 +104,18 @@ export function useAppointmentCalendar({
       views: [createViewWeek(), createViewDay(), createViewMonthGrid()],
       selectedDate: today,
       locale: 'en-US',
+      // Focus on business hours (6 AM - 10 PM) for better event visibility
+      // Appointments outside this range are rare edge cases
       dayBoundaries: {
-        start: "00:00",
-        end: "24:00",
+        start: "06:00",
+        end: "22:00",
       },
       weekOptions: {
+        // 16-hour day span with 1600px = 100px/hour = 50px per 30-min event
+        // Enough for 3 lines of text (title, time, provider)
         gridHeight: 1600,
         nDays: 5,
       },
-      calendars: CALENDAR_STATUS_MAP,
       // Highlight standard business hours (7 AM - 7 PM)
       // Non-business hours will be visually dimmed
       isDark: false,

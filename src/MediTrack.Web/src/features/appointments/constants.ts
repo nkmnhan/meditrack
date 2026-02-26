@@ -11,6 +11,20 @@ interface StatusConfig {
   };
 }
 
+/** Tailwind classes for calendar event status styling */
+export const STATUS_STYLES: Record<AppointmentStatus, string> = {
+  Scheduled: "bg-blue-100 border-l-blue-500 text-blue-900",
+  Confirmed: "bg-blue-200 border-l-blue-600 text-blue-900",
+  CheckedIn: "bg-teal-100 border-l-teal-600 text-teal-900",
+  InProgress: "bg-amber-100 border-l-amber-500 text-amber-900",
+  Completed: "bg-green-100 border-l-green-500 text-green-900",
+  Cancelled: "bg-slate-100 border-l-slate-400 text-slate-700",
+  NoShow: "bg-red-100 border-l-red-500 text-red-900",
+  Rescheduled: "bg-purple-100 border-l-purple-500 text-purple-900",
+};
+
+export const DEFAULT_STATUS_STYLE = "bg-blue-100 border-l-blue-500 text-blue-900";
+
 export const STATUS_CONFIG: Record<AppointmentStatus, StatusConfig> = {
   Scheduled: {
     label: "Scheduled",

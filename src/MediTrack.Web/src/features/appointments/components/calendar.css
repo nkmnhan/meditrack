@@ -1,0 +1,63 @@
+/* ScheduleX calendar overrides — loaded only when AppointmentCalendar is rendered */
+
+/* Calendar wrapper — needs explicit dimensions */
+.sx-calendar-wrapper {
+  width: 100%;
+  height: calc(100vh - 180px);
+  min-height: 600px;
+}
+
+@media (max-width: 768px) {
+  .sx-calendar-wrapper {
+    height: calc(100vh - 200px);
+    min-height: 500px;
+  }
+}
+
+/* Time grid event containers - allow tooltip overflow */
+.sx-time-grid-event {
+  overflow: visible !important;
+}
+
+.sx-time-grid-event > div,
+.sx-time-grid-event-inner {
+  overflow: visible !important;
+}
+
+/* Day column containers */
+.sx-time-grid-day {
+  overflow: visible !important;
+}
+
+.sx-time-grid-day__events {
+  overflow: visible !important;
+}
+
+/* Week grid containers */
+.sx-week-grid {
+  overflow: visible !important;
+}
+
+.sx-week-grid__time-grid {
+  overflow: visible !important;
+}
+
+/* Date grid (all-day events) */
+.sx-date-grid-event {
+  overflow: visible !important;
+}
+
+.sx-week-grid__date-grid {
+  overflow: visible !important;
+}
+
+/* View container */
+.sx-view-container {
+  overflow: visible !important;
+}
+
+/* Ensure tooltip appears above all calendar elements */
+.sx-calendar-wrapper .group > div:last-child {
+  z-index: 9999 !important;
+  position: absolute !important;
+}
