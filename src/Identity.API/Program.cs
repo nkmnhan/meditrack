@@ -100,6 +100,7 @@ WebApplication app = builder.Build();
 using (IServiceScope scope = app.Services.CreateScope())
 {
     IServiceProvider services = scope.ServiceProvider;
+    ILogger<Program> logger = services.GetRequiredService<ILogger<Program>>();
 
     ApplicationDbContext dbContext = services.GetRequiredService<ApplicationDbContext>();
     await dbContext.Database.MigrateAsync();
@@ -108,7 +109,6 @@ using (IServiceScope scope = app.Services.CreateScope())
     UserManager<ApplicationUser> userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
     RoleManager<IdentityRole> roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     IConfiguration configuration = services.GetRequiredService<IConfiguration>();
-    ILogger<Program> logger = services.GetRequiredService<ILogger<Program>>();
 
     await UsersSeed.SeedAsync(userManager, roleManager, configuration, logger);
 }

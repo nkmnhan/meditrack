@@ -1,4 +1,6 @@
 ﻿using System;
+using MediTrack.Identity.Data;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -7,6 +9,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MediTrack.Migrations
 {
     /// <inheritdoc />
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20260225081549_InitialPostgres")]
     public partial class InitialPostgres : Migration
     {
         /// <inheritdoc />
