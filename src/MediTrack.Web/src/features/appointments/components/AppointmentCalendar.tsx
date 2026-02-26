@@ -18,6 +18,7 @@ export function AppointmentCalendar({ calendar }: AppointmentCalendarProps) {
         customComponents={{
           timeGridEvent: CalendarEvent,
           dateGridEvent: CalendarEvent,
+          monthGridEvent: CalendarEvent,
         }}
       />
     </div>
