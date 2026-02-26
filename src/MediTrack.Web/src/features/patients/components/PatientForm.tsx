@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { toast } from "sonner";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Loader2, Save, Plus, X } from "lucide-react";
 import {
@@ -220,7 +221,7 @@ export function PatientForm() {
         navigate(`/patients/${result.id}`);
       }
     } catch {
-      alert(`Failed to ${isEditMode ? "update" : "create"} patient. Please try again.`);
+      toast.error(`Failed to ${isEditMode ? "update" : "create"} patient. Please try again.`);
     }
   };
 

@@ -1,4 +1,5 @@
 import { Link, useParams } from "react-router-dom";
+import { toast } from "sonner";
 import {
   ArrowLeft,
   Edit,
@@ -11,6 +12,7 @@ import {
   MapPin,
   Calendar,
   User,
+  FileText,
 } from "lucide-react";
 import {
   useGetPatientByIdQuery,
@@ -50,7 +52,7 @@ export function PatientDetail() {
       try {
         await deactivatePatient(id!).unwrap();
       } catch {
-        alert("Failed to deactivate patient. Please try again.");
+        toast.error("Failed to deactivate patient. Please try again.");
       }
     }
   };
@@ -59,7 +61,7 @@ export function PatientDetail() {
     try {
       await activatePatient(id!).unwrap();
     } catch {
-      alert("Failed to activate patient. Please try again.");
+      toast.error("Failed to activate patient. Please try again.");
     }
   };
 
@@ -123,6 +125,13 @@ export function PatientDetail() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <Link
+            to={`/patients/${patient.id}/medical-records`}
+            className="inline-flex items-center gap-2 rounded-lg bg-primary-700 px-4 py-2 text-white hover:bg-primary-800"
+          >
+            <FileText className="h-4 w-4" />
+            Medical Records
+          </Link>
           <Link
             to={`/patients/${patient.id}/edit`}
             className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 px-4 py-2 text-neutral-700 hover:bg-neutral-50"

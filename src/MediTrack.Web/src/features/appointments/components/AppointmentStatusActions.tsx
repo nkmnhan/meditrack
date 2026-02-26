@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   CheckCircle2,
   LogIn,
@@ -113,7 +114,7 @@ export function AppointmentStatusActions({
     try {
       await executeTransition(appointmentId, targetStatus);
     } catch {
-      alert(`Failed to update appointment status. Please try again.`);
+      toast.error("Failed to update appointment status. Please try again.");
     }
   }
 
@@ -122,7 +123,7 @@ export function AppointmentStatusActions({
       await executeTransition(appointmentId, "Cancelled", { reason });
       setIsCancelDialogOpen(false);
     } catch {
-      alert("Failed to cancel appointment. Please try again.");
+      toast.error("Failed to cancel appointment. Please try again.");
     }
   }
 
@@ -131,7 +132,7 @@ export function AppointmentStatusActions({
       await executeTransition(appointmentId, "Completed", { notes });
       setIsCompleteDialogOpen(false);
     } catch {
-      alert("Failed to complete appointment. Please try again.");
+      toast.error("Failed to complete appointment. Please try again.");
     }
   }
 

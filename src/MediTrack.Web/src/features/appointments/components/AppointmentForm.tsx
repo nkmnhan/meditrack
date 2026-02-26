@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { toast } from "sonner";
 import { X, Loader2, Save, AlertTriangle, Search } from "lucide-react";
 import { useAuth } from "react-oidc-context";
 
@@ -249,7 +250,7 @@ export function AppointmentForm({
         }
       }
       
-      alert(errorMessage);
+      toast.error(errorMessage);
     }
   }
 

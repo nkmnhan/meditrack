@@ -54,6 +54,9 @@ builder.Services.AddValidatorsFromAssemblyContaining<CreateMedicalRecordRequestV
 // RabbitMQ EventBus
 builder.Services.AddRabbitMQEventBus(builder.Configuration);
 
+// Dev seeder (registered in all environments but endpoints only mapped in Development)
+builder.Services.AddScoped<MedicalRecordSeeder>();
+
 // CORS
 builder.Services.AddDefaultCors(builder.Configuration, builder.Environment);
 
@@ -77,5 +80,11 @@ app.UseAuthorization();
 
 // Map Minimal APIs
 app.MapMedicalRecordsApi();
+
+// Development-only endpoints
+if (app.Environment.IsDevelopment())
+{
+    app.MapDevSeederApi();
+}
 
 await app.RunAsync();

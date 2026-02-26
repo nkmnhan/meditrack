@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
+import { Toaster } from "sonner";
 import { store } from "./shared/store";
 import { AuthProvider } from "./shared/auth";
 import App from "./App";
@@ -19,6 +20,7 @@ createRoot(rootElement).render(
       <Provider store={store}>
         <BrowserRouter>
           <App />
+          <Toaster position="top-right" richColors closeButton />
         </BrowserRouter>
       </Provider>
     </AuthProvider>

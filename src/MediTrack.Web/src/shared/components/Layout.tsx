@@ -78,7 +78,7 @@ export function Layout({ children }: LayoutProps) {
     { to: "/", icon: LayoutDashboard, label: "Dashboard", disabled: false },
     { to: "/patients", icon: Users, label: "Patients", disabled: false },
     { to: "/appointments", icon: Calendar, label: "Appointments", disabled: false },
-    { to: "/medical-records", icon: FileText, label: "Medical Records", disabled: true },
+    { to: "/medical-records", icon: FileText, label: "Medical Records", disabled: false },
   ];
 
   return (
