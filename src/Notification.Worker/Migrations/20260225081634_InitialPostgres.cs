@@ -1,11 +1,15 @@
 ﻿using System;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Notification.Worker.Data;
 
 #nullable disable
 
 namespace MediTrack.Migrations
 {
     /// <inheritdoc />
+    [DbContext(typeof(AuditDbContext))]
+    [Migration("20260225081634_InitialPostgres")]
     public partial class InitialPostgres : Migration
     {
         /// <inheritdoc />

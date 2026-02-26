@@ -1,4 +1,6 @@
 ﻿using System;
+using Appointment.API.Infrastructure;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -6,6 +8,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MediTrack.Migrations
 {
     /// <inheritdoc />
+    [DbContext(typeof(AppointmentDbContext))]
+    [Migration("20260225081622_InitialPostgres")]
     public partial class InitialPostgres : Migration
     {
         /// <inheritdoc />
