@@ -1,4 +1,4 @@
-import { useState, useRef, useLayoutEffect } from "react";
+import { useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Clock, User, Stethoscope, MapPin, Activity } from "lucide-react";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
@@ -19,7 +19,6 @@ interface CalendarEventProps {
 interface TooltipPosition {
   readonly top: number;
   readonly left: number;
-  readonly anchorRight: number; // right edge of the anchor event, for left-flip fallback
 }
 
 function formatEventTime(timeValue: string | { epochMilliseconds?: number }): string {
@@ -53,18 +52,18 @@ function parseDescription(description: string | undefined): Record<string, strin
 }
 
 const TOOLTIP_WIDTH = 240;
-const TOOLTIP_GAP = 8;
+const CURSOR_OFFSET_X = 14;
+const CURSOR_OFFSET_Y = 16;
 const VIEWPORT_MARGIN = 8;
 
 /**
  * Custom event component for ScheduleX calendar.
- * Tooltip is rendered via a React portal into document.body so it is never
- * clipped by overflow:hidden on any ScheduleX ancestor container.
- * Position is adjusted after mount so the tooltip never overflows any edge.
+ * Tooltip follows the mouse cursor (like a browser/Tailwind tooltip) so it
+ * stays close to the pointer regardless of where along a multi-day event the
+ * user hovers. Rendered via a React portal to escape overflow:hidden ancestors.
  */
 export function CalendarEvent({ calendarEvent }: CalendarEventProps) {
   const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition | null>(null);
-  const wrapperRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
   const status = calendarEvent.appointmentStatus;
@@ -75,29 +74,26 @@ export function CalendarEvent({ calendarEvent }: CalendarEventProps) {
   const endTime = formatEventTime(calendarEvent.end);
   const details = parseDescription(calendarEvent.description);
 
-  // After the tooltip renders, measure its actual height and clamp so it
-  // never overflows the bottom or top of the viewport.
-  useLayoutEffect(() => {
-    if (!tooltipRef.current || !tooltipPosition) return;
-    const tooltipHeight = tooltipRef.current.offsetHeight;
-    const maxTop = window.innerHeight - tooltipHeight - VIEWPORT_MARGIN;
-    const clampedTop = Math.max(VIEWPORT_MARGIN, Math.min(tooltipPosition.top, maxTop));
-    if (clampedTop !== tooltipPosition.top) {
-      setTooltipPosition(prev => prev ? { ...prev, top: clampedTop } : null);
-    }
-  }, [tooltipPosition?.anchorRight]); // re-run only when a new anchor is set, not on every top adjustment
+  function handleMouseMove(event: React.MouseEvent) {
+    // Use actual rendered height if available, fall back to estimate
+    const tooltipHeight = tooltipRef.current?.offsetHeight ?? 220;
 
-  function handleMouseEnter() {
-    if (!wrapperRef.current) return;
-    const rect = wrapperRef.current.getBoundingClientRect();
+    // Prefer below-right of cursor; flip when near viewport edges
+    const fitsOnRight = event.clientX + CURSOR_OFFSET_X + TOOLTIP_WIDTH <= window.innerWidth - VIEWPORT_MARGIN;
+    const fitsBelow = event.clientY + CURSOR_OFFSET_Y + tooltipHeight <= window.innerHeight - VIEWPORT_MARGIN;
 
-    // Prefer right of event; flip left if it would overflow the right viewport edge
-    const fitsOnRight = rect.right + TOOLTIP_GAP + TOOLTIP_WIDTH <= window.innerWidth - VIEWPORT_MARGIN;
     const left = fitsOnRight
-      ? rect.right + TOOLTIP_GAP
-      : rect.left - TOOLTIP_GAP - TOOLTIP_WIDTH;
+      ? event.clientX + CURSOR_OFFSET_X
+      : event.clientX - CURSOR_OFFSET_X - TOOLTIP_WIDTH;
 
-    setTooltipPosition({ top: rect.top, left, anchorRight: rect.right });
+    const top = fitsBelow
+      ? event.clientY + CURSOR_OFFSET_Y
+      : event.clientY - CURSOR_OFFSET_Y - tooltipHeight;
+
+    setTooltipPosition({
+      top: Math.max(VIEWPORT_MARGIN, top),
+      left: Math.max(VIEWPORT_MARGIN, left),
+    });
   }
 
   function handleMouseLeave() {
@@ -106,9 +102,8 @@ export function CalendarEvent({ calendarEvent }: CalendarEventProps) {
 
   return (
     <div
-      ref={wrapperRef}
       className="relative h-full w-full"
-      onMouseEnter={handleMouseEnter}
+      onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
       {/* Event card */}
