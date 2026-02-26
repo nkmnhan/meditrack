@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Loader2, AlertCircle, CalendarDays } from "lucide-react";
 import { useRoles } from "@/shared/auth/useRoles";
 import { StaffRoles, UserRole } from "@/shared/auth/roles";
@@ -19,6 +19,20 @@ export function AppointmentCalendarPage() {
   const [formDefaultDate, setFormDefaultDate] = useState<Date | undefined>();
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
 
+  // Memoized callbacks — useCalendarApp captures callbacks on first initialization only,
+  // so we must provide stable references via useCallback. Inline arrow functions would be
+  // recreated on every render, causing stale closures that don't reflect state changes.
+  const handleEventClick = useCallback((appointmentId: string) => {
+    setSelectedAppointmentId(appointmentId);
+  }, []);
+
+  const handleDateTimeClick = useCallback((dateTime: Date) => {
+    if (isStaff) {
+      setFormDefaultDate(dateTime);
+      setIsFormOpen(true);
+    }
+  }, [isStaff]);
+
   const {
     calendar,
     isLoading,
@@ -26,15 +40,8 @@ export function AppointmentCalendarPage() {
     error,
   } = useAppointmentCalendar({
     providerId: selectedProviderId ?? undefined,
-    onEventClick: (appointmentId) => {
-      setSelectedAppointmentId(appointmentId);
-    },
-    onDateTimeClick: (dateTime) => {
-      if (isStaff) {
-        setFormDefaultDate(dateTime);
-        setIsFormOpen(true);
-      }
-    },
+    onEventClick: handleEventClick,
+    onDateTimeClick: handleDateTimeClick,
   });
 
   // Close panels on Escape
