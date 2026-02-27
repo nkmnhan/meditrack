@@ -58,5 +58,5 @@ See `.env.example` for a full list of required variables.
 
 | Change | Phase | Notes |
 |--------|-------|-------|
-| **EmergenAI.API service** | 6b | Single .NET service hosting all MCP tools + agent + SignalR. Total containers: 7 (vs. 10+ in original plan). |
+| **Clara.API service** | 6b | Single .NET service hosting all MCP tools + agent + SignalR. Total containers: 7 (vs. 10+ in original plan). |
 | **SMART on FHIR OAuth2** | 8 | Layer 2 auth configuration for external EMR integration (Epic, Cerner). Requires service credential management. |

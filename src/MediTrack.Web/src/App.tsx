@@ -12,7 +12,7 @@ import {
   SessionStartScreen,
   LiveSessionView,
   DevPanel,
-} from "./features/emergen-ai";
+} from "./features/clara";
 import { Users, Calendar, FileText, ArrowRight, Brain } from "lucide-react";
 import { clsxMerge } from "./shared/utils/clsxMerge";
 
@@ -47,9 +47,9 @@ function Dashboard() {
           color="accent"
         />
         <DashboardCard
-          to="/emergen-ai"
+          to="/clara"
           icon={<Brain className="h-8 w-8" />}
-          title="Emergen AI"
+          title="Clara"
           description="AI-powered medical secretary"
           color="primary"
         />
@@ -196,7 +196,7 @@ export default function App() {
         }
       />
       <Route
-        path="/emergen-ai"
+        path="/clara"
         element={
           <ProtectedRoute>
             <RoleGuard allowedRoles={[UserRole.Doctor, UserRole.Admin]}>
@@ -209,7 +209,7 @@ export default function App() {
         }
       />
       <Route
-        path="/emergen-ai/session/:sessionId"
+        path="/clara/session/:sessionId"
         element={
           <ProtectedRoute>
             <RoleGuard allowedRoles={[UserRole.Doctor, UserRole.Admin]}>

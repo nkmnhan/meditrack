@@ -6,7 +6,7 @@
 
 ## Tier 1 — Enables AI + MCP (Phase 6)
 
-Minimal prerequisites for Emergen AI MVP.
+Minimal prerequisites for Clara MVP.
 
 | Item | Description | Status |
 |------|-------------|--------|
@@ -20,7 +20,7 @@ Minimal prerequisites for Emergen AI MVP.
 
 ## Tier 2 — External EMR Integration (Phase 8)
 
-External system integration. Build after Emergen AI MVP is working with internal data.
+External system integration. Build after Clara MVP is working with internal data.
 
 | Item | Description | Status |
 |------|-------------|--------|
@@ -31,7 +31,7 @@ External system integration. Build after Emergen AI MVP is working with internal
 | **Patient portal** | Patient-facing views for records, appointments, medications, lab results. | Planned |
 | **Clinical Decision Support (CDS)** | Drug interaction checking via NLM RxNav API (free). Alert doctors to contraindications. | Planned |
 | **Break-the-glass** | Emergency access override for PHI with mandatory audit logging and justification. | Planned |
-| **Medical research tools** | PubMed (free), ClinicalTrials.gov (free), openFDA (free) integration via EmergenAI.API knowledge tools. | Planned |
+| **Medical research tools** | PubMed (free), ClinicalTrials.gov (free), openFDA (free) integration via Clara.API knowledge tools. | Planned |
 | **ICD-10 coding** | Add ICD-10 codes to diagnoses for billing and reporting. | Planned |
 | **RxNorm medication coding** | Standardize medication data using RxNorm codes. | Planned |
 
@@ -58,7 +58,7 @@ Advanced EMR capabilities. Scope to be refined based on real usage.
 ```
 Tier 1 (AI + MCP enablers)
   ├── PostgreSQL migration (prerequisite for pgvector)
-  ├── FHIR tools in EmergenAI.API (prerequisite for clinical AI)
+  ├── FHIR tools in Clara.API (prerequisite for clinical AI)
   └── FHIR provider pattern (prerequisite for multi-EMR)
 
 Tier 2 (EMR features)

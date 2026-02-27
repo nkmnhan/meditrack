@@ -2,13 +2,13 @@
 
 ## Overview
 
-MediTrack is an MCP-native EMR platform with an AI clinical companion (**Emergen AI**). It follows a microservices architecture with event-driven communication via RabbitMQ, a React SPA frontend secured by Duende IdentityServer, and an MCP layer for LLM-agnostic AI features.
+MediTrack is an MCP-native EMR platform with an AI clinical companion (**Clara**). It follows a microservices architecture with event-driven communication via RabbitMQ, a React SPA frontend secured by Duende IdentityServer, and an MCP layer for LLM-agnostic AI features.
 
 ## Users
 
 | Role | Description |
 |------|-------------|
-| **Doctor** | Primary user. Sees live transcript, triggers Emergen AI, reviews suggestions, manages patients and appointments. |
+| **Doctor** | Primary user. Sees live transcript, triggers Clara, reviews suggestions, manages patients and appointments. |
 | **Patient** | Views own records, books appointments, receives notifications. Cannot access other patients' data. |
 | **Admin** | Manages knowledge base, agent configuration, clinical skills, user accounts, and system settings. |
 
@@ -29,23 +29,23 @@ MediTrack is an MCP-native EMR platform with an AI clinical companion (**Emergen
 
 | Service | Bounded Context | Responsibility |
 |---|---|---|
-| EmergenAI.API | AI + Consultation | Single service hosting: MCP tools (FHIR, Knowledge, Session), agent orchestration, SignalR hub, real-time audio → STT. Rationale: At 3K users (~30 concurrent sessions), no performance justification for separate containers. |
+| Clara.API | AI + Consultation | Single service hosting: MCP tools (FHIR, Knowledge, Session), agent orchestration, SignalR hub, real-time audio → STT. Rationale: At 3K users (~30 concurrent sessions), no performance justification for separate containers. |
 
 **Simplified from original plan**: Originally 3 separate MCP servers (FHIR, Knowledge, Session) + agent service = 4 containers. Now 1 container. Savings: ~$210-420/mo infra, simpler deployment, faster development.
 
 ## MCP Architecture Layer
 
-Emergen AI is the MCP client orchestrating MCP tools. All AI features go through the MCP protocol — the architecture is LLM-agnostic. At 3,000 users, all MCP tools are hosted in a single service (EmergenAI.API) for simplicity.
+Clara is the MCP client orchestrating MCP tools. All AI features go through the MCP protocol — the architecture is LLM-agnostic. At 3,000 users, all MCP tools are hosted in a single service (Clara.API) for simplicity.
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
 │                Doctor Dashboard / Mobile App                    │
-│              Live transcript · Emergen AI button                │
+│              Live transcript · Clara button                │
 │                    Suggestion cards                              │
 └──────────────────────┬────────────────────────────────────────┘
                        │ SignalR (real-time)
 ┌──────────────────────▼────────────────────────────────────────┐
-│                    EmergenAI.API                                │
+│                    Clara.API                                │
 │  • MCP Server (fhir_*, knowledge_*, session_* tools)           │
 │  • Agent orchestration (MCP client)                             │
 │  • SignalR hub (real-time transcript)                          │
@@ -64,7 +64,7 @@ Emergen AI is the MCP client orchestrating MCP tools. All AI features go through
 
 ### Layer 1: User Authentication (User ↔ MCP Client)
 
-User authenticates via Duende IdentityServer (OIDC). The Emergen AI agent receives user context and consent scope.
+User authenticates via Duende IdentityServer (OIDC). The Clara agent receives user context and consent scope.
 
 ### Layer 2: EMR Backend Authentication (MCP Server ↔ EMR)
 
@@ -100,7 +100,7 @@ MCP servers hold service credentials registered with EMR backends. Authenticatio
 2. IdentityServer issues JWT with claims (sub, roles, scopes)
 3. React stores tokens via `oidc-client-ts`, attaches Bearer token to API requests
 4. Each API validates JWT against IdentityServer discovery document
-5. Emergen AI agent receives user context from Layer 1 auth, authenticates to EMR backends via Layer 2
+5. Clara agent receives user context from Layer 1 auth, authenticates to EMR backends via Layer 2
 
 ## Project Dependencies
 

@@ -1,6 +1,6 @@
 # Knowledge Base Seed Data
 
-This directory contains medical guidelines and reference materials that are loaded into the Emergen AI knowledge base for RAG (Retrieval-Augmented Generation).
+This directory contains medical guidelines and reference materials that are loaded into the Clara knowledge base for RAG (Retrieval-Augmented Generation).
 
 ## Files
 

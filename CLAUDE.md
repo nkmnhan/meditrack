@@ -129,7 +129,7 @@ const onSubmit = () => {};
 
 ### Mobile-First Design (MANDATORY)
 
-This project uses **mobile-first responsive design**. The AI clinical companion (Emergen AI) must work on phones — doctors use mobile devices in patient rooms.
+This project uses **mobile-first responsive design**. The AI clinical companion (Clara) must work on phones — doctors use mobile devices in patient rooms.
 
 - **ALWAYS** design for mobile viewport first, then enhance for larger screens with responsive breakpoints (`sm:`, `md:`, `lg:`)
 - **NEVER** build desktop-only layouts — every component must be usable on a phone (320px minimum)
@@ -545,12 +545,12 @@ All AI features go through the **Model Context Protocol (MCP)**. The architectur
 
 | Layer | Flow | Mechanism |
 |-------|------|-----------|
-| **Layer 1** | User ↔ MCP Client (Emergen AI Agent) | OIDC via Duende IdentityServer — user session + consent |
+| **Layer 1** | User ↔ MCP Client (Clara Agent) | OIDC via Duende IdentityServer — user session + consent |
 | **Layer 2** | MCP Server ↔ EMR Backend | SMART on FHIR / OAuth2 provider pattern (Epic JWT, Cerner OAuth2, internal direct) |
 
 ### Our MCP Server (single .NET project)
 
-**EmergenAI.API** — single service hosting all MCP tools, agent orchestration, and SignalR hub:
+**Clara.API** — single service hosting all MCP tools, agent orchestration, and SignalR hub:
 
 | Tool Category | Tools | Responsibility |
 |---------------|-------|----------------|
@@ -580,7 +580,7 @@ Skills = structured YAML front matter + Markdown body files that guide the AI ag
 
 - MCP server classes: `*McpServer` suffix (e.g., `FhirMcpServer`)
 - SignalR hubs: `*Hub` suffix (e.g., `SessionHub`)
-- User-facing product name: **Emergen AI**
+- User-facing product name: **Clara**
 
 ### Rules
 
@@ -602,7 +602,7 @@ At 3,000 users (~300 doctors, ~30 concurrent sessions, ~4,500 sessions/day, ~1,1
 
 **Tiered LLM Strategy** (critical for cost control):
 - Routine batched suggestions: GPT-4o-mini ($0.15 in, $0.60 out per 1M tokens) — 90% of calls
-- On-demand "Emergen AI" button: Claude Sonnet 4 ($3 in, $15 out per 1M tokens) — 10% of calls
+- On-demand "Clara" button: Claude Sonnet 4 ($3 in, $15 out per 1M tokens) — 10% of calls
 - Saves 70-91% vs. using Sonnet for all calls
 
 **Batching Refinement**:
@@ -617,7 +617,7 @@ At 3,000 users (~300 doctors, ~30 concurrent sessions, ~4,500 sessions/day, ~1,1
 - **FHIR reads**: Cache patient demographics (Redis, 5-min TTL) — eliminates 80% of HTTP calls to domain APIs
 
 **Scaling Decisions**:
-- Single EmergenAI.API service until sustained >50 concurrent sessions
+- Single Clara.API service until sustained >50 concurrent sessions
 - PostgreSQL read replicas not needed until >5K users
 - Self-hosted Whisper ROI: 9-month payback (~$5K savings/mo, but 2-3 months engineering time)
 

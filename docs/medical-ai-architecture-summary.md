@@ -1,8 +1,8 @@
-# Emergen AI — MCP-Native Clinical Companion Architecture
+# Clara — MCP-Native Clinical Companion Architecture
 
 ## Overview
 
-**Emergen AI** is a real-time AI clinical companion that listens to doctor-patient conversations, identifies each speaker, and provides live clinical suggestions to the doctor. Built on the Model Context Protocol (MCP) for LLM-agnostic operation — any model works behind the protocol.
+**Clara** is a real-time AI clinical companion that listens to doctor-patient conversations, identifies each speaker, and provides live clinical suggestions to the doctor. Built on the Model Context Protocol (MCP) for LLM-agnostic operation — any model works behind the protocol.
 
 > **Educational Project**: Reference architecture for MCP-native healthcare AI. Not intended for production use with real patient data.
 
@@ -13,17 +13,17 @@
 ```
 Doctor places phone in room → records live conversation
         ↓
-Audio streamed in real-time to EmergenAI.API (session tools)
+Audio streamed in real-time to Clara.API (session tools)
         ↓
 Speech-to-Text converts audio → transcript with speaker labels
         ↓
-Emergen AI Agent orchestrates MCP tool calls:
+Clara Agent orchestrates MCP tool calls:
   → fhir_* tools: patient context, history, medications
   → knowledge_* tools: RAG search for clinical guidance
   → session_* tools: transcript context, session memory
         ↓
 Suggestions appear live on Doctor's dashboard (tablet/PC)
-Doctor can press "Emergen AI" button for on-demand analysis
+Doctor can press "Clara" button for on-demand analysis
 ```
 
 ---
@@ -33,12 +33,12 @@ Doctor can press "Emergen AI" button for on-demand analysis
 ```
 ┌───────────────────────────────────────────────────────────────┐
 │                Doctor Dashboard / Mobile App                    │
-│              Live transcript · Emergen AI button                │
+│              Live transcript · Clara button                │
 │                    Suggestion cards                              │
 └──────────────────────┬────────────────────────────────────────┘
                        │ SignalR (real-time)
 ┌──────────────────────▼────────────────────────────────────────┐
-│                    EmergenAI.API                                │
+│                    Clara.API                                │
 │  • MCP Server (fhir_*, knowledge_*, session_* tools)           │
 │  • Agent orchestration (batched + on-demand)                    │
 │  • SignalR hub (real-time transcript)                          │
@@ -58,8 +58,8 @@ Inspired by the SMART on FHIR standard and LangCare's provider pattern.
 ```
 Layer 1: User ↔ MCP Client          Layer 2: MCP Server ↔ EMR Backend
 ┌──────────┐    OIDC/JWT    ┌──────────┐    SMART on FHIR    ┌──────────┐
-│  Doctor   │──────────────►│ Emergen  │    OAuth2            │  EMR     │
-│  (User)   │   session     │ AI Agent │───────────────────►│  (Epic/  │
+│  Doctor   │──────────────►│ Clara    │    OAuth2            │  EMR     │
+│  (User)   │   session     │ Agent    │───────────────────►│  (Epic/  │
 │           │◄──────────────│ (MCP     │   Bearer token       │  Cerner/ │
 │           │   consent     │  Client) │◄───────────────────│  FHIR)   │
 └──────────┘                └──────────┘                      └──────────┘
@@ -92,7 +92,7 @@ Request → Check cache → Token valid? → Use it
 
 ## MCP Server (Single .NET Service)
 
-### EmergenAI.API — Unified MCP + Agent + SignalR Service
+### Clara.API — Unified MCP + Agent + SignalR Service
 
 Single .NET service hosting all MCP tools, agent orchestration, and real-time communication. At 3,000 users (~30 concurrent sessions, 1.5 vector QPS), there is zero performance justification for separate containers. Split later only if a specific tool category needs independent scaling.
 
@@ -202,7 +202,7 @@ Agent prompts follow a structured pattern. Prompts are stored in DB/MCP resource
 
 Do NOT call the AI on every word. Use this logic:
 - Call AI every **5 patient utterances** OR every **60 seconds**, whichever comes first
-- **On-demand trigger**: Doctor presses "Emergen AI" button — overrides batch timer, immediate analysis
+- **On-demand trigger**: Doctor presses "Clara" button — overrides batch timer, immediate analysis
 - Include last 10 transcript lines + top-K RAG chunks as context
 
 ---
@@ -263,7 +263,7 @@ AgentPrompt     { Id, Section, Content, Version, UpdatedAt }
 
 ### Doctor Experience
 - **Live transcript** — real-time conversation display with speaker labels
-- **Emergen AI button** — on-demand trigger overrides batch timer for immediate analysis
+- **Clara button** — on-demand trigger overrides batch timer for immediate analysis
 - **Suggestion cards** — contextual clinical suggestions with urgency levels
 - **Mobile voice capture** — Web Audio API, PWA-ready
 
@@ -276,7 +276,7 @@ AgentPrompt     { Id, Section, Content, Version, UpdatedAt }
 ### Session Memory
 - **Transcript persistence** — full conversation stored per session
 - **Cross-session patient memory** — agent recalls relevant history from prior visits
-- **Chat history management** — via session_* MCP tools in EmergenAI.API
+- **Chat history management** — via session_* MCP tools in Clara.API
 
 ---
 
@@ -284,7 +284,7 @@ AgentPrompt     { Id, Section, Content, Version, UpdatedAt }
 
 **Why MCP over direct API calls?** — LLM-agnostic. No vendor lock-in. Any model works behind the protocol. Tools are discoverable and self-documenting.
 
-**Why single EmergenAI.API instead of 3 separate MCP servers?** — At 3,000 users (~30 concurrent sessions, 1.5 vector QPS), there is zero performance justification for separate containers. Single process handles this trivially. Adds: 3 fewer containers, simpler deployment, faster development, ~$210-420/mo infra savings. Split later only if a specific tool category needs independent scaling.
+**Why single Clara.API instead of 3 separate MCP servers?** — At 3,000 users (~30 concurrent sessions, 1.5 vector QPS), there is zero performance justification for separate containers. Single process handles this trivially. Adds: 3 fewer containers, simpler deployment, faster development, ~$210-420/mo infra savings. Split later only if a specific tool category needs independent scaling.
 
 **Why defer Epic/Cerner providers?** — No Epic sandbox access, no Cerner credentials. The `IFhirProvider` interface exists for future extensibility (costs nothing), but implementing providers for systems you don't have access to is pure waste. Build them when you have a real integration partner (YAGNI).
 

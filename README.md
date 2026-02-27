@@ -2,7 +2,7 @@
 
 > **Last updated**: 2026-02-25
 
-An **MCP-native EMR platform** with an AI clinical companion (**Emergen AI**) that listens to doctor-patient conversations in real time and provides live clinical suggestions to the doctor.
+An **MCP-native EMR platform** with an AI clinical companion (**Clara**) that listens to doctor-patient conversations in real time and provides live clinical suggestions to the doctor.
 
 Built with microservices architecture, MCP (Model Context Protocol), HIPAA-compliant patterns, and modern full-stack technologies.
 
@@ -15,7 +15,7 @@ Built with microservices architecture, MCP (Model Context Protocol), HIPAA-compl
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                    React Frontend (Vite)                      │
-│    Doctor Dashboard · Emergen AI · Admin Panel · Patient UI  │
+│    Doctor Dashboard · Clara · Admin Panel · Patient UI  │
 └─────────────────────────┬────────────────────────────────────┘
                           │ OIDC / JWT + SignalR
 ┌─────────────────────────▼────────────────────────────────────┐
@@ -25,7 +25,7 @@ Built with microservices architecture, MCP (Model Context Protocol), HIPAA-compl
                           │ JWT Bearer
   ┌───────────┬───────────┼───────────┬──────────────┐
   ▼           ▼           ▼           ▼              ▼
-Patient   Appointment  MedicalRec  EmergenAI.API  Notification
+Patient   Appointment  MedicalRec  Clara.API      Notification
  .API       .API        .API       (MCP + Agent     .Worker
                                     + SignalR)    (Audit·Alerts)
   │           │           │           │              │
@@ -91,7 +91,7 @@ Patient   Appointment  MedicalRec  EmergenAI.API  Notification
 
 ---
 
-## Current Focus: AI Clinical Companion (Emergen AI)
+## Current Focus: AI Clinical Companion (Clara)
 
 Real-time AI clinical assistant built on MCP — see [full design](docs/medical-ai-architecture-summary.md).
 
@@ -101,13 +101,13 @@ Doctor's phone (mic) ──► SignalR ──► Speech-to-Text (diarization)
                                     Transcript + speaker labels
                                           │
                               ┌───────────▼────────────┐
-                              │  Emergen AI Agent       │
+                              │  Clara Agent            │
                               │  (MCP Client)           │
                               │  LLM-agnostic via MCP   │
                               └───────────┬────────────┘
                                           │
                               ┌───────────▼────────────┐
-                              │    EmergenAI.API        │
+                              │    Clara.API            │
                               │  fhir_* · knowledge_*  │
                               │  session_* MCP tools   │
                               └───┬───────────────┬────┘
@@ -117,7 +117,7 @@ Doctor's phone (mic) ──► SignalR ──► Speech-to-Text (diarization)
 ```
 
 **Key components:**
-- **EmergenAI.API** — Single service hosting: MCP tools (FHIR, Knowledge, Session), agent orchestration, SignalR hub. Rationale: ~30 concurrent sessions at 3K users — no performance justification for separate containers.
+- **Clara.API** — Single service hosting: MCP tools (FHIR, Knowledge, Session), agent orchestration, SignalR hub. Rationale: ~30 concurrent sessions at 3K users — no performance justification for separate containers.
 - **Clinical skills** — YAML files in `skills/core/` loaded into memory (no DB/admin UI for MVP)
 - **IFhirProvider** — MediTrack internal implementation only (Epic/Cerner deferred to Phase 8)
 
@@ -132,9 +132,9 @@ Doctor's phone (mic) ──► SignalR ──► Speech-to-Text (diarization)
 | 3. Domain Services | Done | Patient, Appointment, MedicalRecords, Notification |
 | 4. Security & Compliance | Done | PHI audit, TDE, MFA design, HIPAA checklist |
 | 5. Patient Management UI | Done | React feature, business rules, dev seeding |
-| **6. Emergen AI MVP** | **Next** | 8-10 weeks to functional AI clinical companion. See [MVP plan](plans/emergen-ai-mvp-plan.md) |
+| **6. Clara MVP** | **Next** | 8-10 weeks to functional AI clinical companion. See [MVP plan](plans/clara-mvp-plan.md) |
 | 6a. PostgreSQL + pgvector | Done | Migrated from SQL Server, pgvector ready for embeddings |
-| 6b. EmergenAI.API | Planned | Core service: MCP tools + agent + SignalR + Deepgram (4-5 weeks, 8 milestones) |
+| 6b. Clara.API | Planned | Core service: MCP tools + agent + SignalR + Deepgram (4-5 weeks, 8 milestones) |
 | 6c. Doctor Dashboard UI | Planned | Live transcript, suggestion cards, audio recording (2-3 weeks) |
 | 7. Remaining Frontend | Planned | Appointment UI, Records viewer, SignalR notifications |
 | 8. External EMR Integration | Planned | Epic/Cerner providers, SMART on FHIR, USCDI v3 compliance |
@@ -174,7 +174,7 @@ curl -k -X POST "https://localhost:5002/api/dev/seed/patients?count=100"
 
 | Document | Description |
 |----------|-------------|
-| [Medical AI Architecture](docs/medical-ai-architecture-summary.md) | Emergen AI — MCP-native clinical companion design |
+| [Medical AI Architecture](docs/medical-ai-architecture-summary.md) | Clara — MCP-native clinical companion design |
 | [Business Logic & Rules](docs/business-logic.md) | Domain rules, workflows, and use cases |
 | [Architecture](docs/architecture.md) | System overview, MCP layer, and service boundaries |
 | [EMR Compliance Status](docs/emr-compliance-status.md) | ONC/USCDI v3 scorecard and gap tracking |
@@ -190,7 +190,7 @@ curl -k -X POST "https://localhost:5002/api/dev/seed/patients?count=100"
 
 | Plan | Description |
 |------|-------------|
-| [Emergen AI MVP](plans/emergen-ai-mvp-plan.md) | 8-10 week implementation plan for AI clinical companion. Defines minimal feature set, 8 milestones, acceptance criteria. |
+| [Clara MVP](plans/clara-mvp-plan.md) | 8-10 week implementation plan for AI clinical companion. Defines minimal feature set, 8 milestones, acceptance criteria. |
 | [OWASP Top 10 Hardening](plans/owasp-top-ten-hardening.md) | Systematic security hardening against OWASP Top 10 (2021) |
 | [EMR Compliance Roadmap](plans/emr-compliance-roadmap.md) | FHIR R4, SMART on FHIR, USCDI v3 adoption plan |
 

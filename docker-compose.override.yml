@@ -112,13 +112,13 @@ services:
       otel-collector:
         condition: service_started
 
-  emergenai-api:
+  clara-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080;https://+:8443
       - Kestrel__Certificates__Default__Path=/certs/localhost.pem
       - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
-      - ConnectionStrings__EmergenDb=Host=postgres;Database=meditrack_emergen;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
+      - ConnectionStrings__ClaraDb=Host=postgres;Database=meditrack_clara;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
       - IdentityUrl=https://identity-api:8443
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}

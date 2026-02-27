@@ -54,7 +54,7 @@ This document outlines the strategic roadmap to reach **full EMR maturity** over
 - **Domain-driven design**: Rich domain models with aggregate roots
 - **API-first**: RESTful APIs with OpenAPI documentation
 
-*Note: Phase 7 is the Emergen AI / MCP integration — see CLAUDE.md for details.*
+*Note: Phase 7 is the Clara / MCP integration — see CLAUDE.md for details.*
 
 ### ⚠️ What We're Missing (Critical Gaps)
 
@@ -471,7 +471,7 @@ Problem List and Allergy List are **owned by the Patient domain** (`Patient.API`
 
 ### Budget Requirements
 
-**Phase 7 (Emergen AI / MCP)**: ~$9,000/month at 3,000 users (~$3/user/month)
+**Phase 7 (Clara / MCP)**: ~$9,000/month at 3,000 users (~$3/user/month)
 - STT (Deepgram): ~$6,385/mo
 - LLM (tiered GPT-4o-mini + Sonnet): ~$1,400/mo
 - Infrastructure (PostgreSQL, Redis, pgvector): ~$1,270/mo
