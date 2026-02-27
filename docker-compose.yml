@@ -198,6 +198,7 @@ services:
       - "5005:8443"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+      - AllowedHosts=localhost;emergenai-api;${ALLOWED_HOSTS:-}
       - ConnectionStrings__EmergenDb=Host=postgres;Database=meditrack_emergen;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD};
       - IdentityUrl=http://identity-api:8080
       - RabbitMQ__HostName=rabbitmq
