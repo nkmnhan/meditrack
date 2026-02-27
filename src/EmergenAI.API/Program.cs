@@ -1,7 +1,10 @@
+using EmergenAI.API.Apis;
 using EmergenAI.API.Data;
 using EmergenAI.API.Extensions;
 using EmergenAI.API.Health;
+using EmergenAI.API.Hubs;
 using EmergenAI.API.Services;
+using FluentValidation;
 using MediTrack.ServiceDefaults;
 using MediTrack.ServiceDefaults.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +27,18 @@ builder.Services.AddAIServices(builder.Configuration);
 
 // Resilient HTTP clients (Deepgram, OpenAI, PatientApi)
 builder.Services.AddResilientHttpClients(builder.Configuration);
+
+// Rate limiting policies (prevents abuse and cost overruns)
+builder.Services.AddRateLimitingPolicies();
+
+// FluentValidation
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
+// Session management services
+builder.Services.AddSingleton<BatchTriggerService>();
+builder.Services.AddScoped<SessionService>();
+builder.Services.AddScoped<DeepgramService>();
+builder.Services.AddScoped<SpeakerDetectionService>();
 
 // Skill loader (loads YAML skills at startup)
 builder.Services.AddSingleton<SkillLoaderService>();
@@ -72,6 +87,13 @@ app.UseSecurityHeaders();
 app.UseCors(CorsExtensions.PolicyName);
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
+
+// Map SignalR hub
+app.MapHub<SessionHub>("/sessionHub");
+
+// Map API endpoints
+app.MapSessionEndpoints();
 
 // Health endpoint (basic check)
 app.MapGet("/", () => Results.Ok(new { service = "EmergenAI.API", status = "healthy" }));

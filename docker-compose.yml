@@ -196,7 +196,6 @@ services:
       dockerfile: src/EmergenAI.API/Dockerfile
     ports:
       - "5005:8443"
-      - "5006:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - AllowedHosts=localhost;emergenai-api;${ALLOWED_HOSTS:-}
