@@ -1,4 +1,3 @@
-using System.Net.Http.Headers;
 using System.Text.Json;
 
 namespace EmergenAI.API.Services;
@@ -108,12 +107,8 @@ public sealed class PatientContextService
 
         var today = DateOnly.FromDateTime(DateTime.Today);
         var age = today.Year - dateOfBirth.Value.Year;
-
-        if (dateOfBirth.Value.DayOfYear > today.DayOfYear)
-        {
+        if (dateOfBirth.Value.AddYears(age) > today)
             age--;
-        }
-
         return age;
     }
 }

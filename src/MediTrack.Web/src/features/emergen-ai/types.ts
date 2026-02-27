@@ -22,7 +22,7 @@ export interface Session {
   patientId?: string;
   startedAt: string;
   endedAt?: string;
-  status: "Active" | "Paused" | "Completed" | "Cancelled";
+  status: "Active" | "Paused" | "Completed" | "Cancelled" | string;
   transcriptLines: TranscriptLine[];
   suggestions: Suggestion[];
 }
@@ -31,16 +31,8 @@ export interface StartSessionRequest {
   patientId?: string;
 }
 
-export interface SessionResponse {
-  id: string;
-  doctorId: string;
-  patientId?: string;
-  startedAt: string;
-  endedAt?: string;
-  status: string;
-  transcriptLines: TranscriptLine[];
-  suggestions: Suggestion[];
-}
+// SessionResponse is now an alias for Session
+export type SessionResponse = Session;
 
 export interface SuggestResponse {
   sessionId: string;

@@ -24,7 +24,11 @@ export function TranscriptPanel({
   useEffect(() => {
     const container = containerRef.current;
     if (container) {
-      container.scrollTop = container.scrollHeight;
+      const isNearBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+      if (isNearBottom) {
+        container.scrollTop = container.scrollHeight;
+      }
     }
   }, [lines]);
 

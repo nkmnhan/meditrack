@@ -154,7 +154,7 @@ public sealed class SuggestionService
                 exception,
                 "Failed to generate suggestions for session {SessionId}",
                 sessionId);
-            return [];
+            return null; // Return null to indicate error
         }
     }
 
@@ -299,17 +299,14 @@ public sealed class SuggestionService
             // Validate suggestions
             foreach (var suggestion in result.Suggestions)
             {
-                if (string.IsNullOrWhiteSpace(suggestion.Content))
-                {
-                    _logger.LogWarning("Suggestion with empty content skipped");
-                    continue;
-                }
-
                 // Sanitize and default values
                 suggestion.Type = string.IsNullOrWhiteSpace(suggestion.Type) ? "clinical" : suggestion.Type;
                 suggestion.Urgency = string.IsNullOrWhiteSpace(suggestion.Urgency) ? "medium" : suggestion.Urgency;
                 suggestion.Confidence = suggestion.Confidence is < 0 or > 1 ? 0.5f : suggestion.Confidence;
             }
+
+            // Remove empty-content suggestions
+            result.Suggestions.RemoveAll(s => string.IsNullOrWhiteSpace(s.Content));
 
             return result;
         }

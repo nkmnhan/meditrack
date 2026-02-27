@@ -37,7 +37,7 @@ export function useAudioRecording({
   /**
    * Start recording audio from the microphone
    */
-  const startRecording = useCallback(async () => {
+  async function startRecording() {
     if (!isSupported) {
       onError?.(new Error("Audio recording is not supported in this browser"));
       return;
@@ -96,12 +96,12 @@ export function useAudioRecording({
           : new Error("Failed to access microphone")
       );
     }
-  }, [isSupported, onAudioChunk, onError, chunkIntervalMs]);
+  }
 
   /**
    * Stop recording and release resources
    */
-  const stopRecording = useCallback(() => {
+  function stopRecording() {
     const mediaRecorder = mediaRecorderRef.current;
     if (mediaRecorder && mediaRecorder.state !== "inactive") {
       mediaRecorder.stop();
@@ -115,27 +115,27 @@ export function useAudioRecording({
     mediaRecorderRef.current = null;
     streamRef.current = null;
     setIsRecording(false);
-  }, []);
+  }
 
   /**
    * Pause recording (keeps microphone stream open)
    */
-  const pauseRecording = useCallback(() => {
+  function pauseRecording() {
     const mediaRecorder = mediaRecorderRef.current;
     if (mediaRecorder && mediaRecorder.state === "recording") {
       mediaRecorder.pause();
     }
-  }, []);
+  }
 
   /**
    * Resume recording after pause
    */
-  const resumeRecording = useCallback(() => {
+  function resumeRecording() {
     const mediaRecorder = mediaRecorderRef.current;
     if (mediaRecorder && mediaRecorder.state === "paused") {
       mediaRecorder.resume();
     }
-  }, []);
+  }
 
   return {
     isRecording,

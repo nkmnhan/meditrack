@@ -61,9 +61,9 @@ export function DevPanel({ className }: DevPanelProps) {
           Dev Panel
         </span>
         {isExpanded ? (
-          <ChevronDown className="h-4 w-4 text-neutral-500" />
-        ) : (
           <ChevronUp className="h-4 w-4 text-neutral-500" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-neutral-500" />
         )}
       </button>
 

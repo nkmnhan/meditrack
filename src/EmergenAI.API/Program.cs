@@ -105,6 +105,7 @@ app.MapSessionEndpoints();
 app.MapKnowledgeEndpoints();
 
 // Map Controllers (DevController)
+// Note: DevController uses MVC for test/dev endpoints only. All production endpoints use minimal APIs for performance.
 app.MapControllers();
 
 // Health endpoint (basic check)

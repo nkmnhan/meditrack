@@ -8,8 +8,7 @@ import type {
   Suggestion,
 } from "../types";
 
-const EMERGEN_API_URL =
-  import.meta.env.VITE_EMERGEN_API_URL || "https://localhost:5005";
+import { EMERGEN_API_URL } from "../config";
 const HUB_URL = `${EMERGEN_API_URL}/sessionHub`;
 
 interface UseSessionOptions {
@@ -53,6 +52,16 @@ export function useSession({
     sessionIdRef.current = sessionId;
   }, [sessionId]);
 
+  // Store callbacks in refs to avoid stale closures
+  const onTranscriptLineRef = useRef(onTranscriptLine);
+  const onSuggestionRef = useRef(onSuggestion);
+  const onErrorRef = useRef(onError);
+  useEffect(() => {
+    onTranscriptLineRef.current = onTranscriptLine;
+    onSuggestionRef.current = onSuggestion;
+    onErrorRef.current = onError;
+  });
+
   // Build and manage SignalR connection
   useEffect(() => {
     if (!sessionId) return;
@@ -77,7 +86,7 @@ export function useSession({
       // Rejoin the session after reconnection
       connection.invoke("JoinSession", sessionIdRef.current).catch((error) => {
         console.error("Failed to rejoin session:", error);
-        onError?.(new Error("Failed to rejoin session after reconnection"));
+        onErrorRef.current?.(new Error("Failed to rejoin session after reconnection"));
       });
     });
 
@@ -86,15 +95,15 @@ export function useSession({
     });
 
     // Handle incoming transcript lines
-    connection.on("TranscriptLineReceived", (line: TranscriptLine) => {
+    connection.on("TranscriptLineAdded", (line: TranscriptLine) => {
       setTranscriptLines((prev) => [...prev, line]);
-      onTranscriptLine?.(line);
+      onTranscriptLineRef.current?.(line);
     });
 
     // Handle incoming suggestions
-    connection.on("SuggestionReceived", (suggestion: Suggestion) => {
+    connection.on("SuggestionAdded", (suggestion: Suggestion) => {
       setSuggestions((prev) => [...prev, suggestion]);
-      onSuggestion?.(suggestion);
+      onSuggestionRef.current?.(suggestion);
     });
 
     // Handle session state updates
@@ -105,7 +114,7 @@ export function useSession({
     // Handle errors from server
     connection.on("Error", (errorMessage: string) => {
       console.error("Session error:", errorMessage);
-      onError?.(new Error(errorMessage));
+      onErrorRef.current?.(new Error(errorMessage));
     });
 
     // Start connection
@@ -120,7 +129,7 @@ export function useSession({
       } catch (error) {
         console.error("Failed to connect to session hub:", error);
         setConnectionStatus("disconnected");
-        onError?.(
+        onErrorRef.current?.(
           error instanceof Error ? error : new Error("Connection failed")
         );
       }
@@ -130,14 +139,14 @@ export function useSession({
 
     // Cleanup on unmount
     return () => {
-      connection.off("TranscriptLineReceived");
-      connection.off("SuggestionReceived");
+      connection.off("TranscriptLineAdded");
+      connection.off("SuggestionAdded");
       connection.off("SessionUpdated");
       connection.off("Error");
       connection.stop();
       connectionRef.current = null;
     };
-  }, [sessionId, onTranscriptLine, onSuggestion, onError]);
+  }, [sessionId]);
 
   /**
    * Send audio chunk to the server for transcription

@@ -108,7 +108,7 @@ public class DevController : ControllerBase
             // Broadcast via SignalR to connected clients
             await _hubContext.Clients
                 .Group(sessionId.ToString())
-                .SendAsync("ReceiveTranscriptLine", new
+                .SendAsync("TranscriptLineAdded", new
                 {
                     id = transcriptLine.Id,
                     speaker = transcriptLine.Speaker,
@@ -158,7 +158,7 @@ public class DevController : ControllerBase
         {
             await _hubContext.Clients
                 .Group(sessionId.ToString())
-                .SendAsync("ReceiveSuggestion", new
+                .SendAsync("SuggestionAdded", new
                 {
                     id = suggestion.Id,
                     content = suggestion.Content,

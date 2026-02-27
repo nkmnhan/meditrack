@@ -35,12 +35,12 @@ public sealed class BatchTriggerService : IDisposable
         // Only count patient utterances for auto-batch
         if (line.Speaker == SpeakerRole.Patient)
         {
-            state.PatientUtteranceCount++;
+            var count = System.Threading.Interlocked.Increment(ref state.PatientUtteranceCount);
 
-            if (state.PatientUtteranceCount >= 5)
+            if (count >= 5)
             {
                 await TriggerBatchSuggestionAsync(sessionId, "patient_utterance_threshold");
-                state.PatientUtteranceCount = 0;
+                System.Threading.Interlocked.Exchange(ref state.PatientUtteranceCount, 0);
                 state.ResetTimer();
             }
         }
@@ -67,11 +67,18 @@ public sealed class BatchTriggerService : IDisposable
 
     private async void OnTimerElapsed(string sessionId)
     {
-        if (_sessionStates.TryGetValue(sessionId, out var state) && state.PatientUtteranceCount > 0)
+        try
         {
-            await TriggerBatchSuggestionAsync(sessionId, "time_threshold");
-            state.PatientUtteranceCount = 0;
-            state.ResetTimer();
+            if (_sessionStates.TryGetValue(sessionId, out var state) && state.PatientUtteranceCount > 0)
+            {
+                await TriggerBatchSuggestionAsync(sessionId, "time_threshold");
+                System.Threading.Interlocked.Exchange(ref state.PatientUtteranceCount, 0);
+                state.ResetTimer();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "OnTimerElapsed failed for session {SessionId}", sessionId);
         }
     }
 
@@ -103,7 +110,7 @@ public sealed class BatchTriggerService : IDisposable
             {
                 await hubContext.Clients
                     .Group(sessionId)
-                    .SendAsync("ReceiveSuggestion", new
+                    .SendAsync("SuggestionAdded", new
                     {
                         id = suggestion.Id,
                         content = suggestion.Content,

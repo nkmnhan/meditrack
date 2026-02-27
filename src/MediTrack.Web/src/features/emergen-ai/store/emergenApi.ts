@@ -8,8 +8,7 @@ import type {
   KnowledgeSearchResponse,
 } from "../types";
 
-const EMERGEN_API_URL =
-  import.meta.env.VITE_EMERGEN_API_URL || "https://localhost:5005";
+import { EMERGEN_API_URL } from "../config";
 
 export const emergenApi = createApi({
   reducerPath: "emergenApi",

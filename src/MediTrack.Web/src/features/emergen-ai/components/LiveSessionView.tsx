@@ -44,16 +44,13 @@ export function LiveSessionView() {
   });
 
   // Audio recording
-  const handleAudioChunk = useCallback(
-    async (data: ArrayBuffer) => {
-      try {
-        await sendAudioChunk(data);
-      } catch (chunkError) {
-        console.error("Failed to send audio chunk:", chunkError);
-      }
-    },
-    [sendAudioChunk]
-  );
+  async function handleAudioChunk(data: ArrayBuffer) {
+    try {
+      await sendAudioChunk(data);
+    } catch (chunkError) {
+      console.error("Failed to send audio chunk:", chunkError);
+    }
+  }
 
   const {
     isRecording,
@@ -80,6 +77,9 @@ export function LiveSessionView() {
   };
 
   const handleEndSession = async () => {
+    if (!window.confirm("Are you sure you want to end this session? This action cannot be undone.")) {
+      return;
+    }
     try {
       stopRecording();
       await endSession();

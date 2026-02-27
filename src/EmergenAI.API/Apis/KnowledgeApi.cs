@@ -32,8 +32,13 @@ public static class KnowledgeApi
             return Results.BadRequest(new { message = "Query is required" });
         }
 
-        var topK = request.TopK is > 0 and <= 10 ? request.TopK : 3;
-        var minScore = request.MinScore is > 0 and <= 1 ? request.MinScore : 0.7f;
+        if (request.TopK is <= 0 or > 10)
+            return Results.BadRequest(new { error = "topK must be between 1 and 10" });
+        if (request.MinScore is <= 0 or > 1)
+            return Results.BadRequest(new { error = "minScore must be between 0 and 1" });
+
+        var topK = request.TopK;
+        var minScore = request.MinScore;
 
         var results = await knowledgeService.SearchAsync(
             request.Query,
