@@ -1,8 +1,8 @@
 # Emergen AI — MVP Implementation Plan
 
-> **Goal**: Ship a minimal but functional AI clinical companion in 8-10 weeks. Focus: core workflow works end-to-end, defer all polish.
+> **Goal**: Ship a minimal but functional AI clinical companion in 10-12 weeks. Focus: core workflow works end-to-end, defer all polish.
 
-**Last updated**: 2026-02-25
+**Last updated**: 2026-02-27
 
 ---
 
@@ -112,12 +112,12 @@ CREATE TABLE documents (
 
 ## Phase 6b: EmergenAI.API — Core Service (MVP)
 
-**Duration**: 4-5 weeks  
+**Duration**: 5-6 weeks
 **Status**: Main implementation phase
 
-### Milestone 1: Project Scaffold + Health Check (Week 1)
+### Milestone 1: Project Scaffold + Health Check + AI Infrastructure (Week 1)
 
-**Goal**: Empty service runs, connects to DB, responds to health checks.
+**Goal**: Empty service runs, connects to DB, responds to health checks. AI abstraction layer and resilience patterns wired from day one.
 
 #### Deliverables
 
@@ -156,20 +156,237 @@ SeedData/Guidelines/             ← repo root, COPY'd into Docker image
 └── FDA-DrugInteractions.txt
 ```
 
-**Dockerfile note**: Both `skills/core/` and `SeedData/Guidelines/` must be COPY'd into the Docker image:
+**Content files note**: `Prompts/system.txt` must be included in the published output. Add this to the `.csproj`:
+
+```xml
+<!-- EmergenAI.API.csproj — ensure Prompts/ files are in the publish output -->
+<ItemGroup>
+  <Content Include="Prompts\**\*" CopyToOutputDirectory="PreserveNewest" />
+</ItemGroup>
+```
+
+Both `skills/core/` and `SeedData/Guidelines/` live at the repo root (outside the project), so they must be COPY'd explicitly in the Dockerfile:
 ```dockerfile
 COPY skills/core/ /app/skills/core/
 COPY SeedData/Guidelines/ /app/SeedData/Guidelines/
 ```
 
+`Prompts/system.txt` is inside the project → included via `dotnet publish` (the `CopyToOutputDirectory` above handles this). No extra Dockerfile COPY needed.
+
 #### NuGet Packages (add to `Directory.Packages.props`)
 
 ```xml
+<!-- Data -->
 <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
 <PackageVersion Include="Pgvector.EntityFrameworkCore" Version="0.3.0" />
+
+<!-- AI Abstraction Layer (Microsoft.Extensions.AI) -->
+<PackageVersion Include="Microsoft.Extensions.AI" Version="9.5.0" />
+<PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="9.5.0" />
+
+<!-- AI Providers (used by M.E.AI under the hood) -->
 <PackageVersion Include="OpenAI" Version="2.2.0" />
+
+<!-- Resilience (Polly v8 via Microsoft.Extensions.Http.Resilience) -->
+<PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.5.0" />
+
+<!-- Utilities -->
 <PackageVersion Include="YamlDotNet" Version="16.3.0" />
+<PackageVersion Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
 ```
+
+> **IMPORTANT — Package versions are placeholders**: All version numbers above must be verified against NuGet Gallery before implementation. Check the pre-implementation checklist. Never use preview/RC versions (per CLAUDE.md). The `Microsoft.Extensions.AI` packages reached GA with .NET 9 (late 2024) and are forward-compatible with .NET 10. The `Microsoft.Extensions.Http.Resilience` package is part of the Microsoft.Extensions ecosystem (stable since .NET 8). Verify actual latest stable versions for all packages at implementation time.
+
+#### npm Packages (frontend — add in Phase 6c)
+
+```bash
+npm install @microsoft/signalr
+```
+
+#### EF Core Migration
+
+```bash
+dotnet ef migrations add InitialEmergen -p src/EmergenAI.API -s src/EmergenAI.API
+```
+
+#### Health Check Implementation
+
+```csharp
+// Health/EmergenHealthCheck.cs
+public class EmergenHealthCheck : IHealthCheck
+{
+    private readonly EmergenDbContext _db;
+    private readonly IHttpClientFactory _httpClientFactory;
+
+    public EmergenHealthCheck(EmergenDbContext db, IHttpClientFactory httpClientFactory)
+    {
+        _db = db;
+        _httpClientFactory = httpClientFactory;
+    }
+
+    public async Task<HealthCheckResult> CheckHealthAsync(
+        HealthCheckContext context, CancellationToken cancellationToken = default)
+    {
+        var data = new Dictionary<string, object>();
+
+        // Check PostgreSQL — CRITICAL (unhealthy if down)
+        try
+        {
+            await _db.Database.CanConnectAsync(cancellationToken);
+            data["postgresql"] = "healthy";
+        }
+        catch (Exception exception)
+        {
+            return HealthCheckResult.Unhealthy("PostgreSQL unreachable", exception, data);
+        }
+
+        // Check Deepgram reachability (HEAD request, no billing impact)
+        // Degraded, not unhealthy — manual text fallback works
+        try
+        {
+            var deepgramClient = _httpClientFactory.CreateClient("Deepgram");
+            var response = await deepgramClient.SendAsync(
+                new HttpRequestMessage(HttpMethod.Head, "https://api.deepgram.com/v1/listen"),
+                cancellationToken);
+            data["deepgram"] = response.IsSuccessStatusCode ? "reachable" : "degraded";
+        }
+        catch
+        {
+            data["deepgram"] = "unreachable";
+        }
+
+        // Check OpenAI reachability (list models endpoint — lightweight, no token cost)
+        // Degraded, not unhealthy — circuit breaker handles outages
+        try
+        {
+            var openAiClient = _httpClientFactory.CreateClient("OpenAI");
+            var response = await openAiClient.GetAsync(
+                "https://api.openai.com/v1/models", cancellationToken);
+            data["openai"] = response.IsSuccessStatusCode ? "reachable" : "degraded";
+        }
+        catch
+        {
+            data["openai"] = "unreachable";
+        }
+
+        // Overall: healthy if PostgreSQL is up (AI services are degraded, not critical)
+        var hasDegradedService = data.Values.Any(value =>
+            value is string status && status is "degraded" or "unreachable");
+
+        return hasDegradedService
+            ? HealthCheckResult.Degraded("AI services partially unavailable", data: data)
+            : HealthCheckResult.Healthy("All systems operational", data);
+    }
+}
+```
+
+#### Dockerfile
+
+```dockerfile
+# src/EmergenAI.API/Dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+WORKDIR /app
+EXPOSE 8080
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+COPY ["Directory.Build.props", "."]
+COPY ["Directory.Packages.props", "."]
+COPY ["src/EmergenAI.API/EmergenAI.API.csproj", "src/EmergenAI.API/"]
+COPY ["src/MediTrack.ServiceDefaults/MediTrack.ServiceDefaults.csproj", "src/MediTrack.ServiceDefaults/"]
+RUN dotnet restore "src/EmergenAI.API/EmergenAI.API.csproj"
+COPY . .
+WORKDIR "/src/src/EmergenAI.API"
+RUN dotnet build -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+COPY skills/core/ /app/skills/core/
+COPY SeedData/Guidelines/ /app/SeedData/Guidelines/
+ENTRYPOINT ["dotnet", "EmergenAI.API.dll"]
+```
+
+#### AI Abstraction Layer — `Microsoft.Extensions.AI`
+
+Use `IChatClient` and `IEmbeddingGenerator` as the LLM-agnostic abstractions. This aligns with CLAUDE.md's "MCP-native, no vendor lock-in" principle and is the official .NET pattern (GA since 2025).
+
+**Why from day one**: Costs ~30 minutes to wire up. Gives you provider-swappable DI, built-in OpenTelemetry, and caching middleware — for free. Like `ILogger` is for logging, `IChatClient` is for LLMs.
+
+```csharp
+// Program.cs — AI service registration
+
+// 1. Register IChatClient (LLM abstraction)
+//    Wraps OpenAI SDK with middleware pipeline
+builder.Services.AddChatClient(services =>
+    new OpenAIChatClient(
+        builder.Configuration["OpenAI:Model"] ?? "gpt-4o-mini",
+        new ApiKeyCredential(builder.Configuration["OpenAI:ApiKey"]!)))
+    .UseOpenTelemetry()        // auto-instrument: tokens, latency, cost
+    .UseDistributedCache()     // exact-match response cache (Redis)
+    .Build();
+
+// 2. Register IEmbeddingGenerator (embedding abstraction)
+builder.Services.AddEmbeddingGenerator(services =>
+    new OpenAIEmbeddingGenerator(
+        builder.Configuration["OpenAI:EmbeddingModel"] ?? "text-embedding-3-small",
+        new ApiKeyCredential(builder.Configuration["OpenAI:ApiKey"]!)))
+    .UseOpenTelemetry()
+    .Build();
+```
+
+**Key benefit**: To swap from OpenAI to Azure OpenAI, Anthropic, or local Ollama — change one line in DI registration. Business logic (`SuggestionService`, `KnowledgeService`) depends only on `IChatClient` / `IEmbeddingGenerator` interfaces.
+
+#### Resilience — Polly v8 Circuit Breaker + Retry
+
+AI APIs are **slow, expensive, and unreliable** compared to traditional REST services. Without resilience patterns, a Deepgram outage hangs every request for 30s → thread pool starves → entire app goes down (not just AI features).
+
+Wire this on day one — it's 5 minutes of setup that prevents cascading failures.
+
+```csharp
+// Program.cs — Resilience for external AI HTTP clients
+
+// Deepgram STT client — with retry + circuit breaker + timeout
+builder.Services.AddHttpClient("Deepgram", client =>
+{
+    client.BaseAddress = new Uri("https://api.deepgram.com/");
+    client.DefaultRequestHeaders.Authorization =
+        new AuthenticationHeaderValue("Token", builder.Configuration["Deepgram:ApiKey"]);
+})
+.AddStandardResilienceHandler(options =>
+{
+    // Retry: 3 attempts, exponential backoff with jitter
+    options.Retry.MaxRetryAttempts = 3;
+    options.Retry.UseJitter = true;
+
+    // Circuit breaker: open after 50% failure rate in 30s window
+    options.CircuitBreaker.FailureRatio = 0.5;
+    options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(30);
+    options.CircuitBreaker.MinimumThroughput = 5;
+    options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(30);
+
+    // Timeout: don't hang on slow Deepgram responses
+    options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(10);
+    options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(30);
+});
+
+// Patient.API client — for fetching patient context
+builder.Services.AddHttpClient("PatientApi", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["Services:PatientApi"]!);
+})
+.AddStandardResilienceHandler();  // sensible defaults for internal service calls
+```
+
+**What `AddStandardResilienceHandler` does out of the box**:
+- Retry with exponential backoff + jitter (handles 500, 408, 429)
+- Respects `Retry-After` headers (critical for OpenAI rate limits)
+- Circuit breaker (stops hammering a down service)
+- Request timeout (prevents thread pool starvation)
+- Bulkhead isolation (limits concurrent calls per client)
 
 #### Docker Compose Addition
 
@@ -197,16 +414,77 @@ emergen-api:
 - [ ] Health endpoint returns 200: `GET /health`
 - [ ] EF Core connects to EmergenDB (PostgreSQL)
 - [ ] Migrations run on startup
+- [ ] `IChatClient` and `IEmbeddingGenerator` resolve from DI without errors
+- [ ] OpenTelemetry traces appear for AI calls (verify in Aspire Dashboard or console exporter)
+- [ ] Polly resilience handler attached to Deepgram + Patient.API HTTP clients (verify via health check with Deepgram unreachable → degraded, not crash)
 
 ---
 
-### Milestone 2: Session Management (Week 1-2)
+### Milestone 2: Session Management + Security Hardening (Week 1-2)
 
-**Goal**: Doctor can start/end sessions via REST API.
+**Goal**: Doctor can start/end sessions via REST API. All endpoints secured from day one.
+
+#### Security Hardening (applies to ALL endpoints and hubs)
+
+**Auth**: Every endpoint and hub requires `[Authorize(Roles = UserRoles.Doctor)]`. Doctors only for MVP.
+
+**CORS**: Explicit CORS policy for SignalR WebSocket connections from the frontend origin:
+
+```csharp
+// Program.cs — CORS for SignalR
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("EmergenSignalR", policy =>
+    {
+        policy.WithOrigins(builder.Configuration["AllowedOrigins"]!)
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // Required for SignalR
+    });
+});
+
+// After app.UseRouting()
+app.UseCors("EmergenSignalR");
+```
+
+**Rate Limiting**: Prevent abuse and cost overruns on AI endpoints:
+
+```csharp
+// Program.cs — rate limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("suggest", limiter =>
+    {
+        limiter.PermitLimit = 1;
+        limiter.Window = TimeSpan.FromSeconds(10);
+        limiter.QueueLimit = 0;
+    });
+});
+
+// On the suggest endpoint:
+[HttpPost("/api/sessions/{id}/suggest")]
+[EnableRateLimiting("suggest")]
+public async Task<IActionResult> Suggest(Guid id) { ... }
+```
+
+**FluentValidation**: Add validators for session DTOs:
+
+```csharp
+public class StartSessionRequestValidator : AbstractValidator<StartSessionRequest>
+{
+    public StartSessionRequestValidator()
+    {
+        RuleFor(request => request.PatientId)
+            .MaximumLength(128)
+            .When(request => request.PatientId != null);
+    }
+}
+```
 
 #### Endpoints
 
 ```csharp
+[Authorize(Roles = UserRoles.Doctor)]
 POST   /api/sessions          → Start new session
 GET    /api/sessions/{id}     → Get session details
 POST   /api/sessions/{id}/end → End session
@@ -237,6 +515,7 @@ POST   /api/sessions/{id}/end → End session
 public class SessionService
 {
     private readonly EmergenDbContext _db;
+    private readonly BatchTriggerService _batchTriggerService;
 
     public async Task<Session> StartSessionAsync(string doctorId, string? patientId)
     {
@@ -263,6 +542,10 @@ public class SessionService
         session.EndedAt = DateTimeOffset.UtcNow;
         session.Status = "ended";
         await _db.SaveChangesAsync();
+
+        // Dispose batch timer + clear utterance count (prevents Timer leak)
+        _batchTriggerService.CleanupSession(sessionId.ToString());
+
         return session;
     }
 }
@@ -284,10 +567,11 @@ public class SessionService
 #### Hub Definition
 
 ```csharp
+[Authorize(Roles = UserRoles.Doctor)]
 public class SessionHub : Hub
 {
     private readonly EmergenDbContext _db;
-    
+
     // Client connects to session
     public async Task JoinSession(string sessionId)
     {
@@ -351,15 +635,28 @@ public class SessionHub : Hub
 // Run once on startup or via dev endpoint
 public class KnowledgeBaseSeeder
 {
+    private readonly EmergenDbContext _db;
+    private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator;
+
+    public KnowledgeBaseSeeder(
+        EmergenDbContext db,
+        IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator)  // M.E.AI abstraction
+    {
+        _db = db;
+        _embeddingGenerator = embeddingGenerator;
+    }
+
     public async Task SeedAsync()
     {
-        var docs = Directory.GetFiles("SeedData/Guidelines", "*.txt");
-        
+        // Use AppContext.BaseDirectory for Docker compatibility
+        var seedPath = Path.Combine(AppContext.BaseDirectory, "SeedData", "Guidelines");
+        var docs = Directory.GetFiles(seedPath, "*.txt");
+
         foreach (var docPath in docs)
         {
             var text = await File.ReadAllTextAsync(docPath);
             var chunks = ChunkText(text, maxTokens: 500, overlap: 100);
-            
+
             var document = new Document
             {
                 FileName = Path.GetFileName(docPath),
@@ -367,22 +664,24 @@ public class KnowledgeBaseSeeder
                 UploadedBy = "system"
             };
             _db.Documents.Add(document);
-            
-            for (int i = 0; i < chunks.Count; i++)
+
+            for (int chunkIndex = 0; chunkIndex < chunks.Count; chunkIndex++)
             {
-                var embedding = await _embeddingService.EmbedAsync(chunks[i]);
-                
+                // IEmbeddingGenerator from M.E.AI (registered in Milestone 1)
+                var embeddingResult = await _embeddingGenerator.GenerateAsync(chunks[chunkIndex]);
+                var embeddingVector = embeddingResult.Vector;
+
                 _db.KnowledgeChunks.Add(new KnowledgeChunk
                 {
                     DocumentName = document.FileName,
-                    Content = chunks[i],
-                    Embedding = embedding,  // float[] → VECTOR(1536)
+                    Content = chunks[chunkIndex],
+                    Embedding = embeddingVector.ToArray(),  // float[] → VECTOR(1536)
                     Category = "guideline",
-                    ChunkIndex = i
+                    ChunkIndex = chunkIndex
                 });
             }
         }
-        
+
         await _db.SaveChangesAsync();
     }
 }
@@ -436,28 +735,40 @@ POST /api/knowledge/search
 ```csharp
 public class KnowledgeService
 {
+    private readonly EmergenDbContext _db;
+    private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator;
+
+    public KnowledgeService(
+        EmergenDbContext db,
+        IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator)  // M.E.AI abstraction
+    {
+        _db = db;
+        _embeddingGenerator = embeddingGenerator;
+    }
+
     public async Task<List<SearchResult>> SearchAsync(string query, int topK = 3)
     {
-        // 1. Embed the query
-        var queryEmbedding = await _embeddingService.EmbedAsync(query);
-        
+        // 1. Embed the query via IEmbeddingGenerator (M.E.AI — provider-agnostic)
+        var embeddingResult = await _embeddingGenerator.GenerateAsync(query);
+        var queryEmbedding = embeddingResult.Vector.ToArray();
+
         // 2. pgvector cosine similarity search
         var results = await _db.KnowledgeChunks
-            .Select(c => new
+            .Select(chunk => new
             {
-                Chunk = c,
-                Score = c.Embedding.CosineDistance(queryEmbedding)  // pgvector operator
+                Chunk = chunk,
+                Score = chunk.Embedding.CosineDistance(queryEmbedding)  // pgvector operator
             })
-            .OrderBy(x => x.Score)  // lower distance = higher similarity
+            .OrderBy(result => result.Score)  // lower distance = higher similarity
             .Take(topK)
             .ToListAsync();
-        
-        return results.Select(r => new SearchResult
+
+        return results.Select(result => new SearchResult
         {
-            DocumentName = r.Chunk.DocumentName,
-            Content = r.Chunk.Content,
-            Score = 1 - r.Score,  // convert distance to similarity
-            ChunkIndex = r.Chunk.ChunkIndex
+            DocumentName = result.Chunk.DocumentName,
+            Content = result.Chunk.Content,
+            Score = 1 - result.Score,  // convert distance to similarity
+            ChunkIndex = result.Chunk.ChunkIndex
         }).ToList();
     }
 }
@@ -487,32 +798,99 @@ You are a clinical assistant AI. You assist the doctor during a live patient con
 ## Instructions
 - Analyze the patient's symptoms and conversation context
 - Reference the patient's medical history when relevant
-- Provide 1-2 concise, actionable bullet points
+- Provide 1-3 concise, actionable bullet points
 - Flag any potential drug interactions or contraindications
 - If a clinical skill is active, follow its workflow
 
-## Output format
-- Brief bullet points only
-- Include confidence level (high/medium/low) for each suggestion
+## Output rules
 - Never diagnose — suggest considerations for the doctor to evaluate
+- Respond ONLY with valid JSON matching the required schema
+- Each bullet must be a complete, actionable sentence
+- Confidence: "high" = strong clinical evidence, "medium" = reasonable inference, "low" = worth considering
+```
+
+#### Structured Output Schema
+
+**Treat LLM output as untrusted.** The LLM is a probabilistic system — it can return malformed text, hallucinated formats, or even XSS payloads. Enforce structured JSON output with a schema so parsing never fails and no raw LLM text reaches the UI unvalidated.
+
+```csharp
+// Domain/SuggestionOutput.cs — strongly-typed LLM response
+public sealed record SuggestionOutput
+{
+    public required List<string> Bullets { get; init; }
+    public required string Confidence { get; init; }  // "high", "medium", "low"
+    public List<string>? RelevantMedications { get; init; }
+    public string? ClinicalSkillUsed { get; init; }
+}
+
+// JSON schema sent to OpenAI (forces structured response)
+private static readonly BinaryData SuggestionJsonSchema = BinaryData.FromObjectAsJson(new
+{
+    type = "object",
+    properties = new
+    {
+        bullets = new
+        {
+            type = "array",
+            items = new { type = "string" },
+            minItems = 1,
+            maxItems = 3,
+            description = "Concise, actionable clinical suggestions"
+        },
+        confidence = new
+        {
+            type = "string",
+            @enum = new[] { "high", "medium", "low" },
+            description = "Clinical confidence level"
+        },
+        relevantMedications = new
+        {
+            type = "array",
+            items = new { type = "string" },
+            description = "Medications mentioned or relevant to the suggestion"
+        },
+        clinicalSkillUsed = new
+        {
+            type = "string",
+            description = "ID of the clinical skill that guided this suggestion, if any"
+        }
+    },
+    required = new[] { "bullets", "confidence" },
+    additionalProperties = false
+});
 ```
 
 #### Service
 
+Uses `IChatClient` from Microsoft.Extensions.AI (registered in Milestone 1) — not the OpenAI SDK directly. This keeps the service LLM-agnostic and gives us OpenTelemetry + caching for free via the middleware pipeline.
+
 ```csharp
 public class SuggestionService
 {
-    private readonly ChatClient _chatClient;
+    private readonly IChatClient _chatClient;         // M.E.AI abstraction — NOT OpenAI SDK directly
     private readonly KnowledgeService _knowledge;
     private readonly PatientContextService _patientContext;
     private readonly EmergenDbContext _db;
     private readonly string _systemPrompt;
     private readonly ILogger<SuggestionService> _logger;
 
-    public SuggestionService(/* ... */)
+    public SuggestionService(
+        IChatClient chatClient,                       // injected via DI (registered in Program.cs)
+        KnowledgeService knowledge,
+        PatientContextService patientContext,
+        EmergenDbContext db,
+        ILogger<SuggestionService> logger)
     {
+        _chatClient = chatClient;
+        _knowledge = knowledge;
+        _patientContext = patientContext;
+        _db = db;
+        _logger = logger;
+
         // Load prompt from resource file — not hardcoded
-        _systemPrompt = File.ReadAllText("Prompts/system.txt");
+        // Use AppContext.BaseDirectory for Docker compatibility (avoids CWD issues)
+        _systemPrompt = File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "Prompts", "system.txt"));
     }
 
     public async Task<Suggestion?> GenerateSuggestionAsync(
@@ -520,6 +898,8 @@ public class SuggestionService
         List<TranscriptLine> recentLines,
         string source)  // "batch" or "on_demand"
     {
+        var stopwatch = Stopwatch.StartNew();
+
         try
         {
             // 1. Extract patient utterances for RAG query
@@ -535,7 +915,7 @@ public class SuggestionService
             // 3. Fetch patient context from Patient.API (if session has patientId)
             var session = await _db.Sessions.FindAsync(sessionId);
             var patientSummary = session?.PatientId != null
-                ? await _patientContext.GetSummaryAsync(session.PatientId)
+                ? await _patientContext.GetSummaryAsync(session.PatientId, session.DoctorId)
                 : null;
 
             // 4. Build prompt (compose dynamically per call)
@@ -552,24 +932,49 @@ public class SuggestionService
             var userPrompt = "Conversation:\n"
                 + string.Join("\n", recentLines.Select(l => $"[{l.Speaker}]: {l.Text}"));
 
-            // 5. Call LLM (OpenAI SDK — model from config)
-            var completion = await _chatClient.CompleteChatAsync(
-            [
-                new SystemChatMessage(fullSystemPrompt),
-                new UserChatMessage(userPrompt)
-            ],
-            new ChatCompletionOptions { Temperature = 0.3f, MaxOutputTokenCount = 200 });
+            // 5. Call LLM via IChatClient (M.E.AI — provider-agnostic)
+            //    OpenTelemetry, caching, and retry are handled by the middleware pipeline
+            var chatMessages = new List<ChatMessage>
+            {
+                new(ChatRole.System, fullSystemPrompt),
+                new(ChatRole.User, userPrompt)
+            };
 
-            var content = completion.Value.Content[0].Text;
+            var chatOptions = new ChatOptions
+            {
+                Temperature = 0.3f,
+                MaxOutputTokens = 300,
+                ResponseFormat = ChatResponseFormat.ForJsonSchema(
+                    "clinical_suggestion", SuggestionJsonSchema)
+            };
 
-            // 6. Save suggestion
+            var completion = await _chatClient.GetResponseAsync(chatMessages, chatOptions);
+            stopwatch.Stop();
+
+            // 6. Parse structured output (LLM output is UNTRUSTED — validate before use)
+            var suggestionOutput = JsonSerializer.Deserialize<SuggestionOutput>(
+                completion.Text,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (suggestionOutput is null || suggestionOutput.Bullets.Count == 0)
+            {
+                _logger.LogWarning("LLM returned empty/invalid suggestion for session {SessionId}", sessionId);
+                return null;
+            }
+
+            // 7. Log token usage + cost (structured logging for observability)
+            var usage = completion.Usage;
+            LogTokenUsage(sessionId, source, usage, stopwatch.Elapsed);
+
+            // 8. Save suggestion (store structured content as formatted text for display)
+            var formattedContent = string.Join("\n", suggestionOutput.Bullets.Select(b => $"- {b}"));
             var suggestion = new Suggestion
             {
                 Id = Guid.NewGuid(),
                 SessionId = sessionId,
-                Content = content,
+                Content = formattedContent,
                 TriggeredAt = DateTimeOffset.UtcNow,
-                Type = "clinical",
+                Type = suggestionOutput.ClinicalSkillUsed ?? "clinical",
                 Source = source,
                 Urgency = null  // MVP: no urgency classification yet
             };
@@ -584,22 +989,64 @@ public class SuggestionService
             return null;  // Don't crash the session — suggestion failure is non-fatal
         }
     }
+
+    /// <summary>
+    /// Structured log for per-session token/cost tracking.
+    /// Enables cost dashboards, anomaly detection, and budget alerting.
+    /// </summary>
+    private void LogTokenUsage(
+        Guid sessionId, string source, ChatResponseUsage? usage, TimeSpan latency)
+    {
+        if (usage is null) return;
+
+        // GPT-4o-mini pricing: $0.15/1M input, $0.60/1M output
+        const decimal inputCostPer1M = 0.15m;
+        const decimal outputCostPer1M = 0.60m;
+
+        var estimatedCost =
+            (usage.InputTokenCount * inputCostPer1M / 1_000_000m) +
+            (usage.OutputTokenCount * outputCostPer1M / 1_000_000m);
+
+        _logger.LogInformation(
+            "LLM call completed: session={SessionId} source={Source} " +
+            "tokens_in={InputTokens} tokens_out={OutputTokens} " +
+            "total_tokens={TotalTokens} cost_usd=${Cost:F6} latency_ms={LatencyMs}",
+            sessionId, source,
+            usage.InputTokenCount, usage.OutputTokenCount,
+            usage.TotalTokenCount, estimatedCost, latency.TotalMilliseconds);
+    }
 }
 ```
 
+> **Why `IChatClient` instead of `ChatClient` (OpenAI SDK)?**
+> - Swap providers without changing business logic (OpenAI → Azure OpenAI → Anthropic → Ollama)
+> - OpenTelemetry auto-instrumentation via `.UseOpenTelemetry()` pipeline middleware
+> - Exact-match response caching via `.UseDistributedCache()` (no extra code)
+> - Aligns with CLAUDE.md: "No LLM vendor names in architecture code — use MCP abstractions only"
+> - `IChatClient` is the official .NET abstraction (GA since 2025, like `ILogger` for logging)
+
 #### Patient Context Service
+
+Per CLAUDE.md: "Every MCP tool call touching patient data must be audit-logged." Patient context fetch is PHI access and must emit an audit event.
 
 ```csharp
 // Fetches minimal patient summary from Patient.API
 public class PatientContextService
 {
     private readonly HttpClient _httpClient;
+    private readonly IEventBus _eventBus;
+    private readonly ILogger<PatientContextService> _logger;
 
-    public async Task<string?> GetSummaryAsync(string patientId)
+    public async Task<string?> GetSummaryAsync(string patientId, string doctorId)
     {
         try
         {
             var response = await _httpClient.GetAsync($"api/patients/{patientId}");
+
+            // PHI audit — fire-and-forget (audit never crashes business operation)
+            _ = SafePublishAuditAsync(patientId, doctorId,
+                response.IsSuccessStatusCode ? "success" : "not_found");
+
             if (!response.IsSuccessStatusCode) return null;
 
             var patient = await response.Content.ReadFromJsonAsync<PatientSummaryDto>();
@@ -613,12 +1060,33 @@ public class PatientContextService
             return null;  // Patient context is best-effort, never blocks suggestions
         }
     }
+
+    private async Task SafePublishAuditAsync(string patientId, string doctorId, string status)
+    {
+        try
+        {
+            await _eventBus.PublishAsync(new PHIAccessedIntegrationEvent(
+                UserId: doctorId,
+                ResourceType: AuditConstants.ResourceTypes.Patient,
+                ResourceId: patientId,
+                Operation: AuditConstants.Operations.Read,
+                OperationContext: AuditConstants.OperationContexts.McpToolCall,
+                Status: status));
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Failed to publish PHI audit event for patient {PatientId}",
+                patientId[..Math.Min(8, patientId.Length)] + "...");
+        }
+    }
 }
 ```
 
 #### Batching Logic (singleton service — NOT in hub)
 
-SignalR hubs are **transient** (new instance per invocation). Batching state must live in a singleton service:
+SignalR hubs are **transient** (new instance per invocation). Batching state must live in a singleton service.
+
+**Important**: `SpeakerDetectionService` is scoped (uses `EmergenDbContext`), so it's correctly resolved per-request in the hub. The singleton `BatchTriggerService` uses `IServiceScopeFactory` to create a scope when it needs scoped services. Timer objects **must** be disposed on session end — `CleanupSession` handles this.
 
 ```csharp
 // Registered as singleton in DI
@@ -694,8 +1162,12 @@ await _batchTriggerService.OnTranscriptLineAdded(sessionId, line);
 - [ ] Response time: <3 seconds (including RAG + LLM)
 - [ ] Suggestion persists to DB
 - [ ] LLM errors are caught and logged (non-fatal to session)
+- [ ] **Structured output**: LLM returns valid JSON matching `SuggestionOutput` schema (bullets + confidence)
+- [ ] **Output validation**: Malformed LLM responses are caught and logged, not passed to UI
+- [ ] **Cost tracking**: Every LLM call logs structured token usage (input/output tokens, estimated cost, latency)
+- [ ] **IChatClient**: SuggestionService depends on `IChatClient` (M.E.AI), NOT `ChatClient` (OpenAI SDK)
 
-**Deferred**: Tiered models, adaptive batching, urgent keyword bypass, suggestion history UI.
+**Deferred**: Tiered models, adaptive batching, urgent keyword bypass, suggestion history UI, semantic caching.
 
 ---
 
@@ -708,6 +1180,7 @@ await _batchTriggerService.OnTranscriptLineAdded(sessionId, line);
 #### SignalR Hub Changes
 
 ```csharp
+[Authorize(Roles = UserRoles.Doctor)]
 public class SessionHub : Hub
 {
     private readonly DeepgramService _deepgram;
@@ -771,7 +1244,8 @@ public class DeepgramService
         try
         {
             var content = new ByteArrayContent(audioChunk);
-            content.Headers.ContentType = new MediaTypeHeaderValue("audio/wav");
+            // Browser MediaRecorder default format is audio/webm (NOT wav)
+            content.Headers.ContentType = new MediaTypeHeaderValue("audio/webm");
 
             var response = await _httpClient.PostAsync(
                 "https://api.deepgram.com/v1/listen?model=nova-2-medical&punctuate=true",
@@ -909,8 +1383,11 @@ public class ClinicalSkillService
     private readonly ILogger<ClinicalSkillService> _logger;
 
     // Called once at startup — loads all YAML files from skills/core/
-    public void LoadSkills(string skillsDirectory = "skills/core")
+    // Default path uses AppContext.BaseDirectory for Docker compatibility
+    public void LoadSkills(string? skillsDirectory = null)
     {
+        skillsDirectory ??= Path.Combine(AppContext.BaseDirectory, "skills", "core");
+
         if (!Directory.Exists(skillsDirectory))
         {
             _logger.LogWarning("Skills directory not found: {Directory}", skillsDirectory);
@@ -984,6 +1461,24 @@ if (detectedSkill != null)
 ### Milestone 1: Session Start Screen (Week 1)
 
 **Goal**: Doctor clicks one button → session created + SignalR connected + mic recording starts + transcription begins. Everything kicks off from a single "Start Session" press.
+
+#### Route Protection
+
+All Emergen AI routes require Doctor role. Add `RoleGuard` wrapper in the router:
+
+```tsx
+// In router config
+{
+  path: '/emergen-ai',
+  element: <RoleGuard allowedRoles={[UserRoles.Doctor]}><EmergenAILayout /></RoleGuard>,
+  children: [
+    { index: true, element: <SessionStartScreen /> },
+    { path: 'session/:sessionId', element: <LiveSessionView /> },
+  ]
+}
+```
+
+**Note**: `RoleGuard` is UX only (per CLAUDE.md OWASP A01). Real security is enforced server-side by `[Authorize(Roles = UserRoles.Doctor)]` on all API endpoints and the SignalR hub.
 
 #### Component Structure
 
@@ -1065,30 +1560,30 @@ export function LiveSessionView() {
   const { transcript, isConnected } = useSignalR(sessionId);
   
   return (
-    <div className="flex h-screen bg-neutral-50">
-      {/* Left panel: Transcript */}
-      <div className="w-2/3 flex flex-col">
+    <div className="flex flex-col md:flex-row h-screen bg-neutral-50">
+      {/* Transcript panel: full width on mobile, 2/3 on desktop */}
+      <div className="flex-1 md:w-2/3 flex flex-col min-h-0">
         <div className="bg-white border-b border-neutral-200 p-4">
           <h2 className="text-lg font-semibold">Live Transcript</h2>
           {!isConnected && (
             <span className="text-warning-500 text-sm">Connecting...</span>
           )}
         </div>
-        
+
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
           {transcript.map((line) => (
             <TranscriptLine key={line.id} line={line} />
           ))}
         </div>
-        
+
         {/* Fallback text input — used before Milestone 7 (Deepgram) or when mic is denied */}
         <div className="border-t border-neutral-200 p-4">
           <TextInput onSend={(text, speaker) => sendTranscript(text, speaker)} />
         </div>
       </div>
-      
-      {/* Right panel: Suggestions */}
-      <div className="w-1/3 bg-white border-l border-neutral-200 p-4">
+
+      {/* Suggestions panel: stacks below on mobile, side panel on desktop */}
+      <div className="h-1/3 md:h-auto md:w-1/3 bg-white border-t md:border-t-0 md:border-l border-neutral-200 p-4">
         <SuggestionPanel sessionId={sessionId} />
       </div>
     </div>
@@ -1238,7 +1733,8 @@ function useAudioRecording(sessionId: string, connection: HubConnection) {
     const startRecording = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const mediaRecorder = new MediaRecorder(stream);
+        // Explicit mimeType — matches backend Content-Type: audio/webm
+        const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
         mediaRecorderRef.current = mediaRecorder;
 
         mediaRecorder.ondataavailable = async (event) => {
@@ -1329,6 +1825,715 @@ When all milestones are complete, the following user flow must work:
 
 ---
 
+## Production AI Infrastructure Patterns
+
+This section documents the key infrastructure differences between traditional web apps (eShop-style) and AI-integrated web apps. These patterns inform architectural decisions throughout the plan.
+
+### The Three Key Differences from Traditional APIs
+
+| | Traditional API (eShop) | AI/LLM API (EmergenAI) |
+|---|---|---|
+| **Determinism** | Same input = same output | Same prompt can give different results |
+| **Latency** | 10-100ms typical | 1-30 seconds, P99 can spike unpredictably |
+| **Cost** | Negligible per request | Tokens = money ($0.15-$15 per 1M tokens) |
+
+Every production AI pattern flows from these three differences.
+
+### Resilience Layer (Implemented in Milestone 1)
+
+| Pattern | Tool | What It Handles |
+|---------|------|----------------|
+| **Retry + backoff** | Polly v8 (`AddStandardResilienceHandler`) | Transient 500s, brief rate limits (429) |
+| **Circuit breaker** | Polly v8 (built into standard handler) | Prolonged outages — stops hammering down services |
+| **Timeout** | Polly v8 (attempt + total timeout) | Prevents thread pool starvation from slow LLM responses |
+| **Fallback** | Application-level (`return null`) | Graceful degradation — session continues without AI suggestions |
+
+**Why all on day one**: Without a circuit breaker, a Deepgram outage causes every audio chunk to hang for 30s → SignalR thread pool starves → the entire app goes down, not just the AI feature.
+
+### LLM Abstraction Layer (Implemented in Milestone 1)
+
+`Microsoft.Extensions.AI` (`IChatClient` / `IEmbeddingGenerator`) provides the LLM-agnostic abstraction:
+
+- **Provider swapping**: Change `OpenAIChatClient` → `AzureOpenAIChatClient` → `OllamaChatClient` in one DI registration line
+- **Middleware pipeline**: `.UseOpenTelemetry()` → `.UseDistributedCache()` → `.Build()` — composable like ASP.NET middleware
+- **Testability**: Mock `IChatClient` in integration tests (no real API key needed in CI)
+
+### Structured Output (Implemented in Milestone 6)
+
+LLM output is **untrusted**. It can return malformed text, hallucinated formats, or injection payloads. JSON schema enforcement + validation prevents all of these.
+
+### Cost Management Strategy
+
+| Phase | Strategy | Expected Impact |
+|-------|----------|----------------|
+| **MVP (now)** | Per-call token logging + rate limiter (1 req/10s) | Visibility + hard ceiling |
+| **Phase 7** | Exact-match response cache (Redis via M.E.AI `.UseDistributedCache()`) | 20-40% cost reduction |
+| **Phase 9** | Tiered model routing (mini for batch, Sonnet for on-demand) | 70-91% cost reduction |
+| **Phase 9+** | Semantic cache (similar queries → cached response, pgvector similarity) | Additional 20-30% on top |
+
+### Observability for AI Pipelines
+
+Traditional APM doesn't capture what you need to debug AI issues. Track these:
+
+| Metric | What It Tells You | How |
+|--------|-------------------|-----|
+| Tokens per call (in/out) | Cost per suggestion | Structured log in `SuggestionService` |
+| Latency per LLM call | UX responsiveness | Stopwatch + structured log |
+| Cache hit rate | Cost optimization effectiveness | M.E.AI OpenTelemetry metrics |
+| Circuit breaker state | External service health | Polly OpenTelemetry integration |
+| Suggestions per session | Batching effectiveness | DB query + dashboard |
+
+`Microsoft.Extensions.AI.UseOpenTelemetry()` auto-captures most of these. Export to .NET Aspire Dashboard (dev) or Grafana/Azure Monitor (production).
+
+### Reference Architectures (Beyond eShop)
+
+| Project | Relevance | Key Pattern to Learn |
+|---------|-----------|---------------------|
+| **[Canvas Hyperscribe](https://github.com/canvas-medical/canvas-hyperscribe)** | Open-source clinical AI copilot — **closest to EmergenAI** | Agent chaining, clinical guardrails, EMR integration |
+| **[eShopSupport](https://github.com/dotnet/eShopSupport)** | Microsoft's .NET AI reference app (RAG + M.E.AI) | How to add AI to clean architecture |
+| **[Semantic Kernel](https://github.com/microsoft/semantic-kernel)** | .NET AI orchestration (27K+ stars) | Plugins = our YAML skills. Consider for Phase 7+ |
+| **[liteLLM](https://github.com/BerriAI/litellm)** | Open-source LLM gateway/proxy | Per-user budgets, rate limits, model routing |
+
+### Common First-Timer Mistakes (Checklist)
+
+| Mistake | MediTrack Status | Notes |
+|---------|-----------------|-------|
+| No circuit breaker for AI APIs | **Fixed** (Milestone 1) | Polly v8 standard resilience handler |
+| Full chat history in every prompt | **Already correct** | Last 10 transcript lines only |
+| No token/cost tracking | **Fixed** (Milestone 6) | Structured logging per LLM call |
+| Tight coupling to one LLM provider | **Fixed** (Milestone 1) | `IChatClient` from M.E.AI |
+| No structured output validation | **Fixed** (Milestone 6) | JSON schema + `SuggestionOutput` parsing |
+| No caching | **Correct for MVP** | Add in Phase 7+ when there's traffic data |
+| LLM output treated as trusted | **Fixed** (Milestone 6) | JSON schema enforcement + validation |
+| No fallback when AI fails | **Already correct** | Non-fatal errors, session continues |
+| Ignoring token economics | **Fixed** (Milestone 6) | Cost logging, rate limiter, batch timer |
+
+### Phase 7+ AI Infrastructure Roadmap
+
+These are **not** in MVP but should be planned for:
+
+| Feature | Phase | Trigger to Implement |
+|---------|-------|---------------------|
+| Streaming LLM responses (token-by-token via SignalR) | Phase 7 | Doctors complain about 3s wait for suggestions |
+| Exact-match response cache (Redis) | Phase 7 | Repeated similar queries visible in logs |
+| Tiered model routing (mini + Sonnet) | Phase 9 | Monthly LLM cost exceeds $500 |
+| Semantic cache (pgvector similarity on prompts) | Phase 9+ | Cache hit rate plateaus with exact-match |
+| Semantic Kernel orchestration | Phase 8+ | Agent logic exceeds simple prompt composition |
+| Cost alerting (per-hour/per-day budget caps) | Phase 7 | Pilot launches to >10 doctors |
+| LLM gateway (liteLLM or custom) | Phase 9+ | Multiple services consume LLM APIs |
+
+---
+
+## Developer Testing Tools (Solo Testing)
+
+You can test the entire system **by yourself** without needing another person to play doctor or patient. This section documents the testing mechanisms built into the MVP.
+
+### 1. Text Input Mode (No Microphone Needed)
+
+The UI includes a manual text input that bypasses audio entirely. Use this for most development:
+
+```tsx
+// Component in LiveSessionView — always visible, used when mic is denied or for testing
+interface ManualTranscriptInputProps {
+  readonly sessionId: string;
+}
+
+function ManualTranscriptInput({ sessionId }: ManualTranscriptInputProps) {
+  const [text, setText] = useState('');
+  const [speaker, setSpeaker] = useState<'Doctor' | 'Patient'>('Patient');
+  const { connection } = useSignalR(sessionId);
+
+  const isConnected = connection?.state === 'Connected';
+
+  const handleSend = async () => {
+    if (!text.trim() || !isConnected) return;
+    await connection.invoke('SendTranscriptLine', sessionId, speaker, text);
+    setText('');
+  };
+
+  return (
+    <div className="flex gap-2 p-4 border-t border-neutral-200">
+      <select
+        value={speaker}
+        onChange={(event) => setSpeaker(event.target.value as 'Doctor' | 'Patient')}
+        className="px-3 py-2 border border-neutral-200 rounded"
+      >
+        <option value="Doctor">Doctor</option>
+        <option value="Patient">Patient</option>
+      </select>
+      <input
+        type="text"
+        value={text}
+        onChange={(event) => setText(event.target.value)}
+        onKeyDown={(event) => event.key === 'Enter' && handleSend()}
+        placeholder={isConnected ? "Type message and press Enter..." : "Connecting..."}
+        disabled={!isConnected}
+        className="flex-1 px-3 py-2 border border-neutral-200 rounded disabled:opacity-50"
+      />
+      <button
+        onClick={handleSend}
+        disabled={!isConnected || !text.trim()}
+        className="px-4 py-2 bg-primary-700 text-white rounded disabled:opacity-50"
+      >
+        Send
+      </button>
+    </div>
+  );
+}
+```
+
+**Usage**: Start a session → type messages alternating between Doctor/Patient → watch suggestions appear.
+
+### 2. Dev-Only API Endpoints (Seed Conversations)
+
+Dev endpoints for injecting test conversations and triggering AI suggestions. Guarded by a `[DevOnly]` filter (eliminates repeated `IsDevelopment()` checks) and `[Authorize]` (LLM calls cost money — even in dev, don't leave endpoints open).
+
+```csharp
+// Infrastructure/DevOnlyAttribute.cs — reusable filter, applied once at controller level
+[AttributeUsage(AttributeTargets.Class)]
+public class DevOnlyAttribute : ActionFilterAttribute
+{
+    public override void OnActionExecuting(ActionExecutingContext context)
+    {
+        var environment = context.HttpContext.RequestServices
+            .GetRequiredService<IWebHostEnvironment>();
+        if (!environment.IsDevelopment())
+            context.Result = new NotFoundResult();
+    }
+}
+```
+
+```csharp
+// Controllers/DevController.cs
+[DevOnly]                                    // returns 404 in non-Development environments
+[Authorize(Roles = UserRoles.Doctor)]        // still require auth — LLM calls cost money
+[ApiController]
+[Route("api/dev")]
+public class DevController : ControllerBase
+{
+    private readonly IHubContext<SessionHub> _hubContext;
+    private readonly EmergenDbContext _db;
+    private readonly SuggestionService _suggestionService;
+
+    public DevController(
+        IHubContext<SessionHub> hubContext,
+        EmergenDbContext db,
+        SuggestionService suggestionService)
+    {
+        _hubContext = hubContext;
+        _db = db;
+        _suggestionService = suggestionService;
+    }
+
+    /// <summary>
+    /// Seed a test conversation into an active session.
+    /// Lines are inserted instantly (no delays) — watch them appear in the UI via SignalR.
+    /// POST /api/dev/sessions/{id}/seed-transcript?scenario=chest-pain
+    /// </summary>
+    [HttpPost("sessions/{id}/seed-transcript")]
+    public async Task<IActionResult> SeedTranscript(Guid id, [FromQuery] string scenario = "chest-pain")
+    {
+        var scenarios = await LoadTestScenariosAsync();
+        if (!scenarios.TryGetValue(scenario, out var testScenario))
+            return BadRequest($"Unknown scenario: {scenario}. Available: {string.Join(", ", scenarios.Keys)}");
+
+        var session = await _db.Sessions.FindAsync(id);
+        if (session == null)
+            return NotFound($"Session {id} not found");
+
+        // Insert all lines instantly — no Task.Delay (avoids 17s+ HTTP request timeout)
+        foreach (var testLine in testScenario.Lines)
+        {
+            var line = new TranscriptLine
+            {
+                Id = Guid.NewGuid(),
+                SessionId = id,
+                Speaker = testLine.Speaker,
+                Text = testLine.Text,
+                Timestamp = DateTimeOffset.UtcNow
+            };
+
+            _db.TranscriptLines.Add(line);
+            await _db.SaveChangesAsync();
+
+            await _hubContext.Clients.Group(id.ToString()).SendAsync("TranscriptLineAdded", new
+            {
+                line.Id,
+                line.Speaker,
+                line.Text,
+                line.Timestamp
+            });
+        }
+
+        return Ok(new
+        {
+            message = $"Seeded {testScenario.Lines.Count} transcript lines for scenario '{scenario}'",
+            lineCount = testScenario.Lines.Count,
+            expectedSkill = testScenario.ExpectedSkill
+        });
+    }
+
+    /// <summary>
+    /// Force-trigger an AI suggestion for testing.
+    /// POST /api/dev/sessions/{id}/force-suggest
+    /// </summary>
+    [HttpPost("sessions/{id}/force-suggest")]
+    public async Task<IActionResult> ForceSuggest(Guid id)
+    {
+        var recentLines = await _db.TranscriptLines
+            .Where(transcriptLine => transcriptLine.SessionId == id)
+            .OrderByDescending(transcriptLine => transcriptLine.Timestamp)
+            .Take(10)
+            .OrderBy(transcriptLine => transcriptLine.Timestamp)
+            .ToListAsync();
+
+        if (recentLines.Count == 0)
+            return BadRequest("No transcript lines to analyze. Seed a conversation first.");
+
+        var suggestion = await _suggestionService.GenerateSuggestionAsync(id, recentLines, "dev_test");
+
+        if (suggestion == null)
+            return StatusCode(500, "Suggestion generation failed. Check logs.");
+
+        await _hubContext.Clients.Group(id.ToString()).SendAsync("SuggestionAdded", suggestion);
+
+        return Ok(suggestion);
+    }
+
+    /// <summary>
+    /// Get full session details including transcript, suggestions, and stats.
+    /// GET /api/dev/sessions/{id}/full
+    /// </summary>
+    [HttpGet("sessions/{id}/full")]
+    public async Task<IActionResult> GetFullSession(Guid id)
+    {
+        var session = await _db.Sessions.FindAsync(id);
+        if (session == null)
+            return NotFound();
+
+        var transcript = await _db.TranscriptLines
+            .Where(transcriptLine => transcriptLine.SessionId == id)
+            .OrderBy(transcriptLine => transcriptLine.Timestamp)
+            .ToListAsync();
+
+        var suggestions = await _db.Suggestions
+            .Where(suggestion => suggestion.SessionId == id)
+            .OrderBy(suggestion => suggestion.TriggeredAt)
+            .ToListAsync();
+
+        return Ok(new
+        {
+            session,
+            transcript,
+            suggestions,
+            stats = new
+            {
+                transcriptLineCount = transcript.Count,
+                doctorLines = transcript.Count(line => line.Speaker == "Doctor"),
+                patientLines = transcript.Count(line => line.Speaker == "Patient"),
+                suggestionCount = suggestions.Count
+            }
+        });
+    }
+
+    /// <summary>
+    /// Reset a session — clear transcript and suggestions for re-testing.
+    /// DELETE /api/dev/sessions/{id}/reset
+    /// </summary>
+    [HttpDelete("sessions/{id}/reset")]
+    public async Task<IActionResult> ResetSession(Guid id)
+    {
+        var session = await _db.Sessions.FindAsync(id);
+        if (session == null)
+            return NotFound();
+
+        var transcriptLines = await _db.TranscriptLines
+            .Where(line => line.SessionId == id)
+            .ToListAsync();
+        var suggestions = await _db.Suggestions
+            .Where(suggestion => suggestion.SessionId == id)
+            .ToListAsync();
+
+        _db.TranscriptLines.RemoveRange(transcriptLines);
+        _db.Suggestions.RemoveRange(suggestions);
+        await _db.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = $"Session {id} reset",
+            removedTranscriptLines = transcriptLines.Count,
+            removedSuggestions = suggestions.Count
+        });
+    }
+
+    /// <summary>
+    /// List available test scenarios (loaded from test-data/conversations/*.json).
+    /// GET /api/dev/scenarios
+    /// </summary>
+    [HttpGet("scenarios")]
+    public async Task<IActionResult> ListScenarios()
+    {
+        var scenarios = await LoadTestScenariosAsync();
+        return Ok(scenarios.Select(kvp => new
+        {
+            name = kvp.Key,
+            description = kvp.Value.Description,
+            lineCount = kvp.Value.Lines.Count,
+            expectedSkill = kvp.Value.ExpectedSkill,
+            preview = string.Join(" | ",
+                kvp.Value.Lines.Take(3).Select(line =>
+                    $"[{line.Speaker}] {line.Text[..Math.Min(40, line.Text.Length)]}..."))
+        }));
+    }
+
+    /// <summary>
+    /// Load test scenarios from JSON files — single source of truth (no hardcoded conversations).
+    /// Files in test-data/conversations/*.json, included via CopyToOutputDirectory.
+    /// </summary>
+    private static async Task<Dictionary<string, TestScenario>> LoadTestScenariosAsync()
+    {
+        var scenarioPath = Path.Combine(AppContext.BaseDirectory, "test-data", "conversations");
+        var scenarios = new Dictionary<string, TestScenario>();
+
+        if (!Directory.Exists(scenarioPath))
+            return scenarios;
+
+        foreach (var filePath in Directory.GetFiles(scenarioPath, "*.json"))
+        {
+            var scenarioName = Path.GetFileNameWithoutExtension(filePath);
+            var content = await File.ReadAllTextAsync(filePath);
+            var scenario = JsonSerializer.Deserialize<TestScenario>(content,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (scenario != null)
+                scenarios[scenarioName] = scenario;
+        }
+
+        return scenarios;
+    }
+}
+
+// Models for test data deserialization
+public sealed record TestScenario
+{
+    public required string Scenario { get; init; }
+    public required string Description { get; init; }
+    public string? ExpectedSkill { get; init; }
+    public required List<TestTranscriptLine> Lines { get; init; }
+}
+
+public sealed record TestTranscriptLine
+{
+    public required string Speaker { get; init; }
+    public required string Text { get; init; }
+}
+```
+
+**Key changes from original**:
+- `[DevOnly]` filter replaces 5 duplicated `IsDevelopment()` checks (DRY)
+- `[Authorize(Roles = UserRoles.Doctor)]` — LLM calls cost money, even in dev
+- **No `Task.Delay`** — lines seed instantly (original had ~17s HTTP request)
+- **Conversations loaded from JSON files** — single source of truth in `test-data/conversations/*.json`
+- `DELETE /api/dev/sessions/{id}/reset` endpoint for clearing test data
+- `GetSuggestions` endpoint removed (redundant with `GetFullSession`)
+
+### 3. Test Data Files (Single Source of Truth)
+
+Test conversations live in JSON files — **not** hardcoded in C#. The `DevController` reads from these files at runtime. Integration tests also use them.
+
+```
+test-data/
+├── conversations/                  ← DevController + integration tests read from here
+│   ├── chest-pain.json
+│   ├── medication-review.json
+│   ├── general-checkup.json
+│   └── follow-up-diabetes.json
+├── expected-outputs/               ← Integration tests verify suggestions against these
+│   ├── chest-pain-expected.json
+│   └── medication-review-expected.json
+└── audio/                          ← Optional: pre-recorded audio for Deepgram testing
+    └── README.md
+```
+
+**Include in `.csproj`** so files are available at runtime (dev only — not in production image):
+
+```xml
+<!-- EmergenAI.API.csproj -->
+<ItemGroup Condition="'$(Configuration)' == 'Debug'">
+  <Content Include="test-data\**\*" CopyToOutputDirectory="PreserveNewest" />
+</ItemGroup>
+```
+
+**Sample `test-data/conversations/chest-pain.json`:**
+
+```json
+{
+  "scenario": "chest-pain",
+  "description": "Patient presenting with chest pain radiating to left arm — should trigger chest-pain clinical skill",
+  "expectedSkill": "chest-pain-assessment",
+  "lines": [
+    { "speaker": "Doctor", "text": "Good morning. What brings you in today?" },
+    { "speaker": "Patient", "text": "I've been having chest pain for the past two days." },
+    { "speaker": "Doctor", "text": "Can you describe the pain? Is it sharp or dull?" },
+    { "speaker": "Patient", "text": "It's more of a pressure, like something heavy on my chest." },
+    { "speaker": "Doctor", "text": "Does it radiate anywhere? To your arm, jaw, or back?" },
+    { "speaker": "Patient", "text": "Sometimes I feel it in my left arm." },
+    { "speaker": "Doctor", "text": "Any shortness of breath, sweating, or nausea?" },
+    { "speaker": "Patient", "text": "Yes, I've been sweating more than usual and feel a bit nauseous." }
+  ]
+}
+```
+
+> **Note**: `delayMs` removed from JSON — delays were causing 17s HTTP requests. The `DevController` inserts all lines instantly.
+
+**Sample `test-data/expected-outputs/chest-pain-expected.json`:**
+
+Used by integration tests to verify LLM suggestion quality (keyword matching, not exact string comparison — LLM output is non-deterministic):
+
+```json
+{
+  "scenario": "chest-pain",
+  "minimumSuggestions": 1,
+  "expectedKeywords": [
+    "cardiac",
+    "ECG",
+    "troponin",
+    "aspirin",
+    "emergency"
+  ],
+  "expectedConfidence": "high",
+  "shouldTriggerSkill": "chest-pain-assessment"
+}
+```
+
+Integration tests use this via keyword-match assertion (not exact match — LLM output varies):
+
+```csharp
+// In integration tests
+var expected = LoadExpectedOutput("chest-pain");
+var suggestion = await client.PostAsync($"/api/dev/sessions/{sessionId}/force-suggest");
+var result = await suggestion.Content.ReadFromJsonAsync<SuggestionResponse>();
+
+// At least one expected keyword appears in the suggestion
+Assert.True(
+    expected.ExpectedKeywords.Any(keyword =>
+        result.Content.Contains(keyword, StringComparison.OrdinalIgnoreCase)),
+    $"Suggestion should mention at least one of: {string.Join(", ", expected.ExpectedKeywords)}");
+```
+
+### 4. Testing Workflow by Milestone
+
+| Milestone | How to Test | What to Verify |
+|-----------|-------------|----------------|
+| **1: Scaffold** | `docker-compose up emergen-api` | Health check returns 200 |
+| **2: Sessions** | `POST /api/sessions` via Postman/curl | Session created, JWT validates |
+| **3: SignalR** | Open UI → text input mode → type messages | Messages appear in real-time |
+| **4: Knowledge** | `POST /api/knowledge/search` with "chest pain" | Returns relevant CDC/AHA chunks |
+| **5: RAG** | Same as above | Results have similarity score >0.7 |
+| **6: LLM** | Seed transcript → `POST /api/dev/sessions/{id}/force-suggest` | Suggestion returned with bullets + confidence |
+| **7: Deepgram** | Speak into mic OR play pre-recorded audio | Transcript appears within 2 seconds |
+| **8: Skills** | Seed chest-pain transcript → check suggestion | Suggestion references chest pain workflow |
+
+### 5. Quick Test Commands
+
+All dev endpoints require a Doctor JWT (`-H "Authorization: Bearer <DOCTOR_JWT>"`). Get one from Identity.API login flow.
+
+```bash
+# === Core Workflow ===
+
+# 1. Start a session (get the session ID from response)
+curl -X POST http://localhost:5005/api/sessions \
+  -H "Authorization: Bearer $JWT" \
+  -H "Content-Type: application/json" \
+  -d '{"patientId": "test-patient-123"}'
+
+# 2. Seed a test conversation (instant — all lines injected at once)
+curl -X POST "http://localhost:5005/api/dev/sessions/$SESSION_ID/seed-transcript?scenario=chest-pain" \
+  -H "Authorization: Bearer $JWT"
+
+# 3. Force an AI suggestion
+curl -X POST "http://localhost:5005/api/dev/sessions/$SESSION_ID/force-suggest" \
+  -H "Authorization: Bearer $JWT"
+
+# 4. Get full session with transcript + suggestions + stats
+curl "http://localhost:5005/api/dev/sessions/$SESSION_ID/full" \
+  -H "Authorization: Bearer $JWT"
+
+# 5. List available test scenarios
+curl http://localhost:5005/api/dev/scenarios \
+  -H "Authorization: Bearer $JWT"
+
+# 6. Reset session (clear transcript + suggestions for re-testing)
+curl -X DELETE "http://localhost:5005/api/dev/sessions/$SESSION_ID/reset" \
+  -H "Authorization: Bearer $JWT"
+
+# === Verify Security ===
+
+# 7. Auth denial — no JWT should return 401
+curl -s -o /dev/null -w "%{http_code}" \
+  -X POST http://localhost:5005/api/sessions
+
+# 8. Wrong role — Patient JWT should return 403
+curl -s -o /dev/null -w "%{http_code}" \
+  -X POST http://localhost:5005/api/sessions \
+  -H "Authorization: Bearer $PATIENT_JWT"
+
+# === Verify Rate Limiting ===
+
+# 9. Rate limiter — second suggest within 10s should return 429
+curl -X POST "http://localhost:5005/api/sessions/$SESSION_ID/suggest" \
+  -H "Authorization: Bearer $JWT"
+curl -s -o /dev/null -w "%{http_code}" \
+  -X POST "http://localhost:5005/api/sessions/$SESSION_ID/suggest" \
+  -H "Authorization: Bearer $JWT"
+# Expected: 429 Too Many Requests
+
+# === Verify Batch Trigger ===
+
+# 10. Batch trigger — seed exactly 5 patient lines, watch for auto-suggestion via SignalR
+#     (Open the UI in a browser first, then run this — suggestion should appear automatically)
+curl -X POST "http://localhost:5005/api/dev/sessions/$SESSION_ID/seed-transcript?scenario=follow-up-diabetes" \
+  -H "Authorization: Bearer $JWT"
+# follow-up-diabetes has 4 patient lines — auto-batch should NOT fire
+# Add one more patient line manually via the UI text input → auto-batch should fire
+```
+
+### 6. Frontend Dev Panel (Optional Enhancement)
+
+Add a collapsible dev panel to the LiveSessionView for quick testing:
+
+```tsx
+import { FlaskConical, Zap } from "lucide-react";
+
+interface DevPanelProps {
+  readonly sessionId: string;
+}
+
+const TEST_SCENARIOS = ['chest-pain', 'medication-review', 'general-checkup', 'follow-up-diabetes'] as const;
+
+// Only shown in development mode
+function DevPanel({ sessionId }: DevPanelProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastDevResponse, setLastDevResponse] = useState<Record<string, unknown> | null>(null);
+
+  const seedTranscript = async (scenario: string) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        `/api/dev/sessions/${sessionId}/seed-transcript?scenario=${scenario}`,
+        { method: 'POST' }
+      );
+      setLastDevResponse(await response.json());
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const forceSuggest = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        `/api/dev/sessions/${sessionId}/force-suggest`,
+        { method: 'POST' }
+      );
+      setLastDevResponse(await response.json());
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (import.meta.env.PROD) return null;
+
+  return (
+    <div className="fixed bottom-4 right-4 bg-neutral-800 text-white p-4 rounded-lg shadow-lg max-w-sm">
+      <h3 className="flex items-center gap-2 font-bold mb-2">
+        <FlaskConical className="h-4 w-4" />
+        Dev Tools
+      </h3>
+
+      <div className="space-y-2">
+        <p className="text-xs text-neutral-400">Seed test conversation:</p>
+        <div className="flex flex-wrap gap-1">
+          {TEST_SCENARIOS.map(scenario => (
+            <button
+              key={scenario}
+              onClick={() => seedTranscript(scenario)}
+              disabled={isLoading}
+              className="px-2 py-1 bg-neutral-700 hover:bg-neutral-600 rounded text-xs disabled:opacity-50"
+            >
+              {scenario}
+            </button>
+          ))}
+        </div>
+
+        <button
+          onClick={forceSuggest}
+          disabled={isLoading}
+          className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-accent-500 hover:bg-accent-600 rounded text-sm font-medium disabled:opacity-50"
+        >
+          <Zap className="h-4 w-4" />
+          {isLoading ? 'Processing...' : 'Force AI Suggestion'}
+        </button>
+
+        {lastDevResponse && (
+          <pre className="text-xs bg-neutral-900 p-2 rounded overflow-auto max-h-32">
+            {JSON.stringify(lastDevResponse, null, 2)}
+          </pre>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+### 7. Acceptance Criteria for Testing Tools
+
+- [ ] Text input mode works without microphone (input disabled when SignalR disconnected)
+- [ ] `POST /api/dev/sessions/{id}/seed-transcript?scenario=chest-pain` injects 8 transcript lines instantly
+- [ ] `POST /api/dev/sessions/{id}/force-suggest` returns structured AI suggestion (bullets + confidence)
+- [ ] `GET /api/dev/sessions/{id}/full` returns session + transcript + suggestions + stats
+- [ ] `DELETE /api/dev/sessions/{id}/reset` clears transcript + suggestions for re-testing
+- [ ] `GET /api/dev/scenarios` lists scenarios loaded from `test-data/conversations/*.json`
+- [ ] Dev endpoints return 404 in production environment (`[DevOnly]` filter)
+- [ ] Dev endpoints return 401 without JWT, 403 with non-Doctor JWT (`[Authorize]`)
+- [ ] Frontend dev panel only renders in development mode (`import.meta.env.PROD` guard)
+- [ ] All 4 test scenarios produce meaningful AI suggestions
+- [ ] Test conversations are loaded from JSON files (no hardcoded conversations in C#)
+
+---
+
+## Integration Tests (Phase 6b Acceptance Criteria)
+
+Basic integration tests must pass before MVP is considered complete. These verify the core session lifecycle end-to-end.
+
+#### Test Suite
+
+```
+tests/EmergenAI.IntegrationTests/
+├── SessionLifecycleTests.cs      ← start → transcript → suggest → end
+├── KnowledgeSearchTests.cs       ← seed → search → verify relevance
+├── SignalRHubTests.cs             ← connect → join → receive transcript lines
+└── Fixtures/
+    └── EmergenApiFactory.cs       ← WebApplicationFactory with test PostgreSQL
+```
+
+#### Key Test Scenarios
+
+| Test | What it verifies |
+|------|-----------------|
+| `StartSession_ReturnsActiveSession` | REST → DB → response |
+| `EndSession_DisposesTimerAndMarksEnded` | Timer cleanup + status update |
+| `TranscriptLine_BroadcastsViaSignalR` | SignalR group messaging |
+| `SuggestEndpoint_ReturnsAISuggestion` | LLM integration (use mock for CI) |
+| `KnowledgeSearch_ReturnsRelevantChunks` | pgvector cosine similarity |
+| `SuggestEndpoint_RateLimited` | Rate limiter rejects >1 req/10s |
+| `UnauthenticatedRequest_Returns401` | Auth enforcement |
+| `NonDoctorRole_Returns403` | Role-based access control |
+
+**Note**: LLM calls should be mockable via interface (`IChatClient` from M.E.AI) so CI tests don't require an API key. pgvector tests require a real PostgreSQL instance (use Docker testcontainers).
+
+---
+
 ## What's NOT in MVP (Deferred to Phase 7+)
 
 | Feature | Why Deferred | When to Add |
@@ -1360,9 +2565,11 @@ When all milestones are complete, the following user flow must work:
 | OpenAI API failure | High — no suggestions | Error handling in SuggestionService, return null. Non-fatal to session. |
 | pgvector query performance | Medium — slow RAG blocks suggestions | Pre-benchmark with 10K chunks, add HNSW index early |
 | SignalR at scale | Medium — 30 concurrent sessions | Load test with 50 connections before launch |
-| LLM cost overruns | High — budget risk | Hardcode rate limit: 1 suggestion per 60 seconds per session (batch timer) |
+| LLM cost overruns | High — budget risk | Rate limiter on `/api/sessions/{id}/suggest` (1 req/10s per session) + batch timer (60s floor) |
 | Speaker detection accuracy | Medium — AI heuristic may misidentify | First speaker = Doctor (deterministic), LLM confirms from context, stored in `speaker_map` once resolved |
 | Patient.API unavailable | Low — degraded suggestions | PatientContextService returns null on failure, suggestions still work without patient context |
+| Unauthorized access | Critical — PHI exposure | `[Authorize(Roles = Doctor)]` on all endpoints + SignalR hub, RoleGuard on frontend routes |
+| Audio format mismatch | Medium — STT fails silently | Explicit `audio/webm;codecs=opus` in both MediaRecorder and Deepgram Content-Type |
 
 ---
 
@@ -1371,9 +2578,12 @@ When all milestones are complete, the following user flow must work:
 | Phase | Duration | Effort | Deliverable |
 |-------|----------|--------|-------------|
 | 6a: PostgreSQL Migration | 1 week | 1 engineer | EmergenDB schema + pgvector |
-| 6b: EmergenAI.API MVP | 4-5 weeks | 1 backend engineer | All 8 milestones (REST + SignalR + Deepgram + LLM) |
+| 6b: EmergenAI.API MVP | 5-6 weeks | 1 backend engineer | All 8 milestones (REST + SignalR + Deepgram + LLM) + integration tests |
 | 6c: Doctor Dashboard UI | 2-3 weeks | 1 frontend engineer | React UI (transcript + suggestions + audio) |
-| **Total** | **8-10 weeks** | **2 engineers** | **Functional MVP** |
+| Buffer (Deepgram/LLM surprises) | 1-2 weeks | — | Contingency for STT/LLM integration issues |
+| **Total** | **10-12 weeks** | **2 engineers** | **Functional MVP** |
+
+> **Timeline note**: Milestones 6-7 (LLM + Deepgram integration) often hit surprises (API quirks, latency tuning, audio format edge cases). Budget 5-6 weeks for backend, not 4-5.
 
 ---
 
@@ -1396,10 +2606,114 @@ If metrics are bad → iterate on prompts, RAG, or batching logic before adding 
 
 ---
 
+## Pre-Implementation Checklist
+
+Complete these **one-time setup items** before writing any code:
+
+| Item | Action | Owner | Status |
+|------|--------|-------|--------|
+| **NuGet versions** | Check NuGet Gallery for latest stable versions of `Microsoft.Extensions.AI.*`, `Microsoft.Extensions.Http.Resilience`, `Pgvector.EntityFrameworkCore`. Versions in this plan are placeholders. | Backend | [ ] |
+| **Deepgram account** | Sign up at deepgram.com, get API key, verify `nova-2-medical` model access. Free tier: $200 credit. | DevOps | [ ] |
+| **OpenAI account** | API key ready, billing set up, verify `gpt-4o-mini` and `text-embedding-3-small` access. | DevOps | [ ] |
+| **API keys in docker-compose** | Add `DEEPGRAM_API_KEY` and `OPENAI_API_KEY` to `docker-compose.override.yml` (gitignored, never committed). | DevOps | [ ] |
+| **PostgreSQL + pgvector** | Verify `pgvector/pgvector:pg17` Docker image pulls and runs locally. Test `CREATE EXTENSION vector;`. | Backend | [ ] |
+| **Aspire Dashboard** (optional) | Install .NET Aspire for OpenTelemetry visualization during dev. Not required but useful for debugging AI call traces. | Backend | [ ] |
+| **Canvas Hyperscribe review** (optional) | Skim [canvas-medical/canvas-hyperscribe](https://github.com/canvas-medical/canvas-hyperscribe) for clinical AI patterns. Focus on agent chaining and clinical guardrails. | Backend | [ ] |
+
+---
+
 ## Ready to Start
 
-✅ **Phase 6a (PostgreSQL migration)** can start immediately — no dependencies.  
-✅ **Phase 6b Milestone 1-2** (project scaffold + session management) can start in parallel.  
+✅ **Phase 6a (PostgreSQL migration)** can start immediately — no dependencies.
+✅ **Phase 6b Milestone 1-2** (project scaffold + session management + security hardening) can start in parallel.
 ✅ **Phase 6c** waits for Milestones 1-6 (backend APIs ready).
 
-**Next step**: Kick off Phase 6a, create GitHub issues for each milestone, assign work.
+### Suggested First Sprint (Week 1)
+
+| Task | Owner | Deliverable |
+|------|-------|-------------|
+| Phase 6a: PostgreSQL migration | Backend | All services on PostgreSQL, pgvector extension enabled |
+| Milestone 1: Project scaffold + AI infra | Backend | EmergenAI.API builds, health check passes, `IChatClient` resolves, Polly wired |
+| Verify NuGet package versions | Backend | Actual stable versions confirmed and committed to `Directory.Packages.props` |
+| Deepgram + OpenAI accounts | DevOps | API keys in `docker-compose.override.yml` |
+
+Then Milestones 2-3 in Week 2.
+
+**Next step**: Complete the pre-implementation checklist, then kick off Phase 6a.
+
+---
+
+## Review Amendments Applied (2026-02-27)
+
+All issues from the plan review have been addressed:
+
+| Issue | Resolution |
+|-------|-----------|
+| Timer leak on session end | `CleanupSession` called in `EndSessionAsync` |
+| Scoped service in singleton | Clarified: `SpeakerDetectionService` resolved per-request in hub, `BatchTriggerService` uses `IServiceScopeFactory` |
+| Missing auth on SignalR hub | `[Authorize(Roles = UserRoles.Doctor)]` added to `SessionHub` |
+| No rate limiting | Fixed-window rate limiter on `/api/sessions/{id}/suggest` (1 req/10s) |
+| System prompt path relative | `Path.Combine(AppContext.BaseDirectory, ...)` for Docker compatibility |
+| Missing CORS config | Explicit CORS policy for SignalR with `AllowCredentials()` |
+| Audio format mismatch | Changed to `audio/webm;codecs=opus` (browser + backend aligned) |
+| No PHI audit for patient context | `SafePublishAuditAsync` added to `PatientContextService` |
+| Missing frontend route protection | `RoleGuard` with `UserRoles.Doctor` on all Emergen AI routes |
+| Missing EF migration command | Added `dotnet ef migrations add` command |
+| Missing `@microsoft/signalr` dep | Added npm package to Phase 6c |
+| No health check implementation | `EmergenHealthCheck` checks PostgreSQL + Deepgram reachability |
+| No Dockerfile content | Multi-stage Dockerfile with skills/seed data COPY |
+| No integration tests | Test suite with 8 key scenarios + mock strategy for CI |
+| Timeline too tight | Extended to 10-12 weeks (5-6 weeks backend + buffer) |
+| FluentValidation missing | `StartSessionRequestValidator` added to security hardening task |
+| Desktop-only layout | `LiveSessionView` now mobile-first (`flex-col md:flex-row`) |
+
+---
+
+## Production AI Infrastructure Amendments (2026-02-27)
+
+Added based on real-world AI integration research and production patterns:
+
+| Addition | Location | Why |
+|----------|----------|-----|
+| `Microsoft.Extensions.AI` (`IChatClient`, `IEmbeddingGenerator`) | Milestone 1 | LLM-agnostic abstraction — swap providers without changing business logic. Official .NET pattern (GA 2025). |
+| Polly v8 resilience (`AddStandardResilienceHandler`) | Milestone 1 | Circuit breaker + retry + timeout for Deepgram and OpenAI. Prevents cascading failures from AI API outages. |
+| Structured JSON output (`ResponseFormat.ForJsonSchema`) | Milestone 6 | LLM output is untrusted. JSON schema enforcement prevents malformed/malicious responses from reaching the UI. |
+| `SuggestionOutput` record + output validation | Milestone 6 | Strongly-typed parsing of LLM responses. Invalid output logged and discarded, not displayed. |
+| Per-call token/cost structured logging | Milestone 6 | Cost visibility from day one. Enables budget alerting and anomaly detection. |
+| Production AI Infrastructure Patterns section | New section | Documents resilience, observability, caching roadmap, reference architectures, and common first-timer mistakes. |
+| Cost management roadmap (MVP → Phase 9+) | New section | Phased approach: logging → caching → tiered models → semantic cache. |
+| Reference architectures (Canvas Hyperscribe, eShopSupport, Semantic Kernel) | New section | Real-world .NET + healthcare AI projects to learn from beyond eShop. |
+
+---
+
+## Final Review Fixes (2026-02-27)
+
+| Issue | Resolution |
+|-------|-----------|
+| `_embeddingService` not using M.E.AI | `KnowledgeBaseSeeder` and `KnowledgeService` now inject `IEmbeddingGenerator<string, Embedding<float>>` |
+| Health check missing OpenAI | Added OpenAI `/v1/models` reachability check (degraded, not unhealthy) |
+| `Prompts/system.txt` not in Docker image | Added `<Content Include="Prompts\**\*" CopyToOutputDirectory="PreserveNewest" />` to `.csproj` |
+| NuGet versions are placeholders | Strengthened warning note + added pre-implementation checklist with version verification task |
+| `SeedData/Guidelines` path hardcoded | Fixed to use `Path.Combine(AppContext.BaseDirectory, ...)` in `KnowledgeBaseSeeder` |
+| Pre-implementation checklist missing | Added section with Deepgram, OpenAI, pgvector, Aspire setup items |
+| First sprint plan missing | Added "Suggested First Sprint (Week 1)" table |
+| Solo testing impossible | Added "Developer Testing Tools" section with text input mode, dev endpoints, test scenarios |
+| `ICompletionService` inconsistency | Fixed to `IChatClient` (M.E.AI) in Integration Tests note |
+
+---
+
+## Testing Tools Review Fixes (2026-02-27)
+
+| Issue | Resolution |
+|-------|-----------|
+| DevController has no `[Authorize]` | Added `[Authorize(Roles = UserRoles.Doctor)]` — LLM calls cost money, even in dev |
+| `IsDevelopment()` duplicated 5 times | Replaced with `[DevOnly]` action filter attribute applied once at class level |
+| `Task.Delay` causes 17s HTTP request | Removed all delays — lines seed instantly |
+| Test conversations hardcoded AND in JSON (DRY violation) | DevController now loads from `test-data/conversations/*.json` only — single source of truth |
+| `any` type in DevPanel | Replaced with `Record<string, unknown> \| null` |
+| Emojis in source code | Replaced with lucide-react icons (`FlaskConical`, `Zap`) |
+| `ManualTranscriptInput` no connection check | Added `connection.state === 'Connected'` guard, disabled state when disconnected |
+| `expected-outputs/` not connected to anything | Added integration test example showing keyword-match assertion against expected output files |
+| No cleanup endpoint | Added `DELETE /api/dev/sessions/{id}/reset` to clear transcript + suggestions |
+| Missing test commands | Added auth denial (401), wrong role (403), rate limiter (429), and batch trigger tests |
+| `test-data/` not in csproj | Added `<Content>` with `Condition="'$(Configuration)' == 'Debug'"` (dev only, not in production image) |
