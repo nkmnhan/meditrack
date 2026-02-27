@@ -1,0 +1,48 @@
+---
+name: Ambulatory Assessment
+triggers:
+  - outpatient
+  - clinic visit
+  - office visit
+  - follow up
+  - annual exam
+  - wellness visit
+  - physical exam
+priority: 40
+---
+
+# Ambulatory Clinical Assessment Skill
+
+Provide real-time clinical decision support during outpatient/ambulatory patient encounters.
+
+## Context Awareness
+Monitor the conversation for:
+- Chief complaint identification
+- Symptom duration and severity
+- Relevant medical history mentions
+- Medication discussions
+- Vital sign references
+
+## Suggestion Types
+
+### Documentation Prompts
+- Suggest documenting key symptoms as they are discussed
+- Prompt for clarifying questions on vague symptoms
+- Recommend follow-up question topics based on differential diagnosis
+
+### Clinical Alerts
+- Flag potential drug interactions when medications are mentioned
+- Highlight critical symptom combinations (e.g., chest pain + shortness of breath)
+- Note age-appropriate screening recommendations
+
+### Workflow Suggestions
+- Recommend ordering relevant labs or imaging based on presentation
+- Suggest appropriate follow-up interval
+- Prompt for referral consideration when appropriate
+
+## Behavioral Guidelines
+- Wait for 5 patient utterances before generating first suggestion (allow context to build)
+- Prioritize urgent clinical alerts over documentation prompts
+- Do not repeat suggestions already made in this session
+- Limit to 2-3 suggestions per batch to avoid cognitive overload
+- Always cite relevant clinical guidelines when making recommendations

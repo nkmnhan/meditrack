@@ -41,6 +41,13 @@
     <Content Include="Prompts\**\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <!-- Skills and SeedData live at repo root — link into output for local dev -->
+  <!-- Docker uses explicit COPY in Dockerfile; this handles dotnet run / dotnet test -->
+  <ItemGroup>
+    <Content Include="..\..\skills\core\**\*" Link="skills\core\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\SeedData\Guidelines\**\*" Link="SeedData\Guidelines\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <!-- Include test-data/ in Debug only (not in production image) -->
   <ItemGroup Condition="'$(Configuration)' == 'Debug'">
     <Content Include="test-data\**\*" CopyToOutputDirectory="PreserveNewest" />

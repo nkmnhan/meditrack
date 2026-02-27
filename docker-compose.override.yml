@@ -119,7 +119,7 @@ services:
       - Kestrel__Certificates__Default__Path=/certs/localhost.pem
       - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
       - ConnectionStrings__EmergenDb=Host=postgres;Database=meditrack_emergen;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
-      - IdentityUrl=http://identity-api:8080
+      - IdentityUrl=https://identity-api:8443
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
       - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}

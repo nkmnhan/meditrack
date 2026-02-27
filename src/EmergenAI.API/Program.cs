@@ -1,5 +1,7 @@
 using EmergenAI.API.Data;
+using EmergenAI.API.Extensions;
 using EmergenAI.API.Health;
+using EmergenAI.API.Services;
 using MediTrack.ServiceDefaults;
 using MediTrack.ServiceDefaults.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +18,18 @@ builder.Services.AddDbContext<EmergenDbContext>(options =>
 
 // Authentication & Authorization
 builder.Services.AddDefaultAuthentication(builder.Configuration);
+
+// AI Services (IChatClient, IEmbeddingGenerator)
+builder.Services.AddAIServices(builder.Configuration);
+
+// Resilient HTTP clients (Deepgram, OpenAI, PatientApi)
+builder.Services.AddResilientHttpClients(builder.Configuration);
+
+// Skill loader (loads YAML skills at startup)
+builder.Services.AddSingleton<SkillLoaderService>();
+
+// Knowledge seeder (embeds and stores guidelines)
+builder.Services.AddScoped<KnowledgeSeederService>();
 
 // Health checks
 builder.Services.AddHealthChecks()
@@ -40,6 +54,17 @@ using (IServiceScope scope = app.Services.CreateScope())
 {
     EmergenDbContext dbContext = scope.ServiceProvider.GetRequiredService<EmergenDbContext>();
     await dbContext.Database.MigrateAsync();
+}
+
+// Load clinical skills at startup
+var skillLoader = app.Services.GetRequiredService<SkillLoaderService>();
+await skillLoader.LoadSkillsAsync();
+
+// Seed knowledge base (idempotent - skips existing documents)
+using (IServiceScope scope = app.Services.CreateScope())
+{
+    var knowledgeSeeder = scope.ServiceProvider.GetRequiredService<KnowledgeSeederService>();
+    await knowledgeSeeder.SeedKnowledgeBaseAsync();
 }
 
 app.MapDefaultEndpoints();
