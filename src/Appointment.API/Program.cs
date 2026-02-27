@@ -37,6 +37,7 @@ builder.Services.AddDefaultCors(builder.Configuration, builder.Environment);
 
 // API Explorer for OpenAPI
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 WebApplication app = builder.Build();
 
@@ -52,6 +53,13 @@ app.MapDefaultEndpoints();
 app.UseCors(CorsExtensions.PolicyName);
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Swagger
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 // Map Minimal APIs
 app.MapAppointmentsApi();

@@ -48,6 +48,10 @@ builder.Services.AddDefaultCors(builder.Configuration, builder.Environment);
 
 builder.Services.AddRazorPages();
 
+// Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 WebApplication app = builder.Build();
 
 // Migrate database and seed on startup (dev only)
@@ -72,5 +76,12 @@ app.UseStaticFiles();
 app.UseIdentityServer();
 app.UseAuthorization();
 app.MapRazorPages();
+
+// Swagger
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 await app.RunAsync();
