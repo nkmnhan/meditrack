@@ -157,7 +157,7 @@ public sealed class BatchTriggerService : IDisposable
         private Timer? _timer;
         private bool _disposed;
 
-        public int PatientUtteranceCount { get; set; }
+        public int PatientUtteranceCount;
 
         public SessionBatchState(string sessionId, Action<string> onTimerElapsed)
         {

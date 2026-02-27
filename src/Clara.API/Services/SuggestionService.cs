@@ -154,7 +154,7 @@ public sealed class SuggestionService
                 exception,
                 "Failed to generate suggestions for session {SessionId}",
                 sessionId);
-            return null; // Return null to indicate error
+            return []; // Return empty list on error
         }
     }
 
