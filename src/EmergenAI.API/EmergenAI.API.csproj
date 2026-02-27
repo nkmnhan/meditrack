@@ -49,8 +49,9 @@
   </ItemGroup>
 
   <!-- Include test-data/ in Debug only (not in production image) -->
+  <!-- Use Update instead of Include since SDK auto-includes content items -->
   <ItemGroup Condition="'$(Configuration)' == 'Debug'">
-    <Content Include="test-data\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Update="test-data\**\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

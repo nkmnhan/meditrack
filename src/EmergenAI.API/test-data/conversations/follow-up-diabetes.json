@@ -1,0 +1,39 @@
+{
+  "scenario": "follow-up-diabetes",
+  "description": "Diabetes follow-up visit with 4 patient lines (under auto-batch threshold)",
+  "patientId": "test-patient-004",
+  "lines": [
+    {
+      "speaker": "Doctor",
+      "text": "Welcome back. Let's check on how your diabetes management has been going."
+    },
+    {
+      "speaker": "Patient",
+      "text": "My blood sugar has been between 120 and 150 most mornings."
+    },
+    {
+      "speaker": "Doctor",
+      "text": "That's improving. Have you been following the diet plan we discussed?"
+    },
+    {
+      "speaker": "Patient",
+      "text": "Mostly yes, though I had some cake at a birthday party last weekend."
+    },
+    {
+      "speaker": "Doctor",
+      "text": "Any issues with your feet or vision?"
+    },
+    {
+      "speaker": "Patient",
+      "text": "My feet feel okay, but I've noticed things look a bit blurry sometimes."
+    },
+    {
+      "speaker": "Doctor",
+      "text": "When does the blurriness happen?"
+    },
+    {
+      "speaker": "Patient",
+      "text": "Usually in the afternoon, after lunch. It goes away after a while."
+    }
+  ]
+}

@@ -40,6 +40,14 @@ public static class SessionApi
             .Produces<SessionResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        group.MapPost("/{id:guid}/suggest", RequestSuggestion)
+            .WithName("RequestSuggestion")
+            .WithDescription("Request an on-demand AI suggestion for the session")
+            .RequireRateLimiting(RateLimitingExtensions.Policies.Suggest)
+            .Produces<SuggestResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status429TooManyRequests);
     }
 
     private static async Task<IResult> StartSession(
@@ -102,4 +110,65 @@ public static class SessionApi
             return Results.BadRequest(new { message = exception.Message });
         }
     }
+
+    private static async Task<IResult> RequestSuggestion(
+        Guid id,
+        [FromServices] SuggestionService suggestionService,
+        [FromServices] SessionService sessionService,
+        ClaimsPrincipal user,
+        CancellationToken cancellationToken)
+    {
+        var doctorId = user.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? throw new InvalidOperationException("User ID not found in claims");
+
+        // Verify session exists and belongs to the doctor
+        var session = await sessionService.GetSessionAsync(id, doctorId, cancellationToken);
+        if (session is null)
+        {
+            return Results.NotFound(new { message = $"Session {id} not found" });
+        }
+
+        var suggestions = await suggestionService.GenerateSuggestionsAsync(
+            id,
+            source: "on_demand",
+            cancellationToken);
+
+        var response = new SuggestResponse
+        {
+            SessionId = id,
+            Suggestions = suggestions.Select(suggestion => new SuggestionResponse
+            {
+                Id = suggestion.Id,
+                Content = suggestion.Content,
+                Type = suggestion.Type,
+                Urgency = suggestion.Urgency,
+                Confidence = suggestion.Confidence,
+                TriggeredAt = suggestion.TriggeredAt
+            }).ToList()
+        };
+
+        return Results.Ok(response);
+    }
+}
+
+/// <summary>
+/// Response containing AI suggestions.
+/// </summary>
+public sealed record SuggestResponse
+{
+    public required Guid SessionId { get; init; }
+    public required List<SuggestionResponse> Suggestions { get; init; }
+}
+
+/// <summary>
+/// A single AI suggestion.
+/// </summary>
+public sealed record SuggestionResponse
+{
+    public required Guid Id { get; init; }
+    public required string Content { get; init; }
+    public required string Type { get; init; }
+    public string? Urgency { get; init; }
+    public float? Confidence { get; init; }
+    public required DateTimeOffset TriggeredAt { get; init; }
 }

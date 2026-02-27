@@ -1,5 +1,7 @@
 using System.Collections.Concurrent;
 using EmergenAI.API.Domain;
+using EmergenAI.API.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 namespace EmergenAI.API.Services;
 
@@ -79,9 +81,51 @@ public sealed class BatchTriggerService : IDisposable
             "Auto-batch trigger for session {SessionId}: {TriggerReason}",
             sessionId, triggerReason);
 
-        // TODO: Implement SuggestionService.GenerateSuggestionAsync in next milestone
-        // For now, just log that a trigger occurred
-        await Task.CompletedTask;
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var suggestionService = scope.ServiceProvider.GetRequiredService<SuggestionService>();
+            var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<SessionHub>>();
+
+            if (!Guid.TryParse(sessionId, out var sessionGuid))
+            {
+                _logger.LogWarning("Invalid session ID format for batch trigger: {SessionId}", sessionId);
+                return;
+            }
+
+            var suggestions = await suggestionService.GenerateSuggestionsAsync(
+                sessionGuid,
+                source: "batch",
+                CancellationToken.None);
+
+            // Broadcast suggestions to connected clients
+            foreach (var suggestion in suggestions)
+            {
+                await hubContext.Clients
+                    .Group(sessionId)
+                    .SendAsync("ReceiveSuggestion", new
+                    {
+                        id = suggestion.Id,
+                        content = suggestion.Content,
+                        type = suggestion.Type,
+                        urgency = suggestion.Urgency,
+                        confidence = suggestion.Confidence,
+                        source = suggestion.Source,
+                        triggeredAt = suggestion.TriggeredAt
+                    });
+            }
+
+            _logger.LogInformation(
+                "Generated {SuggestionCount} batch suggestions for session {SessionId}",
+                suggestions.Count, sessionId);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(
+                exception,
+                "Failed to generate batch suggestions for session {SessionId}",
+                sessionId);
+        }
     }
 
     public void Dispose()

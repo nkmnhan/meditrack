@@ -1,0 +1,39 @@
+{
+  "scenario": "chest-pain",
+  "description": "Patient presenting with chest pain symptoms - triggers chest-pain skill",
+  "patientId": "test-patient-001",
+  "lines": [
+    {
+      "speaker": "Doctor",
+      "text": "Good morning. What brings you in today?"
+    },
+    {
+      "speaker": "Patient",
+      "text": "I've been having this pain in my chest for the past couple of days."
+    },
+    {
+      "speaker": "Doctor",
+      "text": "Can you describe the pain for me?"
+    },
+    {
+      "speaker": "Patient",
+      "text": "It's a pressure feeling, kind of tight. It started yesterday morning."
+    },
+    {
+      "speaker": "Doctor",
+      "text": "Does the pain go anywhere else, like your arm or jaw?"
+    },
+    {
+      "speaker": "Patient",
+      "text": "Sometimes I feel it in my left arm, especially when I'm walking upstairs."
+    },
+    {
+      "speaker": "Doctor",
+      "text": "Any shortness of breath or sweating with it?"
+    },
+    {
+      "speaker": "Patient",
+      "text": "Yes, I get a little short of breath and sometimes I sweat more than usual."
+    }
+  ]
+}

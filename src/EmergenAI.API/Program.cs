@@ -40,6 +40,11 @@ builder.Services.AddScoped<SessionService>();
 builder.Services.AddScoped<DeepgramService>();
 builder.Services.AddScoped<SpeakerDetectionService>();
 
+// AI suggestion services
+builder.Services.AddScoped<KnowledgeService>();
+builder.Services.AddScoped<PatientContextService>();
+builder.Services.AddScoped<SuggestionService>();
+
 // Skill loader (loads YAML skills at startup)
 builder.Services.AddSingleton<SkillLoaderService>();
 
@@ -58,6 +63,9 @@ builder.Services.AddDefaultCors(builder.Configuration, builder.Environment);
 
 // API Explorer for OpenAPI
 builder.Services.AddEndpointsApiExplorer();
+
+// Controllers (for DevController)
+builder.Services.AddControllers();
 
 // SignalR for real-time communication
 builder.Services.AddSignalR();
@@ -94,6 +102,10 @@ app.MapHub<SessionHub>("/sessionHub");
 
 // Map API endpoints
 app.MapSessionEndpoints();
+app.MapKnowledgeEndpoints();
+
+// Map Controllers (DevController)
+app.MapControllers();
 
 // Health endpoint (basic check)
 app.MapGet("/", () => Results.Ok(new { service = "EmergenAI.API", status = "healthy" }));
