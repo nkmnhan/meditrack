@@ -1,6 +1,4 @@
 ﻿using System;
-using MediTrack.MedicalRecords.Infrastructure;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -8,8 +6,6 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MediTrack.Migrations
 {
     /// <inheritdoc />
-    [DbContext(typeof(MedicalRecordsDbContext))]
-    [Migration("20260225081700_InitialPostgres")]
     public partial class InitialPostgres : Migration
     {
         /// <inheritdoc />

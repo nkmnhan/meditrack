@@ -1,4 +1,4 @@
-/* ScheduleX calendar overrides — loaded only when AppointmentCalendar is rendered */
+/* ScheduleX calendar overrides — loaded when a Calendar component is rendered */
 
 /* Calendar wrapper — needs explicit dimensions */
 .sx-calendar-wrapper {

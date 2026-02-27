@@ -1,39 +1,15 @@
 import { useState, useEffect } from "react";
 import "temporal-polyfill/global";
-import { useCalendarApp } from "@schedule-x/react";
 import {
   createViewDay,
   createViewWeek,
   createViewMonthGrid,
 } from "@schedule-x/calendar";
 import type { CalendarEvent } from "@schedule-x/calendar";
-import { createEventsServicePlugin } from "@schedule-x/events-service";
+import { utcIsoToCalendarZdt } from "@/shared/components/Calendar/calendarTimeUtils";
+import { useCalendar } from "@/shared/components/Calendar/useCalendar";
 import { useGetAppointmentsQuery } from "../store/appointmentApi";
 import type { AppointmentListItem, AppointmentSearchParams } from "../types";
-
-/** Convert a UTC ISO string to a ZonedDateTime that ScheduleX renders at the correct local time.
- *  ScheduleX positions events by their UTC instant, so we re-wrap the local wall-clock time
- *  in the UTC timezone. This ensures a 9:00 AM Saigon appointment shows at 9:00, not 2:00 AM. */
-function utcIsoToCalendarZdt(utcIso: string): Temporal.ZonedDateTime {
-  // Ensure UTC indicator — backend may omit the Z suffix
-  const hasTimezoneIndicator = /(Z|[+-]\d{2}:\d{2})$/.test(utcIso);
-  const normalized = hasTimezoneIndicator ? utcIso : `${utcIso}Z`;
-  const instant = Temporal.Instant.from(normalized);
-  const localZdt = instant.toZonedDateTimeISO(Temporal.Now.timeZoneId());
-
-  // Re-create as UTC ZonedDateTime with local wall-clock values.
-  // ScheduleX uses the epoch/instant to position events on the grid,
-  // so the UTC instant must equal the desired display time.
-  return Temporal.ZonedDateTime.from({
-    timeZone: "UTC",
-    year: localZdt.year,
-    month: localZdt.month,
-    day: localZdt.day,
-    hour: localZdt.hour,
-    minute: localZdt.minute,
-    second: 0,
-  });
-}
 
 function appointmentToCalendarEvent(appointment: AppointmentListItem): CalendarEvent {
   const startZdt = utcIsoToCalendarZdt(appointment.scheduledDateTime);
@@ -71,8 +47,6 @@ export function useAppointmentCalendar({
   onEventClick,
   onDateTimeClick,
 }: UseAppointmentCalendarOptions = {}) {
-  const [eventsPlugin] = useState(() => createEventsServicePlugin());
-
   const today = Temporal.Now.plainDateISO();
 
   const [dateRange, setDateRange] = useState<{ fromDate: string; toDate: string }>(() => {
@@ -99,8 +73,8 @@ export function useAppointmentCalendar({
     error,
   } = useGetAppointmentsQuery(searchParams);
 
-  const calendar = useCalendarApp(
-    {
+  const { calendar, setEvents } = useCalendar({
+    config: {
       views: [createViewWeek(), createViewDay(), createViewMonthGrid()],
       selectedDate: today,
       locale: 'en-US',
@@ -116,13 +90,7 @@ export function useAppointmentCalendar({
         gridHeight: 1600,
         nDays: 5,
       },
-      // Highlight standard business hours (7 AM - 7 PM)
-      // Non-business hours will be visually dimmed
       isDark: false,
-      minDate: undefined,
-      maxDate: undefined,
-      // Business hours configuration - times outside this will be shaded
-      // This supports patients in different timezones while visually indicating normal office hours
       callbacks: {
         onEventClick: (event: CalendarEvent) => {
           if (onEventClick && event.appointmentId) {
@@ -145,16 +113,15 @@ export function useAppointmentCalendar({
         },
       },
     },
-    [eventsPlugin],
-  );
+  });
 
   // Sync appointments data to ScheduleX events
   useEffect(() => {
     if (!appointments) return;
 
     const calendarEvents = appointments.map(appointmentToCalendarEvent);
-    eventsPlugin.set(calendarEvents);
-  }, [appointments, eventsPlugin]);
+    setEvents(calendarEvents);
+  }, [appointments, setEvents]);
 
   return {
     calendar,
