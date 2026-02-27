@@ -31,6 +31,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clara.API", "src\Clara.API\Clara.API.csproj", "{8D32F513-203A-4CF5-8F28-F1EF0398EF88}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediTrack.AppHost", "src\MediTrack.AppHost\MediTrack.AppHost.csproj", "{E8FBA07E-8F59-4A3C-A7E0-F92330ABB4F8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -197,11 +199,24 @@ Global
 		{8D32F513-203A-4CF5-8F28-F1EF0398EF88}.Release|x64.Build.0 = Release|Any CPU
 		{8D32F513-203A-4CF5-8F28-F1EF0398EF88}.Release|x86.ActiveCfg = Release|Any CPU
 		{8D32F513-203A-4CF5-8F28-F1EF0398EF88}.Release|x86.Build.0 = Release|Any CPU
+		{E8FBA07E-8F59-4A3C-A7E0-F92330ABB4F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E8FBA07E-8F59-4A3C-A7E0-F92330ABB4F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E8FBA07E-8F59-4A3C-A7E0-F92330ABB4F8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E8FBA07E-8F59-4A3C-A7E0-F92330ABB4F8}.Debug|x64.Build.0 = Debug|Any CPU
+		{E8FBA07E-8F59-4A3C-A7E0-F92330ABB4F8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E8FBA07E-8F59-4A3C-A7E0-F92330ABB4F8}.Debug|x86.Build.0 = Debug|Any CPU
+		{E8FBA07E-8F59-4A3C-A7E0-F92330ABB4F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E8FBA07E-8F59-4A3C-A7E0-F92330ABB4F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E8FBA07E-8F59-4A3C-A7E0-F92330ABB4F8}.Release|x64.ActiveCfg = Release|Any CPU
+		{E8FBA07E-8F59-4A3C-A7E0-F92330ABB4F8}.Release|x64.Build.0 = Release|Any CPU
+		{E8FBA07E-8F59-4A3C-A7E0-F92330ABB4F8}.Release|x86.ActiveCfg = Release|Any CPU
+		{E8FBA07E-8F59-4A3C-A7E0-F92330ABB4F8}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{8D32F513-203A-4CF5-8F28-F1EF0398EF88} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{E8FBA07E-8F59-4A3C-A7E0-F92330ABB4F8} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal

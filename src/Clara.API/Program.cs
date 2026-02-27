@@ -61,8 +61,9 @@ builder.Services.AddHttpContextAccessor();
 // CORS
 builder.Services.AddDefaultCors(builder.Configuration, builder.Environment);
 
-// API Explorer for OpenAPI
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // Controllers (for DevController)
 builder.Services.AddControllers();
@@ -96,6 +97,12 @@ app.UseCors(CorsExtensions.PolicyName);
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 // Map SignalR hub
 app.MapHub<SessionHub>("/sessionHub");

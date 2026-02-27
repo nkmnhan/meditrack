@@ -94,6 +94,10 @@ builder.Services.AddRateLimiter(options =>
 
 builder.Services.AddRazorPages();
 
+// Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 WebApplication app = builder.Build();
 
 // Apply database migrations on startup
@@ -126,5 +130,11 @@ app.UseStaticFiles();
 app.UseIdentityServer();
 app.UseAuthorization();
 app.MapRazorPages();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 await app.RunAsync();

@@ -40,8 +40,9 @@ builder.Services.AddPHIAuditLogging();
 // CORS
 builder.Services.AddDefaultCors(builder.Configuration, builder.Environment);
 
-// OpenAPI / Swagger
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 WebApplication app = builder.Build();
 
@@ -65,6 +66,8 @@ app.MapPatientsApi();
 if (app.Environment.IsDevelopment())
 {
     app.MapDevSeederApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 await app.RunAsync();

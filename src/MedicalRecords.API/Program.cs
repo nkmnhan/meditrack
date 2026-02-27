@@ -60,8 +60,9 @@ builder.Services.AddScoped<MedicalRecordSeeder>();
 // CORS
 builder.Services.AddDefaultCors(builder.Configuration, builder.Environment);
 
-// API Explorer for OpenAPI
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 WebApplication app = builder.Build();
 
@@ -77,6 +78,12 @@ app.UseSecurityHeaders();
 app.UseCors(CorsExtensions.PolicyName);
 app.UseAuthentication();
 app.UseAuthorization();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 // Map Minimal APIs
 app.MapMedicalRecordsApi();
