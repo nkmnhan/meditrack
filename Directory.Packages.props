@@ -10,8 +10,8 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.0" />
     
     <!-- pgvector for AI embeddings -->
-    <PackageVersion Include="Pgvector" Version="0.4.0" />
-    <PackageVersion Include="Pgvector.EntityFrameworkCore" Version="0.4.0" />
+    <PackageVersion Include="Pgvector" Version="0.3.0" />
+    <PackageVersion Include="Pgvector.EntityFrameworkCore" Version="0.3.0" />
 
     <!-- RabbitMQ -->
     <PackageVersion Include="RabbitMQ.Client" Version="7.2.0" />
@@ -51,5 +51,18 @@
 
     <!-- Test Data Generation -->
     <PackageVersion Include="Bogus" Version="35.6.2" />
+
+    <!-- AI Abstraction Layer (Microsoft.Extensions.AI) -->
+    <PackageVersion Include="Microsoft.Extensions.AI" Version="9.5.0" />
+    <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.3.0" />
+
+    <!-- AI Providers -->
+    <PackageVersion Include="OpenAI" Version="2.8.0" />
+
+    <!-- Utilities -->
+    <PackageVersion Include="YamlDotNet" Version="16.3.0" />
+
+    <!-- Health Checks -->
+    <PackageVersion Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
   </ItemGroup>
 </Project>

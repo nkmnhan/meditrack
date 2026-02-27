@@ -112,6 +112,32 @@ services:
       otel-collector:
         condition: service_started
 
+  emergenai-api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080;https://+:8443
+      - Kestrel__Certificates__Default__Path=/certs/localhost.pem
+      - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
+      - ConnectionStrings__EmergenDb=Host=postgres;Database=meditrack_emergen;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
+      - IdentityUrl=http://identity-api:8080
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
+      - AI__OpenAI__ApiKey=${OPENAI_API_KEY:-sk-placeholder-for-dev}
+      - AI__Deepgram__ApiKey=${DEEPGRAM_API_KEY:-placeholder-for-dev}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+    volumes:
+      - ./dev-certs/certs:/certs:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      identity-api:
+        condition: service_started
+      otel-collector:
+        condition: service_started
+
   web:
     environment:
       - VITE_IDENTITY_URL=https://localhost:5001
