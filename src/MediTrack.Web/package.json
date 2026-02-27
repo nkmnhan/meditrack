@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@microsoft/signalr": "^10.0.0",
     "@reduxjs/toolkit": "^2.5.1",
     "@schedule-x/calendar": "^4.2.0",
     "@schedule-x/events-service": "^4.2.0",

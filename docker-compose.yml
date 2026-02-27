@@ -227,8 +227,10 @@ services:
       - VITE_PATIENT_API_URL=https://localhost:5002
       - VITE_APPOINTMENT_API_URL=https://localhost:5003
       - VITE_MEDICALRECORDS_API_URL=https://localhost:5004
+      - VITE_EMERGEN_API_URL=https://localhost:5005
     depends_on:
       - identity-api
+      - emergenai-api
 
 volumes:
   postgres-data:

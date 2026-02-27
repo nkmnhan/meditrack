@@ -1,5 +1,5 @@
 import { Routes, Route, Link } from "react-router-dom";
-import { ProtectedRoute, CallbackPage } from "./shared/auth";
+import { ProtectedRoute, CallbackPage, RoleGuard, UserRole } from "./shared/auth";
 import { Layout } from "./shared/components";
 import { PatientList, PatientDetail, PatientForm } from "./features/patients";
 import { AppointmentCalendarPage } from "./features/appointments";
@@ -8,7 +8,12 @@ import {
   MedicalRecordsIndexPage,
   PatientMedicalRecordsPage,
 } from "./features/medical-records";
-import { Users, Calendar, FileText, ArrowRight } from "lucide-react";
+import {
+  SessionStartScreen,
+  LiveSessionView,
+  DevPanel,
+} from "./features/emergen-ai";
+import { Users, Calendar, FileText, ArrowRight, Brain } from "lucide-react";
 import { clsxMerge } from "./shared/utils/clsxMerge";
 
 function Dashboard() {
@@ -19,7 +24,7 @@ function Dashboard() {
         <p className="mt-2 text-lg text-neutral-600">Healthcare Management Platform</p>
       </div>
       
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <DashboardCard
           to="/patients"
           icon={<Users className="h-8 w-8" />}
@@ -40,6 +45,13 @@ function Dashboard() {
           title="Medical Records"
           description="View and manage medical records"
           color="accent"
+        />
+        <DashboardCard
+          to="/emergen-ai"
+          icon={<Brain className="h-8 w-8" />}
+          title="Emergen AI"
+          description="AI-powered medical secretary"
+          color="primary"
         />
       </div>
     </div>
@@ -180,6 +192,32 @@ export default function App() {
             <Layout>
               <PatientMedicalRecordsPage />
             </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/emergen-ai"
+        element={
+          <ProtectedRoute>
+            <RoleGuard allowedRoles={[UserRole.Doctor, UserRole.Admin]}>
+              <Layout>
+                <SessionStartScreen />
+                <DevPanel />
+              </Layout>
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/emergen-ai/session/:sessionId"
+        element={
+          <ProtectedRoute>
+            <RoleGuard allowedRoles={[UserRole.Doctor, UserRole.Admin]}>
+              <Layout>
+                <LiveSessionView />
+                <DevPanel />
+              </Layout>
+            </RoleGuard>
           </ProtectedRoute>
         }
       />
