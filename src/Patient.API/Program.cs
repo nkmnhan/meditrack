@@ -42,6 +42,7 @@ builder.Services.AddDefaultCors(builder.Configuration, builder.Environment);
 
 // OpenAPI / Swagger
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 WebApplication app = builder.Build();
 
@@ -65,6 +66,10 @@ app.MapPatientsApi();
 if (app.Environment.IsDevelopment())
 {
     app.MapDevSeederApi();
+
+    // Swagger
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 await app.RunAsync();
