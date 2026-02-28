@@ -363,45 +363,135 @@ Mobile: all sections stack single column, tables become card lists, touch target
 Create an AI clinical assistant start screen for a feature called "Clara" in a medical EMR app called "MediTrack". Clara is the doctor's AI-powered medical secretary — friendly, smart, and always ready to help during consultations.
 
 Tech: React, TypeScript, Tailwind CSS, Lucide React icons.
-Colors: Primary-700 #1d4ed8, Accent-500 #a855f7, Accent-700 #7c3aed, Accent-50 #faf5ff, Neutral-50 #f8fafc, Neutral-200 #e2e8f0, Neutral-500 #64748b, Neutral-700 #334155, Neutral-900 #0f172a, White #fff.
+Colors: Primary-700 #1d4ed8, Accent-500 #a855f7, Accent-700 #7c3aed, Accent-50 #faf5ff, Neutral-50 #f8fafc, Neutral-100 #f1f5f9, Neutral-200 #e2e8f0, Neutral-500 #64748b, Neutral-700 #334155, Neutral-900 #0f172a, Success-500 #22c55e, Warning-500 #f59e0b, Secondary-700 #0f766e, White #fff.
 
-This is a premium AI feature for doctors — the design should feel modern, polished, warm, and slightly different from the rest of the app (use accent/violet tones). Clara should feel like a trusted team member, not a cold tool.
+This is a premium AI feature for doctors — the design should feel modern, polished, warm, and slightly different from the rest of the app (use accent/violet tones). Clara should feel like a trusted team member, not a cold tool. Think of it as Clara's "home" — a place where the doctor checks in before, during, and after consultations.
 
 PAGE: CLARA — START SESSION (/clara)
+Page background: subtle gradient from neutral-50 to accent-50/30 (very faint violet tint at the bottom).
 
-HERO SECTION (centered, max-w-2xl mx-auto, text-center, pt-12 pb-8):
-- Large Brain icon (h-16 w-16) in a 80px circle with gradient bg (accent-500 to primary-700), white icon, shadow-lg, subtle pulse animation
-- Title: "Clara" (text-3xl font-bold, gradient text from accent-700 to primary-700)
-- Tagline below title: "Your AI Medical Secretary" (text-sm font-medium accent-500 uppercase tracking-wide)
-- Subtitle: "Hi Dr. Nguyen, ready to assist your next consultation." (text-lg neutral-500) — the greeting should feel personal and warm
-- Description: "Clara listens to your consultations, transcribes in real-time, and provides evidence-based clinical suggestions — so you can focus on your patient." (text-sm neutral-700, max-w-lg mx-auto)
+HERO SECTION (centered, max-w-2xl mx-auto, text-center, pt-10 pb-6):
+- Clara avatar: a 72px circle with gradient bg (accent-500 to primary-700), containing a Brain icon (h-10 w-10 white). Two concentric ring animations around it: inner ring (accent-200, animate-ping opacity-20, 80px), outer ring (accent-100, animate-ping opacity-10, 96px, delayed). This creates a gentle "alive" breathing effect.
+- Title: "Clara" (text-3xl font-bold, gradient text from accent-700 to primary-700 via bg-clip-text)
+- Tagline: "Your AI Medical Secretary" (text-xs font-semibold accent-500 uppercase tracking-widest, mt-1)
+- Greeting: Time-aware and contextual (text-lg neutral-700, mt-3):
+  - Morning: "Good morning, Dr. Nguyen. You have 4 consultations today — ready when you are."
+  - Afternoon: "Good afternoon, Dr. Nguyen. 2 patients left today — let's finish strong."
+  - Evening: "Good evening, Dr. Nguyen. Wrapping up? I can help with your session notes."
+  This greeting makes Clara feel aware and present, not static.
 
-FEATURE CARDS — 3 cards in a row (1 col mobile, 3 cols md), gap-4, max-w-3xl mx-auto:
-  Each card: white bg, rounded-xl, border neutral-200, p-5, text-center, hover:shadow-md hover:border-accent-200 transition
+DAILY STATS BAR — (flex items-center justify-center gap-6, mt-6, text-center):
+  Three inline metrics, each: flex items-center gap-1.5
+  - Brain icon (h-4 w-4 accent-500) + "3 sessions today" (text-sm font-medium neutral-700)
+  - Lightbulb icon (h-4 w-4 success-500) + "12 suggestions accepted" (text-sm font-medium neutral-700)
+  - Clock icon (h-4 w-4 primary-700) + "1.2 hrs saved" (text-sm font-medium neutral-700)
+  Mobile: wrap into 1 row centered, gap-4, text-xs. These stats subtly show Clara's value.
 
-  Card 1: Mic icon (h-8 w-8 accent-500) → "Live Transcription" → "Real-time speech-to-text with speaker identification" (text-sm neutral-500)
-  Card 2: Lightbulb icon (h-8 w-8 accent-500) → "AI Suggestions" → "Evidence-based clinical recommendations as you consult" (text-sm neutral-500)
-  Card 3: FileEdit icon (h-8 w-8 accent-500) → "Auto Notes" → "Automatic SOAP note generation from session transcript" (text-sm neutral-500)
+START SESSION CARD — (white bg, rounded-2xl, shadow-md, border border-accent-200/50, p-6, max-w-lg mx-auto, mt-8):
+  This is the primary action — visually prominent, elevated above other sections.
 
-START SESSION SECTION (white card, rounded-xl, shadow-sm, border neutral-200, p-6, max-w-md mx-auto, mt-8):
-- "Start New Session" header (font-semibold)
-- Patient ID field: optional input with Search icon, placeholder "Link a patient for context (optional)"
-- Helpful text below: "Clara gives better suggestions when she knows the patient" (text-xs neutral-500)
-- "Start Session with Clara" button: full width, h-12, bg gradient accent-500 to accent-700, white text, rounded-lg, font-semibold, hover:opacity-90, flex items-center justify-center gap-2 with Play icon
-- Below button: "Clara will listen, transcribe, and suggest — all in real-time" (text-xs neutral-500 text-center)
+  Header row: flex items-center justify-between
+  - Left: "Start New Session" (text-lg font-semibold neutral-900)
+  - Right: Mic icon in a small circle (h-8 w-8, accent-50 bg, accent-500 icon) — microphone status indicator. Green dot overlay if mic permission granted, warning-500 dot if not yet granted.
 
-HOW IT WORKS SECTION (max-w-2xl mx-auto, mt-12):
-- Title: "How Clara Works" (font-semibold neutral-900)
-- 4 horizontal steps (vertical on mobile) connected by a dotted line:
-  Step 1: "1" circle (accent-500 bg white text) + "Start a Session" + "Tell Clara you're ready to consult"
-  Step 2: "2" circle + "Speak Naturally" + "Clara listens and identifies who's speaking"
-  Step 3: "3" circle + "Get Insights" + "Clara surfaces relevant clinical suggestions"
-  Step 4: "4" circle + "Review & Save" + "Export Clara's notes to the patient record"
-- Each step: icon above number, title font-medium, description text-sm neutral-500
+  MICROPHONE CHECK (conditional, shown only if permission not yet granted):
+  - Small banner inside card: bg warning-50, rounded-lg, p-3, flex items-center gap-2, mb-4
+  - AlertTriangle icon (h-4 w-4 warning-500) + "Microphone access needed. Clara needs your mic to transcribe." (text-xs warning-700) + "Allow" link button (text-xs font-semibold accent-700 underline)
 
-Footer note: Shield icon + "All data is encrypted and HIPAA-compliant. Clara never stores audio." (text-xs neutral-500, text-center, mt-8)
+  PATIENT SEARCH FIELD:
+  - Label: "Link a patient" (text-sm font-medium neutral-700) + "(optional)" in neutral-500
+  - Search input: h-11, rounded-lg, border neutral-200, pl-10 (Search icon inside), placeholder "Search by name or MRN..."
+  - Autocomplete dropdown below input showing 3 recent/matching patients:
+    Each row: flex items-center gap-3, px-3 py-2.5, hover:bg-accent-50, rounded-md, cursor-pointer
+    - Avatar circle (32px, initials, pastel bg) + Name (text-sm font-medium neutral-900) + MRN (text-xs font-mono neutral-500) + "Last seen: Feb 20" (text-xs neutral-500)
+    Show sample: "Sarah Johnson" (MRN-2024-001), "Mike Chen" (MRN-2024-002), "Emily Davis" (MRN-2024-003)
+  - Helpful text below: "Clara provides better suggestions with patient context" (text-xs neutral-500, flex items-center gap-1 with Sparkles h-3 w-3 accent-500)
 
-Overall feel: clean, spacious, premium, warm. Lots of whitespace. Clara should feel approachable — like a smart colleague, not a cold tool. The accent violet color should make this page feel distinct from the blue-themed clinical pages.
+  SESSION TYPE SELECTOR (optional, mt-4):
+  - Label: "Session type" (text-sm font-medium neutral-700)
+  - Three pill toggle buttons in a row (flex gap-2):
+    - "Consultation" (default active: accent-500 bg white text, rounded-full px-4 py-1.5 text-sm font-medium)
+    - "Follow-up" (inactive: white bg neutral-200 border neutral-700 text, hover:border-accent-300)
+    - "Review" (inactive, same as Follow-up)
+  This helps Clara tailor suggestions — e.g., follow-ups reference prior visit notes.
+
+  START BUTTON (mt-6):
+  - Full width, h-12, bg gradient from accent-500 to accent-700, white text, rounded-xl, font-semibold text-base, shadow-md hover:shadow-lg hover:scale-[1.01] transition-all duration-200
+  - Content: Play icon (h-5 w-5) + "Start Session with Clara"
+  - Subtle shimmer animation on the gradient (CSS keyframe: moving highlight from left to right, 3s infinite)
+  - Below button: "Clara will listen, transcribe, and suggest — all in real-time" (text-xs neutral-500 text-center, mt-2)
+
+QUICK START FROM TODAY'S APPOINTMENTS — (max-w-lg mx-auto, mt-8):
+  Header: flex items-center justify-between
+  - "Upcoming Appointments" (text-sm font-semibold neutral-900) with CalendarDays icon (h-4 w-4 neutral-500)
+  - "View all" link (text-xs accent-700)
+
+  3 appointment cards stacked (space-y-2):
+  Each card: white bg, rounded-xl, border neutral-200, p-4, flex items-center justify-between, hover:border-accent-200 hover:shadow-sm transition, cursor-pointer
+  - Left: flex items-center gap-3
+    - Time: "10:30 AM" (text-sm font-mono font-semibold neutral-900, min-w-[72px])
+    - Divider: 1px h-8 bg neutral-200
+    - Patient info: Name "Sarah Johnson" (text-sm font-medium neutral-900) + type "Follow-up" (text-xs neutral-500)
+  - Right: "Start with Clara" button (text-xs font-medium accent-700, border border-accent-200, rounded-full px-3 py-1.5, hover:bg-accent-50, flex items-center gap-1.5 with Play h-3 w-3)
+
+  This lets doctors start a Clara session directly from their schedule with patient pre-linked — fewest taps possible.
+
+RECENT SESSIONS — (max-w-lg mx-auto, mt-8):
+  Header: flex items-center justify-between
+  - "Recent Sessions" (text-sm font-semibold neutral-900) with History icon (h-4 w-4 neutral-500)
+  - "View history" link (text-xs accent-700)
+
+  3 recent session cards stacked (space-y-2):
+  Each card: white bg, rounded-xl, border neutral-200, p-4, flex items-center justify-between, hover:border-neutral-300 transition, cursor-pointer
+  - Left: flex items-center gap-3
+    - Status circle: success-500 filled (completed) or warning-500 filled (has pending notes)
+    - Info stack: Patient name "Mike Chen" (text-sm font-medium neutral-900) + "Consultation — 23 min" (text-xs neutral-500) + "Today, 9:15 AM" (text-xs neutral-500)
+  - Right: flex items-center gap-2
+    - "5 suggestions" badge (text-xs accent-100 text-accent-700 rounded-full px-2 py-0.5)
+    - ChevronRight icon (h-4 w-4 neutral-400)
+
+  Session 1: "Mike Chen" — Consultation, 23 min, Today 9:15 AM, completed, 5 suggestions
+  Session 2: "Emily Davis" — Follow-up, 18 min, Today 8:30 AM, completed, 3 suggestions
+  Session 3: "Robert Wilson" — Consultation, 31 min, Yesterday 3:00 PM, has pending notes (warning dot), 7 suggestions
+
+FEATURE CARDS — (max-w-3xl mx-auto, mt-10):
+  Title: "What Clara Can Do" (text-sm font-semibold neutral-900, mb-4, text-center)
+  3 cards in a row (1 col mobile, 3 cols md), gap-4:
+  Each card: white bg, rounded-xl, border neutral-200, p-5, text-center, hover:shadow-md hover:border-accent-200 transition-all duration-200, group
+
+  Card 1: Mic icon (h-8 w-8) in accent-50 rounded-xl p-2.5 mx-auto (icon color accent-500) → "Live Transcription" (text-sm font-semibold neutral-900, mt-3) → "Real-time speech-to-text with automatic speaker identification" (text-xs neutral-500, mt-1) → stat: "98.5% accuracy" (text-xs font-mono accent-700, mt-2)
+  Card 2: Lightbulb icon same style → "AI Suggestions" → "Evidence-based clinical recommendations as you consult" → stat: "12 accepted today"
+  Card 3: FileText icon same style → "Auto SOAP Notes" → "Automatic clinical note generation from session transcript" → stat: "~2 min saved per note"
+
+  The stats at the bottom of each card make them feel real and quantified, not just marketing text.
+
+HOW IT WORKS SECTION (max-w-2xl mx-auto, mt-10, mb-6):
+- Title: "How It Works" (text-sm font-semibold neutral-900, text-center, mb-6)
+- 4 horizontal steps (vertical on mobile) connected by a dotted line (border-dashed border-neutral-200):
+  Step 1: Play icon (h-5 w-5 accent-500) above → "1" circle (h-7 w-7, accent-500 bg white text, text-xs font-bold) → "Start" (text-sm font-medium neutral-900) → "Hit start and begin consulting" (text-xs neutral-500)
+  Step 2: Mic icon → "2" circle → "Speak" → "Talk naturally — Clara identifies speakers"
+  Step 3: Sparkles icon → "3" circle → "Insights" → "Get evidence-based suggestions in real time"
+  Step 4: Save icon → "4" circle → "Save" → "Export notes directly to the patient record"
+- On desktop: flex items-start justify-between with dotted connector lines between circles
+- On mobile: vertical stepper, dotted line on the left side connecting circles
+
+FOOTER (text-center, mt-6, mb-8, max-w-md mx-auto):
+- Shield icon (h-4 w-4 neutral-500) + "End-to-end encrypted. HIPAA-compliant. Clara never stores audio recordings." (text-xs neutral-500)
+- Below: "Clara v1.0 — Powered by MediTrack AI" (text-xs neutral-400, mt-1)
+
+MOBILE-SPECIFIC BEHAVIOR:
+- Hero section: reduce pt to pt-6, icon to 56px circle, title text-2xl
+- Stats bar: horizontal scroll or wrap to 2 rows
+- Start Session card: full width (mx-4), rounded-xl, no max-w constraint
+- Quick Start appointments: horizontal swipeable cards (snap scroll, overflow-x-auto, flex-nowrap, gap-3, scroll-snap-type-x mandatory) — each card min-w-[280px], scroll-snap-align-start
+- Recent Sessions and Feature Cards: full width, single column
+- How It Works: vertical stepper layout
+- Touch targets: all buttons minimum h-11, interactive cards minimum 48px touch area
+- Fixed bottom bar on mobile (sticky bottom-0, white bg, shadow-[0_-4px_12px_rgba(0,0,0,0.05)], px-4 py-3, z-40):
+  - "Start Session" button (full width, h-12, gradient accent-500 to accent-700, white text, rounded-xl, font-semibold) with Play icon
+  - This ensures the primary action is always one thumb-tap away, no scrolling needed
+
+Overall feel: clean, spacious, premium, warm. Clara's page should feel like opening a well-designed app within the app. The accent violet distinguishes it from clinical blue pages. Generous whitespace. Subtle animations (breathing avatar, shimmer button) add life without being distracting. The page prioritizes ACTION (start session / pick from schedule) over explanation — doctors are busy, they don't want to read a brochure every time.
 ```
 
 ---
