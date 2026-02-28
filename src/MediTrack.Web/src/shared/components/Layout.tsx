@@ -6,6 +6,7 @@ import {
   Users,
   Calendar,
   FileText,
+  Sparkles,
   Menu,
   X,
   LogOut,
@@ -77,11 +78,22 @@ export function Layout({ children }: LayoutProps) {
     auth.signoutRedirect();
   };
 
+  const profileRoles = auth.user?.profile?.role;
+  const roleList = Array.isArray(profileRoles)
+    ? profileRoles
+    : profileRoles
+      ? [profileRoles as string]
+      : [];
+  const isDoctorOrAdmin = roleList.some((role) => role === "Doctor" || role === "Admin");
+
   const navigation = [
     { to: "/", icon: LayoutDashboard, label: "Dashboard", disabled: false },
     { to: "/patients", icon: Users, label: "Patients", disabled: false },
     { to: "/appointments", icon: Calendar, label: "Appointments", disabled: false },
     { to: "/medical-records", icon: FileText, label: "Medical Records", disabled: false },
+    ...(isDoctorOrAdmin
+      ? [{ to: "/clara", icon: Sparkles, label: "Clara AI", disabled: false }]
+      : []),
   ];
 
   return (

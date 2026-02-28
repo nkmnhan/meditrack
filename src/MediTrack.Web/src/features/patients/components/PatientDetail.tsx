@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -13,12 +13,15 @@ import {
   Calendar,
   User,
   FileText,
+  Copy,
+  Sparkles,
 } from "lucide-react";
 import {
   useGetPatientByIdQuery,
   useDeactivatePatientMutation,
   useActivatePatientMutation,
 } from "../store/patientApi";
+import { useStartSessionMutation } from "@/features/clara";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
 import { useRoles } from "@/shared/auth/useRoles";
 import { UserRole } from "@/shared/auth/roles";
@@ -38,11 +41,30 @@ function InfoRow({ icon: Icon, label, value }: Readonly<{ icon: typeof Mail; lab
 
 export function PatientDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { data: patient, isLoading, error } = useGetPatientByIdQuery(id!);
   const [deactivatePatient, { isLoading: isDeactivating }] = useDeactivatePatientMutation();
   const [activatePatient, { isLoading: isActivating }] = useActivatePatientMutation();
+  const [startSession, { isLoading: isStartingSession }] = useStartSessionMutation();
   const { hasAnyRole } = useRoles();
   const canManagePatientStatus = hasAnyRole([UserRole.Admin, UserRole.Receptionist]);
+  const canStartClaraSession = hasAnyRole([UserRole.Doctor, UserRole.Admin]);
+
+  const handleStartClaraSession = async () => {
+    if (!patient) return;
+    try {
+      const result = await startSession({ patientId: patient.id }).unwrap();
+      navigate(`/clara/session/${result.id}`);
+    } catch {
+      toast.error("Failed to start Clara session. Please try again.");
+    }
+  };
+
+  const handleCopyMrn = () => {
+    if (!patient) return;
+    navigator.clipboard.writeText(patient.medicalRecordNumber);
+    toast.success("MRN copied to clipboard");
+  };
 
   const handleDeactivate = async () => {
     if (
@@ -134,17 +156,32 @@ export function PatientDetail() {
             <p className="mt-1 text-neutral-500">Patient ID: {patient.id.substring(0, 8)}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          {canStartClaraSession && (
+            <button
+              type="button"
+              onClick={handleStartClaraSession}
+              disabled={isStartingSession}
+              className="inline-flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-white hover:bg-accent-700 disabled:opacity-50"
+            >
+              {isStartingSession ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4" />
+              )}
+              Start with Clara
+            </button>
+          )}
           <Link
             to={`/patients/${patient.id}/medical-records`}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary-700 px-4 py-2 text-white hover:bg-primary-800"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary-700 px-4 py-2 text-sm font-medium text-white hover:bg-primary-800"
           >
             <FileText className="h-4 w-4" />
             Medical Records
           </Link>
           <Link
             to={`/patients/${patient.id}/edit`}
-            className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 px-4 py-2 text-neutral-700 hover:bg-neutral-50"
+            className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
           >
             <Edit className="h-4 w-4" />
             Edit
@@ -255,7 +292,17 @@ export function PatientDetail() {
         <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-lg font-semibold text-neutral-900">Medical Record</h2>
           <p className="text-sm font-medium text-neutral-500">MRN</p>
-          <p className="mt-1 font-mono text-lg text-neutral-900">{patient.medicalRecordNumber}</p>
+          <div className="mt-1 flex items-center gap-2">
+            <p className="font-mono text-lg text-neutral-900">{patient.medicalRecordNumber}</p>
+            <button
+              type="button"
+              onClick={handleCopyMrn}
+              aria-label="Copy MRN to clipboard"
+              className="h-7 w-7 rounded flex items-center justify-center text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors"
+            >
+              <Copy className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {/* Insurance Information */}

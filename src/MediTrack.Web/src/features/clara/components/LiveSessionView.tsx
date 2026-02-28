@@ -1,14 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import {
   Mic,
   MicOff,
   Square,
-  Wifi,
-  WifiOff,
   Loader2,
   AlertCircle,
   Brain,
+  ChevronLeft,
+  Clock,
+  Sparkles,
 } from "lucide-react";
 import { useSession } from "../hooks/useSession";
 import { useAudioRecording } from "../hooks/useAudioRecording";
@@ -16,18 +17,42 @@ import { useRequestSuggestionsMutation } from "../store/claraApi";
 import { TranscriptPanel } from "./TranscriptPanel";
 import { SuggestionPanel } from "./SuggestionPanel";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
+import type { ConnectionStatus } from "../types";
+
+type ActiveTab = "transcript" | "suggestions";
 
 /**
  * Main view for an active Clara session.
- * Shows live transcript and AI suggestions side-by-side.
+ * Shows live transcript and AI suggestions side-by-side on desktop,
+ * with tab switching on mobile.
  */
 export function LiveSessionView() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<ActiveTab>("transcript");
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   const [requestSuggestions, { isLoading: isRequestingSuggestions }] =
     useRequestSuggestionsMutation();
+
+  // Count-up timer from session start
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setElapsedSeconds((seconds) => seconds + 1);
+    }, 1000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const formattedTimer = [
+    String(Math.floor(elapsedSeconds / 60)).padStart(2, "0"),
+    String(elapsedSeconds % 60).padStart(2, "0"),
+  ].join(":");
+
+  // Short session ID for display — first 8 chars uppercased
+  const shortSessionId = sessionId
+    ? `#${sessionId.slice(0, 8).toUpperCase()}`
+    : "#---";
 
   // Session management via SignalR
   const {
@@ -108,77 +133,53 @@ export function LiveSessionView() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-neutral-50">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-4 py-3 bg-white border-b border-neutral-200">
-        <div className="flex items-center gap-3">
-          <h1 className="text-lg font-semibold text-neutral-900">
-            Session Active
-          </h1>
-          <ConnectionIndicator status={connectionStatus} />
+    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-8 flex flex-col bg-neutral-50">
+      {/* ── Top Bar ─────────────────────────────────────── */}
+      <header className="sticky top-0 z-50 bg-white shadow-sm flex items-center justify-between h-14 px-4 flex-shrink-0 border-b border-neutral-200">
+        {/* Left: Back + session ID */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate("/clara")}
+            className="p-2 -ml-2 rounded-lg text-neutral-700 hover:bg-neutral-100 transition-colors"
+            aria-label="Back to Clara"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <span className="font-mono text-sm text-neutral-900 hidden sm:inline">
+            Session {shortSessionId}
+          </span>
+          <span className="font-mono text-sm text-neutral-900 sm:hidden">
+            {shortSessionId}
+          </span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Request Suggestions Button */}
-          <button
-            type="button"
-            onClick={handleRequestSuggestions}
-            disabled={!isConnected || isRequestingSuggestions}
-            className={clsxMerge(
-              "h-10 px-4 rounded-lg text-sm font-medium",
-              "bg-secondary-100 text-secondary-700 hover:bg-secondary-200",
-              "disabled:opacity-50 disabled:cursor-not-allowed",
-              "flex items-center gap-2"
-            )}
-          >
-            {isRequestingSuggestions ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Brain className="h-4 w-4" />
-            )}
-            Get Suggestions
-          </button>
+        {/* Center: Animated connection status */}
+        <ConnectionDot status={connectionStatus} />
 
-          {/* Recording Toggle */}
-          <button
-            type="button"
-            onClick={handleToggleRecording}
-            disabled={!isConnected || !isAudioSupported}
-            className={clsxMerge(
-              "h-10 w-10 rounded-lg flex items-center justify-center",
-              isRecording
-                ? "bg-error-100 text-error-700 hover:bg-error-200"
-                : "bg-primary-100 text-primary-700 hover:bg-primary-200",
-              "disabled:opacity-50 disabled:cursor-not-allowed"
-            )}
-            title={isRecording ? "Pause recording" : "Start recording"}
-          >
-            {isRecording ? (
-              <MicOff className="h-5 w-5" />
-            ) : (
-              <Mic className="h-5 w-5" />
-            )}
-          </button>
-
-          {/* End Session Button */}
+        {/* Right: Timer + End Session */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 text-neutral-700">
+            <Clock className="w-4 h-4 text-neutral-500" />
+            <span className="font-mono text-sm font-medium">{formattedTimer}</span>
+          </div>
+          <div className="hidden md:flex items-center gap-1 text-accent-500">
+            <Sparkles className="w-4 h-4" />
+            <span className="text-xs font-medium">Clara</span>
+          </div>
           <button
             type="button"
             onClick={handleEndSession}
-            className={clsxMerge(
-              "h-10 px-4 rounded-lg text-sm font-medium",
-              "bg-error-600 text-white hover:bg-error-700",
-              "flex items-center gap-2"
-            )}
+            className="h-9 px-3 rounded-lg border border-error-500 text-error-600 text-sm font-medium hover:bg-error-50 transition-colors inline-flex items-center gap-1.5"
           >
-            <Square className="h-4 w-4" />
-            End Session
+            <Square className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">End Session</span>
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* Error Banner */}
+      {/* ── Error Banner ─────────────────────────────────── */}
       {error && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-error-50 text-error-700 text-sm">
+        <div className="flex items-center gap-2 px-4 py-2 bg-error-50 text-error-700 text-sm flex-shrink-0">
           <AlertCircle className="h-4 w-4 flex-shrink-0" />
           <span>{error}</span>
           <button
@@ -191,9 +192,9 @@ export function LiveSessionView() {
         </div>
       )}
 
-      {/* Connecting Overlay */}
+      {/* ── Connecting Banner ────────────────────────────── */}
       {isConnecting && (
-        <div className="flex items-center justify-center gap-2 px-4 py-2 bg-info-50 text-info-700 text-sm">
+        <div className="flex items-center justify-center gap-2 px-4 py-2 bg-info-50 text-info-700 text-sm flex-shrink-0">
           <Loader2 className="h-4 w-4 animate-spin" />
           <span>
             {connectionStatus === "reconnecting"
@@ -203,67 +204,159 @@ export function LiveSessionView() {
         </div>
       )}
 
-      {/* Main Content - Responsive Layout */}
-      <div className="flex-1 overflow-hidden p-4">
-        <div className="h-full grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* ── Mobile Tab Toggle ────────────────────────────── */}
+      <div className="lg:hidden flex items-center bg-white border-b border-neutral-200 px-4 flex-shrink-0">
+        <button
+          type="button"
+          onClick={() => setActiveTab("transcript")}
+          className={clsxMerge(
+            "flex-1 py-3 text-sm font-medium text-center border-b-2 transition-colors",
+            activeTab === "transcript"
+              ? "border-accent-500 text-accent-700"
+              : "border-transparent text-neutral-500 hover:text-neutral-700"
+          )}
+        >
+          Transcript
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("suggestions")}
+          className={clsxMerge(
+            "flex-1 py-3 text-sm font-medium text-center border-b-2 transition-colors inline-flex items-center justify-center gap-2",
+            activeTab === "suggestions"
+              ? "border-accent-500 text-accent-700"
+              : "border-transparent text-neutral-500 hover:text-neutral-700"
+          )}
+        >
+          Clara&apos;s Notes
+          {suggestions.length > 0 && (
+            <span className="inline-flex items-center justify-center rounded-full bg-accent-100 text-accent-700 text-xs font-semibold h-5 w-5">
+              {suggestions.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* ── Main Content ─────────────────────────────────── */}
+      <main className="overflow-auto lg:overflow-hidden p-4 lg:p-6 pb-24 lg:pb-6">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
           {/* Transcript Panel */}
           <TranscriptPanel
             lines={transcriptLines}
             isRecording={isRecording}
-            className="h-full min-h-[300px] lg:min-h-0"
+            className={clsxMerge(
+              "lg:w-[60%] min-h-[65vh] lg:min-h-[calc(100dvh-12rem)]",
+              activeTab !== "transcript" ? "hidden lg:flex" : ""
+            )}
           />
 
           {/* Suggestions Panel */}
           <SuggestionPanel
             suggestions={suggestions}
             isLoading={isRequestingSuggestions}
-            className="h-full min-h-[300px] lg:min-h-0"
+            count={suggestions.length}
+            className={clsxMerge(
+              "lg:w-[40%] min-h-[65vh] lg:min-h-[calc(100dvh-12rem)]",
+              activeTab !== "suggestions" ? "hidden lg:flex" : ""
+            )}
           />
         </div>
+      </main>
+
+      {/* ── Desktop Action Bar (inside transcript panel, bottom) ── */}
+      {/* Handled by panel internally via isRecording state */}
+
+      {/* ── Mobile Floating Actions ──────────────────────── */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] px-4 py-3 z-40 flex items-center justify-center gap-4">
+        <button
+          type="button"
+          onClick={handleRequestSuggestions}
+          disabled={!isConnected || isRequestingSuggestions}
+          className="h-10 px-4 rounded-lg bg-accent-700 text-white text-sm font-medium hover:bg-accent-600 transition-colors inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isRequestingSuggestions ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Brain className="w-4 h-4" />
+          )}
+          Ask Clara
+        </button>
+
+        <button
+          type="button"
+          onClick={handleToggleRecording}
+          disabled={!isConnected || !isAudioSupported}
+          aria-label={isRecording ? "Mute microphone" : "Unmute microphone"}
+          className={clsxMerge(
+            "h-14 w-14 rounded-full flex items-center justify-center shadow-lg transition-all flex-shrink-0",
+            isRecording
+              ? "bg-accent-500 text-white ring-4 ring-accent-500/20"
+              : "bg-neutral-200 text-neutral-700",
+            "disabled:opacity-50 disabled:cursor-not-allowed"
+          )}
+        >
+          {isRecording ? <Mic className="w-6 h-6" /> : <MicOff className="w-6 h-6" />}
+        </button>
+
+        {isRecording ? (
+          <span className="text-xs text-accent-500 font-medium w-16">Listening...</span>
+        ) : (
+          <span className="w-16" />
+        )}
       </div>
     </div>
   );
 }
 
-interface ConnectionIndicatorProps {
-  readonly status: "connecting" | "connected" | "reconnecting" | "disconnected";
+/* ── Sub-components ─────────────────────────────────── */
+
+interface ConnectionDotProps {
+  readonly status: ConnectionStatus;
 }
 
-function ConnectionIndicator({ status }: ConnectionIndicatorProps) {
-  const configs = {
-    connected: {
-      icon: <Wifi className="h-4 w-4" />,
-      text: "Connected",
-      className: "text-success-600 bg-success-50",
-    },
-    connecting: {
-      icon: <Loader2 className="h-4 w-4 animate-spin" />,
-      text: "Connecting",
-      className: "text-info-600 bg-info-50",
-    },
-    reconnecting: {
-      icon: <Loader2 className="h-4 w-4 animate-spin" />,
-      text: "Reconnecting",
-      className: "text-warning-600 bg-warning-50",
-    },
-    disconnected: {
-      icon: <WifiOff className="h-4 w-4" />,
-      text: "Disconnected",
-      className: "text-error-600 bg-error-50",
-    },
-  };
+function ConnectionDot({ status }: ConnectionDotProps) {
+  const dotColor =
+    status === "connected"
+      ? "bg-success-500"
+      : status === "connecting" || status === "reconnecting"
+        ? "bg-warning-500"
+        : "bg-error-500";
 
-  const config = configs[status];
+  const labelColor =
+    status === "connected"
+      ? "text-success-600"
+      : status === "connecting" || status === "reconnecting"
+        ? "text-warning-600"
+        : "text-error-600";
+
+  const label =
+    status === "connected"
+      ? "Connected"
+      : status === "connecting"
+        ? "Connecting"
+        : status === "reconnecting"
+          ? "Reconnecting"
+          : "Disconnected";
 
   return (
-    <span
-      className={clsxMerge(
-        "inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium",
-        config.className
-      )}
-    >
-      {config.icon}
-      {config.text}
-    </span>
+    <div className="flex items-center gap-1.5">
+      <span className="relative flex h-2.5 w-2.5">
+        <span
+          className={clsxMerge(
+            "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
+            dotColor
+          )}
+        />
+        <span
+          className={clsxMerge(
+            "relative inline-flex rounded-full h-2.5 w-2.5",
+            dotColor
+          )}
+        />
+      </span>
+      <span className={clsxMerge("text-sm font-medium hidden sm:inline", labelColor)}>
+        {label}
+      </span>
+    </div>
   );
 }

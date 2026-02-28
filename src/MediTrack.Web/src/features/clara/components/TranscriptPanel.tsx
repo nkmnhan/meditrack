@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { User, Stethoscope } from "lucide-react";
+import { Mic, User, Stethoscope, AlertTriangle } from "lucide-react";
 import type { TranscriptLine } from "../types";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
 
@@ -35,22 +35,28 @@ export function TranscriptPanel({
   return (
     <div
       className={clsxMerge(
-        "flex flex-col h-full bg-white rounded-lg border border-neutral-200 shadow-sm",
+        "flex flex-col bg-white rounded-lg border border-neutral-200 shadow-sm",
         className
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
-        <h2 className="text-sm font-semibold text-neutral-900">Transcript</h2>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <Mic className="w-4 h-4 text-primary-700" />
+          <h2 className="text-sm font-semibold text-neutral-900">Live Transcript</h2>
+        </div>
         {isRecording && (
-          <span className="flex items-center gap-1.5 text-xs text-error-600">
-            <span className="w-2 h-2 rounded-full bg-error-500 animate-pulse" />
-            Recording
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error-500 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-error-500" />
+            </span>
+            <span className="text-xs font-medium text-error-600">Recording</span>
+          </div>
         )}
       </div>
 
-      {/* Transcript Lines */}
+      {/* Transcript lines */}
       <div
         ref={containerRef}
         className="flex-1 overflow-y-auto p-4 space-y-3"
@@ -63,9 +69,18 @@ export function TranscriptPanel({
           ))
         )}
       </div>
+
+      {/* Bottom bar — shown when recording */}
+      {isRecording && (
+        <div className="flex items-center gap-2 border-t border-neutral-200 px-4 py-2 flex-shrink-0">
+          <span className="text-sm text-accent-500 font-medium">Clara is listening...</span>
+        </div>
+      )}
     </div>
   );
 }
+
+/* ── TranscriptLine Item ─────────────────────────────── */
 
 interface TranscriptLineItemProps {
   readonly line: TranscriptLine;
@@ -76,47 +91,40 @@ function TranscriptLineItem({ line }: TranscriptLineItemProps) {
   const Icon = isDoctor ? Stethoscope : User;
 
   return (
-    <div
-      className={clsxMerge(
-        "flex gap-3 p-3 rounded-lg",
-        isDoctor ? "bg-primary-50" : "bg-neutral-50"
-      )}
-    >
-      {/* Speaker Icon */}
-      <div
+    <div className="flex gap-3 items-start">
+      {/* Speaker badge */}
+      <span
         className={clsxMerge(
-          "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
-          isDoctor ? "bg-primary-100 text-primary-700" : "bg-neutral-200 text-neutral-600"
+          "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium flex-shrink-0",
+          isDoctor
+            ? "bg-primary-100 text-primary-700"
+            : "bg-secondary-100 text-secondary-700"
         )}
       >
-        <Icon className="h-4 w-4" />
-      </div>
+        <Icon className="h-3 w-3" />
+        {line.speaker}
+      </span>
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-baseline gap-2 mb-0.5">
-          <span
-            className={clsxMerge(
-              "text-xs font-medium",
-              isDoctor ? "text-primary-700" : "text-neutral-700"
-            )}
-          >
-            {line.speaker}
-          </span>
-          <span className="text-xs text-neutral-400">
-            {formatTimestamp(line.timestamp)}
-          </span>
-          {line.confidence !== undefined && line.confidence < 0.8 && (
-            <span className="text-xs text-warning-600" title="Low confidence">
-              ⚠
-            </span>
-          )}
-        </div>
-        <p className="text-sm text-neutral-800 break-words">{line.text}</p>
+        <p className="text-sm text-neutral-700 leading-relaxed break-words">{line.text}</p>
+        {line.confidence !== undefined && line.confidence < 0.8 && (
+          <div className="flex items-center gap-1 mt-1">
+            <AlertTriangle className="w-3.5 h-3.5 text-warning-500 flex-shrink-0" />
+            <span className="text-xs text-warning-500 font-medium">Low confidence</span>
+          </div>
+        )}
       </div>
+
+      {/* Timestamp */}
+      <span className="text-xs text-neutral-500 flex-shrink-0 pt-0.5">
+        {formatTimestamp(line.timestamp)}
+      </span>
     </div>
   );
 }
+
+/* ── Empty State ─────────────────────────────────────── */
 
 interface EmptyStateProps {
   readonly isRecording: boolean;
@@ -137,13 +145,14 @@ function EmptyState({ isRecording }: EmptyStateProps) {
   );
 }
 
-/**
- * Format ISO timestamp to human-readable time
- */
+/* ── Helpers ─────────────────────────────────────────── */
+
 function formatTimestamp(isoTimestamp: string): string {
   try {
-    const date = new Date(isoTimestamp);
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return new Date(isoTimestamp).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   } catch {
     return "";
   }

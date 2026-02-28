@@ -1,8 +1,23 @@
-import { useId } from "react";
-import { Search, X, FileText, Loader2 } from "lucide-react";
+import { useId, useState } from "react";
+import { Search, X, FileText, Loader2, ChevronDown } from "lucide-react";
 import { useMedicalRecordsSearch } from "../hooks/useMedicalRecordsSearch";
 import { MedicalRecordList } from "./MedicalRecordList";
+import { DiagnosisSeverity, RecordStatus } from "../types";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
+
+const STATUS_LABELS: Record<RecordStatus, string> = {
+  [RecordStatus.Active]: "Active",
+  [RecordStatus.RequiresFollowUp]: "Requires Follow-up",
+  [RecordStatus.Resolved]: "Resolved",
+  [RecordStatus.Archived]: "Archived",
+};
+
+const SEVERITY_LABELS: Record<DiagnosisSeverity, string> = {
+  [DiagnosisSeverity.Critical]: "Critical",
+  [DiagnosisSeverity.Severe]: "Severe",
+  [DiagnosisSeverity.Moderate]: "Moderate",
+  [DiagnosisSeverity.Mild]: "Mild",
+};
 
 export function MedicalRecordsIndexPage() {
   const {
@@ -21,6 +36,9 @@ export function MedicalRecordsIndexPage() {
     handleKeyDown,
   } = useMedicalRecordsSearch();
 
+  const [statusFilter, setStatusFilter] = useState<RecordStatus | "all">("all");
+  const [severityFilter, setSeverityFilter] = useState<DiagnosisSeverity | "all">("all");
+
   const listboxId = useId();
   const isDropdownVisible = isPatientDropdownOpen && patientSearchTerm.length >= 2 && !selectedPatient;
   const hasResults = !isSearchingPatients && patientResults.length > 0;
@@ -30,8 +48,28 @@ export function MedicalRecordsIndexPage() {
       ? `${listboxId}-option-${highlightedIndex}`
       : undefined;
 
+  const filteredRecords = records.filter((record) => {
+    const isMatchingStatus = statusFilter === "all" || record.status === statusFilter;
+    const isMatchingSeverity = severityFilter === "all" || record.severity === severityFilter;
+    return isMatchingStatus && isMatchingSeverity;
+  });
+
+  const activeFilters: { label: string; onClear: () => void }[] = [];
+  if (statusFilter !== "all") {
+    activeFilters.push({
+      label: `Status: ${STATUS_LABELS[statusFilter]}`,
+      onClear: () => setStatusFilter("all"),
+    });
+  }
+  if (severityFilter !== "all") {
+    activeFilters.push({
+      label: `Severity: ${SEVERITY_LABELS[severityFilter]}`,
+      onClear: () => setSeverityFilter("all"),
+    });
+  }
+
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-neutral-900">Medical Records</h1>
         <p className="text-sm text-neutral-600 mt-1">
@@ -146,9 +184,71 @@ export function MedicalRecordsIndexPage() {
         </div>
       )}
 
+      {/* Records filter bar (only shown once patient is selected and has records) */}
+      {selectedPatient && records.length > 0 && (
+        <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+            {/* Status filter */}
+            <div className="relative">
+              <select
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value as RecordStatus | "all")}
+                className="h-10 pl-3 pr-8 rounded-md border border-neutral-200 text-sm text-neutral-700 appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
+              >
+                <option value="all">All Statuses</option>
+                {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+            </div>
+
+            {/* Severity filter */}
+            <div className="relative">
+              <select
+                value={severityFilter}
+                onChange={(event) => setSeverityFilter(event.target.value as DiagnosisSeverity | "all")}
+                className="h-10 pl-3 pr-8 rounded-md border border-neutral-200 text-sm text-neutral-700 appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
+              >
+                <option value="all">All Severities</option>
+                {Object.entries(SEVERITY_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+            </div>
+
+            <p className="self-center sm:ml-auto text-sm text-neutral-500">
+              {filteredRecords.length} {filteredRecords.length === 1 ? "record" : "records"}
+            </p>
+          </div>
+
+          {/* Active filter chips */}
+          {activeFilters.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {activeFilters.map((filter) => (
+                <span
+                  key={filter.label}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700"
+                >
+                  {filter.label}
+                  <button
+                    onClick={filter.onClear}
+                    className="rounded-full p-0.5 hover:bg-neutral-200 transition-colors"
+                    aria-label={`Remove filter: ${filter.label}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Records list or empty state */}
       {selectedPatient ? (
-        <MedicalRecordList records={records} isLoading={isLoadingRecords} />
+        <MedicalRecordList records={filteredRecords} isLoading={isLoadingRecords} />
       ) : (
         <div className="flex flex-col items-center justify-center min-h-[400px] rounded-lg border border-neutral-200 bg-white p-6">
           <FileText className="h-12 w-12 text-neutral-400" />

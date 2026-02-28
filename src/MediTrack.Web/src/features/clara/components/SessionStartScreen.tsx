@@ -6,15 +6,11 @@ import {
   AlertCircle, Loader2,
 } from "lucide-react";
 import { useStartSessionMutation } from "../store/claraApi";
+import { useLazySearchPatientsQuery } from "@/features/patients";
+import type { PatientListItem } from "@/features/patients";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
 
-/* ── Data ──────────────────────────────────────────── */
-
-const samplePatients = [
-  { initials: "SJ", name: "Sarah Johnson", mrn: "MRN-2024-001", lastSeen: "Feb 20", color: "bg-primary-100 text-primary-700" },
-  { initials: "MC", name: "Mike Chen", mrn: "MRN-2024-002", lastSeen: "Feb 18", color: "bg-secondary-100 text-secondary-700" },
-  { initials: "ED", name: "Emily Davis", mrn: "MRN-2024-003", lastSeen: "Feb 15", color: "bg-accent-100 text-accent-700" },
-];
+/* ── Static data ────────────────────────────────────────── */
 
 const todayAppointments = [
   { time: "10:30 AM", patient: "Sarah Johnson", type: "Follow-up" },
@@ -43,7 +39,16 @@ const howItWorksSteps = [
 
 const SESSION_TYPES = ["Consultation", "Follow-up", "Review"] as const;
 
-/* ── Helpers ────────────────────────────────────────── */
+/** Avatar color palette — deterministic from patient ID */
+const AVATAR_COLORS = [
+  "bg-primary-100 text-primary-700",
+  "bg-secondary-100 text-secondary-700",
+  "bg-accent-100 text-accent-700",
+  "bg-success-50 text-success-700",
+  "bg-warning-50 text-warning-700",
+];
+
+/* ── Helpers ────────────────────────────────────────────── */
 
 function getTimeGreeting(): string {
   const hour = new Date().getHours();
@@ -52,7 +57,18 @@ function getTimeGreeting(): string {
   return "Good evening. Wrapping up? I can help with your session notes.";
 }
 
-/* ── Component ──────────────────────────────────────── */
+function getAvatarColor(id: string): string {
+  const hash = id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
+}
+
+function getInitials(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
+
+/* ── Component ──────────────────────────────────────────── */
 
 interface SessionStartScreenProps {
   readonly className?: string;
@@ -61,22 +77,34 @@ interface SessionStartScreenProps {
 export function SessionStartScreen({ className }: SessionStartScreenProps) {
   const navigate = useNavigate();
   const [startSession, { isLoading, error }] = useStartSessionMutation();
+  const [triggerSearch, { data: searchResults = [], isFetching: isSearching }] =
+    useLazySearchPatientsQuery();
+
   const [selectedSessionType, setSelectedSessionType] = useState<typeof SESSION_TYPES[number]>("Consultation");
-  const [patientSearch, setPatientSearch] = useState("");
+  const [patientSearchText, setPatientSearchText] = useState("");
+  const [selectedPatient, setSelectedPatient] = useState<PatientListItem | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const filteredPatients = patientSearch.trim()
-    ? samplePatients.filter(
-        (patient) =>
-          patient.name.toLowerCase().includes(patientSearch.toLowerCase()) ||
-          patient.mrn.toLowerCase().includes(patientSearch.toLowerCase())
-      )
-    : samplePatients;
+  function handlePatientSearchChange(value: string) {
+    setPatientSearchText(value);
+    setSelectedPatient(null);
+    setIsDropdownOpen(true);
+    if (value.trim().length >= 2) {
+      triggerSearch({ searchTerm: value.trim() });
+    }
+  }
+
+  function handleSelectPatient(patient: PatientListItem) {
+    setSelectedPatient(patient);
+    setPatientSearchText(patient.fullName);
+    setIsDropdownOpen(false);
+  }
 
   const handleStartSession = async () => {
     try {
       const result = await startSession({
-        patientId: patientSearch || undefined,
+        // Pass the real patient ID, not the search text
+        patientId: selectedPatient?.id ?? undefined,
       }).unwrap();
       navigate(`/clara/session/${result.id}`);
     } catch (startError) {
@@ -84,10 +112,12 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
     }
   };
 
+  const showDropdown = isDropdownOpen && patientSearchText.trim().length >= 2 && !selectedPatient;
+
   return (
     <div className={clsxMerge("min-h-screen -mx-4 sm:-mx-6 lg:-mx-8 -mt-8 px-4 sm:px-6 lg:px-8 pt-4 pb-24 md:pb-8 bg-gradient-to-b from-neutral-50 to-accent-50/30", className)}>
 
-      {/* ── Hero Section ──────────────────────────────── */}
+      {/* ── Hero Section ──────────────────────────────────── */}
       <div className="text-center pt-6 md:pt-10 pb-6 max-w-2xl mx-auto">
         {/* Clara avatar with animated rings */}
         <div className="relative mx-auto w-[72px] h-[72px]">
@@ -125,7 +155,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
         </div>
       </div>
 
-      {/* ── Start Session Card ────────────────────────── */}
+      {/* ── Start Session Card ─────────────────────────────── */}
       <div className="mx-0 md:max-w-lg md:mx-auto mt-8 bg-white rounded-xl md:rounded-2xl shadow-md border border-accent-200/50 p-6">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-neutral-900">Start New Session</h2>
@@ -145,9 +175,18 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
             <input
               id="patientSearch"
               type="text"
-              value={patientSearch}
-              onChange={(event) => { setPatientSearch(event.target.value); setIsDropdownOpen(true); }}
-              onFocus={() => setIsDropdownOpen(true)}
+              autoComplete="off"
+              value={patientSearchText}
+              onChange={(event) => handlePatientSearchChange(event.target.value)}
+              onFocus={() => {
+                if (patientSearchText.trim().length >= 2 && !selectedPatient) {
+                  setIsDropdownOpen(true);
+                }
+              }}
+              onBlur={() => {
+                // Delay to allow click on dropdown items
+                setTimeout(() => setIsDropdownOpen(false), 200);
+              }}
               placeholder="Search by name or MRN..."
               className={clsxMerge(
                 "w-full h-11 pl-10 pr-3 rounded-lg border border-neutral-200 text-sm text-neutral-900",
@@ -157,28 +196,47 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
               )}
             />
           </div>
-          {isDropdownOpen && (
+
+          {/* Patient search dropdown */}
+          {showDropdown && (
             <div className="mt-1 bg-white rounded-lg border border-neutral-200 shadow-lg overflow-hidden">
-              {filteredPatients.map((patient) => (
+              {isSearching && (
+                <div className="flex items-center gap-2 px-3 py-2.5 text-sm text-neutral-500">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Searching...
+                </div>
+              )}
+              {!isSearching && searchResults.length === 0 && (
+                <div className="px-3 py-2.5 text-sm text-neutral-500">No patients found</div>
+              )}
+              {!isSearching && searchResults.map((patient) => (
                 <button
-                  key={patient.mrn}
-                  onClick={() => { setPatientSearch(patient.name); setIsDropdownOpen(false); }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-accent-50 rounded-md cursor-pointer transition-colors text-left"
+                  key={patient.id}
+                  type="button"
+                  onMouseDown={(event) => {
+                    // Prevent blur before click registers
+                    event.preventDefault();
+                    handleSelectPatient(patient);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-accent-50 cursor-pointer transition-colors text-left"
                 >
-                  <div className={clsxMerge("w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0", patient.color)}>
-                    {patient.initials}
+                  <div
+                    className={clsxMerge(
+                      "w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0",
+                      getAvatarColor(patient.id)
+                    )}
+                  >
+                    {getInitials(patient.fullName)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-neutral-900">{patient.name}</p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono text-neutral-500">{patient.mrn}</span>
-                      <span className="text-xs text-neutral-500">Last seen: {patient.lastSeen}</span>
-                    </div>
+                    <p className="text-sm font-medium text-neutral-900 truncate">{patient.fullName}</p>
+                    <span className="text-xs font-mono text-neutral-500">{patient.medicalRecordNumber}</span>
                   </div>
                 </button>
               ))}
             </div>
           )}
+
           <p className="flex items-center gap-1 text-xs text-neutral-500 mt-1.5">
             <Sparkles className="h-3 w-3 text-accent-500" />
             Clara provides better suggestions with patient context
@@ -192,6 +250,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
             {SESSION_TYPES.map((sessionType) => (
               <button
                 key={sessionType}
+                type="button"
                 onClick={() => setSelectedSessionType(sessionType)}
                 className={clsxMerge(
                   "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
@@ -246,7 +305,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
         </div>
       </div>
 
-      {/* ── Quick Start from Today's Appointments ───── */}
+      {/* ── Quick Start from Today's Appointments ─────────── */}
       <div className="max-w-lg mx-auto mt-8">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -269,6 +328,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
                 </div>
               </div>
               <button
+                type="button"
                 onClick={handleStartSession}
                 className="flex items-center gap-1.5 text-xs font-medium text-accent-700 border border-accent-200 rounded-full px-3 py-1.5 hover:bg-accent-50 transition-colors flex-shrink-0 ml-3"
               >
@@ -280,7 +340,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
         </div>
       </div>
 
-      {/* ── Recent Sessions ───────────────────────────── */}
+      {/* ── Recent Sessions ───────────────────────────────── */}
       <div className="max-w-lg mx-auto mt-8">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -313,7 +373,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
         </div>
       </div>
 
-      {/* ── Feature Cards ─────────────────────────────── */}
+      {/* ── Feature Cards ────────────────────────────────── */}
       <div className="max-w-3xl mx-auto mt-10">
         <h3 className="text-sm font-semibold text-neutral-900 mb-4 text-center">What Clara Can Do</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -333,7 +393,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
         </div>
       </div>
 
-      {/* ── How It Works ──────────────────────────────── */}
+      {/* ── How It Works ──────────────────────────────────── */}
       <div className="max-w-2xl mx-auto mt-10 mb-6">
         <h3 className="text-sm font-semibold text-neutral-900 text-center mb-6">How It Works</h3>
 
@@ -378,7 +438,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
         </div>
       </div>
 
-      {/* ── HIPAA Footer ──────────────────────────────── */}
+      {/* ── HIPAA Footer ──────────────────────────────────── */}
       <div className="text-center mt-6 mb-8 max-w-md mx-auto">
         <div className="flex items-center justify-center gap-2">
           <Shield className="h-4 w-4 text-neutral-500 flex-shrink-0" />
@@ -389,7 +449,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
         <p className="text-xs text-neutral-400 mt-1">Clara v1.0 — Powered by MediTrack AI</p>
       </div>
 
-      {/* ── Mobile Fixed Bottom Bar ───────────────────── */}
+      {/* ── Mobile Fixed Bottom Bar ───────────────────────── */}
       <div className="fixed bottom-0 left-0 right-0 md:hidden bg-white shadow-[0_-4px_12px_rgba(0,0,0,0.05)] px-4 py-3 z-40">
         <button
           type="button"

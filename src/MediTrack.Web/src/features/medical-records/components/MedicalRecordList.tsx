@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { FileText, AlertCircle, CheckCircle, Clock, Archive } from "lucide-react";
 import type { MedicalRecordListItem } from "../types";
-import { RecordStatus } from "../types";
+import { DiagnosisSeverity, RecordStatus } from "../types";
 import { SeverityBadge, StatusBadge } from "./MedicalRecordBadges";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
 
@@ -44,6 +44,13 @@ interface MedicalRecordCardProps {
   readonly record: MedicalRecordListItem;
 }
 
+const SEVERITY_LEFT_BORDER: Record<string, string> = {
+  [DiagnosisSeverity.Critical]: "border-l-error-500",
+  [DiagnosisSeverity.Severe]: "border-l-error-300",
+  [DiagnosisSeverity.Moderate]: "border-l-warning-500",
+  [DiagnosisSeverity.Mild]: "border-l-success-500",
+};
+
 function MedicalRecordCard({ record }: MedicalRecordCardProps) {
   return (
     <Link
@@ -51,10 +58,11 @@ function MedicalRecordCard({ record }: MedicalRecordCardProps) {
       className={clsxMerge(
         "block",
         "p-4 sm:p-6",
-        "rounded-lg border border-neutral-200",
+        "rounded-lg border border-neutral-200 border-l-4",
+        SEVERITY_LEFT_BORDER[record.severity] ?? "border-l-neutral-300",
         "bg-white",
         "transition-all duration-200",
-        "hover:border-primary-300 hover:shadow-md"
+        "hover:shadow-md"
       )}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

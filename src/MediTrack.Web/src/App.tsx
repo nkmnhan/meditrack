@@ -1,6 +1,6 @@
 import { Routes, Route, Link } from "react-router-dom";
 import { ProtectedRoute, CallbackPage, RoleGuard, UserRole } from "./shared/auth";
-import { Layout, useClaraPanel } from "./shared/components";
+import { Layout, useClaraPanel, NotFound } from "./shared/components";
 import { PatientList, PatientDetail, PatientForm } from "./features/patients";
 import { AppointmentCalendarPage } from "./features/appointments";
 import {
@@ -315,6 +315,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

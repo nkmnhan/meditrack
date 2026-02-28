@@ -86,7 +86,7 @@ export function MedicalRecordDetail({ record }: MedicalRecordDetailProps) {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
@@ -422,9 +422,9 @@ interface VitalItemProps {
 
 function VitalItem({ label, value }: VitalItemProps) {
   return (
-    <div>
-      <p className="text-xs text-neutral-600">{label}</p>
-      <p className="text-sm font-medium text-neutral-900">{value}</p>
+    <div className="rounded-lg bg-neutral-50 p-3">
+      <p className="text-lg font-bold text-neutral-900">{value}</p>
+      <p className="text-xs text-neutral-500 mt-0.5">{label}</p>
     </div>
   );
 }

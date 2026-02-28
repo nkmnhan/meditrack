@@ -30,7 +30,7 @@ export const claraSuggestions: readonly ClaraSuggestion[] = [
     label: "Differential diagnosis",
     prompt: "Suggest differential diagnoses for a patient with persistent dry cough, fatigue, and weight loss over 3 months",
     category: "Diagnosis",
-    accentColor: "bg-primary-500",
+    accentColor: "bg-primary-700",
   },
   {
     id: "treatment-guidelines",

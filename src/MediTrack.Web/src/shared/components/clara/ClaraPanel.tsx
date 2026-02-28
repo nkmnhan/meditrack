@@ -195,7 +195,7 @@ export function ClaraPanel() {
                     <div
                       className={clsxMerge(
                         "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg",
-                        "bg-neutral-50 text-neutral-600"
+                        "bg-neutral-50 text-neutral-700"
                       )}
                     >
                       <SuggestionIcon className="h-4 w-4" />
@@ -229,7 +229,7 @@ export function ClaraPanel() {
                     className={clsxMerge(
                       "max-w-[85%] rounded-lg px-3 py-2 text-sm",
                       message.role === "user"
-                        ? "bg-primary-50 text-primary-900"
+                        ? "bg-primary-50 text-primary-800"
                         : "bg-accent-50 text-neutral-900"
                     )}
                   >
@@ -256,7 +256,7 @@ export function ClaraPanel() {
               className={clsxMerge(
                 "flex-1 h-10 rounded-lg border border-neutral-200 px-3 text-sm",
                 "focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500",
-                "placeholder:text-neutral-400"
+                "placeholder:text-neutral-500"
               )}
             />
             <button
@@ -264,7 +264,7 @@ export function ClaraPanel() {
               disabled={!inputValue.trim()}
               className={clsxMerge(
                 "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg",
-                "bg-accent-600 text-white",
+                "bg-accent-500 text-white",
                 "transition-colors hover:bg-accent-700",
                 "disabled:opacity-50 disabled:cursor-not-allowed"
               )}
