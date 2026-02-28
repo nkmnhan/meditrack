@@ -55,4 +55,5 @@ public sealed record SuggestionResponse
     public required string Type { get; init; }
     public required string Source { get; init; }
     public string? Urgency { get; init; }
+    public float? Confidence { get; init; }
 }

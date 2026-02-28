@@ -135,7 +135,8 @@ public sealed class SessionService
                     TriggeredAt = s.TriggeredAt,
                     Type = s.Type,
                     Source = s.Source,
-                    Urgency = s.Urgency
+                    Urgency = s.Urgency,
+                    Confidence = s.Confidence
                 })
                 .ToList()
         };

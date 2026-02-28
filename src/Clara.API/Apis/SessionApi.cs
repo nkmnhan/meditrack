@@ -141,6 +141,7 @@ public static class SessionApi
                 Id = suggestion.Id,
                 Content = suggestion.Content,
                 Type = suggestion.Type,
+                Source = suggestion.Source,
                 Urgency = suggestion.Urgency,
                 Confidence = suggestion.Confidence,
                 TriggeredAt = suggestion.TriggeredAt
@@ -152,23 +153,10 @@ public static class SessionApi
 }
 
 /// <summary>
-/// Response containing AI suggestions.
+/// Response containing AI suggestions for on-demand requests.
 /// </summary>
 public sealed record SuggestResponse
 {
     public required Guid SessionId { get; init; }
     public required List<SuggestionResponse> Suggestions { get; init; }
-}
-
-/// <summary>
-/// A single AI suggestion.
-/// </summary>
-public sealed record SuggestionResponse
-{
-    public required Guid Id { get; init; }
-    public required string Content { get; init; }
-    public required string Type { get; init; }
-    public string? Urgency { get; init; }
-    public float? Confidence { get; init; }
-    public required DateTimeOffset TriggeredAt { get; init; }
 }
