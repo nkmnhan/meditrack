@@ -1,19 +1,62 @@
 import type { Config } from "tailwindcss";
 
 const tailwindConfig: Config = {
+  darkMode: ["class"],
   content: [
     "./index.html",
     "./src/**/*.{ts,tsx}",
   ],
   theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
     extend: {
       colors: {
+        // shadcn/ui semantic tokens — backed by CSS variables in index.css
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+        sidebar: {
+          DEFAULT: "hsl(var(--sidebar-background))",
+          foreground: "hsl(var(--sidebar-foreground))",
+          primary: "hsl(var(--sidebar-primary))",
+          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+          accent: "hsl(var(--sidebar-accent))",
+          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
+          border: "hsl(var(--sidebar-border))",
+          ring: "hsl(var(--sidebar-ring))",
+        },
+
         // ===========================================
         // 1. PRIMARY COLORS (Brand Identity)
         // Medical Blue — trust, professionalism, calm
         // Inspired by Mayo Clinic, Mass General Brigham
         // ===========================================
         primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
           50: "#eff6ff",
           100: "#dbeafe",
           200: "#bfdbfe",
@@ -33,6 +76,8 @@ const tailwindConfig: Config = {
         // Inspired by One Medical, Maven Clinic
         // ===========================================
         secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
           50: "#f0fdfa",
           100: "#ccfbf1",
           200: "#99f6e4",
@@ -52,6 +97,8 @@ const tailwindConfig: Config = {
         // Preferred over orange in healthcare (less alarming)
         // ===========================================
         accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
           50: "#faf5ff",
           100: "#f3e8ff",
           200: "#e9d5ff",
@@ -158,16 +205,38 @@ const tailwindConfig: Config = {
         sans: ["Inter", "system-ui", "sans-serif"],
         serif: ["Georgia", "Merriweather", "serif"],  // For medical documents, printable reports
       },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
       boxShadow: {
         // Elevation system — keep subtle for healthcare UI
-        sm: "0 1px 2px 0 rgb(0 0 0 / 0.05)",           // Cards, subtle lift
+        sm: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
         DEFAULT: "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
-        md: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",  // Dropdowns, popovers
-        lg: "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)", // Modals, dialogs
+        md: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+        lg: "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+      },
+      keyframes: {
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
       },
     },
   },
-  plugins: [],
+  plugins: [
+    require("tailwindcss-animate"),
+    require("@tailwindcss/typography"),
+  ],
 };
 
 export default tailwindConfig;
