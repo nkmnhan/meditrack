@@ -237,9 +237,17 @@ public sealed class SuggestionService
                 new(ChatRole.User, userPrompt)
             };
 
+            var chatOptions = new ChatOptions
+            {
+                Temperature = 0.3f,
+                MaxOutputTokens = 300,
+                ResponseFormat = ChatResponseFormat.Json,
+            };
+
             var response = await _chatClient.GetResponseAsync(
                 messages,
-                cancellationToken: cancellationToken);
+                chatOptions,
+                cancellationToken);
 
             stopwatch.Stop();
 

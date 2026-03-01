@@ -152,6 +152,12 @@ namespace MediTrack.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("started_at");
 
+                    b.Property<string>("SessionType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasDefaultValue("Consultation")
+                        .HasColumnName("session_type");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text")

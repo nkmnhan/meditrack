@@ -20,18 +20,13 @@ MediTrack is an MCP-native EMR platform with an AI clinical companion (**Clara**
 | Patient.API | 5002 | Patient | Patient CRUD, demographics, search |
 | Appointment.API | 5003 | Scheduling | Appointment scheduling & calendar |
 | MedicalRecords.API | 5004 | Clinical | Medical history, diagnoses, prescriptions (DDD) |
+| Clara.API | 5005 | AI + Consultation | Session management, SignalR hub, RAG knowledge search, LLM suggestions, clinical skills |
 | Notification.Worker | — | Cross-cutting | Background worker for notifications & PHI audit |
 | MediTrack.Web | 3000 | — | React SPA (doctor, admin, patient UIs) |
 
-**Total: 7 containers** (6 services + frontend)
+**Total: 8 containers** (7 services + frontend)
 
-### Planned Services
-
-| Service | Bounded Context | Responsibility |
-|---|---|---|
-| Clara.API | AI + Consultation | Single service hosting: MCP tools (FHIR, Knowledge, Session), agent orchestration, SignalR hub, real-time audio → STT. Rationale: At 3K users (~30 concurrent sessions), no performance justification for separate containers. |
-
-**Simplified from original plan**: Originally 3 separate MCP servers (FHIR, Knowledge, Session) + agent service = 4 containers. Now 1 container. Savings: ~$210-420/mo infra, simpler deployment, faster development.
+**Clara.API** is a single service (not 3 separate MCP servers as originally planned). At 3K users (~30 concurrent sessions, 1.5 vector QPS), there is zero performance justification for separate containers. Savings: ~$210-420/mo infra, simpler deployment, faster development.
 
 ## MCP Architecture Layer
 

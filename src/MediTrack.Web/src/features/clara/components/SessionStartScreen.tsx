@@ -1,28 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Sparkles, Lightbulb, Clock, Mic, Search,
-  Play, CalendarDays, History, ChevronRight, FileText, Shield, Save,
+  Sparkles, Lightbulb, Mic, Search,
+  Play, History, ChevronRight, FileText, Shield, Save,
   AlertCircle, Loader2,
 } from "lucide-react";
-import { useStartSessionMutation } from "../store/claraApi";
+import { useStartSessionMutation, useGetSessionsQuery } from "../store/claraApi";
 import { useLazySearchPatientsQuery } from "@/features/patients";
 import type { PatientListItem } from "@/features/patients";
+import type { SessionType } from "../types";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
 
 /* ── Static data ────────────────────────────────────────── */
-
-const todayAppointments = [
-  { time: "10:30 AM", patient: "Sarah Johnson", type: "Follow-up" },
-  { time: "11:15 AM", patient: "Mike Chen", type: "Consultation" },
-  { time: "2:00 PM", patient: "Emily Davis", type: "Review" },
-];
-
-const recentSessions = [
-  { patient: "Mike Chen", type: "Consultation", duration: "23 min", time: "Today, 9:15 AM", isCompleted: true, suggestionCount: 5 },
-  { patient: "Emily Davis", type: "Follow-up", duration: "18 min", time: "Today, 8:30 AM", isCompleted: true, suggestionCount: 3 },
-  { patient: "Robert Wilson", type: "Consultation", duration: "31 min", time: "Yesterday, 3:00 PM", isCompleted: false, suggestionCount: 7 },
-];
 
 const featureCards = [
   { icon: Mic, title: "Live Transcription", description: "Real-time speech-to-text with automatic speaker identification", stat: "98.5% accuracy" },
@@ -52,8 +41,8 @@ const AVATAR_COLORS = [
 
 function getTimeGreeting(): string {
   const hour = new Date().getHours();
-  if (hour < 12) return "Good morning. You have 4 consultations today \u2014 ready when you are.";
-  if (hour < 18) return "Good afternoon. 2 patients left today \u2014 let\u2019s finish strong.";
+  if (hour < 12) return "Good morning. Ready to start your first session?";
+  if (hour < 18) return "Good afternoon. Clara is ready to assist your consultations.";
   return "Good evening. Wrapping up? I can help with your session notes.";
 }
 
@@ -77,10 +66,11 @@ interface SessionStartScreenProps {
 export function SessionStartScreen({ className }: SessionStartScreenProps) {
   const navigate = useNavigate();
   const [startSession, { isLoading, error }] = useStartSessionMutation();
+  const { data: recentSessions = [] } = useGetSessionsQuery();
   const [triggerSearch, { data: searchResults = [], isFetching: isSearching }] =
     useLazySearchPatientsQuery();
 
-  const [selectedSessionType, setSelectedSessionType] = useState<typeof SESSION_TYPES[number]>("Consultation");
+  const [selectedSessionType, setSelectedSessionType] = useState<SessionType>("Consultation");
   const [patientSearchText, setPatientSearchText] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<PatientListItem | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -103,8 +93,8 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
   const handleStartSession = async () => {
     try {
       const result = await startSession({
-        // Pass the real patient ID, not the search text
         patientId: selectedPatient?.id ?? undefined,
+        sessionType: selectedSessionType,
       }).unwrap();
       navigate(`/clara/session/${result.id}`);
     } catch (startError) {
@@ -138,21 +128,15 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
           {getTimeGreeting()}
         </p>
 
-        {/* Daily stats bar */}
-        <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 mt-6">
-          <div className="flex items-center gap-1.5">
+        {/* Session count from real data */}
+        {recentSessions.length > 0 && (
+          <div className="flex items-center justify-center gap-1.5 mt-6">
             <Sparkles className="h-4 w-4 text-accent-500" />
-            <span className="text-xs md:text-sm font-medium text-neutral-700">3 sessions today</span>
+            <span className="text-xs md:text-sm font-medium text-neutral-700">
+              {recentSessions.length} recent session{recentSessions.length !== 1 ? "s" : ""}
+            </span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Lightbulb className="h-4 w-4 text-success-500" />
-            <span className="text-xs md:text-sm font-medium text-neutral-700">12 suggestions accepted</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Clock className="h-4 w-4 text-primary-700" />
-            <span className="text-xs md:text-sm font-medium text-neutral-700">1.2 hrs saved</span>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* ── Start Session Card ─────────────────────────────── */}
@@ -305,73 +289,44 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
         </div>
       </div>
 
-      {/* ── Quick Start from Today's Appointments ─────────── */}
-      <div className="max-w-lg mx-auto mt-8">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <CalendarDays className="h-4 w-4 text-neutral-500" />
-            <h3 className="text-sm font-semibold text-neutral-900">Upcoming Appointments</h3>
-          </div>
-        </div>
-        <div className="flex md:flex-col gap-3 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory md:snap-none -mx-4 px-4 md:mx-0 md:px-0 space-y-0 md:space-y-2">
-          {todayAppointments.map((appointment) => (
-            <div
-              key={appointment.time}
-              className="min-w-[280px] md:min-w-0 snap-start bg-white rounded-xl border border-neutral-200 p-4 flex items-center justify-between hover:border-accent-200 hover:shadow-sm transition-all cursor-pointer flex-shrink-0 md:flex-shrink"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-mono font-semibold text-neutral-900 min-w-[72px]">{appointment.time}</span>
-                <div className="w-px h-8 bg-neutral-200" />
-                <div>
-                  <p className="text-sm font-medium text-neutral-900">{appointment.patient}</p>
-                  <p className="text-xs text-neutral-500">{appointment.type}</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={handleStartSession}
-                className="flex items-center gap-1.5 text-xs font-medium text-accent-700 border border-accent-200 rounded-full px-3 py-1.5 hover:bg-accent-50 transition-colors flex-shrink-0 ml-3"
-              >
-                <Play className="h-3 w-3" />
-                Start with Clara
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* ── Recent Sessions ───────────────────────────────── */}
-      <div className="max-w-lg mx-auto mt-8">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
+      {recentSessions.length > 0 && (
+        <div className="max-w-lg mx-auto mt-8">
+          <div className="flex items-center gap-2 mb-3">
             <History className="h-4 w-4 text-neutral-500" />
             <h3 className="text-sm font-semibold text-neutral-900">Recent Sessions</h3>
           </div>
-        </div>
-        <div className="space-y-2">
-          {recentSessions.map((session) => (
-            <div
-              key={`${session.patient}-${session.time}`}
-              className="bg-white rounded-xl border border-neutral-200 p-4 flex items-center justify-between hover:border-neutral-300 transition-all cursor-pointer"
-            >
-              <div className="flex items-center gap-3">
-                <span className={clsxMerge("w-2.5 h-2.5 rounded-full flex-shrink-0", session.isCompleted ? "bg-success-500" : "bg-warning-500")} />
-                <div>
-                  <p className="text-sm font-medium text-neutral-900">{session.patient}</p>
-                  <p className="text-xs text-neutral-500">{session.type} — {session.duration}</p>
-                  <p className="text-xs text-neutral-500">{session.time}</p>
+          <div className="space-y-2">
+            {recentSessions.map((session) => {
+              const isCompleted = session.status === "completed";
+              const startedDate = new Date(session.startedAt);
+              const formattedDate = startedDate.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+              const formattedTime = startedDate.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+
+              return (
+                <div
+                  key={session.id}
+                  className="bg-white rounded-xl border border-neutral-200 p-4 flex items-center justify-between hover:border-neutral-300 transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className={clsxMerge("w-2.5 h-2.5 rounded-full flex-shrink-0", isCompleted ? "bg-success-500" : "bg-warning-500")} />
+                    <div>
+                      <p className="text-sm font-medium text-neutral-900">{session.sessionType}</p>
+                      <p className="text-xs text-neutral-500">{formattedDate} at {formattedTime}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs bg-accent-100 text-accent-700 rounded-full px-2 py-0.5">
+                      {session.suggestionCount} suggestions
+                    </span>
+                    <ChevronRight className="h-4 w-4 text-neutral-400" />
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs bg-accent-100 text-accent-700 rounded-full px-2 py-0.5">
-                  {session.suggestionCount} suggestions
-                </span>
-                <ChevronRight className="h-4 w-4 text-neutral-400" />
-              </div>
-            </div>
-          ))}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── Feature Cards ────────────────────────────────── */}
       <div className="max-w-3xl mx-auto mt-10">

@@ -131,6 +131,23 @@ Calls existing domain APIs (Patient.API, MedicalRecords.API) via HTTP, returns F
 | `session_transcript` | Get current transcript with speaker labels |
 | `session_suggest` | Get AI suggestions for current session context |
 
+### SignalR Hub — `SessionHub` (`/sessionHub`)
+
+| Method (client → server) | Behavior |
+|--------------------------|----------|
+| `JoinSession(sessionId)` | Adds connection to group; immediately sends `SessionUpdated` with current session state so the client `useSession()` hook is hydrated on connect |
+| `LeaveSession(sessionId)` | Removes connection from group |
+| `StreamAudioChunk(sessionId, audioBase64)` | Decodes base64 audio, calls Deepgram REST, infers speaker (async EF Core), broadcasts `TranscriptLineAdded`, triggers batch check |
+| `SendTranscriptLine(sessionId, speaker, text)` | Manual transcript input (dev/test — no mic required), broadcasts `TranscriptLineAdded`, triggers batch check |
+
+| Event (server → client) | Payload |
+|--------------------------|---------|
+| `SessionJoined` | `sessionId` string |
+| `SessionUpdated` | `SessionResponse` (full session state with transcript + suggestions) |
+| `TranscriptLineAdded` | `TranscriptLineResponse` |
+| `SuggestionAdded` | `SuggestionResponse` |
+| `SttError` | Error message string |
+
 ---
 
 ## Clinical Skills Library
@@ -204,6 +221,18 @@ Do NOT call the AI on every word. Use this logic:
 - Call AI every **5 patient utterances** OR every **60 seconds**, whichever comes first
 - **On-demand trigger**: Doctor presses "Clara" button — overrides batch timer, immediate analysis
 - Include last 10 transcript lines + top-K RAG chunks as context
+- Audio chunk interval: **1000ms** (MediaRecorder `timeslice`) — balances transcript quality against Deepgram API call volume
+
+### LLM Call Parameters
+
+```csharp
+new ChatOptions
+{
+    Temperature = 0.3f,       // Low temperature for consistent clinical output
+    MaxOutputTokens = 300,    // Bounded to prevent runaway costs
+    ResponseFormat = ChatResponseFormat.Json  // Enforces structured output
+}
+```
 
 ---
 
@@ -226,30 +255,36 @@ Every MCP tool call that touches patient data gets audit-logged:
 
 ---
 
-## Database Schema (Planned)
+## Database Schema
 
-### Session & Transcript (PostgreSQL)
+### Session & Transcript (PostgreSQL — implemented)
 
 ```
 Session         { Id, DoctorId, PatientId, StartedAt, EndedAt, Status,
-                  AudioRecorded (bool), SpeakerMap (json — SpeakerLabel → Role) }
+                  SessionType (text — 'Consultation'|'Follow-up'|'Review', default 'Consultation'),
+                  AudioRecorded (bool), SpeakerMap (jsonb — SpeakerLabel → Role) }
 TranscriptLine  { Id, SessionId, Speaker, Text, Timestamp,
                   Confidence (float — STT confidence score, flag low-confidence lines) }
 Suggestion      { Id, SessionId, Content, TriggeredAt, Type, Source,
-                  Urgency (low/medium/high) }
+                  Urgency (low/medium/high), Confidence (float) }
 ```
 
-### Knowledge Base (PostgreSQL + pgvector)
+EF Core migrations: `20260301000000_InitialCreate`, `20260301000001_AddSessionType`.
+
+### Knowledge Base (PostgreSQL + pgvector — implemented)
 
 ```
-KnowledgeChunk  { Id, DocumentName, Content, Embedding(vector), Category, CreatedAt,
+KnowledgeChunk  { Id, DocumentName, Content, Embedding(vector(1536)), Category, CreatedAt,
                   ChunkIndex (int — ordering within source document) }
 Document        { Id, FileName, UploadedAt, ChunkCount, UploadedBy (UserId) }
 ```
 
+HNSW index: `USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64)`.
+Similarity threshold: **0.7** (cosine similarity). Requests below this score are filtered before reaching the LLM.
+
 Note: No `ClinicalSkill` table in MVP — skills are YAML files loaded into memory. Add DB persistence in Phase 8+ if needed.
 
-### Agent Configuration (PostgreSQL)
+### Agent Configuration (PostgreSQL — planned Phase 7+)
 
 ```
 AgentConfig     { Id, SystemPrompt, SuggestionEveryNLines,
@@ -259,13 +294,32 @@ AgentPrompt     { Id, Section, Content, Version, UpdatedAt }
 
 ---
 
+## Integration Tests
+
+`tests/Clara.IntegrationTests/` — xUnit project using `WebApplicationFactory<Program>`.
+
+**Requirements**: Real PostgreSQL instance with pgvector extension. Set `CLARA_TEST_DB` env var (default: `Host=localhost;Database=meditrack_clara_test;...`). The in-memory EF Core provider is **not supported** because the EF Core model uses pgvector `vector(1536)` column types and JSONB, which are PostgreSQL-specific.
+
+```bash
+CLARA_TEST_DB="Host=localhost;Database=meditrack_clara_test;Username=meditrack;Password=meditrack" dotnet test tests/Clara.IntegrationTests
+```
+
+| Test Class | Tests |
+|------------|-------|
+| `SessionLifecycleTests` | Start session (201), get unknown (404), end session (200 + completed status), double-end (400) |
+| `KnowledgeSearchTests` | Empty knowledge base returns empty results, blank query returns 400 |
+| `SignalRHubTests` | Connect to hub succeeds, `JoinSession` with valid ID does not throw |
+
+---
+
 ## Product Features
 
 ### Doctor Experience
 - **Live transcript** — real-time conversation display with speaker labels
+- **Session types** — Consultation, Follow-up, or Review (selected at session start, stored per session)
 - **Clara button** — on-demand trigger overrides batch timer for immediate analysis
-- **Suggestion cards** — contextual clinical suggestions with urgency levels
-- **Mobile voice capture** — Web Audio API, PWA-ready
+- **Suggestion cards** — contextual clinical suggestions with type badge and urgency indicator (no internal routing labels shown)
+- **Mobile voice capture** — Web Audio API, 1-second audio chunks for real-time transcription
 
 ### Admin Experience
 - **AI management panel** — agent config, clinical skills editor, usage dashboard

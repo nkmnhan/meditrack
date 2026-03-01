@@ -2,6 +2,7 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { createBaseQueryWithReauth } from "@/shared/auth/baseQueryWithReauth";
 import type {
   SessionResponse,
+  SessionSummary,
   StartSessionRequest,
   SuggestResponse,
   KnowledgeSearchRequest,
@@ -15,6 +16,14 @@ export const claraApi = createApi({
   baseQuery: createBaseQueryWithReauth(CLARA_API_URL),
   tagTypes: ["Session"],
   endpoints: (builder) => ({
+    /**
+     * List recent sessions for the current doctor
+     */
+    getSessions: builder.query<SessionSummary[], void>({
+      query: () => "/api/sessions",
+      providesTags: ["Session"],
+    }),
+
     /**
      * Start a new session for the current doctor
      */
@@ -77,6 +86,7 @@ export const claraApi = createApi({
 });
 
 export const {
+  useGetSessionsQuery,
   useStartSessionMutation,
   useGetSessionQuery,
   useEndSessionMutation,

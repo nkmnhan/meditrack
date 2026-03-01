@@ -66,6 +66,10 @@ public sealed class ClaraDbContext : DbContext
                 .HasColumnName("audio_recorded")
                 .HasDefaultValue(false);
 
+            entity.Property(session => session.SessionType)
+                .HasColumnName("session_type")
+                .HasDefaultValue("Consultation");
+
             entity.Property(session => session.SpeakerMap)
                 .HasColumnName("speaker_map")
                 .HasColumnType("jsonb");

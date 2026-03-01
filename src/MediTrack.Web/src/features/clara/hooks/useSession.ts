@@ -24,8 +24,6 @@ interface UseSessionReturn {
   transcriptLines: TranscriptLine[];
   suggestions: Suggestion[];
   sendAudioChunk: (audioData: ArrayBuffer) => Promise<void>;
-  requestSuggestions: () => Promise<void>;
-  endSession: () => Promise<void>;
 }
 
 /**
@@ -149,7 +147,8 @@ export function useSession({
   }, [sessionId]);
 
   /**
-   * Send audio chunk to the server for transcription
+   * Send audio chunk to the server for transcription.
+   * Converts ArrayBuffer to base64 — hub method StreamAudioChunk expects string audioBase64.
    */
   const sendAudioChunk = useCallback(async (audioData: ArrayBuffer) => {
     const connection = connectionRef.current;
@@ -157,31 +156,15 @@ export function useSession({
       throw new Error("Not connected to session hub");
     }
 
-    await connection.invoke("SendAudioChunk", sessionIdRef.current, audioData);
-  }, []);
-
-  /**
-   * Request AI suggestions for the current conversation
-   */
-  const requestSuggestions = useCallback(async () => {
-    const connection = connectionRef.current;
-    if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
-      throw new Error("Not connected to session hub");
+    // Convert ArrayBuffer → base64 string (hub expects string, not binary)
+    const bytes = new Uint8Array(audioData);
+    let binary = "";
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
     }
+    const base64Audio = btoa(binary);
 
-    await connection.invoke("RequestSuggestions", sessionIdRef.current);
-  }, []);
-
-  /**
-   * End the current session
-   */
-  const endSession = useCallback(async () => {
-    const connection = connectionRef.current;
-    if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
-      throw new Error("Not connected to session hub");
-    }
-
-    await connection.invoke("EndSession", sessionIdRef.current);
+    await connection.invoke("StreamAudioChunk", sessionIdRef.current, base64Audio);
   }, []);
 
   return {
@@ -190,7 +173,5 @@ export function useSession({
     transcriptLines,
     suggestions,
     sendAudioChunk,
-    requestSuggestions,
-    endSession,
   };
 }

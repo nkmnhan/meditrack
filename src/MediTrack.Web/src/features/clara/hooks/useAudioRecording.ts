@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 interface UseAudioRecordingOptions {
   onAudioChunk: (data: ArrayBuffer) => void;
   onError?: (error: Error) => void;
-  /** Interval in ms between audio chunks (default: 500ms) */
+  /** Interval in ms between audio chunks (default: 1000ms) */
   chunkIntervalMs?: number;
 }
 
@@ -23,7 +23,7 @@ interface UseAudioRecordingReturn {
 export function useAudioRecording({
   onAudioChunk,
   onError,
-  chunkIntervalMs = 500,
+  chunkIntervalMs = 1000,
 }: UseAudioRecordingOptions): UseAudioRecordingReturn {
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);

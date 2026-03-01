@@ -104,14 +104,6 @@ function SuggestionCard({ suggestion }: SuggestionCardProps) {
 
         {/* Content */}
         <p className="text-sm text-neutral-700 leading-relaxed">{suggestion.content}</p>
-
-        {/* Source */}
-        {suggestion.source && (
-          <p className="text-xs text-neutral-500 mt-2 flex items-center gap-1">
-            <BookOpen className="w-3 h-3 flex-shrink-0" />
-            {suggestion.source}
-          </p>
-        )}
       </div>
     </div>
   );

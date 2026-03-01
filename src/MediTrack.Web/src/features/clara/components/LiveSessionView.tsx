@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useSession } from "../hooks/useSession";
 import { useAudioRecording } from "../hooks/useAudioRecording";
-import { useRequestSuggestionsMutation } from "../store/claraApi";
+import { useEndSessionMutation, useRequestSuggestionsMutation } from "../store/claraApi";
 import { TranscriptPanel } from "./TranscriptPanel";
 import { SuggestionPanel } from "./SuggestionPanel";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
@@ -35,6 +35,7 @@ export function LiveSessionView() {
 
   const [requestSuggestions, { isLoading: isRequestingSuggestions }] =
     useRequestSuggestionsMutation();
+  const [endSessionMutation] = useEndSessionMutation();
 
   // Count-up timer from session start
   useEffect(() => {
@@ -60,7 +61,6 @@ export function LiveSessionView() {
     transcriptLines,
     suggestions,
     sendAudioChunk,
-    endSession,
   } = useSession({
     sessionId: sessionId ?? "",
     onError: (sessionError) => {
@@ -107,7 +107,9 @@ export function LiveSessionView() {
     }
     try {
       stopRecording();
-      await endSession();
+      if (sessionId) {
+        await endSessionMutation(sessionId).unwrap();
+      }
       navigate("/clara");
     } catch (endError) {
       console.error("Failed to end session:", endError);

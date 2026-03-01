@@ -26,6 +26,11 @@ public sealed class Session
     /// Session status: Active, Paused, Completed, Cancelled.
     /// </summary>
     public required string Status { get; set; }
+
+    /// <summary>
+    /// Session type: Consultation, Follow-up, Review.
+    /// </summary>
+    public string SessionType { get; set; } = "Consultation";
     
     /// <summary>
     /// Whether audio recording is enabled for this session.

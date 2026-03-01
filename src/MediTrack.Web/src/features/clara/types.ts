@@ -16,6 +16,8 @@ export interface Suggestion {
   triggeredAt: string;
 }
 
+export type SessionType = "Consultation" | "Follow-up" | "Review";
+
 export interface Session {
   id: string;
   doctorId: string;
@@ -23,12 +25,24 @@ export interface Session {
   startedAt: string;
   endedAt?: string;
   status: "Active" | "Paused" | "Completed" | "Cancelled" | string;
+  sessionType: SessionType;
   transcriptLines: TranscriptLine[];
   suggestions: Suggestion[];
 }
 
 export interface StartSessionRequest {
   patientId?: string;
+  sessionType?: SessionType;
+}
+
+export interface SessionSummary {
+  id: string;
+  patientId?: string;
+  startedAt: string;
+  endedAt?: string;
+  status: string;
+  sessionType: SessionType;
+  suggestionCount: number;
 }
 
 // SessionResponse is now an alias for Session

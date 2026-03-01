@@ -40,6 +40,7 @@ public sealed class SessionService
             StartedAt = DateTimeOffset.UtcNow,
             Status = SessionStatus.Active,
             AudioRecorded = request.AudioRecorded,
+            SessionType = request.SessionType,
             SpeakerMap = new Dictionary<string, string>()
         };
 
@@ -51,6 +52,33 @@ public sealed class SessionService
             session.Id, doctorId, request.PatientId ?? "anonymous");
 
         return MapToResponse(session);
+    }
+
+    /// <summary>
+    /// Lists recent sessions for the specified doctor (newest first, no transcript/suggestions).
+    /// </summary>
+    public async Task<List<SessionSummaryResponse>> GetSessionsAsync(
+        string doctorId,
+        int limit = 10,
+        CancellationToken cancellationToken = default)
+    {
+        var sessions = await _db.Sessions
+            .Where(session => session.DoctorId == doctorId)
+            .OrderByDescending(session => session.StartedAt)
+            .Take(limit)
+            .Select(session => new SessionSummaryResponse
+            {
+                Id = session.Id,
+                PatientId = session.PatientId,
+                StartedAt = session.StartedAt,
+                EndedAt = session.EndedAt,
+                Status = session.Status,
+                SessionType = session.SessionType,
+                SuggestionCount = session.Suggestions.Count
+            })
+            .ToListAsync(cancellationToken);
+
+        return sessions;
     }
 
     /// <summary>
@@ -117,6 +145,7 @@ public sealed class SessionService
             EndedAt = session.EndedAt,
             Status = session.Status,
             AudioRecorded = session.AudioRecorded,
+            SessionType = session.SessionType,
             TranscriptLines = session.TranscriptLines
                 .Select(t => new TranscriptLineResponse
                 {

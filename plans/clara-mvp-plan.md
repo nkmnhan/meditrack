@@ -31,8 +31,8 @@
 
 ## Phase 6a: PostgreSQL + pgvector Migration
 
-**Duration**: 1 week  
-**Status**: Prerequisite blocker
+**Duration**: 1 week
+**Status**: ✓ Complete
 
 ### Deliverables
 
@@ -56,6 +56,7 @@ CREATE TABLE sessions (
     started_at TIMESTAMPTZ NOT NULL,
     ended_at TIMESTAMPTZ,
     status TEXT NOT NULL,
+    session_type TEXT NOT NULL DEFAULT 'Consultation',  -- 'Consultation' | 'Follow-up' | 'Review'
     audio_recorded BOOLEAN DEFAULT FALSE,
     speaker_map JSONB  -- {"Speaker A": "Doctor", "Speaker B": "Patient"}
 );
@@ -113,7 +114,7 @@ CREATE TABLE documents (
 ## Phase 6b: Clara.API — Core Service (MVP)
 
 **Duration**: 5-6 weeks
-**Status**: Main implementation phase
+**Status**: In Progress — Milestones 1–8 scaffolded; gap analysis issues #1–#15 resolved (see [clara-gap-analysis.md](clara-gap-analysis.md))
 
 ### Milestone 1: Project Scaffold + Health Check + AI Infrastructure (Week 1)
 
@@ -1455,8 +1456,8 @@ if (detectedSkill != null)
 
 ## Phase 6c: Doctor Dashboard UI (MVP)
 
-**Duration**: 2-3 weeks  
-**Status**: Frontend integration
+**Duration**: 2-3 weeks
+**Status**: In Progress — SessionStartScreen (real API data, session type), LiveSessionView (real SignalR), ClaraPanel (simplified CTA), SuggestionPanel (type badges, urgency, no internal source labels)
 
 ### Milestone 1: Session Start Screen (Week 1)
 
@@ -1822,6 +1823,18 @@ When all milestones are complete, the following user flow must work:
 12. **Persistence** → transcript and suggestions available via API after session ends
 
 **Success**: All 12 steps complete without errors. Doctor pressed one button and the whole system worked.
+
+### Integration Test Criteria (implemented)
+
+The `tests/Clara.IntegrationTests/` project uses `WebApplicationFactory<Program>` with a real PostgreSQL + pgvector test DB. Tests verify:
+- `POST /api/sessions` returns 201 with session data
+- `GET /api/sessions/{id}` returns 404 for unknown session
+- `POST /api/sessions/{id}/end` returns 200 with `completed` status; second call returns 400
+- `POST /api/knowledge/search` with empty knowledge base returns 200 with empty results
+- `POST /api/knowledge/search` with blank query returns 400
+- SignalR `JoinSession` completes without throwing
+
+Set `CLARA_TEST_DB` env var to run against a local test database.
 
 ---
 

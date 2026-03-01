@@ -49,6 +49,11 @@
     <Content Include="..\..\SeedData\Guidelines\**\*" Link="SeedData\Guidelines\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <!-- Allow integration test project to access internal types (e.g. Program) -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Clara.IntegrationTests" />
+  </ItemGroup>
+
   <!-- Include test-data/ in Debug only (not in production image) -->
   <!-- Use Update instead of Include since SDK auto-includes content items -->
   <ItemGroup Condition="'$(Configuration)' == 'Debug'">

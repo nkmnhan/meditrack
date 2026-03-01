@@ -14,6 +14,11 @@ public sealed record StartSessionRequest
     /// Whether to enable audio recording for this session.
     /// </summary>
     public bool AudioRecorded { get; init; } = true;
+
+    /// <summary>
+    /// Session type: Consultation, Follow-up, Review.
+    /// </summary>
+    public string SessionType { get; init; } = "Consultation";
 }
 
 /// <summary>
@@ -28,8 +33,23 @@ public sealed record SessionResponse
     public DateTimeOffset? EndedAt { get; init; }
     public required string Status { get; init; }
     public bool AudioRecorded { get; init; }
+    public string SessionType { get; init; } = "Consultation";
     public IReadOnlyList<TranscriptLineResponse> TranscriptLines { get; init; } = [];
     public IReadOnlyList<SuggestionResponse> Suggestions { get; init; } = [];
+}
+
+/// <summary>
+/// Lightweight session summary for list views (excludes transcript and suggestions).
+/// </summary>
+public sealed record SessionSummaryResponse
+{
+    public required Guid Id { get; init; }
+    public string? PatientId { get; init; }
+    public required DateTimeOffset StartedAt { get; init; }
+    public DateTimeOffset? EndedAt { get; init; }
+    public required string Status { get; init; }
+    public string SessionType { get; init; } = "Consultation";
+    public int SuggestionCount { get; init; }
 }
 
 /// <summary>

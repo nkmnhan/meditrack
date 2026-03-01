@@ -94,16 +94,16 @@ public sealed class KnowledgeService
     }
 
     /// <summary>
-    /// Searches with a lower threshold for broader context gathering.
-    /// Used when we need more background information for LLM suggestions.
+    /// Searches for broader context to enrich LLM suggestions.
+    /// Uses the same quality threshold as <see cref="SearchAsync"/> to avoid injecting
+    /// low-relevance content into the LLM prompt (which degrades suggestion quality).
     /// </summary>
     public async Task<List<KnowledgeSearchResult>> SearchForContextAsync(
         string query,
         int topK = 5,
         CancellationToken cancellationToken = default)
     {
-        // Use lower threshold for context gathering
-        return await SearchAsync(query, topK, minScore: 0.5f, cancellationToken);
+        return await SearchAsync(query, topK, minScore: 0.7f, cancellationToken);
     }
 }
 

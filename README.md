@@ -1,6 +1,6 @@
 # MediTrack
 
-> **Last updated**: 2026-02-25
+> **Last updated**: 2026-03-01
 
 An **MCP-native EMR platform** with an AI clinical companion (**Clara**) that listens to doctor-patient conversations in real time and provides live clinical suggestions to the doctor.
 
@@ -117,8 +117,12 @@ Doctor's phone (mic) ──► SignalR ──► Speech-to-Text (diarization)
 ```
 
 **Key components:**
-- **Clara.API** — Single service hosting: MCP tools (FHIR, Knowledge, Session), agent orchestration, SignalR hub. Rationale: ~30 concurrent sessions at 3K users — no performance justification for separate containers.
-- **Clinical skills** — YAML files in `skills/core/` loaded into memory (no DB/admin UI for MVP)
+- **Clara.API** — Single service hosting: REST API (sessions, knowledge), SignalR hub (`/sessionHub`), RAG search via pgvector, LLM suggestion generation, clinical skills loader. Port 5005.
+- **`SessionHub`** — real-time hub for audio streaming, transcript broadcast, and suggestion delivery. Sends `SessionUpdated` on join to hydrate the client immediately.
+- **`SuggestionService`** — batched LLM calls with `ChatOptions` (temperature 0.3, max 300 tokens, JSON response format)
+- **`KnowledgeService`** — pgvector cosine similarity search with 0.7 minimum score threshold
+- **Clinical skills** — YAML files in `skills/core/` loaded into memory at startup (no DB/admin UI for MVP)
+- **Integration tests** — `tests/Clara.IntegrationTests/` with xUnit + `WebApplicationFactory<Program>` (requires real PostgreSQL + pgvector)
 - **IFhirProvider** — MediTrack internal implementation only (Epic/Cerner deferred to Phase 8)
 
 ---
@@ -132,10 +136,9 @@ Doctor's phone (mic) ──► SignalR ──► Speech-to-Text (diarization)
 | 3. Domain Services | Done | Patient, Appointment, MedicalRecords, Notification |
 | 4. Security & Compliance | Done | PHI audit, TDE, MFA design, HIPAA checklist |
 | 5. Patient Management UI | Done | React feature, business rules, dev seeding |
-| **6. Clara MVP** | **Next** | 8-10 weeks to functional AI clinical companion. See [MVP plan](plans/clara-mvp-plan.md) |
 | 6a. PostgreSQL + pgvector | Done | Migrated from SQL Server, pgvector ready for embeddings |
-| 6b. Clara.API | Planned | Core service: MCP tools + agent + SignalR + Deepgram (4-5 weeks, 8 milestones) |
-| 6c. Doctor Dashboard UI | Planned | Live transcript, suggestion cards, audio recording (2-3 weeks) |
+| **6b. Clara.API** | **In Progress** | Core service: MCP tools + SignalR hub + Deepgram + RAG + clinical skills. [MVP plan](plans/clara-mvp-plan.md) |
+| 6c. Doctor Dashboard UI | In Progress | Live transcript, suggestion cards, audio recording, session start screen |
 | 7. Remaining Frontend | Planned | Appointment UI, Records viewer, SignalR notifications |
 | 8. External EMR Integration | Planned | Epic/Cerner providers, SMART on FHIR, USCDI v3 compliance |
 | 9. Advanced Features | Planned | Skills admin UI, adaptive batching, self-hosted Whisper |
@@ -164,6 +167,7 @@ curl -k -X POST "https://localhost:5002/api/dev/seed/patients?count=100"
 | Patient API | https://localhost:5002 |
 | Appointment API | https://localhost:5003 |
 | Records API | https://localhost:5004 |
+| Clara API (AI + SignalR) | https://localhost:5005 |
 | RabbitMQ UI | http://localhost:15672 (guest/guest) |
 
 > See [docs/SEEDING.md](docs/SEEDING.md) for data generation options.
@@ -190,7 +194,8 @@ curl -k -X POST "https://localhost:5002/api/dev/seed/patients?count=100"
 
 | Plan | Description |
 |------|-------------|
-| [Clara MVP](plans/clara-mvp-plan.md) | 8-10 week implementation plan for AI clinical companion. Defines minimal feature set, 8 milestones, acceptance criteria. |
+| [Clara MVP](plans/clara-mvp-plan.md) | Implementation plan for AI clinical companion. Defines minimal feature set, milestones, acceptance criteria. |
+| [Clara Gap Analysis](plans/clara-gap-analysis.md) | Technical review of Clara against the MVP plan — all 15 issues identified and resolved. |
 | [OWASP Top 10 Hardening](plans/owasp-top-ten-hardening.md) | Systematic security hardening against OWASP Top 10 (2021) |
 | [EMR Compliance Roadmap](plans/emr-compliance-roadmap.md) | FHIR R4, SMART on FHIR, USCDI v3 adoption plan |
 

@@ -5,6 +5,7 @@ using Clara.API.Services;
 using MediTrack.Shared.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 namespace Clara.API.Hubs;
 
@@ -37,6 +38,7 @@ public sealed class SessionHub : Hub
 
     /// <summary>
     /// Client joins a session group to receive real-time updates.
+    /// Immediately broadcasts current session state so the client's useSession() hook is populated.
     /// </summary>
     public async Task JoinSession(string sessionId)
     {
@@ -47,6 +49,58 @@ public sealed class SessionHub : Hub
             Context.ConnectionId, sessionId);
 
         await Clients.Caller.SendAsync("SessionJoined", sessionId);
+
+        // Hydrate the caller with current session state so useSession() receives non-null data
+        if (!Guid.TryParse(sessionId, out var sessionGuid))
+        {
+            return;
+        }
+
+        var session = await _db.Sessions
+            .Include(s => s.TranscriptLines.OrderBy(t => t.Timestamp))
+            .Include(s => s.Suggestions.OrderByDescending(s => s.TriggeredAt))
+            .FirstOrDefaultAsync(s => s.Id == sessionGuid);
+
+        if (session is null)
+        {
+            return;
+        }
+
+        var sessionResponse = new SessionResponse
+        {
+            Id = session.Id,
+            DoctorId = session.DoctorId,
+            PatientId = session.PatientId,
+            StartedAt = session.StartedAt,
+            EndedAt = session.EndedAt,
+            Status = session.Status,
+            AudioRecorded = session.AudioRecorded,
+            SessionType = session.SessionType,
+            TranscriptLines = session.TranscriptLines
+                .Select(transcriptLine => new TranscriptLineResponse
+                {
+                    Id = transcriptLine.Id,
+                    Speaker = transcriptLine.Speaker,
+                    Text = transcriptLine.Text,
+                    Timestamp = transcriptLine.Timestamp,
+                    Confidence = transcriptLine.Confidence
+                })
+                .ToList(),
+            Suggestions = session.Suggestions
+                .Select(suggestion => new SuggestionResponse
+                {
+                    Id = suggestion.Id,
+                    Content = suggestion.Content,
+                    TriggeredAt = suggestion.TriggeredAt,
+                    Type = suggestion.Type,
+                    Source = suggestion.Source,
+                    Urgency = suggestion.Urgency,
+                    Confidence = suggestion.Confidence
+                })
+                .ToList()
+        };
+
+        await Clients.Caller.SendAsync("SessionUpdated", sessionResponse);
     }
 
     /// <summary>
@@ -116,8 +170,8 @@ public sealed class SessionHub : Hub
                 return;
             }
 
-            // Infer speaker based on session context
-            var speaker = _speakerDetection.InferSpeaker(Guid.Parse(sessionId));
+            // Infer speaker based on session context (async to avoid thread-pool starvation)
+            var speaker = await _speakerDetection.InferSpeakerAsync(Guid.Parse(sessionId));
 
             var line = new TranscriptLine
             {

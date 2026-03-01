@@ -1,11 +1,13 @@
 using System.Security.Claims;
 using Clara.API.Application.Models;
 using Clara.API.Extensions;
+using Clara.API.Hubs;
 using Clara.API.Services;
 using FluentValidation;
 using MediTrack.Shared.Common;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Clara.API.Apis;
 
@@ -19,6 +21,11 @@ public static class SessionApi
         var group = app.MapGroup("/api/sessions")
             .WithTags("Sessions")
             .RequireAuthorization(policy => policy.RequireRole(UserRoles.Doctor));
+
+        group.MapGet("/", GetSessions)
+            .WithName("GetSessions")
+            .WithDescription("List recent sessions for the authenticated doctor")
+            .Produces<List<SessionSummaryResponse>>();
 
         group.MapPost("/", StartSession)
             .WithName("StartSession")
@@ -48,6 +55,18 @@ public static class SessionApi
             .Produces<SuggestResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status429TooManyRequests);
+    }
+
+    private static async Task<IResult> GetSessions(
+        [FromServices] SessionService sessionService,
+        ClaimsPrincipal user,
+        CancellationToken cancellationToken)
+    {
+        var doctorId = user.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? throw new InvalidOperationException("User ID not found in claims");
+
+        var sessions = await sessionService.GetSessionsAsync(doctorId, limit: 10, cancellationToken);
+        return Results.Ok(sessions);
     }
 
     private static async Task<IResult> StartSession(
@@ -115,6 +134,7 @@ public static class SessionApi
         Guid id,
         [FromServices] SuggestionService suggestionService,
         [FromServices] SessionService sessionService,
+        [FromServices] IHubContext<SessionHub> hubContext,
         ClaimsPrincipal user,
         CancellationToken cancellationToken)
     {
@@ -132,6 +152,25 @@ public static class SessionApi
             id,
             source: "on_demand",
             cancellationToken);
+
+        // Broadcast each suggestion via SignalR so the UI updates immediately.
+        // Same payload shape as BatchTriggerService — clients listen to "SuggestionAdded".
+        foreach (var suggestion in suggestions)
+        {
+            await hubContext.Clients.Group(id.ToString()).SendAsync(
+                "SuggestionAdded",
+                new
+                {
+                    id = suggestion.Id,
+                    content = suggestion.Content,
+                    type = suggestion.Type,
+                    urgency = suggestion.Urgency,
+                    confidence = suggestion.Confidence,
+                    source = suggestion.Source,
+                    triggeredAt = suggestion.TriggeredAt
+                },
+                cancellationToken);
+        }
 
         var response = new SuggestResponse
         {
