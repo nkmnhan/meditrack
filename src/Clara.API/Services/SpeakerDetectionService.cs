@@ -39,8 +39,8 @@ public sealed class SpeakerDetectionService
         CancellationToken cancellationToken = default)
     {
         var lastLine = await _db.TranscriptLines
-            .Where(t => t.SessionId == sessionId)
-            .OrderByDescending(t => t.Timestamp)
+            .Where(line => line.SessionId == sessionId)
+            .OrderByDescending(line => line.Timestamp)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (lastLine is null)
@@ -72,28 +72,5 @@ public sealed class SpeakerDetectionService
             sessionId, timeSinceLastLine.TotalSeconds, lastLine.Speaker);
 
         return lastLine.Speaker;
-    }
-
-    /// <summary>
-    /// Synchronous version for use in SignalR hub (avoids async in simple cases).
-    /// Prefer InferSpeakerAsync when possible.
-    /// </summary>
-    public string InferSpeaker(Guid sessionId)
-    {
-        var lastLine = _db.TranscriptLines
-            .Where(t => t.SessionId == sessionId)
-            .OrderByDescending(t => t.Timestamp)
-            .FirstOrDefault();
-
-        if (lastLine is null)
-        {
-            return SpeakerRole.Doctor;
-        }
-
-        var timeSinceLastLine = DateTimeOffset.UtcNow - lastLine.Timestamp;
-
-        return timeSinceLastLine.TotalSeconds > SpeakerChangeGapSeconds
-            ? (lastLine.Speaker == SpeakerRole.Doctor ? SpeakerRole.Patient : SpeakerRole.Doctor)
-            : lastLine.Speaker;
     }
 }

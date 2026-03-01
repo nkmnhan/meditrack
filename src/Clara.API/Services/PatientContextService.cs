@@ -105,7 +105,7 @@ public sealed class PatientContextService
             return null;
         }
 
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var age = today.Year - dateOfBirth.Value.Year;
         if (dateOfBirth.Value.AddYears(age) > today)
             age--;

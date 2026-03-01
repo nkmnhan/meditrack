@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import { getOidcAccessToken } from "@/shared/auth/getOidcAccessToken";
 import type {
@@ -149,23 +149,25 @@ export function useSession({
   /**
    * Send audio chunk to the server for transcription.
    * Converts ArrayBuffer to base64 — hub method StreamAudioChunk expects string audioBase64.
+   * Uses chunked String.fromCharCode to avoid O(N²) string concatenation on large buffers.
    */
-  const sendAudioChunk = useCallback(async (audioData: ArrayBuffer) => {
+  async function sendAudioChunk(audioData: ArrayBuffer): Promise<void> {
     const connection = connectionRef.current;
     if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
       throw new Error("Not connected to session hub");
     }
 
-    // Convert ArrayBuffer → base64 string (hub expects string, not binary)
+    // Convert ArrayBuffer → base64 string in 32KB chunks to avoid call stack overflow
     const bytes = new Uint8Array(audioData);
-    let binary = "";
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
+    const chunkSize = 0x8000;
+    const parts: string[] = [];
+    for (let offset = 0; offset < bytes.byteLength; offset += chunkSize) {
+      parts.push(String.fromCharCode(...bytes.subarray(offset, offset + chunkSize)));
     }
-    const base64Audio = btoa(binary);
+    const base64Audio = btoa(parts.join(""));
 
     await connection.invoke("StreamAudioChunk", sessionIdRef.current, base64Audio);
-  }, []);
+  }
 
   return {
     connectionStatus,

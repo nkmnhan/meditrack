@@ -108,7 +108,7 @@ public class DevController : ControllerBase
             // Broadcast via SignalR to connected clients
             await _hubContext.Clients
                 .Group(sessionId.ToString())
-                .SendAsync("TranscriptLineAdded", new
+                .SendAsync(SignalREvents.TranscriptLineAdded, new
                 {
                     id = transcriptLine.Id,
                     speaker = transcriptLine.Speaker,
@@ -150,7 +150,7 @@ public class DevController : ControllerBase
 
         var suggestions = await _suggestionService.GenerateSuggestionsAsync(
             sessionId,
-            source: "dev_force",
+            source: SuggestionSources.DevForce,
             cancellationToken);
 
         // Broadcast via SignalR
@@ -158,7 +158,7 @@ public class DevController : ControllerBase
         {
             await _hubContext.Clients
                 .Group(sessionId.ToString())
-                .SendAsync("SuggestionAdded", new
+                .SendAsync(SignalREvents.SuggestionAdded, new
                 {
                     id = suggestion.Id,
                     content = suggestion.Content,
@@ -292,7 +292,16 @@ public class DevController : ControllerBase
 
     private async Task<TestScenario?> LoadScenarioAsync(string scenario, CancellationToken cancellationToken)
     {
-        var filePath = Path.Combine(GetConversationsPath(), $"{scenario}.json");
+        var conversationsPath = GetConversationsPath();
+
+        // Prevent path traversal — resolve full path and confirm it stays inside conversations directory
+        var filePath = Path.GetFullPath(Path.Combine(conversationsPath, $"{scenario}.json"));
+        if (!filePath.StartsWith(Path.GetFullPath(conversationsPath) + Path.DirectorySeparatorChar,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogWarning("Path traversal attempt detected for scenario '{Scenario}'", scenario);
+            return null;
+        }
 
         if (!System.IO.File.Exists(filePath))
         {

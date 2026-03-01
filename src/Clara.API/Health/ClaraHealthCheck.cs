@@ -12,11 +12,16 @@ public sealed class ClaraHealthCheck : IHealthCheck
 {
     private readonly ClaraDbContext _db;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ILogger<ClaraHealthCheck> _logger;
 
-    public ClaraHealthCheck(ClaraDbContext db, IHttpClientFactory httpClientFactory)
+    public ClaraHealthCheck(
+        ClaraDbContext db,
+        IHttpClientFactory httpClientFactory,
+        ILogger<ClaraHealthCheck> logger)
     {
         _db = db;
         _httpClientFactory = httpClientFactory;
+        _logger = logger;
     }
 
     public async Task<HealthCheckResult> CheckHealthAsync(
@@ -57,8 +62,9 @@ public sealed class ClaraHealthCheck : IHealthCheck
             var deepgramResponse = await deepgramClient.SendAsync(deepgramRequest, cancellationToken);
             data["deepgram"] = deepgramResponse.IsSuccessStatusCode ? "reachable" : "degraded";
         }
-        catch
+        catch (Exception exception)
         {
+            _logger.LogWarning(exception, "Deepgram health check failed");
             data["deepgram"] = "unreachable";
         }
 
@@ -70,8 +76,9 @@ public sealed class ClaraHealthCheck : IHealthCheck
             var openAiResponse = await openAiClient.GetAsync("v1/models", cancellationToken);
             data["openai"] = openAiResponse.IsSuccessStatusCode ? "reachable" : "degraded";
         }
-        catch
+        catch (Exception exception)
         {
+            _logger.LogWarning(exception, "OpenAI health check failed");
             data["openai"] = "unreachable";
         }
 

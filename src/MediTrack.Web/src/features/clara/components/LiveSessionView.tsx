@@ -164,14 +164,14 @@ export function LiveSessionView() {
             <Clock className="w-4 h-4 text-neutral-500" />
             <span className="font-mono text-sm font-medium">{formattedTimer}</span>
           </div>
-          <div className="hidden md:flex items-center gap-1 text-accent-500">
+          <div className="hidden md:flex items-center gap-1 text-accent-700">
             <Sparkles className="w-4 h-4" />
             <span className="text-xs font-medium">Clara</span>
           </div>
           <button
             type="button"
             onClick={handleEndSession}
-            className="h-9 px-3 rounded-lg border border-error-500 text-error-600 text-sm font-medium hover:bg-error-50 transition-colors inline-flex items-center gap-1.5"
+            className="h-10 px-3 rounded-lg border border-error-500 text-error-600 text-sm font-medium hover:bg-error-50 transition-colors inline-flex items-center gap-1.5"
           >
             <Square className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">End Session</span>
@@ -301,7 +301,7 @@ export function LiveSessionView() {
         </button>
 
         {isRecording ? (
-          <span className="text-xs text-accent-500 font-medium w-16">Listening...</span>
+          <span className="text-xs text-accent-700 font-medium w-16">Listening...</span>
         ) : (
           <span className="w-16" />
         )}

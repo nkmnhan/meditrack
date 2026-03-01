@@ -48,7 +48,7 @@ public sealed class SessionHub : Hub
             "Client {ConnectionId} joined session {SessionId}",
             Context.ConnectionId, sessionId);
 
-        await Clients.Caller.SendAsync("SessionJoined", sessionId);
+        await Clients.Caller.SendAsync(SignalREvents.SessionJoined, sessionId);
 
         // Hydrate the caller with current session state so useSession() receives non-null data
         if (!Guid.TryParse(sessionId, out var sessionGuid))
@@ -100,7 +100,7 @@ public sealed class SessionHub : Hub
                 .ToList()
         };
 
-        await Clients.Caller.SendAsync("SessionUpdated", sessionResponse);
+        await Clients.Caller.SendAsync(SignalREvents.SessionUpdated, sessionResponse);
     }
 
     /// <summary>
@@ -114,7 +114,7 @@ public sealed class SessionHub : Hub
             "Client {ConnectionId} left session {SessionId}",
             Context.ConnectionId, sessionId);
 
-        await Clients.Caller.SendAsync("SessionLeft", sessionId);
+        await Clients.Caller.SendAsync(SignalREvents.SessionLeft, sessionId);
     }
 
     /// <summary>
@@ -195,13 +195,13 @@ public sealed class SessionHub : Hub
         catch (FormatException exception)
         {
             _logger.LogWarning(exception, "Invalid base64 audio for session {SessionId}", sessionId);
-            await Clients.Caller.SendAsync("SttError", "Invalid audio format");
+            await Clients.Caller.SendAsync(SignalREvents.SttError, "Invalid audio format");
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "STT failed for session {SessionId}", sessionId);
             // Don't crash the SignalR connection — STT failure is recoverable
-            await Clients.Caller.SendAsync("SttError", "Transcription temporarily unavailable");
+            await Clients.Caller.SendAsync(SignalREvents.SttError, "Transcription temporarily unavailable");
         }
     }
 
@@ -210,7 +210,7 @@ public sealed class SessionHub : Hub
     /// </summary>
     public async Task BroadcastSuggestion(string sessionId, SuggestionResponse suggestion)
     {
-        await Clients.Group(sessionId).SendAsync("SuggestionAdded", suggestion);
+        await Clients.Group(sessionId).SendAsync(SignalREvents.SuggestionAdded, suggestion);
 
         _logger.LogInformation(
             "Suggestion {SuggestionId} broadcast to session {SessionId}",
@@ -228,7 +228,7 @@ public sealed class SessionHub : Hub
             Confidence = line.Confidence
         };
 
-        await Clients.Group(sessionId).SendAsync("TranscriptLineAdded", response);
+        await Clients.Group(sessionId).SendAsync(SignalREvents.TranscriptLineAdded, response);
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)

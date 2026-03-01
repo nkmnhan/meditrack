@@ -150,15 +150,14 @@ public static class SessionApi
 
         var suggestions = await suggestionService.GenerateSuggestionsAsync(
             id,
-            source: "on_demand",
+            source: SuggestionSources.OnDemand,
             cancellationToken);
 
         // Broadcast each suggestion via SignalR so the UI updates immediately.
-        // Same payload shape as BatchTriggerService — clients listen to "SuggestionAdded".
         foreach (var suggestion in suggestions)
         {
             await hubContext.Clients.Group(id.ToString()).SendAsync(
-                "SuggestionAdded",
+                SignalREvents.SuggestionAdded,
                 new
                 {
                     id = suggestion.Id,

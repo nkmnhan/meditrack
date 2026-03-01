@@ -1,4 +1,5 @@
 using Clara.API.Services;
+using FluentValidation;
 using MediTrack.Shared.Common;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,18 +25,15 @@ public static class KnowledgeApi
 
     private static async Task<IResult> SearchKnowledge(
         [FromBody] KnowledgeSearchRequest request,
+        [FromServices] IValidator<KnowledgeSearchRequest> validator,
         [FromServices] KnowledgeService knowledgeService,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.Query))
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
+        if (!validationResult.IsValid)
         {
-            return Results.BadRequest(new { message = "Query is required" });
+            return Results.ValidationProblem(validationResult.ToDictionary());
         }
-
-        if (request.TopK is <= 0 or > 10)
-            return Results.BadRequest(new { error = "topK must be between 1 and 10" });
-        if (request.MinScore is <= 0 or > 1)
-            return Results.BadRequest(new { error = "minScore must be between 0 and 1" });
 
         var topK = request.TopK;
         var minScore = request.MinScore;

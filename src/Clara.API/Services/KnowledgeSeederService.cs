@@ -114,24 +114,21 @@ public sealed class KnowledgeSeederService
 
         db.Documents.Add(document);
 
-        // Generate embeddings for all chunks
-        var knowledgeChunks = new List<KnowledgeChunk>();
-        
+        // Generate embeddings for all chunks in a single batched API call
+        var allEmbeddings = await _embeddingGenerator.GenerateAsync(chunks);
+
+        var knowledgeChunks = new List<KnowledgeChunk>(chunks.Count);
+
         for (int chunkIndex = 0; chunkIndex < chunks.Count; chunkIndex++)
         {
-            var chunkContent = chunks[chunkIndex];
-            
-            // Generate embedding using M.E.AI abstraction
-            // GenerateAsync returns GeneratedEmbeddings<Embedding<float>> (a collection)
-            var embeddingResult = await _embeddingGenerator.GenerateAsync([chunkContent]);
-            var embeddingVector = embeddingResult[0].Vector;
-            
+            var embeddingVector = allEmbeddings[chunkIndex].Vector;
+
             var knowledgeChunk = new KnowledgeChunk
             {
                 Id = Guid.NewGuid(),
                 DocumentId = document.Id,
                 DocumentName = fileName,
-                Content = chunkContent,
+                Content = chunks[chunkIndex],
                 Embedding = new Vector(embeddingVector.ToArray()),
                 Category = category,
                 ChunkIndex = chunkIndex,

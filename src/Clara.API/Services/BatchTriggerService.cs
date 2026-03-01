@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Threading;
 using Clara.API.Domain;
 using Clara.API.Hubs;
 using Microsoft.AspNetCore.SignalR;
@@ -35,13 +36,14 @@ public sealed class BatchTriggerService : IDisposable
         // Only count patient utterances for auto-batch
         if (line.Speaker == SpeakerRole.Patient)
         {
-            var count = System.Threading.Interlocked.Increment(ref state.PatientUtteranceCount);
+            var count = Interlocked.Increment(ref state.PatientUtteranceCount);
 
             if (count >= 5)
             {
-                await TriggerBatchSuggestionAsync(sessionId, "patient_utterance_threshold");
-                System.Threading.Interlocked.Exchange(ref state.PatientUtteranceCount, 0);
+                // Reset counter and timer BEFORE triggering to prevent concurrent double-trigger
+                Interlocked.Exchange(ref state.PatientUtteranceCount, 0);
                 state.ResetTimer();
+                await TriggerBatchSuggestionAsync(sessionId, "patient_utterance_threshold");
             }
         }
     }
@@ -65,21 +67,23 @@ public sealed class BatchTriggerService : IDisposable
         return state;
     }
 
-    private async void OnTimerElapsed(string sessionId)
+    /// <summary>
+    /// Synchronous timer callback — fire-and-forgets the async work.
+    /// TriggerBatchSuggestionAsync handles its own exceptions so the discarded Task is safe.
+    /// </summary>
+    private void OnTimerElapsed(string sessionId)
     {
-        try
+        if (!_sessionStates.TryGetValue(sessionId, out var state) || state.PatientUtteranceCount == 0)
         {
-            if (_sessionStates.TryGetValue(sessionId, out var state) && state.PatientUtteranceCount > 0)
-            {
-                await TriggerBatchSuggestionAsync(sessionId, "time_threshold");
-                System.Threading.Interlocked.Exchange(ref state.PatientUtteranceCount, 0);
-                state.ResetTimer();
-            }
+            return;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "OnTimerElapsed failed for session {SessionId}", sessionId);
-        }
+
+        // Reset before firing to prevent concurrent timer re-entry from triggering again
+        Interlocked.Exchange(ref state.PatientUtteranceCount, 0);
+        state.ResetTimer();
+
+        // Fire-and-forget — all exceptions are caught inside TriggerBatchSuggestionAsync
+        _ = TriggerBatchSuggestionAsync(sessionId, "time_threshold");
     }
 
     private async Task TriggerBatchSuggestionAsync(string sessionId, string triggerReason)
@@ -102,7 +106,7 @@ public sealed class BatchTriggerService : IDisposable
 
             var suggestions = await suggestionService.GenerateSuggestionsAsync(
                 sessionGuid,
-                source: "batch",
+                source: SuggestionSources.Batch,
                 CancellationToken.None);
 
             // Broadcast suggestions to connected clients
@@ -110,7 +114,7 @@ public sealed class BatchTriggerService : IDisposable
             {
                 await hubContext.Clients
                     .Group(sessionId)
-                    .SendAsync("SuggestionAdded", new
+                    .SendAsync(SignalREvents.SuggestionAdded, new
                     {
                         id = suggestion.Id,
                         content = suggestion.Content,
@@ -192,4 +196,14 @@ public static class SpeakerRole
 {
     public const string Doctor = "Doctor";
     public const string Patient = "Patient";
+}
+
+/// <summary>
+/// Suggestion source constants — internal routing labels, not shown to users.
+/// </summary>
+public static class SuggestionSources
+{
+    public const string Batch = "batch";
+    public const string OnDemand = "on_demand";
+    public const string DevForce = "dev_force";
 }

@@ -73,7 +73,7 @@ export function TranscriptPanel({
       {/* Bottom bar — shown when recording */}
       {isRecording && (
         <div className="flex items-center gap-2 border-t border-neutral-200 px-4 py-2 flex-shrink-0">
-          <span className="text-sm text-accent-500 font-medium">Clara is listening...</span>
+          <span className="text-sm text-accent-700 font-medium">Clara is listening...</span>
         </div>
       )}
     </div>
@@ -110,8 +110,8 @@ function TranscriptLineItem({ line }: TranscriptLineItemProps) {
         <p className="text-sm text-neutral-700 leading-relaxed break-words">{line.text}</p>
         {line.confidence !== undefined && line.confidence < 0.8 && (
           <div className="flex items-center gap-1 mt-1">
-            <AlertTriangle className="w-3.5 h-3.5 text-warning-500 flex-shrink-0" />
-            <span className="text-xs text-warning-500 font-medium">Low confidence</span>
+            <AlertTriangle className="w-3.5 h-3.5 text-warning-600 flex-shrink-0" />
+            <span className="text-xs text-warning-600 font-medium">Low confidence</span>
           </div>
         )}
       </div>
