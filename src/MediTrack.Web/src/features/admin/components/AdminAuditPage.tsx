@@ -122,6 +122,7 @@ export function AdminAuditPage() {
           <div className="relative">
             <select
               value={actionFilter}
+              aria-label="Filter by action"
               onChange={(event) => {
                 setActionFilter(event.target.value);
                 setPageNumber(1);
@@ -143,6 +144,7 @@ export function AdminAuditPage() {
           <div className="relative">
             <select
               value={severityFilter}
+              aria-label="Filter by severity"
               onChange={(event) => {
                 setSeverityFilter(event.target.value);
                 setPageNumber(1);
@@ -158,7 +160,7 @@ export function AdminAuditPage() {
             <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
           </div>
 
-          <span className="text-sm text-neutral-500 sm:ml-auto">
+          <span className="text-sm text-neutral-500 sm:ml-auto" aria-live="polite">
             {totalCount} {totalCount === 1 ? "entry" : "entries"}
           </span>
         </div>
@@ -247,7 +249,7 @@ export function AdminAuditPage() {
                 disabled={!data?.hasPreviousPage}
                 onClick={() => setPageNumber((previousPage) => previousPage - 1)}
                 className={clsxMerge(
-                  "inline-flex h-8 w-8 items-center justify-center rounded-md border border-neutral-200 text-neutral-700 transition-colors",
+                  "inline-flex h-10 w-10 items-center justify-center rounded-md border border-neutral-200 text-neutral-700 transition-colors",
                   data?.hasPreviousPage ? "hover:bg-neutral-50" : "cursor-not-allowed opacity-50"
                 )}
               >
@@ -258,7 +260,7 @@ export function AdminAuditPage() {
                 disabled={!data?.hasNextPage}
                 onClick={() => setPageNumber((previousPage) => previousPage + 1)}
                 className={clsxMerge(
-                  "inline-flex h-8 w-8 items-center justify-center rounded-md border border-neutral-200 text-neutral-700 transition-colors",
+                  "inline-flex h-10 w-10 items-center justify-center rounded-md border border-neutral-200 text-neutral-700 transition-colors",
                   data?.hasNextPage ? "hover:bg-neutral-50" : "cursor-not-allowed opacity-50"
                 )}
               >

@@ -28,9 +28,15 @@ public interface IMedicalRecordRepository : IRepository<MedicalRecord>
     Task<MedicalRecord?> GetByIdReadOnlyAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets all medical records for a patient.
+    /// Gets all medical records for a patient with all related entities.
     /// </summary>
     Task<IReadOnlyList<MedicalRecord>> GetByPatientIdAsync(Guid patientId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets medical record summaries for a patient (root fields only, no child collections).
+    /// Use for list views where ClinicalNotes, Prescriptions, VitalSigns are not needed.
+    /// </summary>
+    Task<IReadOnlyList<MedicalRecord>> GetSummariesByPatientIdAsync(Guid patientId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets medical records by diagnosis code.

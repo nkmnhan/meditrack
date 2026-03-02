@@ -1,5 +1,6 @@
 using AutoMapper;
 using MediTrack.EventBus.Abstractions;
+using MediTrack.Shared.Common;
 using MediTrack.Shared.Events;
 using Microsoft.EntityFrameworkCore;
 using Patient.API.Dtos;
@@ -53,6 +54,35 @@ public class PatientService : IPatientService
             .ToListAsync(cancellationToken);
 
         return _mapper.Map<IReadOnlyList<PatientListItemResponse>>(patients);
+    }
+
+    public async Task<PagedResult<PatientListItemResponse>> GetAllPagedAsync(
+        bool includeInactive = false,
+        int pageNumber = 1,
+        int pageSize = 25,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.Patients.AsNoTracking();
+
+        if (!includeInactive)
+        {
+            query = query.Where(patient => patient.IsActive);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        pageNumber = Math.Max(1, pageNumber);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
+        var patients = await query
+            .OrderBy(patient => patient.LastName)
+            .ThenBy(patient => patient.FirstName)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        var items = _mapper.Map<IReadOnlyList<PatientListItemResponse>>(patients);
+        return PagedResult<PatientListItemResponse>.Create(items, totalCount, pageNumber, pageSize);
     }
 
     public async Task<IReadOnlyList<PatientListItemResponse>> SearchAsync(

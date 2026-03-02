@@ -63,6 +63,17 @@ public sealed class MedicalRecordRepository : IMedicalRecordRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<MedicalRecord>> GetSummariesByPatientIdAsync(
+        Guid patientId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.MedicalRecords
+            .AsNoTracking()
+            .Where(r => r.PatientId == patientId)
+            .OrderByDescending(r => r.RecordedAt)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<MedicalRecord>> GetByDiagnosisCodeAsync(
         string diagnosisCode,
         CancellationToken cancellationToken = default)

@@ -61,8 +61,9 @@ export function AdminUsersPage() {
     pageSize,
   });
 
-  const [deactivateUser] = useDeactivateUserMutation();
-  const [activateUser] = useActivateUserMutation();
+  const [deactivateUser, { isLoading: isDeactivating }] = useDeactivateUserMutation();
+  const [activateUser, { isLoading: isActivating }] = useActivateUserMutation();
+  const isToggling = isDeactivating || isActivating;
 
   const users = data?.items ?? [];
   const totalCount = data?.totalCount ?? 0;
@@ -130,6 +131,7 @@ export function AdminUsersPage() {
           <div className="relative">
             <select
               value={roleFilter}
+              aria-label="Filter by role"
               onChange={(event) => {
                 setRoleFilter(event.target.value);
                 setPageNumber(1);
@@ -150,6 +152,7 @@ export function AdminUsersPage() {
           <div className="relative">
             <select
               value={statusFilter}
+              aria-label="Filter by status"
               onChange={(event) => {
                 setStatusFilter(event.target.value);
                 setPageNumber(1);
@@ -163,7 +166,7 @@ export function AdminUsersPage() {
             <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
           </div>
 
-          <span className="text-sm text-neutral-500 sm:ml-auto">
+          <span className="text-sm text-neutral-500 sm:ml-auto" aria-live="polite">
             {totalCount} {totalCount === 1 ? "user" : "users"}
           </span>
         </div>
@@ -236,16 +239,24 @@ export function AdminUsersPage() {
                         <div className="flex items-center justify-end gap-1">
                           <button
                             type="button"
+                            disabled={isToggling}
                             aria-label={user.isActive ? `Deactivate ${fullName}` : `Activate ${fullName}`}
                             onClick={() => handleToggleStatus(user)}
                             className={clsxMerge(
-                              "flex h-8 w-8 items-center justify-center rounded-md transition-colors",
+                              "flex h-10 w-10 items-center justify-center rounded-md transition-colors",
+                              isToggling && "cursor-not-allowed opacity-50",
                               user.isActive
                                 ? "text-neutral-400 hover:bg-error-50 hover:text-error-600"
                                 : "text-neutral-400 hover:bg-success-50 hover:text-success-600"
                             )}
                           >
-                            {user.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+                            {isToggling ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : user.isActive ? (
+                              <UserX className="h-4 w-4" />
+                            ) : (
+                              <UserCheck className="h-4 w-4" />
+                            )}
                           </button>
                         </div>
                       </td>
@@ -274,16 +285,24 @@ export function AdminUsersPage() {
                         </div>
                         <button
                           type="button"
+                          disabled={isToggling}
                           aria-label={user.isActive ? `Deactivate ${fullName}` : `Activate ${fullName}`}
                           onClick={() => handleToggleStatus(user)}
                           className={clsxMerge(
-                            "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md transition-colors",
+                            "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md transition-colors",
+                            isToggling && "cursor-not-allowed opacity-50",
                             user.isActive
                               ? "text-neutral-400 hover:bg-error-50 hover:text-error-600"
                               : "text-neutral-400 hover:bg-success-50 hover:text-success-600"
                           )}
                         >
-                          {user.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+                          {isToggling ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : user.isActive ? (
+                            <UserX className="h-4 w-4" />
+                          ) : (
+                            <UserCheck className="h-4 w-4" />
+                          )}
                         </button>
                       </div>
                       <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -319,7 +338,7 @@ export function AdminUsersPage() {
                   disabled={!data?.hasPreviousPage}
                   onClick={() => setPageNumber((previousPage) => previousPage - 1)}
                   className={clsxMerge(
-                    "inline-flex h-8 w-8 items-center justify-center rounded-md border border-neutral-200 text-neutral-700 transition-colors",
+                    "inline-flex h-10 w-10 items-center justify-center rounded-md border border-neutral-200 text-neutral-700 transition-colors",
                     data?.hasPreviousPage ? "hover:bg-neutral-50" : "cursor-not-allowed opacity-50"
                   )}
                 >
@@ -330,7 +349,7 @@ export function AdminUsersPage() {
                   disabled={!data?.hasNextPage}
                   onClick={() => setPageNumber((previousPage) => previousPage + 1)}
                   className={clsxMerge(
-                    "inline-flex h-8 w-8 items-center justify-center rounded-md border border-neutral-200 text-neutral-700 transition-colors",
+                    "inline-flex h-10 w-10 items-center justify-center rounded-md border border-neutral-200 text-neutral-700 transition-colors",
                     data?.hasNextPage ? "hover:bg-neutral-50" : "cursor-not-allowed opacity-50"
                   )}
                 >

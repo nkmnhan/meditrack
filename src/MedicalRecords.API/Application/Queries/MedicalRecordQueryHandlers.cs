@@ -55,7 +55,7 @@ public sealed class GetMedicalRecordsByPatientIdQueryHandler
         GetMedicalRecordsByPatientIdQuery query,
         CancellationToken cancellationToken)
     {
-        var records = await _repository.GetByPatientIdAsync(query.PatientId, cancellationToken);
+        var records = await _repository.GetSummariesByPatientIdAsync(query.PatientId, cancellationToken);
 
         return _mapper.Map<List<MedicalRecordListItemResponse>>(records);
     }

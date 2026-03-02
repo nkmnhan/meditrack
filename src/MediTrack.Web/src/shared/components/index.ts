@@ -4,4 +4,5 @@ export { Calendar, CalendarEventTooltip, useCalendar, utcIsoToCalendarZdt, forma
 export type { CalendarEvent, CalendarApp } from "./Calendar";
 export { Layout } from "./Layout";
 export { NotFound } from "./NotFound";
+export { PageSkeleton } from "./PageSkeleton";
 export { ClaraPanelProvider, useClaraPanel, ClaraPanel, ClaraFab } from "./clara";

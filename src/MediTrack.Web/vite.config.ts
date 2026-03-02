@@ -20,6 +20,38 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
+  build: {
+    chunkSizeWarningLimit: 500,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (id.includes("react-dom") || id.includes("react-router-dom") || id.match(/\/react\//) || id.includes("react-redux")) {
+              return "vendor-react";
+            }
+            if (id.includes("@reduxjs/toolkit")) {
+              return "vendor-redux";
+            }
+            if (id.includes("@radix-ui") || id.includes("class-variance-authority") || id.includes("clsx") || id.includes("tailwind-merge")) {
+              return "vendor-ui";
+            }
+            if (id.includes("recharts")) {
+              return "vendor-charts";
+            }
+            if (id.includes("@schedule-x")) {
+              return "vendor-calendar";
+            }
+            if (id.includes("@microsoft/signalr")) {
+              return "vendor-signalr";
+            }
+            if (id.includes("oidc-client-ts") || id.includes("react-oidc-context")) {
+              return "vendor-auth";
+            }
+          }
+        },
+      },
+    },
+  },
   server: {
     port: parseInt(process.env.PORT || "3000"),
     https: httpsConfig,

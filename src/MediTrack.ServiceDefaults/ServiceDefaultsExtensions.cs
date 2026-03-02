@@ -13,12 +13,15 @@ public static class ServiceDefaultsExtensions
     {
         builder.Services.AddDefaultHealthChecks();
         builder.Services.AddDefaultOpenTelemetry(serviceName);
+        builder.Services.AddDefaultResponseCompression();
 
         return builder;
     }
 
     public static WebApplication MapDefaultEndpoints(this WebApplication app)
     {
+        app.UseResponseCompression();
+
         app.MapHealthChecks("/health", new HealthCheckOptions
         {
             Predicate = _ => true

@@ -1,3 +1,4 @@
+using MediTrack.Identity.Data;
 using MediTrack.Identity.Dtos;
 using MediTrack.Identity.Models;
 using MediTrack.Shared.Common;
@@ -48,6 +49,7 @@ public static class UsersApi
     private static async Task<IResult> GetUsers(
         [AsParameters] UserSearchQuery query,
         UserManager<ApplicationUser> userManager,
+        ApplicationDbContext dbContext,
         CancellationToken cancellationToken)
     {
         var usersQuery = userManager.Users.AsNoTracking();
@@ -72,46 +74,59 @@ public static class UsersApi
             }
         }
 
-        var totalCount = await usersQuery.CountAsync(cancellationToken);
+        // Single join query to get users with their roles (fixes N+1)
+        var usersWithRolesQuery = usersQuery
+            .GroupJoin(
+                dbContext.UserRoles,
+                user => user.Id,
+                userRole => userRole.UserId,
+                (user, userRoles) => new { User = user, UserRoles = userRoles })
+            .SelectMany(
+                joined => joined.UserRoles.DefaultIfEmpty(),
+                (joined, userRole) => new { joined.User, UserRoleId = (string?)userRole!.RoleId })
+            .GroupJoin(
+                dbContext.Roles,
+                joined => joined.UserRoleId,
+                role => role.Id,
+                (joined, roles) => new { joined.User, Roles = roles })
+            .SelectMany(
+                joined => joined.Roles.DefaultIfEmpty(),
+                (joined, role) => new { joined.User, RoleName = role != null ? role.Name : "Unknown" });
+
+        // Apply role filter at the SQL level
+        if (!string.IsNullOrWhiteSpace(query.Role))
+        {
+            usersWithRolesQuery = usersWithRolesQuery
+                .Where(joined => joined.RoleName == query.Role);
+        }
+
+        var totalCount = await usersWithRolesQuery
+            .Select(joined => joined.User.Id)
+            .Distinct()
+            .CountAsync(cancellationToken);
 
         var pageNumber = Math.Max(1, query.PageNumber);
         var pageSize = Math.Clamp(query.PageSize, 1, 100);
 
-        var users = await usersQuery
-            .OrderBy(user => user.LastName)
-            .ThenBy(user => user.FirstName)
+        var usersWithRoles = await usersWithRolesQuery
+            .OrderBy(joined => joined.User.LastName)
+            .ThenBy(joined => joined.User.FirstName)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
+            .Select(joined => new UserListItemResponse
+            {
+                Id = joined.User.Id,
+                FirstName = joined.User.FirstName,
+                LastName = joined.User.LastName,
+                Email = joined.User.Email ?? "",
+                Role = joined.RoleName ?? "Unknown",
+                IsActive = !joined.User.LockoutEnd.HasValue || joined.User.LockoutEnd <= DateTimeOffset.UtcNow,
+                LastLoginAt = joined.User.LastLoginAt,
+                CreatedAt = joined.User.LockoutEnd ?? DateTimeOffset.MinValue,
+            })
             .ToListAsync(cancellationToken);
 
-        var items = new List<UserListItemResponse>();
-        foreach (var user in users)
-        {
-            var roles = await userManager.GetRolesAsync(user);
-            var role = roles.FirstOrDefault() ?? "Unknown";
-
-            // Apply role filter in-memory since roles are stored in a separate table
-            if (!string.IsNullOrWhiteSpace(query.Role) && !role.Equals(query.Role, StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            var isActive = !user.LockoutEnd.HasValue || user.LockoutEnd <= DateTimeOffset.UtcNow;
-
-            items.Add(new UserListItemResponse
-            {
-                Id = user.Id,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Email = user.Email ?? "",
-                Role = role,
-                IsActive = isActive,
-                LastLoginAt = user.LastLoginAt,
-                CreatedAt = user.LockoutEnd ?? DateTimeOffset.MinValue, // No CreatedAt field; placeholder
-            });
-        }
-
-        var result = PagedResult<UserListItemResponse>.Create(items, totalCount, pageNumber, pageSize);
+        var result = PagedResult<UserListItemResponse>.Create(usersWithRoles, totalCount, pageNumber, pageSize);
         return Results.Ok(result);
     }
 

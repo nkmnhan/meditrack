@@ -144,7 +144,7 @@ function Pagination({
           onClick={onPrevious}
           disabled={currentPage === 1}
           className={clsxMerge(
-            "inline-flex h-9 items-center gap-1 rounded-md border border-neutral-200 px-3 text-sm font-medium text-neutral-700",
+            "inline-flex h-10 items-center gap-1 rounded-md border border-neutral-200 px-3 text-sm font-medium text-neutral-700",
             "transition-colors hover:bg-neutral-50",
             "disabled:cursor-not-allowed disabled:opacity-40"
           )}
@@ -157,7 +157,7 @@ function Pagination({
           onClick={onNext}
           disabled={currentPage === totalPages}
           className={clsxMerge(
-            "inline-flex h-9 items-center gap-1 rounded-md border border-neutral-200 px-3 text-sm font-medium text-neutral-700",
+            "inline-flex h-10 items-center gap-1 rounded-md border border-neutral-200 px-3 text-sm font-medium text-neutral-700",
             "transition-colors hover:bg-neutral-50",
             "disabled:cursor-not-allowed disabled:opacity-40"
           )}
@@ -254,6 +254,7 @@ export function PatientList() {
         <div className="relative">
           <select
             value={statusFilter}
+            aria-label="Filter by status"
             onChange={(event) => {
               setStatusFilter(event.target.value as "all" | "active" | "inactive");
               setCurrentPage(1);
@@ -266,7 +267,7 @@ export function PatientList() {
           </select>
           <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
         </div>
-        <p className="self-center whitespace-nowrap text-sm text-neutral-500">
+        <p className="self-center whitespace-nowrap text-sm text-neutral-500" aria-live="polite">
           Showing {totalItems} patients
         </p>
       </div>

@@ -19,8 +19,8 @@ public static class PatientsApi
 
         group.MapGet("/", GetAllPatients)
             .WithName("GetAllPatients")
-            .WithSummary("Get all patients")
-            .Produces<IReadOnlyList<PatientListItemResponse>>();
+            .WithSummary("Get all patients (paginated)")
+            .Produces<PagedResult<PatientListItemResponse>>();
 
         group.MapGet("/{id:guid}", GetPatientById)
             .WithName("GetPatientById")
@@ -75,6 +75,8 @@ public static class PatientsApi
 
     private static async Task<IResult> GetAllPatients(
         [FromQuery] bool includeInactive,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         ClaimsPrincipal user,
         IPatientService patientService,
         CancellationToken cancellationToken)
@@ -85,8 +87,11 @@ public static class PatientsApi
             return Results.Forbid();
         }
 
-        var patients = await patientService.GetAllAsync(includeInactive, cancellationToken);
-        return Results.Ok(patients);
+        var adjustedPageNumber = pageNumber < 1 ? 1 : pageNumber;
+        var adjustedPageSize = pageSize < 1 ? 25 : pageSize;
+
+        var result = await patientService.GetAllPagedAsync(includeInactive, adjustedPageNumber, adjustedPageSize, cancellationToken);
+        return Results.Ok(result);
     }
 
     private static async Task<IResult> GetPatientById(
