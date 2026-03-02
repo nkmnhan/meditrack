@@ -74,12 +74,12 @@ public static class PatientsApi
     }
 
     private static async Task<IResult> GetAllPatients(
-        [FromQuery] bool includeInactive,
-        [FromQuery] int pageNumber,
-        [FromQuery] int pageSize,
         ClaimsPrincipal user,
         IPatientService patientService,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        [FromQuery] bool includeInactive = false,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 25)
     {
         // IDOR protection: Only staff can enumerate all patients (A01)
         if (!UserRoles.Staff.Any(role => user.IsInRole(role)))

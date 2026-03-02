@@ -47,8 +47,9 @@ TestResult.xml
 nunit-*.xml
 *.VisualState.xml
 
-# EF Core migrations (keep Migrations/ folder, ignore snapshot diffs)
-*.Designer.cs
+# WinForms/WPF designer files (NOT EF Core migration designers — those must be tracked)
+*.designer.cs
+!**/Migrations/*.Designer.cs
 
 # User-specific files
 *.user

@@ -62,12 +62,14 @@ public sealed class AppointmentService : IAppointmentService
 
             if (query.FromDate.HasValue)
             {
-                queryable = queryable.Where(appointment => appointment.ScheduledDateTime >= query.FromDate.Value);
+                var fromDateUtc = DateTime.SpecifyKind(query.FromDate.Value, DateTimeKind.Utc);
+                queryable = queryable.Where(appointment => appointment.ScheduledDateTime >= fromDateUtc);
             }
 
             if (query.ToDate.HasValue)
             {
-                queryable = queryable.Where(appointment => appointment.ScheduledDateTime <= query.ToDate.Value);
+                var toDateUtc = DateTime.SpecifyKind(query.ToDate.Value, DateTimeKind.Utc);
+                queryable = queryable.Where(appointment => appointment.ScheduledDateTime <= toDateUtc);
             }
 
             if (query.Status.HasValue)
@@ -493,8 +495,8 @@ public sealed class AppointmentService : IAppointmentService
         CancellationToken cancellationToken = default)
     {
         var targetDate = query.Date?.Date ?? DateTime.UtcNow.Date;
-        var startOfDay = targetDate;
-        var endOfDay = targetDate.AddDays(1);
+        var startOfDay = DateTime.SpecifyKind(targetDate, DateTimeKind.Utc);
+        var endOfDay = startOfDay.AddDays(1);
 
         var baseQuery = _dbContext.Appointments.AsNoTracking();
 
@@ -520,7 +522,7 @@ public sealed class AppointmentService : IAppointmentService
             .CountAsync(cancellationToken);
 
         // Last 7 days counts for sparkline
-        var sevenDaysAgo = targetDate.AddDays(-6);
+        var sevenDaysAgo = startOfDay.AddDays(-6);
         var dailyCounts = await baseQuery
             .Where(appointment => appointment.ScheduledDateTime >= sevenDaysAgo
                 && appointment.ScheduledDateTime < endOfDay

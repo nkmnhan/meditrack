@@ -62,7 +62,7 @@ public static class SessionApi
         ClaimsPrincipal user,
         CancellationToken cancellationToken)
     {
-        var doctorId = user.FindFirstValue(ClaimTypes.NameIdentifier)
+        var doctorId = user.FindFirstValue(JwtClaims.Subject)
             ?? throw new InvalidOperationException("User ID not found in claims");
 
         var sessions = await sessionService.GetSessionsAsync(doctorId, limit: 10, cancellationToken);
@@ -82,7 +82,7 @@ public static class SessionApi
             return Results.ValidationProblem(validationResult.ToDictionary());
         }
 
-        var doctorId = user.FindFirstValue(ClaimTypes.NameIdentifier)
+        var doctorId = user.FindFirstValue(JwtClaims.Subject)
             ?? throw new InvalidOperationException("User ID not found in claims");
 
         var session = await sessionService.StartSessionAsync(doctorId, request, cancellationToken);
@@ -96,7 +96,7 @@ public static class SessionApi
         ClaimsPrincipal user,
         CancellationToken cancellationToken)
     {
-        var doctorId = user.FindFirstValue(ClaimTypes.NameIdentifier)
+        var doctorId = user.FindFirstValue(JwtClaims.Subject)
             ?? throw new InvalidOperationException("User ID not found in claims");
 
         var session = await sessionService.GetSessionAsync(id, doctorId, cancellationToken);
@@ -112,7 +112,7 @@ public static class SessionApi
         ClaimsPrincipal user,
         CancellationToken cancellationToken)
     {
-        var doctorId = user.FindFirstValue(ClaimTypes.NameIdentifier)
+        var doctorId = user.FindFirstValue(JwtClaims.Subject)
             ?? throw new InvalidOperationException("User ID not found in claims");
 
         try
@@ -138,7 +138,7 @@ public static class SessionApi
         ClaimsPrincipal user,
         CancellationToken cancellationToken)
     {
-        var doctorId = user.FindFirstValue(ClaimTypes.NameIdentifier)
+        var doctorId = user.FindFirstValue(JwtClaims.Subject)
             ?? throw new InvalidOperationException("User ID not found in claims");
 
         // Verify session exists and belongs to the doctor

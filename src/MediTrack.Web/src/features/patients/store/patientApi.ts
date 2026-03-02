@@ -15,12 +15,14 @@ export const patientApi = createApi({
   baseQuery: createBaseQueryWithReauth(`${PATIENT_API_URL}/api`),
   tagTypes: ["Patient"],
   endpoints: (builder) => ({
-    // Get all patients
+    // Get all patients (backend returns PagedResult, extract items array)
     getPatients: builder.query<PatientListItem[], { includeInactive?: boolean }>({
       query: ({ includeInactive = false }) => ({
         url: "/patients",
-        params: { includeInactive },
+        params: { includeInactive, pageSize: 200 },
       }),
+      transformResponse: (response: { items: PatientListItem[] } | PatientListItem[]) =>
+        Array.isArray(response) ? response : response.items,
       providesTags: (result) =>
         result
           ? [

@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 // Custom dev cert for all API projects — prevents browser cert warnings
@@ -5,28 +7,30 @@ var certPath = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, "..", "..
 var certKeyPath = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, "..", "..", "dev-certs", "certs", "localhost-key.pem"));
 
 // ──────────────────────────────────────────────────────
-// Infrastructure — ports pinned to match docker-compose
+// Infrastructure — ensure Docker Compose containers are running
 // ──────────────────────────────────────────────────────
-var postgres = builder.AddPostgres("postgres")
-    .WithImage("pgvector/pgvector", "pg17")
-    .WithEndpoint("tcp", e => e.Port = 5432)
-    .WithDataVolume()
-    .WithLifetime(ContainerLifetime.Persistent)
-    .WithPgAdmin();
-
-var identityDb = postgres.AddDatabase("IdentityDb");
-var patientDb = postgres.AddDatabase("PatientDb");
-var appointmentDb = postgres.AddDatabase("AppointmentDb");
-var medicalRecordsDb = postgres.AddDatabase("MedicalRecordsDb");
-var auditDb = postgres.AddDatabase("AuditDatabase");
-var claraDb = postgres.AddDatabase("ClaraDb");
-
-var rabbitmq = builder.AddRabbitMQ("rabbitmq")
-    .WithDataVolume()
-    .WithManagementPlugin()
-    .WithEndpoint("tcp", e => e.Port = 5672)
-    .WithEndpoint("management", e => e.Port = 15672)
-    .WithLifetime(ContainerLifetime.Persistent);
+var repoRoot = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, "..", ".."));
+var dockerCompose = Process.Start(new ProcessStartInfo
+{
+    FileName = "docker",
+    Arguments = "compose up -d postgres rabbitmq",
+    WorkingDirectory = repoRoot,
+    RedirectStandardOutput = true,
+    RedirectStandardError = true,
+    UseShellExecute = false,
+});
+dockerCompose?.WaitForExit();
+if (dockerCompose?.ExitCode != 0)
+{
+    Console.Error.WriteLine("Failed to start Docker Compose infrastructure. Is Docker Desktop running?");
+}
+var identityDb = builder.AddConnectionString("IdentityDb");
+var patientDb = builder.AddConnectionString("PatientDb");
+var appointmentDb = builder.AddConnectionString("AppointmentDb");
+var medicalRecordsDb = builder.AddConnectionString("MedicalRecordsDb");
+var auditDb = builder.AddConnectionString("AuditDatabase");
+var claraDb = builder.AddConnectionString("ClaraDb");
+var rabbitmq = builder.AddConnectionString("rabbitmq");
 
 // ──────────────────────────────────────────────────────
 // Backend services — HTTPS ports match docker-compose
@@ -36,9 +40,8 @@ var rabbitmq = builder.AddRabbitMQ("rabbitmq")
 // ──────────────────────────────────────────────────────
 var identityApi = builder.AddProject<Projects.Identity_API>("identity-api")
     .WithReference(identityDb)
-    .WaitFor(identityDb)
     .WithReference(rabbitmq)
-    .WaitFor(rabbitmq)
+    .WithEnvironment("IdentityUrl", "https://localhost:5001")
     .WithEnvironment("ServiceClientSecret", "service-secret-dev")
     .WithEnvironment("WebClientUrl", "https://localhost:3000")
     .WithEnvironment("Kestrel__Certificates__Default__Path", certPath)
@@ -46,9 +49,7 @@ var identityApi = builder.AddProject<Projects.Identity_API>("identity-api")
 
 var patientApi = builder.AddProject<Projects.Patient_API>("patient-api")
     .WithReference(patientDb)
-    .WaitFor(patientDb)
     .WithReference(rabbitmq)
-    .WaitFor(rabbitmq)
     .WithReference(identityApi)
     .WaitFor(identityApi)
     .WithEnvironment("IdentityUrl", identityApi.GetEndpoint("https"))
@@ -57,9 +58,7 @@ var patientApi = builder.AddProject<Projects.Patient_API>("patient-api")
 
 var appointmentApi = builder.AddProject<Projects.Appointment_API>("appointment-api")
     .WithReference(appointmentDb)
-    .WaitFor(appointmentDb)
     .WithReference(rabbitmq)
-    .WaitFor(rabbitmq)
     .WithReference(identityApi)
     .WaitFor(identityApi)
     .WithEnvironment("IdentityUrl", identityApi.GetEndpoint("https"))
@@ -68,9 +67,7 @@ var appointmentApi = builder.AddProject<Projects.Appointment_API>("appointment-a
 
 var medicalRecordsApi = builder.AddProject<Projects.MedicalRecords_API>("medicalrecords-api")
     .WithReference(medicalRecordsDb)
-    .WaitFor(medicalRecordsDb)
     .WithReference(rabbitmq)
-    .WaitFor(rabbitmq)
     .WithReference(identityApi)
     .WaitFor(identityApi)
     .WithEnvironment("IdentityUrl", identityApi.GetEndpoint("https"))
@@ -79,15 +76,11 @@ var medicalRecordsApi = builder.AddProject<Projects.MedicalRecords_API>("medical
 
 var notificationWorker = builder.AddProject<Projects.Notification_Worker>("notification-worker")
     .WithReference(auditDb)
-    .WaitFor(auditDb)
-    .WithReference(rabbitmq)
-    .WaitFor(rabbitmq);
+    .WithReference(rabbitmq);
 
 var claraApi = builder.AddProject<Projects.Clara_API>("clara-api")
     .WithReference(claraDb)
-    .WaitFor(claraDb)
     .WithReference(rabbitmq)
-    .WaitFor(rabbitmq)
     .WithReference(identityApi)
     .WaitFor(identityApi)
     .WithEnvironment("IdentityUrl", identityApi.GetEndpoint("https"))
