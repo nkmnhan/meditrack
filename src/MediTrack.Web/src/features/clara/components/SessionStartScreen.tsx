@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "react-oidc-context";
 import {
   Sparkles, Lightbulb, Mic, Search,
   Play, History, ChevronRight, FileText, Shield, Save,
@@ -45,11 +46,12 @@ const AVATAR_COLORS = [
 
 /* ── Helpers ────────────────────────────────────────────── */
 
-function getTimeGreeting(): string {
+function getTimeGreeting(displayName?: string): string {
   const hour = new Date().getHours();
-  if (hour < 12) return "Good morning. Ready to start your first session?";
-  if (hour < 18) return "Good afternoon. Clara is ready to assist your consultations.";
-  return "Good evening. Wrapping up? I can help with your session notes.";
+  const namePrefix = displayName ? `, ${displayName}` : "";
+  if (hour < 12) return `Good morning${namePrefix}. Ready to start your first session?`;
+  if (hour < 18) return `Good afternoon${namePrefix}. Clara is ready to assist your consultations.`;
+  return `Good evening${namePrefix}. Wrapping up? I can help with your session notes.`;
 }
 
 function getAvatarColor(id: string): string {
@@ -71,6 +73,10 @@ interface SessionStartScreenProps {
 
 export function SessionStartScreen({ className }: SessionStartScreenProps) {
   const navigate = useNavigate();
+  const auth = useAuth();
+  const displayName = auth.user?.profile?.name
+    ? `Dr. ${auth.user.profile.name.split(" ").pop()}`
+    : undefined;
   const [startSession, { isLoading, error }] = useStartSessionMutation();
   const { data: recentSessions = [] } = useGetSessionsQuery();
   const [triggerSearch, { data: searchResults = [], isFetching: isSearching }] =
@@ -111,7 +117,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
   const showDropdown = isDropdownOpen && patientSearchText.trim().length >= 2 && !selectedPatient;
 
   return (
-    <div className={clsxMerge("min-h-screen -mx-4 sm:-mx-6 lg:-mx-8 -mt-8 px-4 sm:px-6 lg:px-8 pt-4 pb-24 md:pb-8 bg-gradient-to-b from-neutral-50 to-accent-50/30", className)}>
+    <div className={clsxMerge("min-h-screen -mx-4 sm:-mx-6 lg:-mx-8 -mt-4 px-4 sm:px-6 lg:px-8 pt-4 pb-24 md:pb-8 bg-gradient-to-b from-neutral-50 to-accent-50/30", className)}>
 
       {/* ── Hero Section ──────────────────────────────────── */}
       <div className="text-center pt-6 md:pt-10 pb-6 max-w-2xl mx-auto">
@@ -131,7 +137,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
           Your AI Medical Secretary
         </p>
         <p className="text-lg text-neutral-700 mt-3">
-          {getTimeGreeting()}
+          {getTimeGreeting(displayName)}
         </p>
 
         {/* Daily stats bar */}
@@ -310,7 +316,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
             <CalendarDays className="h-4 w-4 text-neutral-500" />
             <h3 className="text-sm font-semibold text-neutral-900">Upcoming Appointments</h3>
           </div>
-          <a href="/appointments" className="text-xs text-accent-700 hover:underline">View all</a>
+          <Link to="/appointments" className="text-xs text-accent-700 hover:underline">View all</Link>
         </div>
         <div className="flex gap-3 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 md:flex-col snap-x snap-mandatory md:snap-none">
           {upcomingAppointments.map((appointment) => (

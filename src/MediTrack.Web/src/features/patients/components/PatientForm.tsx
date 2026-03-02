@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { Loader2, UserPlus, User, Phone, AlertCircle, Shield, ChevronDown } from "lucide-react";
+import { Loader2, UserPlus, User, Phone, AlertCircle, Shield, ChevronDown, Calendar } from "lucide-react";
 import {
   useGetPatientByIdQuery,
   useCreatePatientMutation,
@@ -349,14 +349,17 @@ export function PatientForm() {
               </div>
               <div>
                 <FormLabel htmlFor="dateOfBirth" isRequired>Date of Birth</FormLabel>
-                <input
-                  id="dateOfBirth"
-                  type="date"
-                  {...register("dateOfBirth")}
-                  max={maxDateOfBirth}
-                  autoComplete="bday"
-                  className={errors.dateOfBirth ? INPUT_ERROR : INPUT_NORMAL}
-                />
+                <div className="relative">
+                  <input
+                    id="dateOfBirth"
+                    type="date"
+                    {...register("dateOfBirth")}
+                    max={maxDateOfBirth}
+                    autoComplete="bday"
+                    className={errors.dateOfBirth ? INPUT_ERROR : INPUT_NORMAL}
+                  />
+                  <Calendar className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+                </div>
                 {errors.dateOfBirth && (
                   <p className="mt-1 text-xs text-error-500">{errors.dateOfBirth.message}</p>
                 )}

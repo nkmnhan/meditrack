@@ -1,4 +1,4 @@
-import { BarChart3, TrendingUp, TrendingDown, Users, Clock, FileCheck } from "lucide-react";
+import { BarChart3, TrendingUp, TrendingDown, Users, Clock, FileCheck, Sparkles } from "lucide-react";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
 import { Breadcrumb } from "@/shared/components";
 
@@ -64,18 +64,18 @@ const sessionVolumeByDay = [
 const maxSessions = Math.max(...sessionVolumeByDay.map((day) => day.sessions));
 
 const suggestionBreakdown = [
-  { category: "Medication", percentage: 44, color: "bg-primary-600" },
-  { category: "Guideline", percentage: 30, color: "bg-secondary-600" },
-  { category: "Recommendation", percentage: 18, color: "bg-accent-500" },
-  { category: "Urgent", percentage: 8, color: "bg-error-500" },
+  { category: "Medication", percentage: 44, count: 1842, color: "bg-primary-600" },
+  { category: "Guideline", percentage: 30, count: 1256, color: "bg-secondary-600" },
+  { category: "Recommendation", percentage: 18, count: 753, color: "bg-accent-500" },
+  { category: "Urgent", percentage: 8, count: 335, color: "bg-error-500" },
 ];
 
 const providerLeaderboard = [
-  { rank: 1, name: "Dr. Nguyen", initials: "TN", specialty: "Internal Medicine", sessions: 412, saveRate: 94, avatarBg: "bg-primary-100 text-primary-700" },
-  { rank: 2, name: "Dr. Lee", initials: "JL", specialty: "Cardiology", sessions: 387, saveRate: 91, avatarBg: "bg-secondary-100 text-secondary-700" },
-  { rank: 3, name: "Dr. Smith", initials: "AS", specialty: "Family Medicine", sessions: 356, saveRate: 89, avatarBg: "bg-accent-100 text-accent-700" },
-  { rank: 4, name: "Dr. Kim", initials: "SK", specialty: "Pediatrics", sessions: 334, saveRate: 87, avatarBg: "bg-warning-100 text-warning-700" },
-  { rank: 5, name: "Dr. Patel", initials: "RP", specialty: "Neurology", sessions: 298, saveRate: 85, avatarBg: "bg-info-100 text-info-700" },
+  { rank: 1, name: "Dr. Nguyen", initials: "TN", specialty: "Internal Medicine", sessions: 412, draftsSaved: 387, saveRate: 94, avgLength: "22m", avatarBg: "bg-primary-100 text-primary-700" },
+  { rank: 2, name: "Dr. Lee", initials: "JL", specialty: "Cardiology", sessions: 387, draftsSaved: 352, saveRate: 91, avgLength: "19m", avatarBg: "bg-secondary-100 text-secondary-700" },
+  { rank: 3, name: "Dr. Smith", initials: "AS", specialty: "Family Medicine", sessions: 356, draftsSaved: 317, saveRate: 89, avgLength: "17m", avatarBg: "bg-accent-100 text-accent-700" },
+  { rank: 4, name: "Dr. Kim", initials: "SK", specialty: "Pediatrics", sessions: 334, draftsSaved: 291, saveRate: 87, avgLength: "15m", avatarBg: "bg-warning-100 text-warning-700" },
+  { rank: 5, name: "Dr. Patel", initials: "RP", specialty: "Neurology", sessions: 298, draftsSaved: 253, saveRate: 85, avgLength: "21m", avatarBg: "bg-info-100 text-info-700" },
 ];
 
 /* ── Component ── */
@@ -123,7 +123,7 @@ export function AdminReportsPage() {
                 {card.trend}
               </div>
             </div>
-            <p className="text-2xl font-bold text-neutral-900">{card.value}</p>
+            <p className="text-3xl font-bold text-neutral-900">{card.value}</p>
             <p className="mt-1 text-sm text-neutral-500">{card.title}</p>
           </div>
         ))}
@@ -132,38 +132,61 @@ export function AdminReportsPage() {
       {/* Session Volume + Suggestion Breakdown */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
         {/* Session Volume Bar Chart */}
-        <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm lg:col-span-2">
-          <h2 className="mb-4 text-lg font-semibold text-neutral-900">Session Volume</h2>
-          <div className="flex items-end justify-between gap-2 sm:gap-4" style={{ height: "200px" }}>
-            {sessionVolumeByDay.map((day) => {
-              const heightPercentage = (day.sessions / maxSessions) * 100;
-              return (
-                <div key={day.day} className="flex flex-1 flex-col items-center gap-2">
-                  <span className="text-xs font-medium text-neutral-700">{day.sessions}</span>
-                  <div className="w-full max-w-[48px]" style={{ height: "160px" }}>
-                    <div className="flex h-full items-end">
-                      <div
-                        className="w-full rounded-t-md bg-primary-600 transition-all duration-300 hover:bg-primary-700"
-                        style={{ height: `${heightPercentage}%` }}
-                      />
+        <div className="rounded-lg border border-neutral-200 bg-white shadow-sm lg:col-span-2">
+          <div className="flex items-center gap-2 border-b border-neutral-200 px-6 pb-3 pt-5">
+            <BarChart3 className="h-5 w-5 text-primary-700" />
+            <div>
+              <h2 className="font-semibold text-neutral-900">Session Volume</h2>
+              <p className="text-xs text-neutral-500">Last 7 days</p>
+            </div>
+          </div>
+          <div className="p-5">
+            <div className="flex items-end justify-between gap-2 sm:gap-4" style={{ height: "200px" }}>
+              {sessionVolumeByDay.map((day) => {
+                const heightPercentage = (day.sessions / maxSessions) * 100;
+                return (
+                  <div key={day.day} className="flex flex-1 flex-col items-center gap-2">
+                    <span className="text-xs font-medium text-neutral-700">{day.sessions}</span>
+                    <div className="w-full max-w-[48px]" style={{ height: "160px" }}>
+                      <div className="flex h-full items-end">
+                        <div
+                          className="w-full rounded-t-md bg-primary-600 transition-all duration-300 hover:bg-primary-700"
+                          style={{ height: `${heightPercentage}%` }}
+                        />
+                      </div>
                     </div>
+                    <span className="text-xs text-neutral-500">{day.day}</span>
                   </div>
-                  <span className="text-xs text-neutral-500">{day.day}</span>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+          </div>
+          <div className="flex items-center justify-around border-t border-neutral-200 px-5 py-3 text-xs text-neutral-500">
+            <span>{sessionVolumeByDay.reduce((sum, day) => sum + day.sessions, 0).toLocaleString()} total</span>
+            <div className="h-3 w-px bg-neutral-200" />
+            <span>{Math.round(sessionVolumeByDay.reduce((sum, day) => sum + day.sessions, 0) / 7)} avg/day</span>
+            <div className="h-3 w-px bg-neutral-200" />
+            <span>{maxSessions} peak ({sessionVolumeByDay.find((day) => day.sessions === maxSessions)?.day})</span>
           </div>
         </div>
 
         {/* Suggestion Breakdown */}
-        <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-neutral-900">Suggestion Breakdown</h2>
-          <div className="space-y-4">
+        <div className="rounded-lg border border-neutral-200 bg-white shadow-sm">
+          <div className="flex items-center gap-2 border-b border-neutral-200 px-6 pb-3 pt-5">
+            <Sparkles className="h-5 w-5 text-accent-500" />
+            <div>
+              <h2 className="font-semibold text-neutral-900">Suggestion Breakdown</h2>
+              <p className="text-xs text-neutral-500">By Clara suggestion type</p>
+            </div>
+          </div>
+          <div className="space-y-4 p-5">
             {suggestionBreakdown.map((item) => (
               <div key={item.category}>
                 <div className="mb-1 flex items-center justify-between">
                   <span className="text-sm font-medium text-neutral-700">{item.category}</span>
-                  <span className="text-sm font-semibold text-neutral-900">{item.percentage}%</span>
+                  <span className="text-sm font-semibold text-neutral-900">
+                    {item.count.toLocaleString()} &middot; {item.percentage}%
+                  </span>
                 </div>
                 <div className="h-2.5 w-full overflow-hidden rounded-full bg-neutral-100">
                   <div
@@ -179,21 +202,26 @@ export function AdminReportsPage() {
 
       {/* Provider Leaderboard */}
       <div className="rounded-lg border border-neutral-200 bg-white shadow-sm">
-        <div className="border-b border-neutral-200 p-5 pb-3">
-          <h2 className="text-lg font-semibold text-neutral-900">Provider Leaderboard</h2>
-          <p className="mt-0.5 text-sm text-neutral-500">Top providers by session volume and save rate</p>
+        <div className="flex items-center gap-2 border-b border-neutral-200 px-5 pb-3 pt-5">
+          <Users className="h-5 w-5 text-primary-700" />
+          <div>
+            <h2 className="font-semibold text-neutral-900">Top Providers by Clara Usage</h2>
+            <p className="mt-0.5 text-xs text-neutral-500">Session volume and save rate</p>
+          </div>
         </div>
 
         {/* Desktop table */}
         <div className="hidden md:block">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-neutral-200 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
-                <th className="px-5 py-3">Rank</th>
+              <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+                <th className="px-5 py-3">#</th>
                 <th className="px-5 py-3">Provider</th>
                 <th className="px-5 py-3">Specialty</th>
                 <th className="px-5 py-3 text-right">Sessions</th>
+                <th className="px-5 py-3 text-right">Drafts Saved</th>
                 <th className="px-5 py-3 text-right">Save Rate</th>
+                <th className="px-5 py-3 text-right">Avg Length</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200">
@@ -219,6 +247,7 @@ export function AdminReportsPage() {
                   </td>
                   <td className="px-5 py-3 text-sm text-neutral-600">{provider.specialty}</td>
                   <td className="px-5 py-3 text-right text-sm font-medium text-neutral-900">{provider.sessions}</td>
+                  <td className="px-5 py-3 text-right text-sm text-neutral-600">{provider.draftsSaved}</td>
                   <td className="px-5 py-3 text-right">
                     <span className={clsxMerge(
                       "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
@@ -229,6 +258,7 @@ export function AdminReportsPage() {
                       {provider.saveRate}%
                     </span>
                   </td>
+                  <td className="px-5 py-3 text-right text-sm text-neutral-600">{provider.avgLength}</td>
                 </tr>
               ))}
             </tbody>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { UserCog, Search, ChevronDown, Pencil, Trash2, Plus } from "lucide-react";
+import { UserCog, Search, ChevronDown, Pencil, Trash2, UserPlus } from "lucide-react";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
 import { Breadcrumb } from "@/shared/components";
 
@@ -41,16 +41,16 @@ const mockUsers: MockUser[] = [
 ];
 
 const ROLE_BADGE_STYLES: Record<UserRole, string> = {
-  Doctor: "bg-primary-100 text-primary-700",
-  Admin: "bg-accent-100 text-accent-700",
-  Nurse: "bg-secondary-100 text-secondary-700",
-  Receptionist: "bg-neutral-100 text-neutral-600",
+  Doctor: "border border-primary-200 bg-primary-100 text-primary-700",
+  Admin: "border border-accent-200 bg-accent-100 text-accent-700",
+  Nurse: "border border-secondary-200 bg-secondary-100 text-secondary-700",
+  Receptionist: "border border-neutral-200 bg-neutral-100 text-neutral-600",
 };
 
 const STATUS_BADGE_STYLES: Record<UserStatus, string> = {
-  Active: "bg-success-50 text-success-700",
-  Inactive: "bg-neutral-100 text-neutral-600",
-  Pending: "bg-warning-50 text-warning-700",
+  Active: "border border-success-500/30 bg-success-50 text-success-700",
+  Inactive: "border border-neutral-200 bg-neutral-100 text-neutral-600",
+  Pending: "border border-warning-500/30 bg-warning-50 text-warning-700",
 };
 
 /* ── Component ── */
@@ -93,7 +93,7 @@ export function AdminUsersPage() {
             "transition-colors hover:bg-primary-800"
           )}
         >
-          <Plus className="h-4 w-4" />
+          <UserPlus className="h-4 w-4" />
           Invite User
         </button>
       </div>
@@ -158,7 +158,7 @@ export function AdminUsersPage() {
       <div className="hidden rounded-lg border border-neutral-200 bg-white shadow-sm md:block">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-neutral-200 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+            <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
               <th className="px-5 py-3">User</th>
               <th className="px-5 py-3">Role</th>
               <th className="px-5 py-3">Status</th>

@@ -1,6 +1,6 @@
 import {
   Activity, CheckCircle2, Brain, Users, FileText,
-  Clock, AlertTriangle, Info, CheckCircle,
+  Clock, AlertTriangle, Info, CheckCircle, Bell,
 } from "lucide-react";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
 import { Breadcrumb } from "@/shared/components";
@@ -16,43 +16,50 @@ const BREADCRUMB_ITEMS = [
 /* ── Mock data ── */
 
 const uptimeMetrics = [
-  { label: "Overall Uptime", value: "99.97%", icon: Activity, iconBg: "bg-success-50", iconColor: "text-success-600" },
-  { label: "Avg Response Time", value: "142ms", icon: Clock, iconBg: "bg-primary-50", iconColor: "text-primary-700" },
-  { label: "Active Sessions", value: "23", icon: Users, iconBg: "bg-secondary-50", iconColor: "text-secondary-700" },
-  { label: "Error Rate", value: "0.03%", icon: AlertTriangle, iconBg: "bg-warning-50", iconColor: "text-warning-600" },
+  { label: "Overall Uptime", value: "99.97%", sub: "Last 90 days", valueColor: "text-success-700" },
+  { label: "Avg Response", value: "142ms", sub: "API gateway", valueColor: "text-success-700" },
+  { label: "Active Sessions", value: "23", sub: "Right now", valueColor: "text-primary-700" },
+  { label: "Error Rate", value: "0.03%", sub: "Last 24 hours", valueColor: "text-success-700" },
 ];
 
 type ServiceStatus = "Operational" | "Degraded";
 
 interface ServiceInfo {
   readonly name: string;
+  readonly description: string;
   readonly icon: typeof Brain;
   readonly status: ServiceStatus;
   readonly uptime: string;
-  readonly responseTime: string;
+  readonly responseMs: number;
   readonly iconBg: string;
   readonly iconColor: string;
 }
 
 const services: ServiceInfo[] = [
-  { name: "Clara AI", icon: Brain, status: "Operational", uptime: "99.99%", responseTime: "89ms", iconBg: "bg-accent-50", iconColor: "text-accent-600" },
-  { name: "Patient API", icon: Users, status: "Operational", uptime: "99.98%", responseTime: "124ms", iconBg: "bg-primary-50", iconColor: "text-primary-700" },
-  { name: "Appointment Service", icon: Clock, status: "Operational", uptime: "99.97%", responseTime: "156ms", iconBg: "bg-secondary-50", iconColor: "text-secondary-700" },
-  { name: "Medical Records API", icon: FileText, status: "Degraded", uptime: "98.42%", responseTime: "342ms", iconBg: "bg-warning-50", iconColor: "text-warning-600" },
+  { name: "Clara AI Service", description: "MCP server + session orchestration", icon: Brain, status: "Operational", uptime: "99.99%", responseMs: 89, iconBg: "bg-accent-50", iconColor: "text-accent-600" },
+  { name: "Patient API", description: "Patient CRUD + demographics", icon: Users, status: "Operational", uptime: "99.98%", responseMs: 54, iconBg: "bg-primary-50", iconColor: "text-primary-700" },
+  { name: "Appointment Service", description: "Calendar + scheduling engine", icon: Clock, status: "Operational", uptime: "99.97%", responseMs: 71, iconBg: "bg-secondary-50", iconColor: "text-secondary-700" },
+  { name: "Medical Records API", description: "EHR read/write + FHIR bridge", icon: FileText, status: "Degraded", uptime: "98.21%", responseMs: 340, iconBg: "bg-warning-50", iconColor: "text-warning-600" },
 ];
 
 const SERVICE_STATUS_STYLES: Record<ServiceStatus, { dot: string; badge: string; label: string }> = {
   Operational: {
     dot: "bg-success-500",
-    badge: "bg-success-50 text-success-700",
+    badge: "border border-success-500/30 bg-success-50 text-success-700",
     label: "Operational",
   },
   Degraded: {
     dot: "bg-warning-500",
-    badge: "bg-warning-50 text-warning-700",
+    badge: "border border-warning-500/30 bg-warning-50 text-warning-700",
     label: "Degraded",
   },
 };
+
+function responseTimeColor(ms: number): string {
+  if (ms <= 100) return "text-success-700";
+  if (ms <= 200) return "text-warning-700";
+  return "text-error-700";
+}
 
 type AlertType = "warning" | "info" | "resolved";
 
@@ -102,10 +109,10 @@ const recentAlerts: AlertEntry[] = [
   },
 ];
 
-const ALERT_STYLES: Record<AlertType, { bar: string; icon: typeof AlertTriangle; iconColor: string }> = {
-  warning: { bar: "bg-warning-500", icon: AlertTriangle, iconColor: "text-warning-600" },
-  info: { bar: "bg-info-500", icon: Info, iconColor: "text-info-600" },
-  resolved: { bar: "bg-success-500", icon: CheckCircle, iconColor: "text-success-600" },
+const ALERT_STYLES: Record<AlertType, { bar: string; badge: string; icon: typeof AlertTriangle; iconColor: string }> = {
+  warning: { bar: "bg-warning-500", badge: "border border-warning-500/30 bg-warning-50 text-warning-700", icon: AlertTriangle, iconColor: "text-warning-600" },
+  info: { bar: "bg-info-500", badge: "border border-info-500/30 bg-info-50 text-info-700", icon: Info, iconColor: "text-info-600" },
+  resolved: { bar: "bg-success-500", badge: "border border-success-500/30 bg-success-50 text-success-700", icon: CheckCircle, iconColor: "text-success-600" },
 };
 
 /* ── Component ── */
@@ -136,66 +143,65 @@ export function AdminSystemPage() {
       </div>
 
       {/* Uptime Metrics */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {uptimeMetrics.map((metric) => (
-          <div key={metric.label} className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
-            <div className="mb-3 flex items-start justify-between">
-              <div className={clsxMerge("flex h-10 w-10 items-center justify-center rounded-lg", metric.iconBg)}>
-                <metric.icon className={clsxMerge("h-5 w-5", metric.iconColor)} />
-              </div>
-            </div>
-            <p className="text-2xl font-bold text-neutral-900">{metric.value}</p>
-            <p className="mt-1 text-sm text-neutral-500">{metric.label}</p>
+          <div key={metric.label} className="rounded-lg border border-neutral-200 bg-white p-5 text-center shadow-sm">
+            <p className={clsxMerge("text-3xl font-bold", metric.valueColor)}>{metric.value}</p>
+            <p className="mt-0.5 text-sm text-neutral-700">{metric.label}</p>
+            <p className="mt-0.5 text-xs text-neutral-500">{metric.sub}</p>
           </div>
         ))}
       </div>
 
       {/* Service Status Cards */}
-      <div>
-        <h2 className="mb-4 text-lg font-semibold text-neutral-900">Services</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {services.map((service) => {
-            const statusStyle = SERVICE_STATUS_STYLES[service.status];
-            return (
-              <div key={service.name} className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={clsxMerge("flex h-10 w-10 items-center justify-center rounded-lg", service.iconBg)}>
-                      <service.icon className={clsxMerge("h-5 w-5", service.iconColor)} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-neutral-900">{service.name}</p>
-                      <span className={clsxMerge("inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium", statusStyle.badge)}>
-                        {statusStyle.label}
-                      </span>
-                    </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {services.map((service) => {
+          const statusStyle = SERVICE_STATUS_STYLES[service.status];
+          return (
+            <div key={service.name} className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className={clsxMerge("flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg", service.iconBg)}>
+                    <service.icon className={clsxMerge("h-5 w-5", service.iconColor)} />
                   </div>
-                  <div className="relative flex h-3 w-3 flex-shrink-0">
-                    <span className={clsxMerge("absolute inline-flex h-full w-full animate-ping rounded-full opacity-75", statusStyle.dot)} />
-                    <span className={clsxMerge("relative inline-flex h-3 w-3 rounded-full", statusStyle.dot)} />
+                  <div>
+                    <p className="text-sm font-semibold text-neutral-900">{service.name}</p>
+                    <p className="mt-0.5 text-xs text-neutral-500">{service.description}</p>
                   </div>
                 </div>
-                <div className="mt-4 flex items-center justify-between border-t border-neutral-100 pt-3">
-                  <div>
-                    <p className="text-xs text-neutral-500">Uptime</p>
-                    <p className="text-sm font-semibold text-neutral-900">{service.uptime}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-neutral-500">Response Time</p>
-                    <p className="text-sm font-semibold text-neutral-900">{service.responseTime}</p>
-                  </div>
+                <span className={clsxMerge("inline-flex flex-shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium", statusStyle.badge)}>
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className={clsxMerge("absolute inline-flex h-full w-full animate-ping rounded-full opacity-75", statusStyle.dot)} />
+                    <span className={clsxMerge("relative inline-flex h-1.5 w-1.5 rounded-full", statusStyle.dot)} />
+                  </span>
+                  {statusStyle.label}
+                </span>
+              </div>
+              <div className="mt-4 flex gap-6 border-t border-neutral-200 pt-3">
+                <div>
+                  <p className="text-xs text-neutral-500">Uptime</p>
+                  <p className="mt-0.5 text-sm font-semibold text-neutral-900">{service.uptime}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-neutral-500">Response</p>
+                  <p className={clsxMerge("mt-0.5 text-sm font-semibold", responseTimeColor(service.responseMs))}>{service.responseMs}ms</p>
                 </div>
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Recent Alerts */}
       <div className="rounded-lg border border-neutral-200 bg-white shadow-sm">
-        <div className="border-b border-neutral-200 p-5 pb-3">
-          <h2 className="text-lg font-semibold text-neutral-900">Recent Alerts</h2>
-          <p className="mt-0.5 text-sm text-neutral-500">System events and notifications</p>
+        <div className="flex items-center gap-2 border-b border-neutral-200 px-6 pb-3 pt-5">
+          <Bell className="h-5 w-5 text-neutral-700" />
+          <h2 className="font-semibold text-neutral-900">Recent Alerts</h2>
+          {recentAlerts.filter((alert) => alert.type === "warning").length > 0 && (
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-warning-50 text-xs font-semibold text-warning-700">
+              {recentAlerts.filter((alert) => alert.type === "warning").length}
+            </span>
+          )}
         </div>
         <div className="divide-y divide-neutral-100">
           {recentAlerts.map((alert) => {

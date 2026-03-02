@@ -299,8 +299,8 @@ export function PatientDetail() {
           </div>
         </DetailCard>
 
-        {patient.emergencyContact && typeof patient.emergencyContact !== "string" && (
-          <DetailCard icon={AlertTriangle} title="Emergency Contact" accent="border-l-warning-500">
+        <DetailCard icon={AlertTriangle} title="Emergency Contact" accent="border-l-warning-500">
+          {patient.emergencyContact && typeof patient.emergencyContact !== "string" ? (
             <div className="space-y-3">
               <InfoField label="Name" value={patient.emergencyContact.name} />
               <InfoField label="Relationship" value={patient.emergencyContact.relationship} />
@@ -309,8 +309,10 @@ export function PatientDetail() {
                 <InfoField label="Email" value={patient.emergencyContact.email} />
               )}
             </div>
-          </DetailCard>
-        )}
+          ) : (
+            <p className="text-sm italic text-neutral-500">No emergency contact on file</p>
+          )}
+        </DetailCard>
 
         <DetailCard icon={Hash} title="Medical Record Number">
           <div className="flex items-center gap-3">
@@ -327,8 +329,8 @@ export function PatientDetail() {
           </div>
         </DetailCard>
 
-        {patient.insurance && typeof patient.insurance !== "string" && (
-          <DetailCard icon={Shield} title="Insurance Information">
+        <DetailCard icon={Shield} title="Insurance Information">
+          {patient.insurance && typeof patient.insurance !== "string" ? (
             <div className="space-y-3">
               <InfoField label="Provider" value={patient.insurance.provider} />
               <InfoField label="Policy Number" value={patient.insurance.policyNumber} />
@@ -337,8 +339,10 @@ export function PatientDetail() {
                 <InfoField label="Plan Name" value={patient.insurance.planName} />
               )}
             </div>
-          </DetailCard>
-        )}
+          ) : (
+            <p className="text-sm italic text-neutral-500">No insurance on file</p>
+          )}
+        </DetailCard>
 
         <DetailCard icon={Clock} title="Metadata">
           <div className="space-y-3">
