@@ -122,7 +122,7 @@ export function AppointmentDetailPage() {
         items={[
           { label: "Home", href: "/" },
           { label: "Appointments", href: "/appointments" },
-          { label: `Appointment ${appointment.id.slice(0, 8)}` },
+          { label: `${appointment.patientName} \u2014 ${appointment.type}` },
         ]}
       />
 
@@ -134,7 +134,11 @@ export function AppointmentDetailPage() {
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-bold text-neutral-900">{appointment.patientName}</h1>
+              <h1 className="text-xl font-bold text-neutral-900">{appointment.patientName}</h1>
+              <span className="inline-flex items-center gap-1 rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-mono text-xs text-neutral-500">
+                <Hash className="h-3 w-3" />
+                {appointment.patientId.slice(0, 8).toUpperCase()}
+              </span>
               <span className={clsxMerge("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", statusConfig.badge)}>
                 {appointment.status}
               </span>
@@ -157,7 +161,7 @@ export function AppointmentDetailPage() {
               onClick={handleStartClaraSession}
               disabled={isStartingSession}
               className={clsxMerge(
-                "relative inline-flex h-10 items-center justify-center gap-2 overflow-hidden rounded-lg px-4",
+                "relative inline-flex h-11 items-center justify-center gap-2 overflow-hidden rounded-xl px-6",
                 "bg-gradient-to-r from-accent-500 to-accent-700",
                 "text-sm font-medium text-white shadow-md",
                 "transition-all hover:shadow-lg disabled:opacity-50"

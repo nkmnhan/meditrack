@@ -246,6 +246,10 @@ export function LiveSessionView() {
           <TranscriptPanel
             lines={transcriptLines}
             isRecording={isRecording}
+            onToggleRecording={handleToggleRecording}
+            onAskClara={handleRequestSuggestions}
+            isConnected={isConnected}
+            isRequestingSuggestions={isRequestingSuggestions}
             className={clsxMerge(
               "lg:w-[60%] min-h-[65vh] lg:min-h-[calc(100dvh-12rem)]",
               activeTab !== "transcript" ? "hidden lg:flex" : ""

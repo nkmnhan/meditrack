@@ -7,6 +7,7 @@ import { CalendarToolbar } from "./CalendarToolbar";
 import { AppointmentCalendar } from "./AppointmentCalendar";
 import { AppointmentDetailPanel } from "./AppointmentDetailPanel";
 import { AppointmentForm } from "./AppointmentForm";
+import { Breadcrumb } from "@/shared/components";
 
 export function AppointmentCalendarPage() {
   const { hasAnyRole, hasRole } = useRoles();
@@ -93,6 +94,13 @@ export function AppointmentCalendarPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <Breadcrumb
+        items={[
+          { label: "Home", href: "/" },
+          { label: "Appointments" },
+        ]}
+      />
+
       {/* Toolbar */}
       <CalendarToolbar
         selectedProviderId={selectedProviderId}

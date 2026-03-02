@@ -1,16 +1,11 @@
 import { useState, useRef, useEffect } from "react";
-import { Badge } from "@/shared/components/ui/badge";
-import { Card, CardHeader, CardTitle, CardContent } from "@/shared/components/ui/card";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/shared/components/ui/table";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
-  FileText,
-  Calendar,
-  User,
+  Stethoscope,
   Activity,
+  StickyNote,
   Pill,
-  FileBarChart,
   Paperclip,
   ArrowLeft,
   MoreVertical,
@@ -18,8 +13,22 @@ import {
   Clock,
   Archive,
   Loader2,
+  Sparkles,
+  CalendarDays,
+  AlertTriangle,
+  Heart,
+  HeartPulse,
+  Thermometer,
+  Wind,
+  Scale,
+  Ruler,
+  Calculator,
+  FileImage,
+  FileText,
+  Download,
+  Plus,
 } from "lucide-react";
-import type { MedicalRecordResponse } from "../types";
+import type { MedicalRecordResponse, ClinicalNoteType } from "../types";
 import { RecordStatus } from "../types";
 import { SeverityBadge, StatusBadge, PrescriptionStatusBadge } from "./MedicalRecordBadges";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
@@ -31,12 +40,110 @@ import {
 import { useRoles } from "@/shared/auth/useRoles";
 import { UserRole } from "@/shared/auth/roles";
 
+/* ── Vital sign config ── */
+
+const VITAL_CONFIG: Record<string, { icon: React.ElementType; color: string }> = {
+  "Blood Pressure": { icon: Heart, color: "text-warning-500" },
+  "Heart Rate": { icon: HeartPulse, color: "text-success-500" },
+  "Temperature": { icon: Thermometer, color: "text-neutral-700" },
+  "Respiratory Rate": { icon: Wind, color: "text-success-500" },
+  "O2 Saturation": { icon: Wind, color: "text-success-500" },
+  "Weight": { icon: Scale, color: "text-neutral-700" },
+  "Height": { icon: Ruler, color: "text-neutral-700" },
+  "BMI": { icon: Calculator, color: "text-success-500" },
+};
+
+const DEFAULT_VITAL_CONFIG = { icon: Activity, color: "text-info-700" };
+
+/* ── Note type colors ── */
+
+const NOTE_TYPE_COLORS: Record<string, string> = {
+  "Progress Note": "bg-primary-100 text-primary-700",
+  "SOAP Note": "bg-secondary-100 text-secondary-700",
+  "Assessment": "bg-accent-100 text-accent-700",
+  "Plan": "bg-info-100 text-info-700",
+  "Procedure Note": "bg-warning-100 text-warning-700",
+  "Consultation Note": "bg-primary-100 text-primary-700",
+  "Discharge Summary": "bg-neutral-100 text-neutral-700",
+};
+
+/* ── Sub-components ── */
+
+function SectionCard({
+  icon: Icon,
+  title,
+  iconColor = "text-primary-700",
+  right,
+  children,
+}: {
+  readonly icon: React.ElementType;
+  readonly title: string;
+  readonly iconColor?: string;
+  readonly right?: React.ReactNode;
+  readonly children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-lg border border-neutral-200 bg-white shadow-sm">
+      <div className="flex items-center justify-between border-b border-neutral-200 px-6 pb-3 pt-5">
+        <div className="flex items-center gap-2">
+          <Icon className={clsxMerge("h-5 w-5", iconColor)} />
+          <h2 className="font-semibold text-neutral-900">{title}</h2>
+        </div>
+        {right}
+      </div>
+      <div className="p-6">{children}</div>
+    </div>
+  );
+}
+
+function Field({ label, children }: { readonly label: string; readonly children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="mb-1 text-xs uppercase tracking-wide text-neutral-500">{label}</p>
+      <div className="text-sm font-medium leading-relaxed text-neutral-900">{children}</div>
+    </div>
+  );
+}
+
+interface VitalCardProps {
+  readonly label: string;
+  readonly value: string;
+  readonly unit?: string;
+  readonly warning?: boolean;
+  readonly warningText?: string;
+  readonly vitalKey: string;
+}
+
+function VitalCard({ label, value, unit, warning, warningText, vitalKey }: VitalCardProps) {
+  const config = VITAL_CONFIG[vitalKey] || DEFAULT_VITAL_CONFIG;
+  const VitalIcon = config.icon;
+  const colorClass = warning ? "text-warning-500" : config.color;
+
+  return (
+    <div className="rounded-lg bg-neutral-50 p-4">
+      <VitalIcon className={clsxMerge("mb-2 h-4 w-4", colorClass)} />
+      <p className={clsxMerge("text-2xl font-bold", colorClass)}>{value}</p>
+      <p className="mt-0.5 text-xs text-neutral-500">
+        {label}
+        {unit ? ` (${unit})` : ""}
+      </p>
+      {warning && warningText && (
+        <div className="mt-1.5 flex items-center gap-1 text-xs font-medium text-warning-600">
+          <AlertTriangle className="h-3 w-3" />
+          <span>{warningText}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Main component ── */
+
 interface MedicalRecordDetailProps {
   readonly record: MedicalRecordResponse;
 }
 
 export function MedicalRecordDetail({ record }: MedicalRecordDetailProps) {
-  // AI Origin Banner — show when the record has an origin field set to 'AI'
   const isAiGenerated = Boolean("origin" in record && (record as Record<string, unknown>).origin === "AI");
   const navigate = useNavigate();
   const { hasAnyRole } = useRoles();
@@ -90,44 +197,44 @@ export function MedicalRecordDetail({ record }: MedicalRecordDetailProps) {
     }
   }
 
+  const formattedDate = new Date(record.recordedAt).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  function getAttachmentIcon(contentType: string) {
+    if (contentType.startsWith("image/")) {
+      return <FileImage className="h-5 w-5 flex-shrink-0 text-primary-700" />;
+    }
+    return <FileText className="h-5 w-5 flex-shrink-0 text-primary-700" />;
+  }
+
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-      {/* AI Origin Banner */}
-      {isAiGenerated && (
-        <Card className="mb-4 border-info-500 bg-info-50">
-          <CardHeader className="flex-row items-center gap-2">
-            <Badge variant="outline" className="bg-info-100 text-info-700 border-info-300">
-              AI Origin
-            </Badge>
-            <CardTitle className="text-info-700 text-base font-semibold">This record was generated or updated by Clara AI</CardTitle>
-          </CardHeader>
-        </Card>
-      )}
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate(-1)}
-            className={clsxMerge(
-              "h-10 w-10 rounded-lg",
-              "flex items-center justify-center",
-              "border border-neutral-200",
-              "hover:bg-neutral-50",
-              "transition-colors duration-200"
-            )}
-          >
-            <ArrowLeft className="h-5 w-5 text-neutral-700" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-neutral-900">Medical Record</h1>
-            <p className="text-sm text-neutral-600 mt-1">
-              {new Date(record.recordedAt).toLocaleDateString("en-US", {
-                month: "long",
-                day: "numeric",
-                year: "numeric",
-              })}
-            </p>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <div className="mb-2 flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className={clsxMerge(
+                "flex h-10 w-10 items-center justify-center",
+                "rounded-lg border border-neutral-200",
+                "transition-colors hover:bg-neutral-50"
+              )}
+            >
+              <ArrowLeft className="h-5 w-5 text-neutral-700" />
+            </button>
+            <h1 className="text-2xl font-bold text-neutral-900">{record.chiefComplaint}</h1>
           </div>
+          <div className="flex flex-wrap items-center gap-2 pl-[52px]">
+            <StatusBadge status={record.status} size="md" />
+            <SeverityBadge severity={record.severity} size="md" />
+          </div>
+          <p className="mt-2 pl-[52px] text-sm text-neutral-500">
+            {record.recordedByDoctorName} — Created {formattedDate}
+          </p>
         </div>
 
         {isMedicalStaff && record.status !== RecordStatus.Archived && (
@@ -135,30 +242,26 @@ export function MedicalRecordDetail({ record }: MedicalRecordDetailProps) {
             <button
               onClick={() => setShowActions(!showActions)}
               className={clsxMerge(
-                "h-10 px-4 rounded-lg",
-                "flex items-center gap-2",
-                "border border-neutral-200 bg-white",
-                "hover:bg-neutral-50",
-                "transition-colors duration-200"
+                "flex h-10 w-10 items-center justify-center",
+                "rounded-lg border border-neutral-200 bg-white",
+                "transition-colors hover:bg-neutral-50"
               )}
             >
-              <MoreVertical className="h-5 w-5" />
-              <span className="text-sm font-medium">Actions</span>
+              <MoreVertical className="h-4 w-4" />
             </button>
 
             {showActions && (
               <div
                 className={clsxMerge(
-                  "absolute right-0 mt-2 w-48",
-                  "bg-white rounded-lg border border-neutral-200 shadow-lg",
-                  "z-10"
+                  "absolute right-0 z-10 mt-2 w-48",
+                  "rounded-lg border border-neutral-200 bg-white shadow-lg"
                 )}
               >
                 {record.status !== RecordStatus.Resolved && (
                   <button
                     onClick={handleResolve}
                     disabled={isResolving}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 disabled:opacity-50 flex items-center gap-2"
+                    className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-neutral-50 disabled:opacity-50"
                   >
                     {isResolving ? (
                       <Loader2 className="h-4 w-4 animate-spin text-success-600" />
@@ -173,7 +276,7 @@ export function MedicalRecordDetail({ record }: MedicalRecordDetailProps) {
                   <button
                     onClick={handleMarkFollowUp}
                     disabled={isMarkingFollowUp}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 disabled:opacity-50 flex items-center gap-2"
+                    className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-neutral-50 disabled:opacity-50"
                   >
                     {isMarkingFollowUp ? (
                       <Loader2 className="h-4 w-4 animate-spin text-warning-600" />
@@ -187,7 +290,7 @@ export function MedicalRecordDetail({ record }: MedicalRecordDetailProps) {
                 <button
                   onClick={handleArchive}
                   disabled={isArchiving}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 disabled:opacity-50 flex items-center gap-2 border-t border-neutral-200"
+                  className="flex w-full items-center gap-2 border-t border-neutral-200 px-4 py-2 text-left text-sm hover:bg-neutral-50 disabled:opacity-50"
                 >
                   {isArchiving ? (
                     <Loader2 className="h-4 w-4 animate-spin text-neutral-600" />
@@ -202,169 +305,276 @@ export function MedicalRecordDetail({ record }: MedicalRecordDetailProps) {
         )}
       </div>
 
-      {/* Main Info Card */}
-      <Card className="space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex-1 space-y-4">
-            <div>
-              <h2 className="text-lg font-semibold text-neutral-900">Chief Complaint</h2>
-              <p className="text-neutral-700 mt-1">{record.chiefComplaint}</p>
-            </div>
-
-            <div>
-              <h2 className="text-lg font-semibold text-neutral-900">Diagnosis</h2>
-              <p className="text-neutral-700 mt-1">
-                <span className="font-medium">{record.diagnosisCode}</span> -{" "}
-                {record.diagnosisDescription}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2 sm:flex-col sm:items-end">
-            <SeverityBadge severity={record.severity} size="md" />
-            <StatusBadge status={record.status} size="md" />
-          </div>
+      {/* AI Origin Banner */}
+      {isAiGenerated && (
+        <div className="flex flex-wrap items-center gap-2.5 rounded-lg border border-accent-100 bg-accent-50 px-4 py-3">
+          <Sparkles className="h-4 w-4 flex-shrink-0 text-accent-700" />
+          <span className="text-sm text-accent-700">
+            This record was generated by Clara AI on {formattedDate}.
+          </span>
+          <Link
+            to={`/clara/session/${record.appointmentId || ""}`}
+            className="text-sm font-medium text-accent-700 hover:underline"
+          >
+            View session &rarr;
+          </Link>
         </div>
+      )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-neutral-200">
-          <InfoItem
-            icon={<User className="h-5 w-5" />}
-            label="Provider"
-            value={record.recordedByDoctorName}
-          />
-          <InfoItem
-            icon={<Calendar className="h-5 w-5" />}
-            label="Recorded"
-            value={new Date(record.recordedAt).toLocaleString()}
-          />
-        </div>
-      </Card>
+      <div className="space-y-6">
+        {/* Diagnosis & Chief Complaint */}
+        <SectionCard icon={Stethoscope} title="Diagnosis & Chief Complaint">
+          <div className="space-y-4">
+            <Field label="Chief Complaint">{record.chiefComplaint}</Field>
+            <Field label="Primary Diagnosis">
+              {record.diagnosisDescription}{" "}
+              <span className="rounded border border-neutral-200 bg-neutral-50 px-2 py-0.5 font-mono text-xs">
+                {record.diagnosisCode}
+              </span>
+            </Field>
+          </div>
+        </SectionCard>
 
-      {/* Clinical Notes */}
-      {record.clinicalNotes.length > 0 && (
-        <Card>
-          <CardHeader className="flex-row items-center gap-2">
-            <FileText className="h-5 w-5 text-primary-700" />
-            <CardTitle>Clinical Notes <span className="text-sm text-neutral-500">({record.clinicalNotes.length})</span></CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {record.clinicalNotes.map((note) => (
-                <div key={note.id} className="border-b border-neutral-200 last:border-0 pb-4 last:pb-0">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">{note.noteType}</Badge>
-                        <span className="text-sm text-neutral-500">•</span>
-                        <span className="text-sm text-neutral-600">{note.authorName}</span>
-                      </div>
-                      <p className="text-neutral-700 mt-2 whitespace-pre-wrap">{note.content}</p>
-                    </div>
-                    <span className="text-xs text-neutral-500 whitespace-nowrap">
-                      {new Date(note.createdAt).toLocaleDateString()}
+        {/* Vital Signs */}
+        {record.vitalSigns.length > 0 && (
+          <SectionCard
+            icon={Activity}
+            title="Vital Signs"
+            right={
+              <span className="hidden text-xs text-neutral-500 sm:block">
+                Recorded {new Date(record.vitalSigns[0].recordedAt).toLocaleString()}
+              </span>
+            }
+          >
+            {record.vitalSigns.map((vitals) => (
+              <div key={vitals.id} className="mb-4 last:mb-0">
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                  {vitals.bloodPressureFormatted != null && (
+                    <VitalCard
+                      vitalKey="Blood Pressure"
+                      label="Blood Pressure"
+                      value={vitals.bloodPressureFormatted}
+                      unit="mmHg"
+                      warning={
+                        (vitals.bloodPressureSystolic != null && vitals.bloodPressureSystolic > 140) ||
+                        (vitals.bloodPressureDiastolic != null && vitals.bloodPressureDiastolic > 90)
+                      }
+                      warningText="Monitor closely"
+                    />
+                  )}
+                  {vitals.heartRate != null && (
+                    <VitalCard
+                      vitalKey="Heart Rate"
+                      label="Heart Rate"
+                      value={String(vitals.heartRate)}
+                      unit="bpm"
+                      warning={vitals.heartRate > 100 || vitals.heartRate < 60}
+                      warningText="Abnormal range"
+                    />
+                  )}
+                  {vitals.temperature != null && (
+                    <VitalCard
+                      vitalKey="Temperature"
+                      label="Temperature"
+                      value={String(vitals.temperature)}
+                      unit="°F"
+                      warning={vitals.temperature > 100.4 || vitals.temperature < 97}
+                      warningText="Outside normal"
+                    />
+                  )}
+                  {vitals.respiratoryRate != null && (
+                    <VitalCard
+                      vitalKey="Respiratory Rate"
+                      label="Respiratory Rate"
+                      value={String(vitals.respiratoryRate)}
+                      unit="/min"
+                      warning={vitals.respiratoryRate > 20 || vitals.respiratoryRate < 12}
+                      warningText="Abnormal range"
+                    />
+                  )}
+                  {vitals.oxygenSaturation != null && (
+                    <VitalCard
+                      vitalKey="O2 Saturation"
+                      label="O₂ Saturation"
+                      value={String(vitals.oxygenSaturation)}
+                      unit="%"
+                      warning={vitals.oxygenSaturation < 95}
+                      warningText="Low oxygen"
+                    />
+                  )}
+                  {vitals.weight != null && (
+                    <VitalCard
+                      vitalKey="Weight"
+                      label="Weight"
+                      value={String(vitals.weight)}
+                      unit="lbs"
+                    />
+                  )}
+                  {vitals.height != null && (
+                    <VitalCard
+                      vitalKey="Height"
+                      label="Height"
+                      value={String(vitals.height)}
+                      unit="in"
+                    />
+                  )}
+                  {vitals.bmi != null && (
+                    <VitalCard
+                      vitalKey="BMI"
+                      label="BMI"
+                      value={vitals.bmi.toFixed(1)}
+                      warning={vitals.bmi > 30 || vitals.bmi < 18.5}
+                      warningText={vitals.bmi > 30 ? "Obese range" : "Underweight"}
+                    />
+                  )}
+                </div>
+                <p className="mt-3 text-xs text-neutral-500">
+                  Recorded by {vitals.recordedByName} on{" "}
+                  {new Date(vitals.recordedAt).toLocaleString()}
+                </p>
+              </div>
+            ))}
+          </SectionCard>
+        )}
+
+        {/* Clinical Notes */}
+        {record.clinicalNotes.length > 0 && (
+          <SectionCard
+            icon={StickyNote}
+            title="Clinical Notes"
+            right={
+              <button className="inline-flex items-center gap-1 rounded-md border border-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50">
+                <Plus className="h-3.5 w-3.5" />
+                Add Note
+              </button>
+            }
+          >
+            <div className="divide-y divide-neutral-200">
+              {record.clinicalNotes.map((note, noteIndex) => (
+                <div key={note.id} className={noteIndex === 0 ? "pb-5" : "py-5"}>
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <span
+                      className={clsxMerge(
+                        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
+                        NOTE_TYPE_COLORS[note.noteType as ClinicalNoteType] || "bg-neutral-100 text-neutral-700"
+                      )}
+                    >
+                      {note.noteType}
+                    </span>
+                    <span className="text-xs text-neutral-500">
+                      {note.authorName} · {new Date(note.createdAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
                     </span>
                   </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Prescriptions as Table */}
-      {record.prescriptions.length > 0 && (
-        <Card>
-          <CardHeader className="flex-row items-center gap-2">
-            <Pill className="h-5 w-5 text-primary-700" />
-            <CardTitle>Prescriptions <span className="text-sm text-neutral-500">({record.prescriptions.length})</span></CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Medication</TableHead>
-                  <TableHead>Dosage</TableHead>
-                  <TableHead>Frequency</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Prescribed By</TableHead>
-                  <TableHead>Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {record.prescriptions.map((prescription) => (
-                  <TableRow key={prescription.id}>
-                    <TableCell className="font-medium">{prescription.medicationName}</TableCell>
-                    <TableCell>{prescription.dosage}</TableCell>
-                    <TableCell>{prescription.frequency}</TableCell>
-                    <TableCell>{prescription.durationDays} days</TableCell>
-                    <TableCell><PrescriptionStatusBadge status={prescription.status} /></TableCell>
-                    <TableCell>{prescription.prescribedByName}</TableCell>
-                    <TableCell>{new Date(prescription.prescribedAt).toLocaleDateString()}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Vital Signs with Icons/Warnings */}
-      {record.vitalSigns.length > 0 && (
-        <Card>
-          <CardHeader className="flex-row items-center gap-2">
-            <Activity className="h-5 w-5 text-primary-700" />
-            <CardTitle>Vital Signs <span className="text-sm text-neutral-500">({record.vitalSigns.length})</span></CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {record.vitalSigns.map((vitals) => (
-                <div key={vitals.id} className="border-b border-neutral-200 last:border-0 pb-4 last:pb-0">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {vitals.bloodPressureFormatted != null && (
-                      <VitalItem label="Blood Pressure" value={vitals.bloodPressureFormatted} icon={<Activity className="h-4 w-4 text-info-700" />} warning={(vitals.bloodPressureSystolic != null && vitals.bloodPressureSystolic > 140) || (vitals.bloodPressureDiastolic != null && vitals.bloodPressureDiastolic > 90)} />
-                    )}
-                    {vitals.heartRate != null && (
-                      <VitalItem label="Heart Rate" value={`${vitals.heartRate} bpm`} icon={<Activity className="h-4 w-4 text-info-700" />} warning={vitals.heartRate > 100 || vitals.heartRate < 60} />
-                    )}
-                    {vitals.temperature != null && (
-                      <VitalItem label="Temperature" value={`${vitals.temperature}°F`} icon={<Activity className="h-4 w-4 text-info-700" />} warning={vitals.temperature > 100.4 || vitals.temperature < 97} />
-                    )}
-                    {vitals.respiratoryRate != null && (
-                      <VitalItem label="Respiratory Rate" value={`${vitals.respiratoryRate} /min`} icon={<Activity className="h-4 w-4 text-info-700" />} warning={vitals.respiratoryRate > 20 || vitals.respiratoryRate < 12} />
-                    )}
-                    {vitals.oxygenSaturation != null && (
-                      <VitalItem label="O2 Saturation" value={`${vitals.oxygenSaturation}%`} icon={<Activity className="h-4 w-4 text-info-700" />} warning={vitals.oxygenSaturation < 95} />
-                    )}
-                    {vitals.weight != null && (
-                      <VitalItem label="Weight" value={`${vitals.weight} lbs`} icon={<Activity className="h-4 w-4 text-info-700" />} />
-                    )}
-                    {vitals.height != null && (
-                      <VitalItem label="Height" value={`${vitals.height} in`} icon={<Activity className="h-4 w-4 text-info-700" />} />
-                    )}
-                    {vitals.bmi != null && (
-                      <VitalItem label="BMI" value={vitals.bmi.toFixed(1)} icon={<Activity className="h-4 w-4 text-info-700" />} warning={vitals.bmi > 30 || vitals.bmi < 18.5} />
-                    )}
-                  </div>
-                  <p className="text-xs text-neutral-500 mt-3">
-                    Recorded by {vitals.recordedByName} on {new Date(vitals.recordedAt).toLocaleString()}
+                  <p className="whitespace-pre-line text-sm leading-relaxed text-neutral-700">
+                    {note.content}
                   </p>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </SectionCard>
+        )}
 
-      {/* Attachments with Icons */}
-      {record.attachments.length > 0 && (
-        <Card>
-          <CardHeader className="flex-row items-center gap-2">
-            <Paperclip className="h-5 w-5 text-primary-700" />
-            <CardTitle>Attachments <span className="text-sm text-neutral-500">({record.attachments.length})</span></CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
+        {/* Prescriptions */}
+        {record.prescriptions.length > 0 && (
+          <SectionCard icon={Pill} title="Prescriptions" iconColor="text-secondary-700">
+            {/* Desktop table */}
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-neutral-200 text-left">
+                    <th className="pb-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Medication</th>
+                    <th className="pb-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Dosage</th>
+                    <th className="pb-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Frequency</th>
+                    <th className="pb-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Prescribed By</th>
+                    <th className="pb-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Start Date</th>
+                    <th className="pb-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-100">
+                  {record.prescriptions.map((prescription) => (
+                    <tr key={prescription.id} className="transition-colors hover:bg-neutral-50">
+                      <td className="py-3 font-medium text-neutral-900">{prescription.medicationName}</td>
+                      <td className="py-3 text-neutral-700">{prescription.dosage}</td>
+                      <td className="py-3 text-neutral-700">{prescription.frequency}</td>
+                      <td className="py-3 text-neutral-700">{prescription.prescribedByName}</td>
+                      <td className="py-3 text-neutral-500">
+                        {new Date(prescription.prescribedAt).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </td>
+                      <td className="py-3">
+                        <PrescriptionStatusBadge status={prescription.status} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Mobile cards */}
+            <div className="space-y-3 md:hidden">
+              {record.prescriptions.map((prescription) => (
+                <div key={prescription.id} className="space-y-1.5 rounded-lg bg-neutral-50 p-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-neutral-900">{prescription.medicationName}</p>
+                    <PrescriptionStatusBadge status={prescription.status} />
+                  </div>
+                  <p className="text-xs text-neutral-500">
+                    {prescription.dosage} · {prescription.frequency}
+                  </p>
+                  <p className="text-xs text-neutral-500">
+                    {prescription.prescribedByName} ·{" "}
+                    {new Date(prescription.prescribedAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        )}
+
+        {/* Recommended Follow-up */}
+        {record.status === RecordStatus.RequiresFollowUp && (
+          <SectionCard
+            icon={CalendarDays}
+            title="Recommended Follow-up"
+            iconColor="text-secondary-700"
+            right={
+              <Link
+                to="/appointments"
+                className="inline-flex items-center gap-1 rounded-md border border-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
+              >
+                Book Appointment &rarr;
+              </Link>
+            }
+          >
+            <p className="text-sm text-neutral-700">
+              This record requires follow-up. Please schedule a follow-up appointment with the patient.
+            </p>
+          </SectionCard>
+        )}
+
+        {/* Attachments */}
+        {record.attachments.length > 0 && (
+          <SectionCard
+            icon={Paperclip}
+            title="Attachments"
+            right={
+              <button className="inline-flex items-center gap-1 rounded-md border border-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50">
+                <Download className="h-3.5 w-3.5" />
+                Upload
+              </button>
+            }
+          >
+            <div className="space-y-2">
               {record.attachments.map((attachment) => (
                 <a
                   key={attachment.id}
@@ -372,68 +582,34 @@ export function MedicalRecordDetail({ record }: MedicalRecordDetailProps) {
                   target="_blank"
                   rel="noopener noreferrer"
                   className={clsxMerge(
-                    "flex items-center gap-3 p-3",
-                    "rounded-lg border border-neutral-200",
-                    "hover:bg-neutral-50 hover:border-primary-300",
-                    "transition-all duration-200"
+                    "flex items-center gap-3 rounded-lg p-3",
+                    "transition-colors hover:bg-neutral-50"
                   )}
                 >
-                  {/* Icon by file type */}
-                  <FileBarChart className="h-5 w-5 text-neutral-600 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-neutral-900 truncate">{attachment.fileName}</p>
-                    <p className="text-sm text-neutral-600">
-                      {attachment.fileSizeFormatted} • {attachment.contentType}
+                  {getAttachmentIcon(attachment.contentType)}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-neutral-900">{attachment.fileName}</p>
+                    <p className="text-xs text-neutral-500">
+                      {attachment.fileSizeFormatted} · {new Date(attachment.uploadedAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
                     </p>
-                    {attachment.description && (
-                      <p className="text-sm text-neutral-600 mt-1">{attachment.description}</p>
-                    )}
                   </div>
+                  <button
+                    type="button"
+                    className="h-9 w-9 flex-shrink-0 rounded-lg text-neutral-500 transition-colors hover:bg-neutral-100"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <Download className="mx-auto h-4 w-4" />
+                  </button>
                 </a>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
-}
-
-// --- Sub-components ---
-
-interface InfoItemProps {
-  readonly icon: React.ReactNode;
-  readonly label: string;
-  readonly value: string;
-}
-
-function InfoItem({ icon, label, value }: InfoItemProps) {
-  return (
-    <div className="flex items-start gap-3">
-      <div className="text-neutral-600 mt-0.5">{icon}</div>
-      <div>
-        <p className="text-sm text-neutral-600">{label}</p>
-        <p className="font-medium text-neutral-900">{value}</p>
+          </SectionCard>
+        )}
       </div>
-    </div>
-  );
-}
-
-interface VitalItemProps {
-  readonly label: string;
-  readonly value: string;
-  readonly icon?: React.ReactNode;
-  readonly warning?: boolean;
-}
-
-function VitalItem({ label, value, icon, warning }: VitalItemProps) {
-  return (
-    <div>
-      <div className="flex items-center gap-1">
-        {icon}
-        <p className={clsxMerge("text-xs", warning ? "text-error-600 font-semibold" : "text-neutral-600")}>{label}</p>
-      </div>
-      <p className={clsxMerge("text-sm font-medium", warning ? "text-error-700" : "text-neutral-900")}>{value}</p>
     </div>
   );
 }

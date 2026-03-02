@@ -22,7 +22,7 @@ export function CalendarToolbar({
   return (
     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
       <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-bold text-neutral-900 md:text-3xl">Appointments</h1>
+        <h1 className="text-2xl font-bold text-neutral-900">Appointments</h1>
         {isFetching && (
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-700 border-t-transparent" />
         )}

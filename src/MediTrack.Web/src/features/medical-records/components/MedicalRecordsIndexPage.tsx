@@ -1,5 +1,5 @@
 import { useId, useState } from "react";
-import { Search, X, FileX, Loader2, ChevronDown } from "lucide-react";
+import { Search, X, FileX, Loader2, ChevronDown, FilePlus } from "lucide-react";
 import { useMedicalRecordsSearch } from "../hooks/useMedicalRecordsSearch";
 import { MedicalRecordList } from "./MedicalRecordList";
 import { DiagnosisSeverity, RecordStatus } from "../types";
@@ -81,10 +81,16 @@ export function MedicalRecordsIndexPage() {
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold text-neutral-900">Medical Records</h1>
-          <p className="text-sm text-neutral-500 mt-1">
+          <p className="mt-1 text-sm text-neutral-500">
             Search for a patient to view their medical records
           </p>
         </div>
+        <button
+          type="button"
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary-700 px-4 text-sm font-medium text-white transition-colors hover:bg-primary-600"
+        >
+          <FilePlus className="h-4 w-4" /> New Record
+        </button>
       </div>
 
       {/* Patient search */}

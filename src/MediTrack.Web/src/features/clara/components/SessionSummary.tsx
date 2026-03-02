@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   MessageSquare,
   ChevronRight,
+  Mic,
 } from "lucide-react";
 import { useGetSessionQuery } from "../store/claraApi";
 import { useCreateMedicalRecordMutation } from "@/features/medical-records/store/medicalRecordsApi";
@@ -182,42 +183,37 @@ export function SessionSummary() {
             <ChevronLeft className="h-5 w-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-neutral-900">Session Summary</h1>
-            <p className="text-sm text-neutral-500 font-mono">
-              {sessionId?.slice(0, 8).toUpperCase()}
-            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-bold text-neutral-900">Review AI-Generated Draft</h1>
+              <span className="inline-flex items-center gap-1 rounded-full border border-accent-200 bg-accent-50 px-2.5 py-0.5 text-xs font-semibold text-accent-700">
+                <Sparkles className="h-3 w-3" />
+                AI Draft
+              </span>
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <span className="inline-flex items-center gap-1 text-xs text-neutral-500">
+                <Mic className="h-3.5 w-3.5" />
+                {session.transcriptLines.length} exchanges
+              </span>
+              <span className="text-neutral-300">&middot;</span>
+              <span className="inline-flex items-center gap-1 text-xs text-neutral-500">
+                <Clock className="h-3.5 w-3.5" />
+                {sessionId?.slice(0, 8).toUpperCase()}
+              </span>
+              <span className="text-neutral-300">&middot;</span>
+              <span className="inline-flex items-center gap-1 text-xs text-neutral-500">
+                <Sparkles className="h-3.5 w-3.5 text-accent-500" />
+                {session.suggestions.length} suggestions
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Two-column layout */}
-      <div className="grid grid-cols-1 gap-6 pb-24 lg:grid-cols-5 lg:pb-0">
+      <div className="flex flex-col gap-6 pb-24 lg:flex-row lg:pb-0">
         {/* Left column — Session data */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Session stats */}
-          <div className="rounded-lg border border-neutral-200 bg-white p-5">
-            <div className="flex items-center gap-2 mb-4 border-b border-neutral-200 pb-3">
-              <Clock className="h-5 w-5 text-primary-700" />
-              <h3 className="text-sm font-semibold text-neutral-900">Session Stats</h3>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-neutral-900">
-                  {session.transcriptLines.length}
-                </p>
-                <p className="text-xs text-neutral-500">Transcript Lines</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-neutral-900">{session.suggestions.length}</p>
-                <p className="text-xs text-neutral-500">Suggestions</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-neutral-900">{patientStatements.length}</p>
-                <p className="text-xs text-neutral-500">Patient Statements</p>
-              </div>
-            </div>
-          </div>
-
+        <div className="lg:w-[40%] lg:sticky lg:top-6 lg:self-start space-y-4">
           {/* Patient statements */}
           <div className="rounded-lg border border-neutral-200 bg-white p-5">
             <div className="flex items-center gap-2 mb-4 border-b border-neutral-200 pb-3">
@@ -231,15 +227,9 @@ export function SessionSummary() {
                 patientStatements.map((line) => (
                   <div
                     key={line.id}
-                    className="rounded-lg bg-secondary-50 p-3 text-sm text-neutral-700"
+                    className="rounded-lg border border-secondary-100 bg-secondary-50 px-3 py-2.5 text-xs text-neutral-700 leading-relaxed"
                   >
-                    <p>{line.text}</p>
-                    <p className="mt-1 text-xs text-neutral-500">
-                      {new Date(line.timestamp).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
+                    {line.text}
                   </div>
                 ))
               )}
@@ -286,10 +276,28 @@ export function SessionSummary() {
               )}
             </div>
           </div>
+
+          {/* Session stats strip */}
+          <div className="flex items-center justify-around rounded-lg border border-neutral-200 bg-white px-4 py-3 shadow-sm">
+            <div className="flex items-center gap-1.5 text-xs text-neutral-500">
+              <MessageSquare className="h-3.5 w-3.5" />
+              <span>{session.transcriptLines.length} exchanges</span>
+            </div>
+            <div className="h-4 w-px bg-neutral-200" />
+            <div className="flex items-center gap-1.5 text-xs text-neutral-500">
+              <Clock className="h-3.5 w-3.5" />
+              <span>{patientStatements.length} patient statements</span>
+            </div>
+            <div className="h-4 w-px bg-neutral-200" />
+            <div className="flex items-center gap-1.5 text-xs text-neutral-500">
+              <Sparkles className="h-3.5 w-3.5 text-accent-500" />
+              <span>{session.suggestions.length} suggestions</span>
+            </div>
+          </div>
         </div>
 
         {/* Right column — Medical record draft form */}
-        <div className="lg:col-span-3 space-y-5">
+        <div className="lg:w-[60%] space-y-5">
           {/* AI Draft banner */}
           <div className="flex items-center gap-2.5 rounded-lg border border-accent-200 bg-accent-50 px-4 py-3">
             <Sparkles className="h-4 w-4 flex-shrink-0 text-accent-600" />
@@ -298,40 +306,38 @@ export function SessionSummary() {
             </p>
           </div>
 
-          <div className="rounded-lg border border-neutral-200 bg-white p-6 lg:sticky lg:top-4">
-            <div className="flex items-center gap-2 mb-6 border-b border-neutral-200 pb-3">
+          <div className="rounded-lg border border-neutral-200 bg-white shadow-sm">
+            <div className="flex items-center gap-2 border-b border-neutral-200 px-6 pb-3 pt-5">
               <FileText className="h-5 w-5 text-primary-700" />
-              <h3 className="text-sm font-semibold text-neutral-900">Medical Record Draft</h3>
+              <h3 className="font-semibold text-neutral-900">Medical Record Draft</h3>
             </div>
 
-            <div className="space-y-5">
+            <div className="space-y-6 p-6">
               {/* Chief Complaint */}
               <div>
                 <label
                   htmlFor="chiefComplaint"
-                  className="mb-1.5 block text-sm font-medium text-neutral-700"
+                  className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-neutral-500"
                 >
                   Chief Complaint <span className="text-error-500">*</span>
                 </label>
-                <input
+                <textarea
                   id="chiefComplaint"
-                  type="text"
+                  rows={4}
                   value={chiefComplaint}
                   onChange={(event) => setChiefComplaint(event.target.value)}
                   placeholder="e.g. Persistent headache for 3 days"
-                  className="h-10 w-full rounded-lg border border-neutral-200 px-3 text-sm text-neutral-900 placeholder:text-neutral-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
+                  className="w-full resize-none rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
                 />
               </div>
 
-              {/* Diagnosis Code + Description */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {/* Primary Diagnosis */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-neutral-500">
+                  Primary Diagnosis <span className="text-error-500">*</span>
+                </label>
+              <div className="grid grid-cols-[120px_1fr] gap-3 items-start">
                 <div>
-                  <label
-                    htmlFor="diagnosisCode"
-                    className="mb-1.5 block text-sm font-medium text-neutral-700"
-                  >
-                    ICD-10 Code <span className="text-error-500">*</span>
-                  </label>
                   <input
                     id="diagnosisCode"
                     type="text"
@@ -341,40 +347,32 @@ export function SessionSummary() {
                     className="h-10 w-full rounded-lg border border-neutral-200 px-3 font-mono text-sm text-neutral-900 placeholder:text-neutral-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
                   />
                 </div>
-                <div className="sm:col-span-2">
-                  <label
-                    htmlFor="diagnosisDescription"
-                    className="mb-1.5 block text-sm font-medium text-neutral-700"
-                  >
-                    Description <span className="text-error-500">*</span>
-                  </label>
-                  <input
-                    id="diagnosisDescription"
-                    type="text"
-                    value={diagnosisDescription}
-                    onChange={(event) => setDiagnosisDescription(event.target.value)}
-                    placeholder="e.g. Headache, unspecified"
-                    className="h-10 w-full rounded-lg border border-neutral-200 px-3 text-sm text-neutral-900 placeholder:text-neutral-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
-                  />
-                </div>
+                <input
+                  id="diagnosisDescription"
+                  type="text"
+                  value={diagnosisDescription}
+                  onChange={(event) => setDiagnosisDescription(event.target.value)}
+                  placeholder="Diagnosis description"
+                  className="h-10 w-full rounded-lg border border-neutral-200 px-3 text-sm text-neutral-900 placeholder:text-neutral-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
+                />
               </div>
-
               {/* ICD-10 chip preview */}
               {diagnosisCode && diagnosisDescription && (
-                <div className="inline-flex items-center gap-1.5">
+                <div className="mt-2 inline-flex items-center gap-1.5">
                   <span className="rounded border border-neutral-200 bg-neutral-50 px-2 py-0.5 font-mono text-xs text-neutral-700">
                     {diagnosisCode}
                   </span>
                   <span className="text-xs text-neutral-600">{diagnosisDescription}</span>
                 </div>
               )}
+              </div>
 
               {/* Severity + Status */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-4">
               <div>
                 <label
                   htmlFor="severity"
-                  className="mb-1.5 block text-sm font-medium text-neutral-700"
+                  className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-neutral-500"
                 >
                   Severity
                 </label>
@@ -399,7 +397,7 @@ export function SessionSummary() {
               <div>
                 <label
                   htmlFor="diagnosisStatus"
-                  className="mb-1.5 block text-sm font-medium text-neutral-700"
+                  className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-neutral-500"
                 >
                   Status
                 </label>
@@ -423,9 +421,9 @@ export function SessionSummary() {
               <div>
                 <label
                   htmlFor="soapNote"
-                  className="mb-1.5 block text-sm font-medium text-neutral-700"
+                  className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-neutral-500"
                 >
-                  SOAP Note
+                  Clinical Notes (SOAP)
                 </label>
                 <textarea
                   id="soapNote"
@@ -435,14 +433,21 @@ export function SessionSummary() {
                   placeholder={
                     "S: (Subjective)\n\nO: (Objective)\n\nA: (Assessment)\n\nP: (Plan)"
                   }
-                  className="w-full rounded-lg border border-neutral-200 px-3 py-2 font-mono text-sm text-neutral-900 placeholder:text-neutral-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
+                  className="w-full resize-none rounded-lg border border-neutral-200 px-3 py-2 font-mono text-xs leading-relaxed text-neutral-900 placeholder:text-neutral-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
                 />
               </div>
 
               {/* Prescriptions */}
               <div>
                 <div className="mb-3 flex items-center justify-between">
-                  <label className="text-sm font-medium text-neutral-700">Prescriptions</label>
+                  <div className="flex items-center gap-2">
+                    <Pill className="h-4 w-4 text-secondary-700" />
+                    <span className="text-sm font-semibold text-neutral-900">Suggested Prescriptions</span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-accent-50 px-2 py-0.5 text-xs font-medium text-accent-700">
+                      <Sparkles className="h-3 w-3" />
+                      Clara suggested
+                    </span>
+                  </div>
                   <button
                     type="button"
                     onClick={handleAddPrescription}
@@ -533,9 +538,9 @@ export function SessionSummary() {
               <div>
                 <label
                   htmlFor="followUp"
-                  className="mb-1.5 block text-sm font-medium text-neutral-700"
+                  className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-neutral-500"
                 >
-                  Follow-up
+                  Recommended Follow-up
                 </label>
                 <input
                   id="followUp"

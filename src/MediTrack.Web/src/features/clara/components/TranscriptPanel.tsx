@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Mic, User, Stethoscope, AlertTriangle } from "lucide-react";
+import { Mic, MicOff, User, Stethoscope, AlertTriangle, Brain } from "lucide-react";
 import type { TranscriptLine } from "../types";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
 
@@ -7,6 +7,10 @@ interface TranscriptPanelProps {
   readonly lines: TranscriptLine[];
   readonly isRecording: boolean;
   readonly className?: string;
+  readonly onToggleRecording?: () => void;
+  readonly onAskClara?: () => void;
+  readonly isConnected?: boolean;
+  readonly isRequestingSuggestions?: boolean;
 }
 
 /**
@@ -17,6 +21,10 @@ export function TranscriptPanel({
   lines,
   isRecording,
   className,
+  onToggleRecording,
+  onAskClara,
+  isConnected,
+  isRequestingSuggestions,
 }: TranscriptPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -70,12 +78,45 @@ export function TranscriptPanel({
         )}
       </div>
 
-      {/* Bottom bar — shown when recording */}
-      {isRecording && (
-        <div className="flex items-center gap-2 border-t border-neutral-200 px-4 py-2 flex-shrink-0">
-          <span className="text-sm text-accent-700 font-medium">Clara is listening...</span>
-        </div>
-      )}
+      {/* Desktop action bar */}
+      <div className="hidden items-center gap-3 border-t border-neutral-200 px-4 py-3 lg:flex">
+        {onToggleRecording && (
+          <button
+            type="button"
+            onClick={onToggleRecording}
+            disabled={!isConnected}
+            className={clsxMerge(
+              "flex h-10 w-10 items-center justify-center rounded-full transition-all",
+              isRecording
+                ? "bg-error-500 text-white shadow-md hover:bg-error-600"
+                : "border border-neutral-200 text-neutral-700 hover:bg-neutral-50",
+              "disabled:opacity-50"
+            )}
+            aria-label={isRecording ? "Stop recording" : "Start recording"}
+          >
+            {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+          </button>
+        )}
+        {onAskClara && (
+          <button
+            type="button"
+            onClick={onAskClara}
+            disabled={!isConnected || isRequestingSuggestions}
+            className={clsxMerge(
+              "inline-flex h-10 items-center gap-2 rounded-lg px-4",
+              "bg-accent-600 text-sm font-medium text-white",
+              "transition-colors hover:bg-accent-700",
+              "disabled:opacity-50"
+            )}
+          >
+            <Brain className="h-4 w-4" />
+            Ask Clara
+          </button>
+        )}
+        {isRecording && (
+          <span className="text-sm font-medium text-accent-700">Clara is listening...</span>
+        )}
+      </div>
     </div>
   );
 }

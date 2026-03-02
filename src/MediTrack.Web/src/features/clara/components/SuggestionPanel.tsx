@@ -1,4 +1,4 @@
-import { Lightbulb, AlertTriangle, BookOpen, Pill, Sparkles } from "lucide-react";
+import { Lightbulb, AlertTriangle, BookOpen, Pill, Sparkles, FileText } from "lucide-react";
 import type { Suggestion } from "../types";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
 
@@ -104,6 +104,14 @@ function SuggestionCard({ suggestion }: SuggestionCardProps) {
 
         {/* Content */}
         <p className="text-sm text-neutral-700 leading-relaxed">{suggestion.content}</p>
+
+        {/* Source */}
+        {suggestion.source && (
+          <div className="mt-2 flex items-center gap-1.5 text-xs text-neutral-500">
+            <FileText className="h-3 w-3 flex-shrink-0" />
+            <span>{suggestion.source}</span>
+          </div>
+        )}
       </div>
     </div>
   );
