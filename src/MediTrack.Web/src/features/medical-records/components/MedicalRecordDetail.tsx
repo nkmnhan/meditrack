@@ -387,10 +387,10 @@ interface SectionCardProps {
 function SectionCard({ title, icon, count, children }: SectionCardProps) {
   return (
     <div className="bg-white rounded-lg border border-neutral-200 p-6">
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-4 border-b border-neutral-200 pb-3">
         <div className="text-primary-700">{icon}</div>
-        <h2 className="text-lg font-semibold text-neutral-900">{title}</h2>
-        <span className="text-sm text-neutral-500">({count})</span>
+        <h2 className="text-sm font-semibold text-neutral-900">{title}</h2>
+        <span className="text-xs text-neutral-500">({count})</span>
       </div>
       {children}
     </div>

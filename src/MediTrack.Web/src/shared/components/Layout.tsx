@@ -1,18 +1,24 @@
-import { ReactNode, useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 import {
   LayoutDashboard,
   Users,
-  Calendar,
+  CalendarDays,
   FileText,
   Sparkles,
   Menu,
-  X,
   LogOut,
-  ChevronRight,
+  BarChart3,
+  UserCog,
+  Activity,
+  ShieldCheck,
+  Stethoscope,
 } from "lucide-react";
 import { clsxMerge } from "../utils/clsxMerge";
+import { useRoles } from "../auth/useRoles";
+import { UserRole } from "../auth/roles";
+import { Sheet, SheetContent, SheetTitle } from "./ui/sheet";
 import { ClaraPanelProvider } from "./clara/ClaraPanelContext";
 import { ClaraFab } from "./clara/ClaraFab";
 import { ClaraPanel } from "./clara/ClaraPanel";
@@ -21,160 +27,167 @@ interface LayoutProps {
   readonly children: ReactNode;
 }
 
-interface NavLinkProps {
+interface NavItem {
   readonly to: string;
   readonly icon: React.ElementType;
   readonly label: string;
-  readonly disabled?: boolean;
 }
 
-function NavLink({ to, icon: Icon, label, disabled }: NavLinkProps) {
+function NavLink({ to, icon: Icon, label, onNavigate }: NavItem & { readonly onNavigate?: () => void }) {
   const location = useLocation();
   const isActive = to === "/"
     ? location.pathname === "/"
     : location.pathname === to || location.pathname.startsWith(`${to}/`);
 
-  if (disabled) {
-    return (
-      <div
-        className={clsxMerge(
-          "flex items-center gap-3 rounded-lg px-3 py-2",
-          "cursor-not-allowed opacity-50",
-          "text-neutral-400"
-        )}
-      >
-        <Icon className="h-5 w-5" />
-        <span className="font-medium">{label}</span>
-        <span className="ml-auto text-xs">(Soon)</span>
-      </div>
-    );
-  }
-
   return (
     <Link
       to={to}
+      onClick={onNavigate}
       className={clsxMerge(
-        "flex items-center gap-3 rounded-lg px-3 py-2 transition-colors",
+        "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
         isActive
-          ? "bg-primary-700 text-white"
-          : "text-neutral-700 hover:bg-neutral-100"
+          ? "bg-primary-50 text-primary-700 font-semibold"
+          : "text-neutral-700 hover:bg-neutral-50"
       )}
     >
-      <Icon className="h-5 w-5" />
-      <span className="font-medium">{label}</span>
-      {isActive && <ChevronRight className="ml-auto h-4 w-4" />}
+      <Icon className="h-5 w-5 flex-shrink-0" />
+      <span className="flex-1 text-left">{label}</span>
     </Link>
   );
 }
 
-export function Layout({ children }: LayoutProps) {
+const clinicalNavItems: NavItem[] = [
+  { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/patients", icon: Users, label: "Patients" },
+  { to: "/appointments", icon: CalendarDays, label: "Appointments" },
+  { to: "/medical-records", icon: FileText, label: "Medical Records" },
+];
+
+const adminNavItems: NavItem[] = [
+  { to: "/admin/reports", icon: BarChart3, label: "Reports" },
+  { to: "/admin/users", icon: UserCog, label: "User Management" },
+  { to: "/admin/system", icon: Activity, label: "System Health" },
+  { to: "/admin/audit", icon: ShieldCheck, label: "Audit Log" },
+];
+
+function SidebarContent({ onNavigate }: { readonly onNavigate?: () => void }) {
   const auth = useAuth();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { hasRole, hasAnyRole } = useRoles();
 
   const userName = auth.user?.profile?.name ?? auth.user?.profile?.email ?? "User";
   const userRole = (auth.user?.profile?.role as string | undefined) ?? "User";
+  const isDoctorOrAdmin = hasAnyRole([UserRole.Doctor, UserRole.Admin]);
+  const isAdmin = hasRole(UserRole.Admin);
+
+  const userInitials = String(userName)
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   const handleSignOut = () => {
     auth.signoutRedirect();
   };
 
-  const profileRoles = auth.user?.profile?.role;
-  const roleList = Array.isArray(profileRoles)
-    ? profileRoles
-    : profileRoles
-      ? [profileRoles as string]
-      : [];
-  const isDoctorOrAdmin = roleList.some((role) => role === "Doctor" || role === "Admin");
+  return (
+    <div className="flex h-full flex-col">
+      {/* Logo */}
+      <div className="flex items-center gap-2 p-6">
+        <Stethoscope className="h-7 w-7 text-primary-700" />
+        <span className="text-xl font-bold text-primary-700">MediTrack</span>
+      </div>
 
-  const navigation = [
-    { to: "/", icon: LayoutDashboard, label: "Dashboard", disabled: false },
-    { to: "/patients", icon: Users, label: "Patients", disabled: false },
-    { to: "/appointments", icon: Calendar, label: "Appointments", disabled: false },
-    { to: "/medical-records", icon: FileText, label: "Medical Records", disabled: false },
-    ...(isDoctorOrAdmin
-      ? [{ to: "/clara", icon: Sparkles, label: "Clara AI", disabled: false }]
-      : []),
-  ];
+      {/* Navigation */}
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3">
+        {clinicalNavItems.map((item) => (
+          <NavLink key={item.to} {...item} onNavigate={onNavigate} />
+        ))}
+
+        {isDoctorOrAdmin && (
+          <NavLink
+            to="/clara"
+            icon={Sparkles}
+            label="Clara AI"
+            onNavigate={onNavigate}
+          />
+        )}
+
+        {isAdmin && (
+          <div className="mx-0 my-2 border-t border-neutral-200 pt-2">
+            <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-neutral-500">
+              Admin
+            </p>
+            {adminNavItems.map((item) => (
+              <NavLink key={item.to} {...item} onNavigate={onNavigate} />
+            ))}
+          </div>
+        )}
+      </nav>
+
+      {/* User Profile Footer */}
+      <div className="border-t border-neutral-200 p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary-700 text-sm font-semibold text-white">
+            {userInitials}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-neutral-900">{userName}</p>
+            <p className="text-xs text-neutral-500">{userRole}</p>
+          </div>
+          <button
+            onClick={handleSignOut}
+            className="rounded-lg p-1.5 text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-700"
+            aria-label="Sign out"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function Layout({ children }: LayoutProps) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
     <ClaraPanelProvider>
-      <div className="flex h-screen flex-col overflow-hidden bg-neutral-50 lg:flex-row">
-        {/* Sidebar - Desktop */}
-        <aside className="hidden w-64 flex-col border-r border-neutral-200 bg-white lg:flex">
-          {/* Logo */}
-          <div className="flex h-16 items-center border-b border-neutral-200 px-6">
-            <h1 className="text-xl font-bold text-primary-700">MediTrack</h1>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 space-y-1 overflow-y-auto p-4">
-            {navigation.map((item) => (
-              <NavLink key={item.to} {...item} />
-            ))}
-          </nav>
-
-          {/* User Profile */}
-          <div className="border-t border-neutral-200 p-4">
-            <div className="mb-3 rounded-lg bg-neutral-50 p-3">
-              <p className="text-sm font-medium text-neutral-900">{userName}</p>
-              <p className="text-xs text-neutral-500">{userRole}</p>
-            </div>
-            <button
-              onClick={handleSignOut}
-              className={clsxMerge(
-                "flex w-full items-center gap-2 rounded-lg px-3 py-2",
-                "text-error-700 hover:bg-error-50"
-              )}
-            >
-              <LogOut className="h-4 w-4" />
-              <span className="text-sm font-medium">Sign Out</span>
-            </button>
-          </div>
+      <div className="min-h-screen bg-neutral-50">
+        {/* Sidebar — Desktop */}
+        <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-neutral-200 bg-white md:flex md:flex-col">
+          <SidebarContent />
         </aside>
 
         {/* Mobile Header */}
-        <div className="flex flex-col lg:hidden">
-          <header className="flex h-16 items-center border-b border-neutral-200 bg-white px-4">
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="rounded-lg p-2 text-neutral-700 hover:bg-neutral-100"
-            >
-              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
-            <h1 className="ml-3 text-xl font-bold text-primary-700">MediTrack</h1>
-          </header>
+        <header className="sticky top-0 z-20 flex h-16 items-center justify-between bg-white px-4 shadow-sm md:hidden">
+          <button
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="rounded-lg p-2 text-neutral-700 hover:bg-neutral-50"
+            aria-label="Open menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <Link to="/" className="flex items-center gap-2">
+            <Stethoscope className="h-6 w-6 text-primary-700" />
+            <span className="text-lg font-bold text-primary-700">MediTrack</span>
+          </Link>
+          <div className="w-9" aria-hidden="true" />
+        </header>
 
-          {/* Mobile Menu */}
-          {isMobileMenuOpen && (
-            <nav className="border-b border-neutral-200 bg-white p-4">
-              <div className="space-y-1">
-                {navigation.map((item) => (
-                  <NavLink key={item.to} {...item} />
-                ))}
-              </div>
-              <div className="mt-4 border-t border-neutral-200 pt-4">
-                <div className="mb-3 rounded-lg bg-neutral-50 p-3">
-                  <p className="text-sm font-medium text-neutral-900">{userName}</p>
-                  <p className="text-xs text-neutral-500">{userRole}</p>
-                </div>
-                <button
-                  onClick={handleSignOut}
-                  className={clsxMerge(
-                    "flex w-full items-center gap-2 rounded-lg px-3 py-2",
-                    "text-error-700 hover:bg-error-50"
-                  )}
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span className="text-sm font-medium">Sign Out</span>
-                </button>
-              </div>
-            </nav>
-          )}
-        </div>
+        {/* Mobile Menu — Sheet drawer */}
+        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+          <SheetContent side="left" className="w-72 max-w-[85vw] p-0">
+            <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+            <SidebarContent onNavigate={closeMobileMenu} />
+          </SheetContent>
+        </Sheet>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</div>
+        <main className="min-h-screen md:ml-64">
+          <div className="p-4 md:p-6 lg:p-8">{children}</div>
         </main>
 
         {/* Clara AI — Floating button + slide-in panel */}

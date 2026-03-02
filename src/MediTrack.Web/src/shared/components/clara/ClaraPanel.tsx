@@ -1,11 +1,89 @@
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, X, Mic, ArrowRight } from "lucide-react";
+import { Sparkles, X, Mic, Send, ArrowRight } from "lucide-react";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
 import { useClaraPanel } from "./ClaraPanelContext";
+import {
+  claraSuggestions,
+  mockConversations,
+  type MockMessage,
+} from "@/features/clara/data/clara-suggestions";
+
+interface ChatMessage {
+  readonly role: "user" | "assistant";
+  readonly content: string;
+}
+
+function formatMessageContent(content: string): React.ReactNode {
+  const lines = content.split("\n");
+
+  return lines.map((line, lineIndex) => {
+    const parts = line.split(/(\*\*[^*]+\*\*)/g);
+    const formattedParts = parts.map((part, partIndex) => {
+      if (part.startsWith("**") && part.endsWith("**")) {
+        return (
+          <strong key={partIndex} className="font-semibold">
+            {part.slice(2, -2)}
+          </strong>
+        );
+      }
+      return part;
+    });
+
+    return (
+      <span key={lineIndex}>
+        {lineIndex > 0 && "\n"}
+        {formattedParts}
+      </span>
+    );
+  });
+}
 
 export function ClaraPanel() {
-  const { isOpen, closePanel } = useClaraPanel();
+  const { isOpen, prefillPrompt, closePanel } = useClaraPanel();
   const navigate = useNavigate();
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [inputValue, setInputValue] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const findMockResponse = (userMessage: string): string => {
+    for (const suggestion of claraSuggestions) {
+      if (userMessage === suggestion.prompt) {
+        const conversation = mockConversations[suggestion.id];
+        if (conversation) {
+          const assistantMessage = conversation.find(
+            (message: MockMessage) => message.role === "assistant"
+          );
+          if (assistantMessage) return assistantMessage.content;
+        }
+      }
+    }
+    return "I'm Clara, your AI medical secretary. This is a demo \u2014 in production, I'll connect to your clinical knowledge base and patient records to provide evidence-based assistance. Try clicking one of the suggestion chips above for a sample interaction.";
+  };
+
+  const handleSendMessage = (text: string) => {
+    const trimmedText = text.trim();
+    if (!trimmedText) return;
+
+    const userMessage: ChatMessage = { role: "user", content: trimmedText };
+    const assistantResponse: ChatMessage = {
+      role: "assistant",
+      content: findMockResponse(trimmedText),
+    };
+
+    setMessages((previous) => [...previous, userMessage, assistantResponse]);
+    setInputValue("");
+  };
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    handleSendMessage(inputValue);
+  };
+
+  const handleSuggestionClick = (prompt: string) => {
+    handleSendMessage(prompt);
+  };
 
   const handleStartSession = () => {
     closePanel();
@@ -19,6 +97,34 @@ export function ClaraPanel() {
   const handlePanelClick = (event: React.MouseEvent) => {
     event.stopPropagation();
   };
+
+  // Handle prefill prompt when panel opens
+  useEffect(() => {
+    if (isOpen && prefillPrompt) {
+      handleSendMessage(prefillPrompt);
+    }
+    if (isOpen) {
+      const timer = setTimeout(() => inputRef.current?.focus(), 300);
+      return () => clearTimeout(timer);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, prefillPrompt]);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Reset messages when panel closes
+  useEffect(() => {
+    if (!isOpen) {
+      const timer = setTimeout(() => {
+        setMessages([]);
+        setInputValue("");
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
 
   return (
     <>
@@ -68,13 +174,13 @@ export function ClaraPanel() {
           </button>
         </div>
 
-        {/* Content area */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
-          {/* Start Clinical Session CTA */}
+        {/* Scrollable content area */}
+        <div className="flex-1 overflow-y-auto px-4 py-4">
+          {/* Start Clinical Session banner */}
           <button
             onClick={handleStartSession}
             className={clsxMerge(
-              "flex w-full items-center gap-3 rounded-lg p-3",
+              "mb-4 flex w-full items-center gap-3 rounded-lg p-3",
               "bg-gradient-to-r from-accent-500 to-accent-700",
               "text-white transition-opacity hover:opacity-90"
             )}
@@ -85,24 +191,113 @@ export function ClaraPanel() {
             <div className="flex-1 text-left">
               <p className="text-sm font-medium">Start Clinical Session</p>
               <p className="text-xs text-white/80">
-                Real-time transcription and AI suggestions
+                Record and transcribe patient encounters
               </p>
             </div>
             <ArrowRight className="h-4 w-4 flex-shrink-0" />
           </button>
 
-          {/* Informational message */}
-          <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
-            <p className="text-sm font-medium text-neutral-900 mb-1">
-              Clara is ready during your sessions
-            </p>
-            <p className="text-xs text-neutral-500 leading-relaxed">
-              Start a clinical session to get real-time evidence-based suggestions, automatic speaker detection, and live transcription. Clara works alongside you as you consult.
-            </p>
-          </div>
+          {/* Suggestion chips (show only when no messages) */}
+          {messages.length === 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+                Try asking
+              </p>
+              {claraSuggestions.map((suggestion) => {
+                const SuggestionIcon = suggestion.icon;
+                return (
+                  <button
+                    key={suggestion.id}
+                    onClick={() => handleSuggestionClick(suggestion.prompt)}
+                    className={clsxMerge(
+                      "flex w-full items-center gap-3 rounded-lg border border-neutral-200 p-3",
+                      "bg-white text-left transition-all",
+                      "hover:border-accent-300 hover:shadow-sm"
+                    )}
+                  >
+                    <div
+                      className={clsxMerge(
+                        "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg",
+                        "bg-neutral-50 text-neutral-700"
+                      )}
+                    >
+                      <SuggestionIcon className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-neutral-900">
+                        {suggestion.label}
+                      </p>
+                      <p className="text-xs text-neutral-500">
+                        {suggestion.category}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Chat messages */}
+          {messages.length > 0 && (
+            <div className="space-y-3">
+              {messages.map((message, index) => (
+                <div
+                  key={index}
+                  className={clsxMerge(
+                    "flex",
+                    message.role === "user" ? "justify-end" : "justify-start"
+                  )}
+                >
+                  <div
+                    className={clsxMerge(
+                      "max-w-[85%] rounded-lg px-3 py-2 text-sm",
+                      message.role === "user"
+                        ? "bg-primary-50 text-primary-800"
+                        : "bg-accent-50 text-neutral-900"
+                    )}
+                  >
+                    <div className="whitespace-pre-wrap break-words">
+                      {formatMessageContent(message.content)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+        </div>
+
+        {/* Input bar (sticky bottom) */}
+        <div className="border-t border-neutral-200 px-4 py-3">
+          <form onSubmit={handleSubmit} className="flex items-center gap-2">
+            <input
+              ref={inputRef}
+              type="text"
+              value={inputValue}
+              onChange={(event) => setInputValue(event.target.value)}
+              placeholder="Ask Clara anything..."
+              className={clsxMerge(
+                "h-10 flex-1 rounded-lg border border-neutral-200 px-3 text-sm",
+                "placeholder:text-neutral-500",
+                "focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-500"
+              )}
+            />
+            <button
+              type="submit"
+              disabled={!inputValue.trim()}
+              className={clsxMerge(
+                "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg",
+                "bg-accent-500 text-white",
+                "transition-colors hover:bg-accent-700",
+                "disabled:cursor-not-allowed disabled:opacity-50"
+              )}
+              aria-label="Send message"
+            >
+              <Send className="h-4 w-4" />
+            </button>
+          </form>
         </div>
       </div>
     </>
   );
 }
-

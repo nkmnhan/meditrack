@@ -4,6 +4,7 @@ export { LiveSessionView } from "./components/LiveSessionView";
 export { TranscriptPanel } from "./components/TranscriptPanel";
 export { SuggestionPanel } from "./components/SuggestionPanel";
 export { DevPanel } from "./components/DevPanel";
+export { SessionSummary } from "./components/SessionSummary";
 
 // Hooks
 export { useSession } from "./hooks/useSession";

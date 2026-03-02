@@ -1,20 +1,22 @@
+import { useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
-  ArrowLeft,
-  Edit,
-  UserMinus,
-  UserCheck,
+  Pencil,
+  UserCheck as UserCheckIcon,
   Loader2,
   AlertCircle,
-  Mail,
   Phone,
-  MapPin,
-  Calendar,
   User,
   FileText,
   Copy,
+  Check,
   Sparkles,
+  AlertTriangle,
+  Shield,
+  Hash,
+  Clock,
+  Ban,
 } from "lucide-react";
 import {
   useGetPatientByIdQuery,
@@ -27,17 +29,43 @@ import { useRoles } from "@/shared/auth/useRoles";
 import { UserRole } from "@/shared/auth/roles";
 import { Breadcrumb } from "@/shared/components";
 
-function InfoRow({ icon: Icon, label, value }: Readonly<{ icon: typeof Mail; label: string; value: string }>) {
+/* ── Sub-components ── */
+
+function InfoField({ label, value }: { readonly label: string; readonly value: string }) {
   return (
-    <div className="flex items-start gap-3">
-      <Icon className="h-5 w-5 shrink-0 text-neutral-500" />
-      <div>
-        <p className="text-sm font-medium text-neutral-500">{label}</p>
-        <p className="mt-1 text-neutral-900">{value || "—"}</p>
-      </div>
+    <div>
+      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-neutral-500">{label}</p>
+      <p className="text-sm font-medium text-neutral-900">{value || "\u2014"}</p>
     </div>
   );
 }
+
+function DetailCard({
+  icon: Icon,
+  title,
+  children,
+  accent,
+}: {
+  readonly icon: React.ElementType;
+  readonly title: string;
+  readonly children: React.ReactNode;
+  readonly accent?: string;
+}) {
+  return (
+    <div className={clsxMerge(
+      "rounded-lg border border-neutral-200 bg-white p-6 shadow-sm",
+      accent && `border-l-4 ${accent}`
+    )}>
+      <div className="mb-4 flex items-center gap-2 border-b border-neutral-200 pb-3">
+        <Icon className="h-5 w-5 text-primary-700" />
+        <h3 className="font-semibold text-neutral-900">{title}</h3>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+/* ── Main component ── */
 
 export function PatientDetail() {
   const { id } = useParams<{ id: string }>();
@@ -49,6 +77,7 @@ export function PatientDetail() {
   const { hasAnyRole } = useRoles();
   const canManagePatientStatus = hasAnyRole([UserRole.Admin, UserRole.Receptionist]);
   const canStartClaraSession = hasAnyRole([UserRole.Doctor, UserRole.Admin]);
+  const [isMrnCopied, setIsMrnCopied] = useState(false);
 
   const handleStartClaraSession = async () => {
     if (!patient) return;
@@ -63,7 +92,8 @@ export function PatientDetail() {
   const handleCopyMrn = () => {
     if (!patient) return;
     navigator.clipboard.writeText(patient.medicalRecordNumber);
-    toast.success("MRN copied to clipboard");
+    setIsMrnCopied(true);
+    setTimeout(() => setIsMrnCopied(false), 2000);
   };
 
   const handleDeactivate = async () => {
@@ -100,26 +130,18 @@ export function PatientDetail() {
 
   if (error || !patient) {
     return (
-      <div className="space-y-4">
-        <Link
-          to="/patients"
-          className="inline-flex items-center gap-2 text-primary-700 hover:text-primary-800"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Patients
+      <div className="flex flex-col items-center justify-center py-20">
+        <AlertCircle className="mb-3 h-12 w-12 text-neutral-300" />
+        <p className="text-lg font-semibold text-neutral-700">Patient not found</p>
+        <Link to="/patients" className="mt-2 text-sm text-primary-700 hover:underline">
+          &larr; Back to Patients
         </Link>
-        <div className="flex items-center gap-3 rounded-lg border border-error-200 bg-error-50 p-4">
-          <AlertCircle className="h-5 w-5 shrink-0 text-error-600" />
-          <div>
-            <p className="text-sm font-medium text-error-800">Patient not found</p>
-            <p className="text-sm text-error-700">
-              The patient you're looking for doesn't exist or has been removed.
-            </p>
-          </div>
-        </div>
       </div>
     );
   }
+
+  const fullName = `${patient.firstName} ${patient.lastName}`;
+  const initials = `${patient.firstName[0]}${patient.lastName[0]}`.toUpperCase();
 
   const formattedDOB = new Date(patient.dateOfBirth).toLocaleDateString("en-US", {
     year: "numeric",
@@ -131,38 +153,80 @@ export function PatientDetail() {
     (Date.now() - new Date(patient.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)
   );
 
+  const formattedCreatedAt = new Date(patient.createdAt).toLocaleDateString("en-US", {
+    year: "numeric", month: "short", day: "numeric",
+  });
+  const formattedUpdatedAt = patient.updatedAt
+    ? new Date(patient.updatedAt).toLocaleDateString("en-US", {
+        year: "numeric", month: "short", day: "numeric",
+      })
+    : "\u2014";
+
+  const addressString = typeof patient.address === "string"
+    ? patient.address
+    : (() => {
+        const street2Part = patient.address.street2 ? `, ${patient.address.street2}` : "";
+        return `${patient.address.street}${street2Part}, ${patient.address.city}, ${patient.address.state} ${patient.address.zipCode}`;
+      })();
+
   return (
-    <div className="space-y-6">
+    <>
+      {/* Breadcrumb */}
       <Breadcrumb
         items={[
+          { label: "Home", href: "/" },
           { label: "Patients", href: "/patients" },
-          { label: `${patient.firstName} ${patient.lastName}` },
+          { label: fullName },
         ]}
       />
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="mb-8 flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
         <div className="flex items-center gap-4">
-          <Link
-            to="/patients"
-            className="rounded-lg border border-neutral-300 p-2 text-neutral-700 hover:bg-neutral-50"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
+          <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-primary-100 text-lg font-semibold text-primary-700">
+            {initials}
+          </div>
           <div>
-            <h1 className="text-3xl font-bold text-neutral-900">
-              {patient.firstName} {patient.lastName}
-            </h1>
-            <p className="mt-1 text-neutral-500">Patient ID: {patient.id.substring(0, 8)}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-bold text-neutral-900">{fullName}</h1>
+              <span
+                className={clsxMerge(
+                  "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+                  patient.isActive
+                    ? "border border-success-500/30 bg-success-50 text-success-700"
+                    : "bg-neutral-100 text-neutral-500"
+                )}
+              >
+                {patient.isActive ? "Active" : "Inactive"}
+              </span>
+            </div>
+            <p className="mt-0.5 font-mono text-sm text-neutral-500">{patient.medicalRecordNumber}</p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Link
+            to={`/patients/${patient.id}/edit`}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-neutral-200 px-4 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
+          >
+            <Pencil className="h-4 w-4" /> Edit
+          </Link>
+          <Link
+            to={`/patients/${patient.id}/medical-records`}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary-700 px-4 text-sm font-medium text-white transition-colors hover:bg-primary-600"
+          >
+            <FileText className="h-4 w-4" /> View Medical Records
+          </Link>
           {canStartClaraSession && (
             <button
               type="button"
               onClick={handleStartClaraSession}
               disabled={isStartingSession}
-              className="inline-flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-white hover:bg-accent-700 disabled:opacity-50"
+              className={clsxMerge(
+                "relative inline-flex h-10 items-center justify-center gap-2 overflow-hidden rounded-lg px-4",
+                "bg-gradient-to-r from-accent-500 to-accent-700",
+                "text-sm font-medium text-white shadow-md",
+                "transition-all hover:shadow-lg disabled:opacity-50"
+              )}
             >
               {isStartingSession ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -172,45 +236,23 @@ export function PatientDetail() {
               Start with Clara
             </button>
           )}
-          <Link
-            to={`/patients/${patient.id}/medical-records`}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary-700 px-4 py-2 text-sm font-medium text-white hover:bg-primary-800"
-          >
-            <FileText className="h-4 w-4" />
-            Medical Records
-          </Link>
-          <Link
-            to={`/patients/${patient.id}/edit`}
-            className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
-          >
-            <Edit className="h-4 w-4" />
-            Edit
-          </Link>
           {canManagePatientStatus && (
             patient.isActive ? (
               <button
                 onClick={handleDeactivate}
                 disabled={isDeactivating}
-                className="inline-flex items-center gap-2 rounded-lg border border-error-300 px-4 py-2 text-error-700 hover:bg-error-50 disabled:opacity-50"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-error-500 px-4 text-sm font-medium text-error-700 transition-colors hover:bg-error-50 disabled:opacity-50"
               >
-                {isDeactivating ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <UserMinus className="h-4 w-4" />
-                )}
+                {isDeactivating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />}
                 Deactivate
               </button>
             ) : (
               <button
                 onClick={handleActivate}
                 disabled={isActivating}
-                className="inline-flex items-center gap-2 rounded-lg border border-success-300 px-4 py-2 text-success-700 hover:bg-success-50 disabled:opacity-50"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-success-300 px-4 text-sm font-medium text-success-700 transition-colors hover:bg-success-50 disabled:opacity-50"
               >
-                {isActivating ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <UserCheck className="h-4 w-4" />
-                )}
+                {isActivating ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCheckIcon className="h-4 w-4" />}
                 Activate
               </button>
             )
@@ -218,144 +260,72 @@ export function PatientDetail() {
         </div>
       </div>
 
-      {/* Status Badge */}
-      <span
-        className={clsxMerge(
-          "inline-flex items-center rounded-full px-3 py-1 text-sm font-medium",
-          patient.isActive
-            ? "bg-success-50 text-success-700"
-            : "bg-neutral-100 text-neutral-500"
-        )}
-      >
-        {patient.isActive ? "Active" : "Inactive"}
-      </span>
-
-      {/* Patient Information */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Basic Information */}
-        <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-neutral-900">Basic Information</h2>
-          <div className="space-y-4">
-            <InfoRow icon={User} label="Full Name" value={`${patient.firstName} ${patient.lastName}`} />
-            <InfoRow
-              icon={Calendar}
-              label="Date of Birth"
-              value={`${formattedDOB} (${age} years old)`}
-            />
-            {patient.gender && <InfoRow icon={User} label="Gender" value={patient.gender} />}
+      {/* Info Grid */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <DetailCard icon={User} title="Basic Information">
+          <div className="grid grid-cols-2 gap-4">
+            <InfoField label="Full Name" value={fullName} />
+            <InfoField label="Date of Birth" value={`${formattedDOB} (${age} years)`} />
+            <InfoField label="Gender" value={patient.gender || "\u2014"} />
           </div>
-        </div>
+        </DetailCard>
 
-        {/* Contact Information */}
-        <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-neutral-900">Contact Information</h2>
-          <div className="space-y-4">
-            <InfoRow icon={Mail} label="Email" value={patient.email} />
-            <InfoRow icon={Phone} label="Phone" value={patient.phoneNumber} />
-            <InfoRow
-              icon={MapPin}
-              label="Address"
-              value={
-                typeof patient.address === "string"
-                  ? patient.address
-                  : (() => {
-                      const street2Part = patient.address.street2
-                        ? `, ${patient.address.street2}`
-                        : "";
-                      return `${patient.address.street}${street2Part}, ${patient.address.city}, ${patient.address.state} ${patient.address.zipCode}`;
-                    })()
-              }
-            />
+        <DetailCard icon={Phone} title="Contact Information">
+          <div className="space-y-3">
+            <InfoField label="Phone" value={patient.phoneNumber} />
+            <InfoField label="Email" value={patient.email} />
+            <InfoField label="Address" value={addressString} />
           </div>
-        </div>
+        </DetailCard>
 
-        {/* Emergency Contact */}
-        {patient.emergencyContact && (
-          <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-neutral-900">Emergency Contact</h2>
-            {typeof patient.emergencyContact === "string" ? (
-              <div className="whitespace-pre-line text-neutral-900">{patient.emergencyContact}</div>
-            ) : (
-              <div className="space-y-2 text-neutral-900">
-                <p><strong>Name:</strong> {patient.emergencyContact.name}</p>
-                <p><strong>Relationship:</strong> {patient.emergencyContact.relationship}</p>
-                <p><strong>Phone:</strong> {patient.emergencyContact.phoneNumber}</p>
-                {patient.emergencyContact.email && (
-                  <p><strong>Email:</strong> {patient.emergencyContact.email}</p>
-                )}
-              </div>
-            )}
-          </div>
+        {patient.emergencyContact && typeof patient.emergencyContact !== "string" && (
+          <DetailCard icon={AlertTriangle} title="Emergency Contact" accent="border-l-warning-500">
+            <div className="space-y-3">
+              <InfoField label="Name" value={patient.emergencyContact.name} />
+              <InfoField label="Relationship" value={patient.emergencyContact.relationship} />
+              <InfoField label="Phone" value={patient.emergencyContact.phoneNumber} />
+              {patient.emergencyContact.email && (
+                <InfoField label="Email" value={patient.emergencyContact.email} />
+              )}
+            </div>
+          </DetailCard>
         )}
 
-        {/* Medical Record Number */}
-        <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-neutral-900">Medical Record</h2>
-          <p className="text-sm font-medium text-neutral-500">MRN</p>
-          <div className="mt-1 flex items-center gap-2">
-            <p className="font-mono text-lg text-neutral-900">{patient.medicalRecordNumber}</p>
+        <DetailCard icon={Hash} title="Medical Record Number">
+          <div className="flex items-center gap-3">
+            <div className="flex-1 rounded-md bg-neutral-50 p-3 font-mono text-lg font-semibold text-neutral-900">
+              {patient.medicalRecordNumber}
+            </div>
             <button
-              type="button"
               onClick={handleCopyMrn}
+              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md border border-neutral-200 text-neutral-500 transition-colors hover:bg-neutral-50"
               aria-label="Copy MRN to clipboard"
-              className="h-7 w-7 rounded flex items-center justify-center text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors"
             >
-              <Copy className="h-4 w-4" />
+              {isMrnCopied ? <Check className="h-4 w-4 text-success-500" /> : <Copy className="h-4 w-4" />}
             </button>
           </div>
-        </div>
+        </DetailCard>
 
-        {/* Insurance Information */}
-        {patient.insurance && (
-          <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm lg:col-span-2">
-            <h2 className="mb-4 text-lg font-semibold text-neutral-900">Insurance Information</h2>
-            {typeof patient.insurance === "string" ? (
-              <div className="whitespace-pre-line text-neutral-900">{patient.insurance}</div>
-            ) : (
-              <div className="space-y-2 text-neutral-900">
-                <p><strong>Provider:</strong> {patient.insurance.provider}</p>
-                <p><strong>Policy Number:</strong> {patient.insurance.policyNumber}</p>
-                <p><strong>Group Number:</strong> {patient.insurance.groupNumber}</p>
-                {patient.insurance.planName && (
-                  <p><strong>Plan Name:</strong> {patient.insurance.planName}</p>
-                )}
-                {patient.insurance.effectiveDate && (
-                  <p><strong>Effective Date:</strong> {new Date(patient.insurance.effectiveDate).toLocaleDateString()}</p>
-                )}
-                {patient.insurance.expirationDate && (
-                  <p><strong>Expiration Date:</strong> {new Date(patient.insurance.expirationDate).toLocaleDateString()}</p>
-                )}
-              </div>
-            )}
-          </div>
+        {patient.insurance && typeof patient.insurance !== "string" && (
+          <DetailCard icon={Shield} title="Insurance Information">
+            <div className="space-y-3">
+              <InfoField label="Provider" value={patient.insurance.provider} />
+              <InfoField label="Policy Number" value={patient.insurance.policyNumber} />
+              <InfoField label="Group Number" value={patient.insurance.groupNumber} />
+              {patient.insurance.planName && (
+                <InfoField label="Plan Name" value={patient.insurance.planName} />
+              )}
+            </div>
+          </DetailCard>
         )}
-      </div>
 
-      {/* Metadata */}
-      <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
-        <div className="flex items-center justify-between text-sm text-neutral-500">
-          <span>
-            Created: {new Date(patient.createdAt).toLocaleString("en-US", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </span>
-          {patient.updatedAt && (
-            <span>
-              Last Updated: {new Date(patient.updatedAt).toLocaleString("en-US", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </span>
-          )}
-        </div>
+        <DetailCard icon={Clock} title="Metadata">
+          <div className="space-y-3">
+            <InfoField label="Created" value={formattedCreatedAt} />
+            <InfoField label="Last Updated" value={formattedUpdatedAt} />
+          </div>
+        </DetailCard>
       </div>
-    </div>
+    </>
   );
 }

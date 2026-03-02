@@ -1,9 +1,10 @@
 import { useId, useState } from "react";
-import { Search, X, FileText, Loader2, ChevronDown } from "lucide-react";
+import { Search, X, FileX, Loader2, ChevronDown } from "lucide-react";
 import { useMedicalRecordsSearch } from "../hooks/useMedicalRecordsSearch";
 import { MedicalRecordList } from "./MedicalRecordList";
 import { DiagnosisSeverity, RecordStatus } from "../types";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
+import { Breadcrumb } from "@/shared/components";
 
 const STATUS_LABELS: Record<RecordStatus, string> = {
   [RecordStatus.Active]: "Active",
@@ -70,11 +71,20 @@ export function MedicalRecordsIndexPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-neutral-900">Medical Records</h1>
-        <p className="text-sm text-neutral-600 mt-1">
-          Search for a patient to view their medical records
-        </p>
+      <Breadcrumb
+        items={[
+          { label: "Home", href: "/" },
+          { label: "Medical Records" },
+        ]}
+      />
+
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-neutral-900">Medical Records</h1>
+          <p className="text-sm text-neutral-500 mt-1">
+            Search for a patient to view their medical records
+          </p>
+        </div>
       </div>
 
       {/* Patient search */}
@@ -251,9 +261,9 @@ export function MedicalRecordsIndexPage() {
         <MedicalRecordList records={filteredRecords} isLoading={isLoadingRecords} />
       ) : (
         <div className="flex flex-col items-center justify-center min-h-[400px] rounded-lg border border-neutral-200 bg-white p-6">
-          <FileText className="h-12 w-12 text-neutral-400" />
-          <h2 className="mt-4 text-lg font-semibold text-neutral-900">Search for a Patient</h2>
-          <p className="mt-2 text-sm text-neutral-600 text-center max-w-md">
+          <FileX className="h-12 w-12 text-neutral-300" />
+          <h2 className="mt-4 text-lg font-semibold text-neutral-700">Search for a Patient</h2>
+          <p className="mt-2 text-sm text-neutral-500 text-center max-w-md">
             Type a patient's name above to search and view their medical records.
           </p>
         </div>

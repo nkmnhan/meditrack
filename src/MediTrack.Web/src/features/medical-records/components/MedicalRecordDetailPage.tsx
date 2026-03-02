@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router-dom";
-import { AlertCircle, ArrowLeft } from "lucide-react";
+import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
 import { useGetMedicalRecordByIdQuery } from "../store/medicalRecordsApi";
 import { MedicalRecordDetail } from "../components/MedicalRecordDetail";
 import { Breadcrumb } from "@/shared/components";
@@ -16,24 +16,19 @@ export function MedicalRecordDetailPage() {
   if (isLoading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-primary-700 border-r-transparent"></div>
-          <p className="mt-4 text-neutral-600">Loading medical record...</p>
-        </div>
+        <Loader2 className="h-8 w-8 animate-spin text-primary-700" />
       </div>
     );
   }
 
   if (error || !record) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="h-12 w-12 text-error-600 mx-auto" />
-          <h2 className="mt-4 text-xl font-semibold text-neutral-900">Record Not Found</h2>
-          <p className="mt-2 text-neutral-600">
-            The medical record you're looking for doesn't exist or you don't have access to it.
-          </p>
-        </div>
+      <div className="flex flex-col items-center justify-center py-20">
+        <AlertCircle className="mb-3 h-12 w-12 text-neutral-300" />
+        <p className="text-lg font-semibold text-neutral-700">Record Not Found</p>
+        <Link to="/medical-records" className="mt-2 text-sm text-primary-700 hover:underline">
+          &larr; Back to Medical Records
+        </Link>
       </div>
     );
   }

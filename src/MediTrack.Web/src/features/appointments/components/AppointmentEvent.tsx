@@ -76,14 +76,14 @@ export function AppointmentEvent({ calendarEvent }: AppointmentEventProps) {
             <div
               className={clsxMerge(
                 "h-2 w-2 shrink-0 rounded-full",
-                status === "Completed" && "bg-green-500",
-                status === "Scheduled" && "bg-blue-500",
-                status === "Confirmed" && "bg-blue-600",
-                status === "CheckedIn" && "bg-teal-500",
-                status === "InProgress" && "bg-amber-500",
-                status === "Cancelled" && "bg-slate-400",
-                status === "NoShow" && "bg-red-500",
-                status === "Rescheduled" && "bg-purple-500"
+                status === "Completed" && "bg-success-500",
+                status === "Scheduled" && "bg-primary-700",
+                status === "Confirmed" && "bg-accent-700",
+                status === "CheckedIn" && "bg-info-700",
+                status === "InProgress" && "bg-warning-500",
+                status === "Cancelled" && "bg-neutral-400",
+                status === "NoShow" && "bg-error-500",
+                status === "Rescheduled" && "bg-neutral-500"
               )}
             />
             <span>{statusLabel}</span>
