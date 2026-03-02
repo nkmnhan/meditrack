@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OpenTelemetry.Logs;
+using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -19,22 +19,20 @@ public static class OpenTelemetryExtensions
             {
                 tracing
                     .AddAspNetCoreInstrumentation()
-                    .AddHttpClientInstrumentation()
-                    .AddOtlpExporter();
+                    .AddHttpClientInstrumentation();
             })
             .WithMetrics(metrics =>
             {
                 metrics
                     .AddAspNetCoreInstrumentation()
-                    .AddHttpClientInstrumentation()
-                    .AddOtlpExporter();
-            });
+                    .AddHttpClientInstrumentation();
+            })
+            .UseOtlpExporter();
 
         services.AddLogging(logging =>
         {
             logging.AddOpenTelemetry(openTelemetryLogOptions =>
             {
-                openTelemetryLogOptions.AddOtlpExporter();
                 openTelemetryLogOptions.IncludeFormattedMessage = true;
                 openTelemetryLogOptions.IncludeScopes = true;
             });

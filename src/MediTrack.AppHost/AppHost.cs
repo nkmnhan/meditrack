@@ -7,13 +7,38 @@ var certPath = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, "..", "..
 var certKeyPath = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, "..", "..", "dev-certs", "certs", "localhost-key.pem"));
 
 // ──────────────────────────────────────────────────────
-// Infrastructure — ensure Docker Compose containers are running
+// Prerequisites — ensure dev cert is trusted and Docker infra is running
 // ──────────────────────────────────────────────────────
 var repoRoot = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, "..", ".."));
+
+// Ensure .NET dev cert is trusted (required for Aspire dashboard OTLP endpoint)
+var devCertCheck = Process.Start(new ProcessStartInfo
+{
+    FileName = "dotnet",
+    Arguments = "dev-certs https --check --trust",
+    RedirectStandardOutput = true,
+    RedirectStandardError = true,
+    UseShellExecute = false,
+});
+devCertCheck?.WaitForExit();
+if (devCertCheck?.ExitCode != 0)
+{
+    Console.WriteLine("Trusting .NET dev certificate for Aspire dashboard OTLP...");
+    var devCertTrust = Process.Start(new ProcessStartInfo
+    {
+        FileName = "dotnet",
+        Arguments = "dev-certs https --trust",
+        RedirectStandardOutput = true,
+        RedirectStandardError = true,
+        UseShellExecute = false,
+    });
+    devCertTrust?.WaitForExit();
+}
+
 var dockerCompose = Process.Start(new ProcessStartInfo
 {
     FileName = "docker",
-    Arguments = "compose up -d postgres rabbitmq",
+    Arguments = "compose up -d --wait postgres rabbitmq",
     WorkingDirectory = repoRoot,
     RedirectStandardOutput = true,
     RedirectStandardError = true,
@@ -39,6 +64,7 @@ var rabbitmq = builder.AddConnectionString("rabbitmq");
 // Ports are set in each project's launchSettings.json
 // ──────────────────────────────────────────────────────
 var identityApi = builder.AddProject<Projects.Identity_API>("identity-api")
+    .WithOtlpExporter()
     .WithReference(identityDb)
     .WithReference(rabbitmq)
     .WithEnvironment("IdentityUrl", "https://localhost:5001")
@@ -48,6 +74,7 @@ var identityApi = builder.AddProject<Projects.Identity_API>("identity-api")
     .WithEnvironment("Kestrel__Certificates__Default__KeyPath", certKeyPath);
 
 var patientApi = builder.AddProject<Projects.Patient_API>("patient-api")
+    .WithOtlpExporter()
     .WithReference(patientDb)
     .WithReference(rabbitmq)
     .WithReference(identityApi)
@@ -57,6 +84,7 @@ var patientApi = builder.AddProject<Projects.Patient_API>("patient-api")
     .WithEnvironment("Kestrel__Certificates__Default__KeyPath", certKeyPath);
 
 var appointmentApi = builder.AddProject<Projects.Appointment_API>("appointment-api")
+    .WithOtlpExporter()
     .WithReference(appointmentDb)
     .WithReference(rabbitmq)
     .WithReference(identityApi)
@@ -66,6 +94,7 @@ var appointmentApi = builder.AddProject<Projects.Appointment_API>("appointment-a
     .WithEnvironment("Kestrel__Certificates__Default__KeyPath", certKeyPath);
 
 var medicalRecordsApi = builder.AddProject<Projects.MedicalRecords_API>("medicalrecords-api")
+    .WithOtlpExporter()
     .WithReference(medicalRecordsDb)
     .WithReference(rabbitmq)
     .WithReference(identityApi)
@@ -75,10 +104,12 @@ var medicalRecordsApi = builder.AddProject<Projects.MedicalRecords_API>("medical
     .WithEnvironment("Kestrel__Certificates__Default__KeyPath", certKeyPath);
 
 var notificationWorker = builder.AddProject<Projects.Notification_Worker>("notification-worker")
+    .WithOtlpExporter()
     .WithReference(auditDb)
     .WithReference(rabbitmq);
 
 var claraApi = builder.AddProject<Projects.Clara_API>("clara-api")
+    .WithOtlpExporter()
     .WithReference(claraDb)
     .WithReference(rabbitmq)
     .WithReference(identityApi)
