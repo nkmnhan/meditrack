@@ -66,9 +66,7 @@
     <PackageVersion Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
 
     <!-- Aspire Hosting -->
-    <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.1.1" />
-    <PackageVersion Include="Aspire.Hosting.RabbitMQ" Version="13.1.1" />
-    <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.1.1" />
+    <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.1.2" />
 
     <!-- Swagger / OpenAPI -->
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.0.0" />
