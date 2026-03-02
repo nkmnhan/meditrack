@@ -12,4 +12,6 @@ public class ApplicationUser : IdentityUser
     [Required]
     [MaxLength(100)]
     public string LastName { get; set; } = default!;
+
+    public DateTimeOffset? LastLoginAt { get; set; }
 }

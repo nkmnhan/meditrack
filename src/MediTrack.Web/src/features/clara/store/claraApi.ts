@@ -8,13 +8,22 @@ import type {
   KnowledgeSearchRequest,
   KnowledgeSearchResponse,
 } from "../types";
+import type {
+  AuditLogSearchParams,
+  PagedAuditLogsResponse,
+  AnalyticsOverview,
+  SessionVolumeEntry,
+  SuggestionBreakdownEntry,
+  ProviderLeaderboardEntry,
+  SystemHealthResponse,
+} from "@/features/admin/types";
 
 import { CLARA_API_URL } from "../config";
 
 export const claraApi = createApi({
   reducerPath: "claraApi",
   baseQuery: createBaseQueryWithReauth(CLARA_API_URL),
-  tagTypes: ["Session"],
+  tagTypes: ["Session", "AuditLog"],
   endpoints: (builder) => ({
     /**
      * List recent sessions for the current doctor
@@ -82,6 +91,62 @@ export const claraApi = createApi({
         body,
       }),
     }),
+
+    // --- Admin: Audit Logs ---
+
+    getAuditLogs: builder.query<PagedAuditLogsResponse, AuditLogSearchParams>({
+      query: (params) => ({
+        url: "/api/audit/logs",
+        params: {
+          ...(params.action && { action: params.action }),
+          ...(params.user && { user: params.user }),
+          ...(params.search && { search: params.search }),
+          ...(params.severity && { severity: params.severity }),
+          pageNumber: params.pageNumber ?? 1,
+          pageSize: params.pageSize ?? 25,
+        },
+      }),
+      providesTags: ["AuditLog"],
+    }),
+
+    // --- Admin: Analytics ---
+
+    getAnalyticsOverview: builder.query<AnalyticsOverview, { period?: string }>({
+      query: (params) => ({
+        url: "/api/analytics/overview",
+        params: { period: params.period ?? "30d" },
+      }),
+    }),
+
+    getSessionVolume: builder.query<SessionVolumeEntry[], { days?: number }>({
+      query: (params) => ({
+        url: "/api/analytics/session-volume",
+        params: { days: params.days ?? 7 },
+      }),
+    }),
+
+    getSuggestionBreakdown: builder.query<SuggestionBreakdownEntry[], { period?: string }>({
+      query: (params) => ({
+        url: "/api/analytics/suggestion-breakdown",
+        params: { period: params.period ?? "30d" },
+      }),
+    }),
+
+    getProviderLeaderboard: builder.query<ProviderLeaderboardEntry[], { period?: string; limit?: number }>({
+      query: (params) => ({
+        url: "/api/analytics/provider-leaderboard",
+        params: {
+          period: params.period ?? "30d",
+          limit: params.limit ?? 5,
+        },
+      }),
+    }),
+
+    // --- Admin: System Health ---
+
+    getSystemHealth: builder.query<SystemHealthResponse, void>({
+      query: () => "/api/system/health",
+    }),
   }),
 });
 
@@ -92,4 +157,10 @@ export const {
   useEndSessionMutation,
   useRequestSuggestionsMutation,
   useSearchKnowledgeMutation,
+  useGetAuditLogsQuery,
+  useGetAnalyticsOverviewQuery,
+  useGetSessionVolumeQuery,
+  useGetSuggestionBreakdownQuery,
+  useGetProviderLeaderboardQuery,
+  useGetSystemHealthQuery,
 } = claraApi;

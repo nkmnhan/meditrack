@@ -175,4 +175,11 @@ public sealed record AttachmentResponse(
     string UploadedByName,
     DateTimeOffset UploadedAt);
 
+/// <summary>
+/// Dashboard stats for medical records.
+/// </summary>
+public sealed record MedicalRecordStatsResponse(
+    int PendingCount,
+    int UrgentCount);
+
 #endregion

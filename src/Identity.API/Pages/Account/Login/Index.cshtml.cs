@@ -86,8 +86,12 @@ public class Index : PageModel
             {
                 ApplicationUser? user = await _userManager.FindByNameAsync(Input.Username!);
 
+                // Track last login timestamp
+                user!.LastLoginAt = DateTimeOffset.UtcNow;
+                await _userManager.UpdateAsync(user);
+
                 await _events.RaiseAsync(new UserLoginSuccessEvent(
-                    user!.UserName, user.Id, user.UserName, clientId: context?.Client.ClientId));
+                    user.UserName, user.Id, user.UserName, clientId: context?.Client.ClientId));
 
                 if (context is not null)
                 {

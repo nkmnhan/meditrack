@@ -144,4 +144,19 @@ public sealed record ProviderSummaryResponse(
     Guid ProviderId,
     string ProviderName);
 
+/// <summary>
+/// Dashboard statistics for a provider on a given date.
+/// </summary>
+public sealed record DashboardStatsResponse(
+    int TodayAppointmentCount,
+    int PatientsSeen,
+    int[] AppointmentCountsByDay);
+
+/// <summary>
+/// Query parameters for dashboard stats.
+/// </summary>
+public sealed record DashboardStatsQuery(
+    Guid? ProviderId = null,
+    DateTime? Date = null);
+
 #endregion

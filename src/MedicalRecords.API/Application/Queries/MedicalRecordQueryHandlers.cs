@@ -2,6 +2,8 @@ using AutoMapper;
 using MediatR;
 using MediTrack.MedicalRecords.API.Application.Models;
 using MediTrack.MedicalRecords.Domain.Aggregates;
+using MediTrack.MedicalRecords.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 
 namespace MediTrack.MedicalRecords.API.Application.Queries;
 
@@ -83,5 +85,48 @@ public sealed class GetMedicalRecordsByDiagnosisCodeQueryHandler
         var records = await _repository.GetByDiagnosisCodeAsync(query.DiagnosisCode, cancellationToken);
 
         return _mapper.Map<List<MedicalRecordListItemResponse>>(records);
+    }
+}
+
+/// <summary>
+/// Handler for GetMedicalRecordStatsQuery.
+/// Uses DbContext directly for efficient aggregate queries.
+/// </summary>
+public sealed class GetMedicalRecordStatsQueryHandler
+    : IRequestHandler<GetMedicalRecordStatsQuery, MedicalRecordStatsResponse>
+{
+    private readonly MedicalRecordsDbContext _dbContext;
+
+    public GetMedicalRecordStatsQueryHandler(MedicalRecordsDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
+    public async Task<MedicalRecordStatsResponse> Handle(
+        GetMedicalRecordStatsQuery query,
+        CancellationToken cancellationToken)
+    {
+        var baseQuery = _dbContext.MedicalRecords.AsNoTracking();
+
+        if (query.ProviderId.HasValue)
+        {
+            baseQuery = baseQuery.Where(record => record.RecordedByDoctorId == query.ProviderId.Value);
+        }
+
+        // Pending = Active or RequiresFollowUp (not Resolved or Archived)
+        var pendingCount = await baseQuery
+            .Where(record => record.Status == RecordStatus.Active
+                || record.Status == RecordStatus.RequiresFollowUp)
+            .CountAsync(cancellationToken);
+
+        // Urgent = Severe or Critical severity among pending records
+        var urgentCount = await baseQuery
+            .Where(record => record.Status == RecordStatus.Active
+                || record.Status == RecordStatus.RequiresFollowUp)
+            .Where(record => record.Severity == DiagnosisSeverity.Severe
+                || record.Severity == DiagnosisSeverity.Critical)
+            .CountAsync(cancellationToken);
+
+        return new MedicalRecordStatsResponse(pendingCount, urgentCount);
     }
 }

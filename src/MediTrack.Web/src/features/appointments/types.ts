@@ -139,3 +139,14 @@ export interface ConflictCheckParams {
   readonly endTime: string;
   readonly excludeAppointmentId?: string;
 }
+
+export interface DashboardStatsResponse {
+  readonly todayAppointmentCount: number;
+  readonly patientsSeen: number;
+  readonly appointmentCountsByDay: number[];
+}
+
+export interface DashboardStatsParams {
+  readonly providerId?: string;
+  readonly date?: string;
+}

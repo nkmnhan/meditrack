@@ -6,6 +6,7 @@ using MediTrack.MedicalRecords.API.Application.Models;
 using MediTrack.MedicalRecords.API.Application.Queries;
 using MediTrack.MedicalRecords.API.Application.Services;
 using MediTrack.Shared.Common;
+using Microsoft.AspNetCore.Mvc;
 
 namespace MediTrack.MedicalRecords.API.Apis;
 
@@ -35,6 +36,10 @@ public static class MedicalRecordsApi
         group.MapGet("/diagnosis/{diagnosisCode}", GetByDiagnosisCode)
             .WithName("GetMedicalRecordsByDiagnosisCode")
             .WithSummary("Get medical records by diagnosis code");
+
+        group.MapGet("/stats", GetMedicalRecordStats)
+            .WithName("GetMedicalRecordStats")
+            .WithSummary("Get medical record statistics for the dashboard");
 
         // Command endpoints - Medical Record
         group.MapPost("/", CreateMedicalRecord)
@@ -116,6 +121,25 @@ public static class MedicalRecordsApi
             cancellationToken);
 
         return Results.Ok(records);
+    }
+
+    private static async Task<IResult> GetMedicalRecordStats(
+        [FromQuery] Guid? providerId,
+        ClaimsPrincipal user,
+        IMediator mediator,
+        CancellationToken cancellationToken)
+    {
+        // IDOR protection: Only staff can access stats (A01)
+        if (!UserRoles.Staff.Any(role => user.IsInRole(role)))
+        {
+            return Results.Forbid();
+        }
+
+        var stats = await mediator.Send(
+            new GetMedicalRecordStatsQuery(providerId),
+            cancellationToken);
+
+        return Results.Ok(stats);
     }
 
     private static async Task<IResult> GetByDiagnosisCode(

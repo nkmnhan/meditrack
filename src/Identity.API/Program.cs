@@ -1,14 +1,17 @@
 using System.Threading.RateLimiting;
 using MediTrack.Identity;
+using MediTrack.Identity.Apis;
 using MediTrack.Identity.Data;
 using MediTrack.Identity.Models;
 using MediTrack.Identity.Services;
 using MediTrack.ServiceDefaults.Middleware;
 using MediTrack.ServiceDefaults;
 using MediTrack.ServiceDefaults.Extensions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +38,28 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
+
+// JWT Bearer auth for REST API endpoints (alongside cookie auth for Razor Pages).
+// Identity.API is the IdentityServer itself, so it validates tokens it issued.
+string identityUrl = builder.Configuration["IdentityUrl"]
+    ?? throw new InvalidOperationException("IdentityUrl configuration is required.");
+
+builder.Services.AddAuthentication()
+    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+    {
+        options.Authority = identityUrl;
+        options.RequireHttpsMetadata = false;
+        options.MapInboundClaims = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateAudience = false,
+            ValidateIssuer = false,
+            NameClaimType = "name",
+            RoleClaimType = "role"
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 // Duende IdentityServer
 builder.Services
@@ -130,6 +155,7 @@ app.UseStaticFiles();
 app.UseIdentityServer();
 app.UseAuthorization();
 app.MapRazorPages();
+app.MapUsersApi();
 
 if (app.Environment.IsDevelopment())
 {

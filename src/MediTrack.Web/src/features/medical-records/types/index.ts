@@ -204,3 +204,12 @@ export interface MedicalRecordSearchParams {
   readonly fromDate?: string;
   readonly toDate?: string;
 }
+
+export interface MedicalRecordStatsResponse {
+  readonly pendingCount: number;
+  readonly urgentCount: number;
+}
+
+export interface MedicalRecordStatsParams {
+  readonly providerId?: string;
+}

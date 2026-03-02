@@ -488,6 +488,60 @@ public sealed class AppointmentService : IAppointmentService
         return _mapper.Map<AppointmentResponse>(appointment);
     }
 
+    public async Task<DashboardStatsResponse> GetDashboardStatsAsync(
+        DashboardStatsQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        var targetDate = query.Date?.Date ?? DateTime.UtcNow.Date;
+        var startOfDay = targetDate;
+        var endOfDay = targetDate.AddDays(1);
+
+        var baseQuery = _dbContext.Appointments.AsNoTracking();
+
+        if (query.ProviderId.HasValue)
+        {
+            baseQuery = baseQuery.Where(appointment => appointment.ProviderId == query.ProviderId.Value);
+        }
+
+        // Today's appointment count (non-cancelled statuses)
+        var todayAppointmentCount = await baseQuery
+            .Where(appointment => appointment.ScheduledDateTime >= startOfDay
+                && appointment.ScheduledDateTime < endOfDay
+                && appointment.Status != AppointmentStatus.Cancelled
+                && appointment.Status != AppointmentStatus.Rescheduled)
+            .CountAsync(cancellationToken);
+
+        // Patients seen = Completed or InProgress today
+        var patientsSeen = await baseQuery
+            .Where(appointment => appointment.ScheduledDateTime >= startOfDay
+                && appointment.ScheduledDateTime < endOfDay
+                && (appointment.Status == AppointmentStatus.Completed
+                    || appointment.Status == AppointmentStatus.InProgress))
+            .CountAsync(cancellationToken);
+
+        // Last 7 days counts for sparkline
+        var sevenDaysAgo = targetDate.AddDays(-6);
+        var dailyCounts = await baseQuery
+            .Where(appointment => appointment.ScheduledDateTime >= sevenDaysAgo
+                && appointment.ScheduledDateTime < endOfDay
+                && appointment.Status != AppointmentStatus.Cancelled
+                && appointment.Status != AppointmentStatus.Rescheduled)
+            .GroupBy(appointment => appointment.ScheduledDateTime.Date)
+            .Select(group => new { Date = group.Key, Count = group.Count() })
+            .ToListAsync(cancellationToken);
+
+        // Fill in all 7 days (including zero-count days)
+        var appointmentCountsByDay = new int[7];
+        for (var dayOffset = 0; dayOffset < 7; dayOffset++)
+        {
+            var day = sevenDaysAgo.AddDays(dayOffset);
+            appointmentCountsByDay[dayOffset] = dailyCounts
+                .FirstOrDefault(dailyCount => dailyCount.Date == day)?.Count ?? 0;
+        }
+
+        return new DashboardStatsResponse(todayAppointmentCount, patientsSeen, appointmentCountsByDay);
+    }
+
     public async Task<IReadOnlyList<ProviderSummaryResponse>> GetDistinctProvidersAsync(
         CancellationToken cancellationToken = default)
     {

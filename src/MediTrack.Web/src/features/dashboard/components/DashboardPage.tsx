@@ -2,35 +2,16 @@ import { Link } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 import {
   CalendarDays, UserCheck, FileText, Sparkles, CalendarPlus, UserPlus, FileSearch, Users,
-  Clock, ArrowUpRight, Bell,
+  Clock, ArrowUpRight, Bell, Loader2, AlertCircle,
 } from "lucide-react";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
 import { useClaraPanel } from "@/shared/components/clara/ClaraPanelContext";
 import { claraSuggestions } from "@/features/clara/data/clara-suggestions";
+import { useDashboard } from "../hooks/useDashboard";
+import { getInitials, getAvatarColor } from "@/shared/utils/avatarUtils";
+import type { AppointmentListItem } from "@/features/appointments/types";
 
-/* ── Mock data (will be replaced by RTK Query when APIs are ready) ── */
-
-const statCards = [
-  { title: "Today's Appointments", value: "12", icon: CalendarDays, iconBg: "bg-primary-50", iconColor: "text-primary-700", trend: "+3 from yesterday", trendColor: "text-success-500" },
-  { title: "Patients Seen", value: "8", icon: UserCheck, iconBg: "bg-secondary-50", iconColor: "text-secondary-700", trend: "On track", trendColor: "text-success-500" },
-  { title: "Pending Records", value: "5", icon: FileText, iconBg: "bg-warning-50", iconColor: "text-warning-500", trend: "2 urgent", trendColor: "text-warning-500" },
-  { title: "Clara Sessions", value: "3", icon: Sparkles, iconBg: "bg-accent-50", iconColor: "text-accent-500", trend: "1 active", trendColor: "text-accent-500" },
-];
-
-const SPARKLINE_HEIGHTS = [
-  [50, 70, 40, 90, 60, 80, 45],
-  [30, 60, 85, 55, 70, 40, 90],
-  [80, 45, 65, 35, 75, 55, 60],
-  [60, 90, 50, 70, 35, 85, 40],
-];
-
-const appointments = [
-  { time: "09:00 AM", patient: "Sarah Johnson", type: "Follow-up", status: "Confirmed", statusColor: "bg-accent-100 text-accent-700", duration: "30 min" },
-  { time: "09:30 AM", patient: "Michael Chen", type: "New Visit", status: "Checked In", statusColor: "bg-info-50 text-info-700", duration: "45 min" },
-  { time: "10:15 AM", patient: "Emily Rivera", type: "Lab Review", status: "Scheduled", statusColor: "bg-primary-100 text-primary-700", duration: "20 min" },
-  { time: "11:00 AM", patient: "James O'Brien", type: "Follow-up", status: "In Progress", statusColor: "bg-warning-50 text-warning-700", duration: "30 min" },
-  { time: "11:30 AM", patient: "Aisha Patel", type: "Urgent", status: "Scheduled", statusColor: "bg-primary-100 text-primary-700", duration: "30 min" },
-];
+/* ── Static data (intentional — not from backend) ── */
 
 const quickActions = [
   { label: "New Appointment", icon: CalendarPlus, bg: "bg-primary-700 hover:bg-primary-600", text: "text-white", to: "/appointments" },
@@ -38,27 +19,69 @@ const quickActions = [
   { label: "View Records", icon: FileSearch, bg: "bg-white hover:bg-neutral-50", text: "text-neutral-700", border: true, to: "/medical-records" },
 ];
 
-const recentPatients = [
-  { initials: "SJ", name: "Sarah Johnson", mrn: "MRN-2847", lastVisit: "Today", color: "bg-primary-100 text-primary-700", isActive: true, id: "1" },
-  { initials: "MC", name: "Michael Chen", mrn: "MRN-1923", lastVisit: "Today", color: "bg-secondary-100 text-secondary-700", isActive: true, id: "2" },
-  { initials: "ER", name: "Emily Rivera", mrn: "MRN-3312", lastVisit: "Feb 25", color: "bg-accent-100 text-accent-700", isActive: true, id: "3" },
-  { initials: "JO", name: "James O'Brien", mrn: "MRN-0847", lastVisit: "Feb 20", color: "bg-warning-50 text-warning-700", isActive: false, id: "4" },
-];
+const STATUS_COLORS: Record<string, string> = {
+  Scheduled: "bg-primary-100 text-primary-700",
+  Confirmed: "bg-accent-100 text-accent-700",
+  CheckedIn: "bg-info-50 text-info-700",
+  InProgress: "bg-warning-50 text-warning-700",
+  Completed: "bg-success-50 text-success-700",
+  Cancelled: "bg-neutral-100 text-neutral-500",
+  NoShow: "bg-error-50 text-error-700",
+  Rescheduled: "bg-neutral-100 text-neutral-500",
+};
+
+const STATUS_DISPLAY: Record<string, string> = {
+  Scheduled: "Scheduled",
+  Confirmed: "Confirmed",
+  CheckedIn: "Checked In",
+  InProgress: "In Progress",
+  Completed: "Completed",
+  Cancelled: "Cancelled",
+  NoShow: "No Show",
+  Rescheduled: "Rescheduled",
+};
 
 /* ── Sub-components ── */
 
 function Sparkline({ heights, colorClass }: { readonly heights: number[]; readonly colorClass: string }) {
+  const maxHeight = Math.max(...heights, 1);
   return (
     <div className="mt-1.5 flex h-5 items-end gap-0.5">
       {heights.map((height, index) => (
         <div
           key={index}
           className={clsxMerge("w-1 rounded-full opacity-30", colorClass)}
-          style={{ height: `${height}%` }}
+          style={{ height: `${Math.max((height / maxHeight) * 100, 5)}%` }}
         />
       ))}
     </div>
   );
+}
+
+function SkeletonCard() {
+  return (
+    <div className="animate-pulse rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
+      <div className="mb-3 flex items-start justify-between">
+        <div className="h-10 w-10 rounded-lg bg-neutral-200" />
+        <div className="h-4 w-4 rounded bg-neutral-100" />
+      </div>
+      <div className="h-9 w-16 rounded bg-neutral-200" />
+      <div className="mt-3 h-4 w-24 rounded bg-neutral-100" />
+      <div className="mt-2 h-3 w-20 rounded bg-neutral-100" />
+    </div>
+  );
+}
+
+function formatTime(dateString: string): string {
+  return new Date(dateString).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
+function formatDuration(minutes: number): string {
+  return `${minutes} min`;
 }
 
 /* ── Main component ── */
@@ -66,10 +89,55 @@ function Sparkline({ heights, colorClass }: { readonly heights: number[]; readon
 export function DashboardPage() {
   const auth = useAuth();
   const { openPanel } = useClaraPanel();
+  const dashboard = useDashboard();
 
   const userName = auth.user?.profile?.name ?? auth.user?.profile?.email ?? "Doctor";
   const firstName = String(userName).split(" ")[0];
   const today = new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+
+  const statCards = [
+    {
+      title: "Today's Appointments",
+      value: String(dashboard.todayAppointmentCount),
+      icon: CalendarDays,
+      iconBg: "bg-primary-50",
+      iconColor: "text-primary-700",
+      sparklineColor: "bg-primary-700",
+    },
+    {
+      title: "Patients Seen",
+      value: String(dashboard.patientsSeen),
+      icon: UserCheck,
+      iconBg: "bg-secondary-50",
+      iconColor: "text-secondary-700",
+      sparklineColor: "bg-secondary-700",
+    },
+    {
+      title: "Pending Records",
+      value: String(dashboard.pendingRecords),
+      icon: FileText,
+      iconBg: "bg-warning-50",
+      iconColor: "text-warning-500",
+      sparklineColor: "bg-warning-500",
+      trend: dashboard.urgentRecords > 0 ? `${dashboard.urgentRecords} urgent` : undefined,
+      trendColor: "text-warning-500",
+    },
+    {
+      title: "Clara Sessions",
+      value: String(dashboard.claraSessionCount),
+      icon: Sparkles,
+      iconBg: "bg-accent-50",
+      iconColor: "text-accent-500",
+      sparklineColor: "bg-accent-500",
+      trend: dashboard.activeSessionCount > 0 ? `${dashboard.activeSessionCount} active` : undefined,
+      trendColor: "text-accent-500",
+    },
+  ];
+
+  const nextAppointment = dashboard.appointments.find(
+    (appointment: AppointmentListItem) =>
+      appointment.status === "CheckedIn" || appointment.status === "Confirmed" || appointment.status === "Scheduled"
+  );
 
   return (
     <>
@@ -95,57 +163,72 @@ export function DashboardPage() {
         <p className="mt-0.5 text-sm text-neutral-500">Here's your overview for today</p>
       </div>
 
-      {/* Next Patient Banner */}
-      <div className="relative mb-6 overflow-hidden rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-secondary-100 text-sm font-bold text-secondary-700">
-              MC
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-3.5 w-3.5 text-neutral-500" />
-                <span className="text-xs text-neutral-500">Up next in 8 min</span>
-              </div>
-              <p className="text-lg font-bold text-neutral-900">Michael Chen</p>
-              <span className="mt-0.5 inline-flex items-center rounded-full bg-info-50 px-2.5 py-0.5 text-xs font-medium text-info-700">
-                New Visit
-              </span>
-            </div>
-          </div>
-          <Link
-            to="/clara"
-            className={clsxMerge(
-              "relative flex flex-shrink-0 items-center justify-center gap-2",
-              "h-10 overflow-hidden rounded-xl px-5",
-              "bg-gradient-to-r from-accent-500 to-accent-700",
-              "text-sm font-semibold text-white shadow-md",
-              "transition-all duration-200 hover:scale-[1.01] hover:shadow-lg"
-            )}
-          >
-            <span className="absolute inset-0 -translate-x-full animate-[shimmer_3s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-            <Sparkles className="relative z-10 h-4 w-4" />
-            <span className="relative z-10">Start with Clara</span>
-          </Link>
+      {/* Error Banner */}
+      {dashboard.isError && (
+        <div className="mb-6 flex items-center gap-3 rounded-lg border border-error-200 bg-error-50 p-4">
+          <AlertCircle className="h-5 w-5 flex-shrink-0 text-error-500" />
+          <p className="text-sm text-error-700">Some dashboard data couldn't be loaded. Showing available data below.</p>
         </div>
-      </div>
+      )}
+
+      {/* Next Patient Banner */}
+      {nextAppointment && (
+        <div className="relative mb-6 overflow-hidden rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4">
+              <div className={clsxMerge("flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold", getAvatarColor(nextAppointment.patientName))}>
+                {getInitials(nextAppointment.patientName)}
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-3.5 w-3.5 text-neutral-500" />
+                  <span className="text-xs text-neutral-500">Up next — {formatTime(nextAppointment.scheduledDateTime)}</span>
+                </div>
+                <p className="text-lg font-bold text-neutral-900">{nextAppointment.patientName}</p>
+                <span className="mt-0.5 inline-flex items-center rounded-full bg-info-50 px-2.5 py-0.5 text-xs font-medium text-info-700">
+                  {nextAppointment.type}
+                </span>
+              </div>
+            </div>
+            <Link
+              to="/clara"
+              className={clsxMerge(
+                "relative flex flex-shrink-0 items-center justify-center gap-2",
+                "h-10 overflow-hidden rounded-xl px-5",
+                "bg-gradient-to-r from-accent-500 to-accent-700",
+                "text-sm font-semibold text-white shadow-md",
+                "transition-all duration-200 hover:scale-[1.01] hover:shadow-lg"
+              )}
+            >
+              <span className="absolute inset-0 -translate-x-full animate-[shimmer_3s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              <Sparkles className="relative z-10 h-4 w-4" />
+              <span className="relative z-10">Start with Clara</span>
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
-        {statCards.map((card, index) => (
-          <div key={card.title} className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
-            <div className="mb-3 flex items-start justify-between">
-              <div className={clsxMerge("flex h-10 w-10 items-center justify-center rounded-lg", card.iconBg)}>
-                <card.icon className={clsxMerge("h-5 w-5", card.iconColor)} />
+        {dashboard.isLoading
+          ? Array.from({ length: 4 }).map((_, index) => <SkeletonCard key={index} />)
+          : statCards.map((card) => (
+              <div key={card.title} className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+                <div className="mb-3 flex items-start justify-between">
+                  <div className={clsxMerge("flex h-10 w-10 items-center justify-center rounded-lg", card.iconBg)}>
+                    <card.icon className={clsxMerge("h-5 w-5", card.iconColor)} />
+                  </div>
+                  <ArrowUpRight className="h-4 w-4 text-neutral-300" />
+                </div>
+                <p className="text-3xl font-bold text-neutral-900">{card.value}</p>
+                <Sparkline heights={dashboard.appointmentCountsByDay} colorClass={card.sparklineColor} />
+                <p className="mt-1 text-sm text-neutral-500">{card.title}</p>
+                {card.trend && (
+                  <p className={clsxMerge("mt-1 text-xs font-medium", card.trendColor)}>{card.trend}</p>
+                )}
               </div>
-              <ArrowUpRight className="h-4 w-4 text-neutral-300" />
-            </div>
-            <p className="text-3xl font-bold text-neutral-900">{card.value}</p>
-            <Sparkline heights={SPARKLINE_HEIGHTS[index]} colorClass={card.iconColor.replace("text-", "bg-")} />
-            <p className="mt-1 text-sm text-neutral-500">{card.title}</p>
-            <p className={clsxMerge("mt-1 text-xs font-medium", card.trendColor)}>{card.trend}</p>
-          </div>
-        ))}
+            ))
+        }
       </div>
 
       {/* Schedule + Quick Actions */}
@@ -158,33 +241,46 @@ export function DashboardPage() {
             </div>
             <Link to="/appointments" className="text-sm font-medium text-primary-700 hover:underline">View All</Link>
           </div>
-          <div className="divide-y divide-neutral-200">
-            {appointments.map((appointment, index) => (
-              <Link
-                key={index}
-                to="/appointments"
-                className={clsxMerge(
-                  "flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-neutral-50",
-                  appointment.status === "In Progress" && "border-l-2 border-l-primary-200"
-                )}
-              >
-                <div className="w-20 flex-shrink-0">
-                  <p className="text-sm font-medium text-neutral-900">{appointment.time}</p>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-neutral-700">{appointment.patient}</p>
-                </div>
-                {index === 0 && (
-                  <span className="inline-flex items-center rounded-full bg-accent-50 px-2 py-0.5 text-xs font-medium text-accent-700">Next up</span>
-                )}
-                <span className="hidden items-center rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-700 sm:inline-flex">{appointment.type}</span>
-                <span className={clsxMerge("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", appointment.statusColor)}>{appointment.status}</span>
-                <span className="hidden w-14 text-right text-xs text-neutral-500 md:block">
-                  <Clock className="mr-0.5 inline h-3 w-3" />{appointment.duration}
-                </span>
-              </Link>
-            ))}
-          </div>
+          {dashboard.isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
+            </div>
+          ) : dashboard.appointments.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <CalendarDays className="h-8 w-8 text-neutral-300" />
+              <p className="mt-2 text-sm text-neutral-500">No appointments scheduled for today</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-neutral-200">
+              {dashboard.appointments.map((appointment: AppointmentListItem, index: number) => (
+                <Link
+                  key={appointment.id}
+                  to="/appointments"
+                  className={clsxMerge(
+                    "flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-neutral-50",
+                    appointment.status === "InProgress" && "border-l-2 border-l-primary-200"
+                  )}
+                >
+                  <div className="w-20 flex-shrink-0">
+                    <p className="text-sm font-medium text-neutral-900">{formatTime(appointment.scheduledDateTime)}</p>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-neutral-700">{appointment.patientName}</p>
+                  </div>
+                  {index === 0 && (
+                    <span className="inline-flex items-center rounded-full bg-accent-50 px-2 py-0.5 text-xs font-medium text-accent-700">Next up</span>
+                  )}
+                  <span className="hidden items-center rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-700 sm:inline-flex">{appointment.type}</span>
+                  <span className={clsxMerge("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", STATUS_COLORS[appointment.status] ?? "bg-neutral-100 text-neutral-700")}>
+                    {STATUS_DISPLAY[appointment.status] ?? appointment.status}
+                  </span>
+                  <span className="hidden w-14 text-right text-xs text-neutral-500 md:block">
+                    <Clock className="mr-0.5 inline h-3 w-3" />{formatDuration(appointment.durationMinutes)}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
         <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
           <h2 className="mb-4 text-lg font-semibold text-neutral-900">Quick Actions</h2>
@@ -222,34 +318,42 @@ export function DashboardPage() {
             </div>
             <Link to="/patients" className="text-sm font-medium text-primary-700 hover:underline">View All</Link>
           </div>
-          <div className="divide-y divide-neutral-200">
-            {recentPatients.map((patient) => (
-              <Link
-                key={patient.id}
-                to={`/patients/${patient.id}`}
-                className="flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-neutral-50"
-              >
-                <div className={clsxMerge("flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold", patient.color)}>
-                  {patient.initials}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-neutral-900">{patient.name}</p>
-                  <p className="text-xs text-neutral-500">{patient.mrn}</p>
-                </div>
-                <div className="hidden text-right sm:block">
-                  <p className="text-xs text-neutral-500">{patient.lastVisit}</p>
-                </div>
-                <span className={clsxMerge(
-                  "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-                  patient.isActive
-                    ? "border border-success-500/30 bg-success-50 text-success-700"
-                    : "border border-neutral-200 bg-neutral-100 text-neutral-500"
-                )}>
-                  {patient.isActive ? "Active" : "Inactive"}
-                </span>
-              </Link>
-            ))}
-          </div>
+          {dashboard.isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
+            </div>
+          ) : dashboard.recentPatients.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <Users className="h-8 w-8 text-neutral-300" />
+              <p className="mt-2 text-sm text-neutral-500">No patients found</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-neutral-200">
+              {dashboard.recentPatients.map((patient) => (
+                <Link
+                  key={patient.id}
+                  to={`/patients/${patient.id}`}
+                  className="flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-neutral-50"
+                >
+                  <div className={clsxMerge("flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold", getAvatarColor(patient.fullName))}>
+                    {getInitials(patient.fullName)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-neutral-900">{patient.fullName}</p>
+                    <p className="text-xs text-neutral-500">{patient.medicalRecordNumber}</p>
+                  </div>
+                  <span className={clsxMerge(
+                    "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+                    patient.isActive
+                      ? "border border-success-500/30 bg-success-50 text-success-700"
+                      : "border border-neutral-200 bg-neutral-100 text-neutral-500"
+                  )}>
+                    {patient.isActive ? "Active" : "Inactive"}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
         <div className="rounded-lg border border-neutral-200 bg-white shadow-sm">
           <div className="border-b border-neutral-200 p-5 pb-3">

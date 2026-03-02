@@ -19,3 +19,9 @@ public sealed record GetMedicalRecordsByPatientIdQuery(Guid PatientId)
 /// </summary>
 public sealed record GetMedicalRecordsByDiagnosisCodeQuery(string DiagnosisCode)
     : IRequest<IReadOnlyList<MedicalRecordListItemResponse>>;
+
+/// <summary>
+/// Query to get medical record stats for the dashboard.
+/// </summary>
+public sealed record GetMedicalRecordStatsQuery(Guid? ProviderId = null)
+    : IRequest<MedicalRecordStatsResponse>;

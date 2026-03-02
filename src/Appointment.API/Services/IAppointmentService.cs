@@ -136,6 +136,13 @@ public interface IAppointmentService
     Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets dashboard statistics for a provider on a given date.
+    /// </summary>
+    Task<DashboardStatsResponse> GetDashboardStatsAsync(
+        DashboardStatsQuery query,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Checks for scheduling conflicts for a provider.
     /// </summary>
     Task<bool> HasConflictAsync(

@@ -19,6 +19,10 @@ builder.Services.AddDbContext<ClaraDbContext>(options =>
         builder.Configuration.GetConnectionString("ClaraDb"),
         npgsqlOptions => npgsqlOptions.UseVector()));
 
+// Read-only audit database context (cross-boundary read access to Notification.Worker's audit DB)
+builder.Services.AddDbContext<AuditReadContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("AuditDatabase")));
+
 // Authentication & Authorization
 builder.Services.AddDefaultAuthentication(builder.Configuration);
 
@@ -45,6 +49,9 @@ builder.Services.AddScoped<KnowledgeService>();
 builder.Services.AddScoped<PatientContextService>();
 builder.Services.AddScoped<SuggestionService>();
 
+// Analytics service (admin reports)
+builder.Services.AddScoped<AnalyticsService>();
+
 // Skill loader (loads YAML skills at startup)
 builder.Services.AddSingleton<SkillLoaderService>();
 
@@ -54,6 +61,12 @@ builder.Services.AddScoped<KnowledgeSeederService>();
 // Health checks
 builder.Services.AddHealthChecks()
     .AddCheck<ClaraHealthCheck>("claradb");
+
+// Health check HTTP client (for system health aggregation endpoint)
+builder.Services.AddHttpClient("HealthCheck", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(5);
+});
 
 // Required for AuthenticationDelegatingHandler
 builder.Services.AddHttpContextAccessor();
@@ -110,6 +123,9 @@ app.MapHub<SessionHub>("/sessionHub");
 // Map API endpoints
 app.MapSessionEndpoints();
 app.MapKnowledgeEndpoints();
+app.MapAuditEndpoints();
+app.MapAnalyticsEndpoints();
+app.MapSystemHealthEndpoints();
 
 // Map Controllers (DevController)
 // Note: DevController uses MVC for test/dev endpoints only. All production endpoints use minimal APIs for performance.

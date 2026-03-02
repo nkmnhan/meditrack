@@ -12,6 +12,8 @@ import type {
   AppointmentSearchParams,
   ConflictCheckParams,
   ProviderSummary,
+  DashboardStatsResponse,
+  DashboardStatsParams,
 } from "../types";
 import { createBaseQueryWithReauth } from "@/shared/auth/baseQueryWithReauth";
 
@@ -101,6 +103,16 @@ export const appointmentApi = createApi({
     getDistinctProviders: builder.query<ProviderSummary[], void>({
       query: () => "/appointments/providers",
       providesTags: [{ type: "Provider", id: "LIST" }],
+    }),
+
+    getDashboardStats: builder.query<DashboardStatsResponse, DashboardStatsParams>({
+      query: (params) => ({
+        url: "/appointments/dashboard-stats",
+        params: {
+          ...(params.providerId && { providerId: params.providerId }),
+          ...(params.date && { date: params.date }),
+        },
+      }),
     }),
 
     // --- Mutations ---
@@ -247,6 +259,7 @@ export const {
   useGetAppointmentsByProviderQuery,
   useLazyCheckConflictsQuery,
   useGetDistinctProvidersQuery,
+  useGetDashboardStatsQuery,
   useCreateAppointmentMutation,
   useUpdateAppointmentMutation,
   useRescheduleAppointmentMutation,

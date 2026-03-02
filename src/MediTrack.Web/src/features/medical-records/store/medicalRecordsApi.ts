@@ -8,6 +8,8 @@ import type {
   AddPrescriptionRequest,
   RecordVitalSignsRequest,
   AddAttachmentRequest,
+  MedicalRecordStatsResponse,
+  MedicalRecordStatsParams,
 } from "../types";
 import { createBaseQueryWithReauth } from "@/shared/auth/baseQueryWithReauth";
 
@@ -40,6 +42,15 @@ export const medicalRecordsApi = createApi({
     getMedicalRecordsByDiagnosisCode: builder.query<MedicalRecordListItem[], string>({
       query: (diagnosisCode) => `/medical-records/diagnosis/${diagnosisCode}`,
       providesTags: [{ type: "MedicalRecord", id: "LIST" }],
+    }),
+
+    getMedicalRecordStats: builder.query<MedicalRecordStatsResponse, MedicalRecordStatsParams>({
+      query: (params) => ({
+        url: "/medical-records/stats",
+        params: {
+          ...(params.providerId && { providerId: params.providerId }),
+        },
+      }),
     }),
 
     // --- Mutations - Medical Record ---
@@ -172,4 +183,5 @@ export const {
   useAddPrescriptionMutation,
   useRecordVitalSignsMutation,
   useAddAttachmentMutation,
+  useGetMedicalRecordStatsQuery,
 } = medicalRecordsApi;

@@ -47,6 +47,10 @@ public static class AppointmentsApi
             .WithName("GetAppointmentsByProviderId")
             .WithSummary("Get all appointments for a provider");
 
+        group.MapGet("/dashboard-stats", GetDashboardStats)
+            .WithName("GetDashboardStats")
+            .WithSummary("Get dashboard statistics for a provider");
+
         group.MapGet("/conflicts", CheckConflicts)
             .WithName("CheckAppointmentConflicts")
             .WithSummary("Check for scheduling conflicts");
@@ -189,6 +193,22 @@ public static class AppointmentsApi
     {
         var appointments = await appointmentService.GetByProviderIdAsync(providerId, cancellationToken);
         return Results.Ok(appointments);
+    }
+
+    private static async Task<IResult> GetDashboardStats(
+        [AsParameters] DashboardStatsQuery query,
+        ClaimsPrincipal user,
+        IAppointmentService appointmentService,
+        CancellationToken cancellationToken)
+    {
+        // IDOR protection: Only staff can access dashboard stats (A01)
+        if (!UserRoles.Staff.Any(role => user.IsInRole(role)))
+        {
+            return Results.Forbid();
+        }
+
+        var stats = await appointmentService.GetDashboardStatsAsync(query, cancellationToken);
+        return Results.Ok(stats);
     }
 
     private static async Task<IResult> CheckConflicts(
