@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Sparkles, Lightbulb, Mic, Search,
   Play, History, ChevronRight, FileText, Shield, Save,
-  AlertCircle, Loader2,
+  AlertCircle, Loader2, CalendarDays, Clock,
 } from "lucide-react";
 import { useStartSessionMutation, useGetSessionsQuery } from "../store/claraApi";
 import { useLazySearchPatientsQuery } from "@/features/patients";
@@ -24,6 +24,12 @@ const howItWorksSteps = [
   { icon: Mic, label: "Speak", description: "Talk naturally \u2014 Clara identifies speakers" },
   { icon: Sparkles, label: "Insights", description: "Get evidence-based suggestions in real time" },
   { icon: Save, label: "Save", description: "Export notes directly to the patient record" },
+];
+
+const upcomingAppointments = [
+  { time: "10:30 AM", patient: "Sarah Johnson", type: "Follow-up" },
+  { time: "11:15 AM", patient: "Michael Chen", type: "Consultation" },
+  { time: "2:00 PM", patient: "Emily Davis", type: "Review" },
 ];
 
 const SESSION_TYPES = ["Consultation", "Follow-up", "Review"] as const;
@@ -128,15 +134,23 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
           {getTimeGreeting()}
         </p>
 
-        {/* Session count from real data */}
-        {recentSessions.length > 0 && (
-          <div className="flex items-center justify-center gap-1.5 mt-6">
+        {/* Daily stats bar */}
+        <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 mt-6">
+          <div className="flex items-center gap-1.5">
             <Sparkles className="h-4 w-4 text-accent-500" />
             <span className="text-xs md:text-sm font-medium text-neutral-700">
-              {recentSessions.length} recent session{recentSessions.length !== 1 ? "s" : ""}
+              {recentSessions.length} session{recentSessions.length !== 1 ? "s" : ""} today
             </span>
           </div>
-        )}
+          <div className="flex items-center gap-1.5">
+            <Lightbulb className="h-4 w-4 text-success-500" />
+            <span className="text-xs md:text-sm font-medium text-neutral-700">12 suggestions accepted</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Clock className="h-4 w-4 text-primary-700" />
+            <span className="text-xs md:text-sm font-medium text-neutral-700">1.2 hrs saved</span>
+          </div>
+        </div>
       </div>
 
       {/* ── Start Session Card ─────────────────────────────── */}
@@ -286,6 +300,43 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
           <p className="text-xs text-neutral-500 text-center mt-2">
             Clara will listen, transcribe, and suggest — all in real-time
           </p>
+        </div>
+      </div>
+
+      {/* ── Upcoming Appointments ─────────────────────────── */}
+      <div className="max-w-lg mx-auto mt-8">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-4 w-4 text-neutral-500" />
+            <h3 className="text-sm font-semibold text-neutral-900">Upcoming Appointments</h3>
+          </div>
+          <a href="/appointments" className="text-xs text-accent-700 hover:underline">View all</a>
+        </div>
+        <div className="flex gap-3 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 md:flex-col snap-x snap-mandatory md:snap-none">
+          {upcomingAppointments.map((appointment) => (
+            <div
+              key={appointment.time}
+              className="min-w-[280px] md:min-w-0 flex-shrink-0 md:flex-shrink snap-start rounded-xl border border-neutral-200 bg-white p-4 flex items-center justify-between transition-all hover:border-accent-200 hover:shadow-sm"
+            >
+              <div className="flex items-center gap-3">
+                <span className="min-w-[72px] font-mono text-sm font-semibold text-neutral-900">{appointment.time}</span>
+                <div className="h-8 w-px bg-neutral-200" />
+                <div>
+                  <p className="text-sm font-medium text-neutral-900">{appointment.patient}</p>
+                  <p className="text-xs text-neutral-500">{appointment.type}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleStartSession}
+                disabled={isLoading}
+                className="ml-3 flex flex-shrink-0 items-center gap-1.5 rounded-full border border-accent-200 px-3 py-1.5 text-xs font-medium text-accent-700 transition-colors hover:bg-accent-50"
+              >
+                <Play className="h-3 w-3" />
+                Start with Clara
+              </button>
+            </div>
+          ))}
         </div>
       </div>
 

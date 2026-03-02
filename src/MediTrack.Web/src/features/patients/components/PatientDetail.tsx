@@ -29,6 +29,26 @@ import { useRoles } from "@/shared/auth/useRoles";
 import { UserRole } from "@/shared/auth/roles";
 import { Breadcrumb } from "@/shared/components";
 
+/* ── Avatar color rotation ── */
+
+const AVATAR_COLORS = [
+  "bg-primary-100 text-primary-700",
+  "bg-success-100 text-success-700",
+  "bg-error-100 text-error-700",
+  "bg-warning-100 text-warning-700",
+  "bg-accent-100 text-accent-700",
+  "bg-info-100 text-info-700",
+  "bg-secondary-100 text-secondary-700",
+] as const;
+
+function getAvatarColor(patientId: string): string {
+  let hash = 0;
+  for (let index = 0; index < patientId.length; index++) {
+    hash = ((hash << 5) - hash + patientId.charCodeAt(index)) | 0;
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
 /* ── Sub-components ── */
 
 function InfoField({ label, value }: { readonly label: string; readonly value: string }) {
@@ -183,7 +203,7 @@ export function PatientDetail() {
       {/* Header */}
       <div className="mb-8 flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-primary-100 text-lg font-semibold text-primary-700">
+          <div className={clsxMerge("flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full text-lg font-semibold", getAvatarColor(patient.id))}>
             {initials}
           </div>
           <div>
@@ -267,6 +287,7 @@ export function PatientDetail() {
             <InfoField label="Full Name" value={fullName} />
             <InfoField label="Date of Birth" value={`${formattedDOB} (${age} years)`} />
             <InfoField label="Gender" value={patient.gender || "\u2014"} />
+            <InfoField label="Blood Type" value={patient.bloodType || "\u2014"} />
           </div>
         </DetailCard>
 

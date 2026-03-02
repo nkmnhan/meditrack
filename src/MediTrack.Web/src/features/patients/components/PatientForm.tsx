@@ -27,6 +27,17 @@ const GENDER_OPTIONS = [
   { value: "Prefer not to say", label: "Prefer not to say" },
 ] as const;
 
+const BLOOD_TYPE_OPTIONS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] as const;
+
+const US_STATES = [
+  "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
+  "KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ",
+  "NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT",
+  "VA","WA","WV","WI","WY",
+] as const;
+
+const RELATIONSHIP_OPTIONS = ["Spouse", "Parent", "Sibling", "Child", "Friend", "Other"] as const;
+
 // --- Validation Schemas ---
 
 const addressSchema = z.object({
@@ -82,6 +93,7 @@ const patientFormSchema = z.object({
       "Patient must be at least 1 day old",
     ),
   gender: z.string().min(1, "Gender is required"),
+  bloodType: z.string().optional(),
   email: z.string().min(1, "Email is required").email("Invalid email address").max(256),
   phoneNumber: z
     .string()
@@ -176,6 +188,7 @@ export function PatientForm() {
       lastName: "",
       dateOfBirth: "",
       gender: "",
+      bloodType: "",
       email: "",
       phoneNumber: "",
       address: { street: "", street2: "", city: "", state: "", zipCode: "" },
@@ -201,6 +214,7 @@ export function PatientForm() {
         lastName: patient.lastName,
         dateOfBirth: patient.dateOfBirth,
         gender: patient.gender,
+        bloodType: patient.bloodType || "",
         email: patient.email,
         phoneNumber: patient.phoneNumber,
         address: addressData,
@@ -237,6 +251,7 @@ export function PatientForm() {
       const request = {
         ...formData,
         address: { ...formData.address, country: "USA" },
+        bloodType: formData.bloodType || undefined,
         emergencyContact: hasEmergencyContact ? formData.emergencyContact : undefined,
         insurance: hasInsurance ? formData.insurance : undefined,
       };
@@ -369,6 +384,24 @@ export function PatientForm() {
                   <p className="mt-1 text-xs text-error-500">{errors.gender.message}</p>
                 )}
               </div>
+              <div>
+                <FormLabel htmlFor="bloodType">Blood Type</FormLabel>
+                <SelectWrapper>
+                  <select
+                    id="bloodType"
+                    {...register("bloodType")}
+                    className={clsxMerge(
+                      "h-10 w-full appearance-none rounded-md border pl-3 pr-8 text-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 bg-white",
+                      "border-neutral-200 text-neutral-900 focus:ring-primary-700"
+                    )}
+                  >
+                    <option value="">Select blood type</option>
+                    {BLOOD_TYPE_OPTIONS.map((type) => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </SelectWrapper>
+              </div>
             </div>
           </div>
 
@@ -378,14 +411,20 @@ export function PatientForm() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
                 <FormLabel htmlFor="phoneNumber" isRequired>Phone Number</FormLabel>
-                <input
-                  id="phoneNumber"
-                  type="tel"
-                  {...register("phoneNumber")}
-                  placeholder="(555) 000-0000"
-                  autoComplete="tel"
-                  className={errors.phoneNumber ? INPUT_ERROR : INPUT_NORMAL}
-                />
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-neutral-500">+1</span>
+                  <input
+                    id="phoneNumber"
+                    type="tel"
+                    {...register("phoneNumber")}
+                    placeholder="(555) 000-0000"
+                    autoComplete="tel"
+                    className={clsxMerge(
+                      errors.phoneNumber ? INPUT_ERROR : INPUT_NORMAL,
+                      "pl-9"
+                    )}
+                  />
+                </div>
                 {errors.phoneNumber && (
                   <p className="mt-1 text-xs text-error-500">{errors.phoneNumber.message}</p>
                 )}
@@ -447,14 +486,24 @@ export function PatientForm() {
               </div>
               <div>
                 <FormLabel htmlFor="address.state" isRequired>State</FormLabel>
-                <input
-                  id="address.state"
-                  type="text"
-                  {...register("address.state")}
-                  placeholder="NY"
-                  autoComplete="address-level1"
-                  className={errors.address?.state ? INPUT_ERROR : INPUT_NORMAL}
-                />
+                <SelectWrapper>
+                  <select
+                    id="address.state"
+                    {...register("address.state")}
+                    autoComplete="address-level1"
+                    className={clsxMerge(
+                      "h-10 w-full appearance-none rounded-md border pl-3 pr-8 text-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 bg-white",
+                      errors.address?.state
+                        ? "border-error-500 text-neutral-900 focus:ring-error-500"
+                        : "border-neutral-200 text-neutral-900 focus:ring-primary-700"
+                    )}
+                  >
+                    <option value="">Select state</option>
+                    {US_STATES.map((stateCode) => (
+                      <option key={stateCode} value={stateCode}>{stateCode}</option>
+                    ))}
+                  </select>
+                </SelectWrapper>
                 {errors.address?.state && (
                   <p className="mt-1 text-xs text-error-500">{errors.address.state.message}</p>
                 )}
@@ -516,13 +565,23 @@ export function PatientForm() {
                   </div>
                   <div>
                     <FormLabel htmlFor="emergencyContact.relationship" isRequired>Relationship</FormLabel>
-                    <input
-                      id="emergencyContact.relationship"
-                      type="text"
-                      {...register("emergencyContact.relationship")}
-                      placeholder="Spouse, Parent, etc."
-                      className={errors.emergencyContact?.relationship ? INPUT_ERROR : INPUT_NORMAL}
-                    />
+                    <SelectWrapper>
+                      <select
+                        id="emergencyContact.relationship"
+                        {...register("emergencyContact.relationship")}
+                        className={clsxMerge(
+                          "h-10 w-full appearance-none rounded-md border pl-3 pr-8 text-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 bg-white",
+                          errors.emergencyContact?.relationship
+                            ? "border-error-500 text-neutral-900 focus:ring-error-500"
+                            : "border-neutral-200 text-neutral-900 focus:ring-primary-700"
+                        )}
+                      >
+                        <option value="" disabled>Select relationship</option>
+                        {RELATIONSHIP_OPTIONS.map((relationship) => (
+                          <option key={relationship} value={relationship}>{relationship}</option>
+                        ))}
+                      </select>
+                    </SelectWrapper>
                     {errors.emergencyContact?.relationship && (
                       <p className="mt-1 text-xs text-error-500">{errors.emergencyContact.relationship.message}</p>
                     )}

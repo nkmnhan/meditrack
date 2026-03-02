@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 import {
   CalendarDays, UserCheck, FileText, Sparkles, CalendarPlus, UserPlus, FileSearch, Users,
-  Clock, ArrowUpRight,
+  Clock, ArrowUpRight, Bell,
 } from "lucide-react";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
 import { useClaraPanel } from "@/shared/components/clara/ClaraPanelContext";
@@ -81,6 +81,13 @@ export function DashboardPage() {
         </div>
         <div className="flex items-center gap-4">
           <span className="text-sm text-neutral-500">{today}</span>
+          <button className="relative rounded-lg p-2 text-neutral-500 transition-colors hover:bg-neutral-100">
+            <Bell className="h-5 w-5" />
+            <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-error-500 ring-2 ring-white" />
+          </button>
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-700 text-sm font-semibold text-white">
+            {firstName[0]?.toUpperCase() ?? "D"}
+          </div>
         </div>
       </div>
       <div className="mb-5 md:hidden">

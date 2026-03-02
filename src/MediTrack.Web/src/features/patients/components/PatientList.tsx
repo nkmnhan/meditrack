@@ -11,6 +11,24 @@ import { Breadcrumb } from "@/shared/components/Breadcrumb";
 
 const PAGE_SIZE = 6;
 
+const AVATAR_COLORS = [
+  "bg-primary-100 text-primary-700",
+  "bg-success-100 text-success-700",
+  "bg-error-100 text-error-700",
+  "bg-warning-100 text-warning-700",
+  "bg-accent-100 text-accent-700",
+  "bg-info-100 text-info-700",
+  "bg-secondary-100 text-secondary-700",
+] as const;
+
+function getAvatarColor(patientId: string): string {
+  let hash = 0;
+  for (let index = 0; index < patientId.length; index++) {
+    hash = ((hash << 5) - hash + patientId.charCodeAt(index)) | 0;
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
 const BREADCRUMB_ITEMS = [
   { label: "Home", href: "/" },
   { label: "Patients" },
@@ -46,7 +64,7 @@ function PatientCard({ patient }: { readonly patient: PatientListItem }) {
     <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
       {/* Top: avatar + name + status */}
       <div className="mb-4 flex items-center gap-3">
-        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700">
+        <div className={clsxMerge("flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-sm font-semibold", getAvatarColor(patient.id))}>
           {initials.toUpperCase()}
         </div>
         <div className="min-w-0 flex-1">
@@ -72,7 +90,7 @@ function PatientCard({ patient }: { readonly patient: PatientListItem }) {
         </div>
         <div className="flex items-center gap-2 text-sm text-neutral-700">
           <Calendar className="h-4 w-4 flex-shrink-0 text-neutral-500" />
-          <span>{formattedDOB} <span className="text-neutral-500">({patient.gender})</span></span>
+          <span>{formattedDOB} <span className="text-neutral-500">({patient.age} years)</span></span>
         </div>
         <div className="flex items-center gap-2 text-sm text-neutral-700">
           <Phone className="h-4 w-4 flex-shrink-0 text-neutral-500" />

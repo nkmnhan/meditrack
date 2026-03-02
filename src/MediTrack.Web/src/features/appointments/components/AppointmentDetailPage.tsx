@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import {
   Loader2, AlertCircle, Calendar, Clock, User,
   Sparkles, Hash, Stethoscope, Video, MessageSquare,
+  FileText,
 } from "lucide-react";
 import { useGetAppointmentByIdQuery } from "../store/appointmentApi";
 import { useStartSessionMutation } from "@/features/clara";
@@ -114,6 +115,9 @@ export function AppointmentDetailPage() {
 
   return (
     <>
+      {/* Shimmer keyframe for Clara button */}
+      <style>{`@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}`}</style>
+
       <Breadcrumb
         items={[
           { label: "Home", href: "/" },
@@ -135,7 +139,9 @@ export function AppointmentDetailPage() {
                 {appointment.status}
               </span>
             </div>
-            <p className="mt-0.5 font-mono text-sm text-neutral-500">{appointment.id.slice(0, 8)}</p>
+            <p className="mt-0.5 text-sm text-neutral-500">
+              {appointment.type} &middot; {appointment.providerName}
+            </p>
           </div>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
@@ -157,6 +163,7 @@ export function AppointmentDetailPage() {
                 "transition-all hover:shadow-lg disabled:opacity-50"
               )}
             >
+              <span className="pointer-events-none absolute inset-0 animate-[shimmer_3s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
               {isStartingSession ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               Start with Clara
             </button>
@@ -231,6 +238,20 @@ export function AppointmentDetailPage() {
                 />
               )}
             </div>
+          </DetailCard>
+        )}
+
+        {appointment.status === "Completed" && (
+          <DetailCard icon={FileText} title="Meeting Record">
+            <p className="mb-3 text-sm text-neutral-700">
+              A medical record was generated from this appointment.
+            </p>
+            <Link
+              to={`/patients/${appointment.patientId}/medical-records`}
+              className="inline-flex items-center gap-2 text-sm font-medium text-primary-700 hover:underline"
+            >
+              <FileText className="h-4 w-4" /> View Medical Records &rarr;
+            </Link>
           </DetailCard>
         )}
 

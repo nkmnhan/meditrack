@@ -7,13 +7,17 @@ import {
   Sparkles,
   FileText,
   Stethoscope,
-  User,
   Clock,
   ChevronLeft,
   Plus,
   Trash2,
   Save,
-  X,
+  Pill,
+  BookOpen,
+  Lightbulb,
+  AlertTriangle,
+  MessageSquare,
+  ChevronRight,
 } from "lucide-react";
 import { useGetSessionQuery } from "../store/claraApi";
 import { useCreateMedicalRecordMutation } from "@/features/medical-records/store/medicalRecordsApi";
@@ -46,6 +50,27 @@ const SEVERITY_OPTIONS = [
   { value: DiagnosisSeverity.Critical, label: "Critical" },
 ];
 
+const STATUS_OPTIONS = ["Active", "Resolved", "Chronic", "Inactive"] as const;
+
+const SUGGESTION_TYPE_CONFIG: Record<string, {
+  barColor: string;
+  badgeBg: string;
+  badgeText: string;
+  icon: typeof AlertTriangle;
+}> = {
+  Urgent:         { barColor: "bg-error-500",      badgeBg: "bg-error-50",      badgeText: "text-error-700",      icon: AlertTriangle },
+  Medication:     { barColor: "bg-secondary-700",   badgeBg: "bg-secondary-50",   badgeText: "text-secondary-700",   icon: Pill },
+  Guideline:      { barColor: "bg-primary-700",     badgeBg: "bg-primary-50",     badgeText: "text-primary-700",     icon: BookOpen },
+  Recommendation: { barColor: "bg-warning-500",     badgeBg: "bg-warning-50",     badgeText: "text-warning-700",     icon: Lightbulb },
+};
+
+const DEFAULT_SUGGESTION_STYLE = {
+  barColor: "bg-accent-500",
+  badgeBg: "bg-accent-50",
+  badgeText: "text-accent-700",
+  icon: Sparkles,
+};
+
 /* ── Component ── */
 
 export function SessionSummary() {
@@ -59,6 +84,7 @@ export function SessionSummary() {
   const [diagnosisCode, setDiagnosisCode] = useState("");
   const [diagnosisDescription, setDiagnosisDescription] = useState("");
   const [severity, setSeverity] = useState<DiagnosisSeverity>(DiagnosisSeverity.Moderate);
+  const [diagnosisStatus, setDiagnosisStatus] = useState("Active");
   const [soapNote, setSoapNote] = useState("");
   const [prescriptions, setPrescriptions] = useState<PrescriptionDraft[]>([]);
   const [followUp, setFollowUp] = useState("");
@@ -165,7 +191,7 @@ export function SessionSummary() {
       </div>
 
       {/* Two-column layout */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-6 pb-24 lg:grid-cols-5 lg:pb-0">
         {/* Left column — Session data */}
         <div className="lg:col-span-2 space-y-6">
           {/* Session stats */}
@@ -195,8 +221,8 @@ export function SessionSummary() {
           {/* Patient statements */}
           <div className="rounded-lg border border-neutral-200 bg-white p-5">
             <div className="flex items-center gap-2 mb-4 border-b border-neutral-200 pb-3">
-              <User className="h-5 w-5 text-primary-700" />
-              <h3 className="text-sm font-semibold text-neutral-900">Patient Statements</h3>
+              <MessageSquare className="h-4 w-4 text-secondary-700" />
+              <h3 className="text-sm font-semibold text-neutral-900">Key Patient Statements</h3>
             </div>
             <div className="max-h-64 overflow-y-auto space-y-3">
               {patientStatements.length === 0 ? (
@@ -225,44 +251,57 @@ export function SessionSummary() {
             <div className="flex items-center gap-2 mb-4 border-b border-neutral-200 pb-3">
               <Sparkles className="h-5 w-5 text-accent-500" />
               <h3 className="text-sm font-semibold text-neutral-900">Clara&apos;s Suggestions</h3>
+              <span className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-accent-100 text-xs font-semibold text-accent-700">
+                {session.suggestions.length}
+              </span>
             </div>
-            <div className="max-h-64 overflow-y-auto space-y-3">
+            <div className="max-h-64 overflow-y-auto space-y-2.5">
               {session.suggestions.length === 0 ? (
                 <p className="text-sm text-neutral-500">No suggestions were generated.</p>
               ) : (
-                session.suggestions.map((suggestion) => (
-                  <div
-                    key={suggestion.id}
-                    className="rounded-lg border border-accent-100 bg-accent-50 p-3"
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="inline-flex items-center rounded-full bg-accent-100 px-2 py-0.5 text-xs font-medium text-accent-700">
-                        {suggestion.type}
-                      </span>
-                      {suggestion.urgency === "high" && (
-                        <span className="inline-flex items-center rounded-full bg-error-50 px-2 py-0.5 text-xs font-medium text-error-700">
-                          Urgent
+                session.suggestions.map((suggestion) => {
+                  const config = SUGGESTION_TYPE_CONFIG[suggestion.type] ?? DEFAULT_SUGGESTION_STYLE;
+                  const SuggestionIcon = config.icon;
+                  return (
+                    <div
+                      key={suggestion.id}
+                      className="flex overflow-hidden rounded-lg border border-neutral-200 bg-white"
+                    >
+                      <div className={clsxMerge("w-1 flex-shrink-0", config.barColor)} />
+                      <div className="flex-1 p-3">
+                        <span className={clsxMerge(
+                          "mb-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+                          config.badgeBg, config.badgeText,
+                        )}>
+                          <SuggestionIcon className="h-3 w-3" />
+                          {suggestion.type}
                         </span>
-                      )}
+                        <p className="text-xs leading-relaxed text-neutral-700 line-clamp-2">
+                          {suggestion.content}
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-sm text-neutral-700">{suggestion.content}</p>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
         </div>
 
         {/* Right column — Medical record draft form */}
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3 space-y-5">
+          {/* AI Draft banner */}
+          <div className="flex items-center gap-2.5 rounded-lg border border-accent-200 bg-accent-50 px-4 py-3">
+            <Sparkles className="h-4 w-4 flex-shrink-0 text-accent-600" />
+            <p className="text-sm text-accent-700">
+              <strong>AI Generated Draft</strong> — Clara pre-filled this record from the session transcript. Review, edit, and save as the official medical record.
+            </p>
+          </div>
+
           <div className="rounded-lg border border-neutral-200 bg-white p-6 lg:sticky lg:top-4">
             <div className="flex items-center gap-2 mb-6 border-b border-neutral-200 pb-3">
               <FileText className="h-5 w-5 text-primary-700" />
               <h3 className="text-sm font-semibold text-neutral-900">Medical Record Draft</h3>
-              <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-accent-50 px-2 py-0.5 text-xs font-medium text-accent-700">
-                <Sparkles className="h-3 w-3" />
-                AI-Assisted
-              </span>
             </div>
 
             <div className="space-y-5">
@@ -320,7 +359,18 @@ export function SessionSummary() {
                 </div>
               </div>
 
-              {/* Severity */}
+              {/* ICD-10 chip preview */}
+              {diagnosisCode && diagnosisDescription && (
+                <div className="inline-flex items-center gap-1.5">
+                  <span className="rounded border border-neutral-200 bg-neutral-50 px-2 py-0.5 font-mono text-xs text-neutral-700">
+                    {diagnosisCode}
+                  </span>
+                  <span className="text-xs text-neutral-600">{diagnosisDescription}</span>
+                </div>
+              )}
+
+              {/* Severity + Status */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label
                   htmlFor="severity"
@@ -345,6 +395,28 @@ export function SessionSummary() {
                   </select>
                   <Stethoscope className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
                 </div>
+              </div>
+              <div>
+                <label
+                  htmlFor="diagnosisStatus"
+                  className="mb-1.5 block text-sm font-medium text-neutral-700"
+                >
+                  Status
+                </label>
+                <div className="relative">
+                  <select
+                    id="diagnosisStatus"
+                    value={diagnosisStatus}
+                    onChange={(event) => setDiagnosisStatus(event.target.value)}
+                    className="h-10 w-full appearance-none rounded-lg border border-neutral-200 bg-white pl-3 pr-8 text-sm text-neutral-700 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
+                  >
+                    {STATUS_OPTIONS.map((option) => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
+                  </select>
+                  <ChevronRight className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+                </div>
+              </div>
               </div>
 
               {/* SOAP Note */}
@@ -476,36 +548,39 @@ export function SessionSummary() {
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="mt-6 flex flex-col gap-3 border-t border-neutral-200 pt-4 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                onClick={() => navigate("/clara")}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-neutral-200 px-4 text-sm font-medium text-neutral-700 hover:bg-neutral-50 transition-colors"
-              >
-                <X className="h-4 w-4" />
-                Discard Draft
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={isCreating || !chiefComplaint.trim() || !diagnosisCode.trim()}
-                className={clsxMerge(
-                  "inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4",
-                  "bg-primary-700 text-sm font-medium text-white",
-                  "hover:bg-primary-600 transition-colors",
-                  "disabled:opacity-50 disabled:cursor-not-allowed",
-                )}
-              >
-                {isCreating ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4" />
-                )}
-                Save as Medical Record
-              </button>
-            </div>
           </div>
+        </div>
+      </div>
+
+      {/* Footer — fixed on mobile, relative on desktop */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-neutral-200 bg-white px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] lg:relative lg:bottom-auto lg:left-auto lg:right-auto lg:z-auto lg:mt-6 lg:px-0 lg:py-0 lg:shadow-none">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => navigate("/clara")}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-error-500 px-4 text-sm font-medium text-error-600 transition-colors hover:bg-error-50 hover:text-error-700"
+          >
+            <Trash2 className="h-4 w-4" />
+            Discard Draft
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={isCreating || !chiefComplaint.trim() || !diagnosisCode.trim()}
+            className={clsxMerge(
+              "inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4",
+              "bg-primary-700 text-sm font-medium text-white",
+              "hover:bg-primary-600 transition-colors",
+              "disabled:opacity-50 disabled:cursor-not-allowed",
+            )}
+          >
+            {isCreating ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            Save as Medical Record
+          </button>
         </div>
       </div>
     </>
