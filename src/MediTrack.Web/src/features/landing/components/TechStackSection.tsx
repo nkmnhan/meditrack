@@ -1,4 +1,5 @@
 import { clsxMerge } from "@/shared/utils/clsxMerge";
+import { LovableIcon } from "@/shared/components/BrandIcons";
 
 const techBadges = [
   { label: "React 19", category: "frontend" },
@@ -17,6 +18,7 @@ const techBadges = [
   { label: "OpenTelemetry", category: "infra" },
   { label: "Duende IdentityServer", category: "backend" },
   { label: "MCP (Model Context Protocol)", category: "ai" },
+  { label: "Lovable.dev", category: "design", href: "https://meditrack-styleguide.lovable.app", hasIcon: true },
 ];
 
 const categoryColors: Record<string, string> = {
@@ -24,6 +26,7 @@ const categoryColors: Record<string, string> = {
   backend: "border-secondary-200 bg-secondary-50 text-secondary-700",
   infra: "border-neutral-200 bg-neutral-100 text-neutral-700",
   ai: "border-accent-200 bg-accent-50 text-accent-700",
+  design: "border-error-200 bg-error-50 text-error-700",
 };
 
 export function TechStackSection() {
@@ -40,17 +43,33 @@ export function TechStackSection() {
         </div>
 
         <div className="mt-10 flex flex-wrap justify-center gap-3">
-          {techBadges.map((badge) => (
-            <span
-              key={badge.label}
-              className={clsxMerge(
-                "rounded-full border px-4 py-2 text-sm font-medium transition-shadow hover:shadow-sm",
-                categoryColors[badge.category]
-              )}
-            >
-              {badge.label}
-            </span>
-          ))}
+          {techBadges.map((badge) => {
+            const badgeClassName = clsxMerge(
+              "rounded-full border px-4 py-2 text-sm font-medium transition-shadow hover:shadow-sm",
+              categoryColors[badge.category]
+            );
+
+            if (badge.href) {
+              return (
+                <a
+                  key={badge.label}
+                  href={badge.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={clsxMerge(badgeClassName, "inline-flex items-center gap-1.5")}
+                >
+                  {badge.hasIcon && <LovableIcon className="h-3.5 w-3.5" />}
+                  {badge.label}
+                </a>
+              );
+            }
+
+            return (
+              <span key={badge.label} className={badgeClassName}>
+                {badge.label}
+              </span>
+            );
+          })}
         </div>
 
         {/* Legend */}
@@ -60,6 +79,7 @@ export function TechStackSection() {
             { label: "Backend", color: "bg-secondary-200" },
             { label: "Infrastructure", color: "bg-neutral-300" },
             { label: "AI", color: "bg-accent-200" },
+            { label: "Design", color: "bg-error-200" },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-2">
               <div className={clsxMerge("h-2.5 w-2.5 rounded-full", item.color)} />

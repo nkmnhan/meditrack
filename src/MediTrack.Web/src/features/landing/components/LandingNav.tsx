@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Stethoscope, Menu, X } from "lucide-react";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
+import { GitHubIcon } from "@/shared/components/BrandIcons";
 
 interface LandingNavProps {
   readonly onSignIn: () => void;
@@ -35,6 +36,15 @@ export function LandingNav({ onSignIn }: LandingNavProps) {
               {link.label}
             </a>
           ))}
+          <a
+            href="https://github.com/nkmnhan/meditrack"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-lg p-2 text-neutral-500 transition-colors hover:text-neutral-900"
+            aria-label="View source on GitHub"
+          >
+            <GitHubIcon className="h-5 w-5" />
+          </a>
           <button
             onClick={onSignIn}
             className="h-10 rounded-lg bg-primary-700 px-5 text-sm font-semibold text-white transition-colors hover:bg-primary-600"
@@ -70,6 +80,19 @@ export function LandingNav({ onSignIn }: LandingNavProps) {
                 {link.label}
               </a>
             ))}
+            <a
+              href="https://github.com/nkmnhan/meditrack"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={clsxMerge(
+                "flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700",
+                "transition-colors hover:bg-neutral-50"
+              )}
+            >
+              <GitHubIcon className="h-4 w-4" />
+              GitHub
+            </a>
             <button
               onClick={() => {
                 setIsMobileMenuOpen(false);

@@ -1,4 +1,5 @@
 import { Stethoscope } from "lucide-react";
+import { GitHubIcon, LovableIcon } from "@/shared/components/BrandIcons";
 
 const footerLinks = [
   { label: "Features", href: "#features" },
@@ -41,26 +42,55 @@ export function LandingFooter() {
             </ul>
           </div>
 
-          {/* GitHub */}
+          {/* GitHub & Author */}
           <div>
             <h3 className="text-sm font-semibold text-neutral-900">Open Source</h3>
             <p className="mt-3 text-sm text-neutral-500">
               MediTrack is a portfolio project showcasing modern healthcare software engineering.
             </p>
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-primary-700 hover:underline"
-            >
-              View on GitHub
-            </a>
+            <div className="mt-3 flex flex-col gap-2">
+              <a
+                href="https://github.com/nkmnhan/meditrack"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm font-medium text-primary-700 hover:underline"
+              >
+                <GitHubIcon className="h-4 w-4" />
+                View on GitHub
+              </a>
+              <a
+                href="https://github.com/nkmnhan"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-neutral-500 hover:text-primary-700"
+              >
+                Built by @nkmnhan
+              </a>
+              <a
+                href="https://meditrack-styleguide.lovable.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-neutral-500 hover:text-primary-700"
+              >
+                <LovableIcon className="h-4 w-4" />
+                UI Style Guide by Lovable.dev
+              </a>
+            </div>
           </div>
         </div>
 
         <div className="mt-10 border-t border-neutral-200 pt-6 text-center">
           <p className="text-xs text-neutral-400">
-            &copy; {currentYear} MediTrack. Portfolio project — not for production clinical use.
+            &copy; {currentYear} MediTrack by{" "}
+            <a
+              href="https://github.com/nkmnhan"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-neutral-500 hover:text-primary-700"
+            >
+              Nhan Nguyen
+            </a>
+            . Portfolio project — not for production clinical use.
           </p>
         </div>
       </div>

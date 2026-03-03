@@ -3,6 +3,7 @@ import {
   Activity, Users, LayoutDashboard,
 } from "lucide-react";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
+import { GitHubIcon } from "@/shared/components/BrandIcons";
 
 interface HeroSectionProps {
   readonly onSignIn: () => void;
@@ -53,7 +54,7 @@ export function HeroSection({ onSignIn }: HeroSectionProps) {
                 <span className="relative z-10">Sign In to MediTrack</span>
               </button>
               <a
-                href="https://github.com"
+                href="https://github.com/nkmnhan/meditrack"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={clsxMerge(
@@ -61,6 +62,7 @@ export function HeroSection({ onSignIn }: HeroSectionProps) {
                   "text-base font-semibold text-neutral-700 transition-colors hover:bg-neutral-50"
                 )}
               >
+                <GitHubIcon className="h-5 w-5" />
                 View on GitHub
               </a>
             </div>
