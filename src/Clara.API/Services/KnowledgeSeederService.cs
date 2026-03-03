@@ -33,7 +33,7 @@ public sealed class KnowledgeSeederService
         ["REPLACE_IN_OVERRIDE", "sk-placeholder-for-dev", "placeholder-for-dev", ""];
 
     /// <summary>
-    /// Seeds knowledge base with documents from SeedData/Guidelines/.
+    /// Seeds knowledge base with documents from seed-data/Guidelines/.
     /// Skips documents that already exist in the database.
     /// Skips entirely when the OpenAI API key is a placeholder (avoids error spam in dev).
     /// </summary>
@@ -49,7 +49,7 @@ public sealed class KnowledgeSeederService
             return;
         }
 
-        var guidelinesPath = Path.Combine(AppContext.BaseDirectory, "SeedData", "Guidelines");
+        var guidelinesPath = Path.Combine(AppContext.BaseDirectory, "seed-data", "Guidelines");
 
         if (!Directory.Exists(guidelinesPath))
         {

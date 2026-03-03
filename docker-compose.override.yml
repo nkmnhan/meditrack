@@ -138,6 +138,22 @@ services:
       otel-collector:
         condition: service_started
 
+  simulator:
+    environment:
+      - DOTNET_ENVIRONMENT=Development
+      - ConnectionStrings__IdentityDb=Host=postgres;Database=meditrack_identity;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
+      - ConnectionStrings__PatientDb=Host=postgres;Database=meditrack_patients;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
+      - ConnectionStrings__AppointmentDb=Host=postgres;Database=meditrack_appointments;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
+      - ConnectionStrings__MedicalRecordsDb=Host=postgres;Database=meditrack_records;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
+      - ConnectionStrings__AuditDatabase=Host=postgres;Database=meditrack_audit;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
+      - ConnectionStrings__ClaraDb=Host=postgres;Database=meditrack_clara;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+    depends_on:
+      postgres:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+
   web:
     environment:
       - VITE_IDENTITY_URL=https://localhost:5001

@@ -4,34 +4,30 @@ using Patient.API.Dtos;
 using Patient.API.Infrastructure;
 using Patient.API.Models;
 
-namespace Patient.API.Services;
+namespace MediTrack.Simulator.Seeders;
 
 /// <summary>
-/// Generates realistic test data for Patient entities using Bogus library.
-/// For development and testing purposes only.
+/// Generates realistic patient test data via direct entity creation.
+/// Adapted from Patient.API/Services/PatientSeeder.cs — no IPatientService dependency.
 /// </summary>
-public class PatientSeeder
+public sealed class PatientSeeder
 {
-    private readonly IPatientService _patientService;
     private readonly PatientDbContext _dbContext;
     private readonly ILogger<PatientSeeder> _logger;
 
-    public PatientSeeder(
-        IPatientService patientService,
-        PatientDbContext dbContext,
-        ILogger<PatientSeeder> logger)
+    public PatientSeeder(PatientDbContext dbContext, ILogger<PatientSeeder> logger)
     {
-        _patientService = patientService;
         _dbContext = dbContext;
         _logger = logger;
     }
 
     /// <summary>
-    /// Seeds the database with realistic patient data.
+    /// Seeds patient data and returns results for downstream seeders.
     /// </summary>
-    /// <param name="count">Number of patients to generate (default: 50, max: 1000)</param>
-    /// <param name="clearExisting">If true, deletes all existing patients before seeding</param>
-    public async Task<(int CreatedCount, int FailedCount)> SeedPatientsAsync(int count = 50, bool clearExisting = false, CancellationToken cancellationToken = default)
+    public async Task<(List<PatientSeedResult> Patients, int FailedCount)> SeedPatientsAsync(
+        int count = 50,
+        bool clearExisting = false,
+        CancellationToken cancellationToken = default)
     {
         count = Math.Clamp(count, 1, 1000);
 
@@ -45,52 +41,105 @@ public class PatientSeeder
         _logger.LogInformation("Generating {Count} realistic patient records...", count);
 
         var faker = CreatePatientFaker();
-        var patients = faker.Generate(count);
-
-        var createdCount = 0;
+        var patientRequests = faker.Generate(count);
+        var results = new List<PatientSeedResult>();
         var failedCount = 0;
 
-        foreach (var patientRequest in patients)
+        foreach (var request in patientRequests)
         {
             try
             {
-                // Skip if email already exists (handles re-runs with deterministic seed)
-                if (await _patientService.EmailExistsAsync(patientRequest.Email, cancellationToken: cancellationToken))
+                // Check email uniqueness (handles re-runs with deterministic seed)
+                if (await _dbContext.Patients.AnyAsync(
+                        patient => patient.Email == request.Email, cancellationToken))
                 {
-                    _logger.LogDebug("Skipping patient with existing email: {Email}", patientRequest.Email);
+                    // Still return existing patient for downstream seeders
+                    var existing = await _dbContext.Patients
+                        .Where(patient => patient.Email == request.Email)
+                        .Select(patient => new PatientSeedResult(
+                            patient.Id,
+                            patient.FirstName,
+                            patient.LastName,
+                            patient.Email))
+                        .FirstAsync(cancellationToken);
+                    results.Add(existing);
+                    _logger.LogDebug("Skipping patient with existing email: {Email}", request.Email);
                     continue;
                 }
 
-                // Use a deterministic dev-only userId for seeded patients
-                //  In production, userId comes from authenticated user claims
                 var devUserId = Guid.NewGuid();
-                await _patientService.CreateAsync(devUserId, patientRequest, cancellationToken);
-                createdCount++;
+                var address = new Address(
+                    request.Address.Street,
+                    request.Address.Street2,
+                    request.Address.City,
+                    request.Address.State,
+                    request.Address.ZipCode,
+                    request.Address.Country);
 
-                if (createdCount % 10 == 0)
+                var patient = new Patient.API.Models.Patient(
+                    devUserId,
+                    request.FirstName,
+                    request.LastName,
+                    request.DateOfBirth,
+                    request.Gender,
+                    request.Email,
+                    request.PhoneNumber,
+                    address);
+
+                patient.UpdateMedicalInfo(request.BloodType, request.Allergies, request.MedicalNotes);
+
+                if (request.EmergencyContact is not null)
                 {
-                    _logger.LogInformation("Generated {CreatedCount}/{TotalCount} patients...", createdCount, count);
+                    patient.SetEmergencyContact(new EmergencyContact(
+                        request.EmergencyContact.Name,
+                        request.EmergencyContact.Relationship,
+                        request.EmergencyContact.PhoneNumber,
+                        request.EmergencyContact.Email));
+                }
+
+                if (request.Insurance is not null)
+                {
+                    patient.SetInsurance(new Insurance(
+                        request.Insurance.Provider,
+                        request.Insurance.PolicyNumber,
+                        request.Insurance.GroupNumber,
+                        request.Insurance.PlanName,
+                        request.Insurance.EffectiveDate,
+                        request.Insurance.ExpirationDate));
+                }
+
+                _dbContext.Patients.Add(patient);
+                results.Add(new PatientSeedResult(
+                    patient.Id,
+                    request.FirstName,
+                    request.LastName,
+                    request.Email));
+
+                if (results.Count % 10 == 0)
+                {
+                    _logger.LogInformation("Generated {CreatedCount}/{TotalCount} patients...",
+                        results.Count, count);
                 }
             }
             catch (Exception ex)
             {
                 failedCount++;
-                _logger.LogWarning(ex, "Failed to create patient: {Email}", patientRequest.Email);
+                _logger.LogWarning(ex, "Failed to create patient: {Email}", request.Email);
             }
         }
 
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
         _logger.LogInformation(
             "Patient seeding complete: {CreatedCount} created, {FailedCount} failed",
-            createdCount,
-            failedCount);
+            results.Count, failedCount);
 
-        return (createdCount, failedCount);
+        return (results, failedCount);
     }
 
     private static Faker<CreatePatientRequest> CreatePatientFaker()
     {
-        // Seed for consistent data across runs (remove for random data each time)
-        var seed = 42;
+        const int seed = 42;
 
         var addressFaker = new Faker<AddressDto>()
             .UseSeed(seed)
@@ -137,11 +186,11 @@ public class PatientSeeder
             .CustomInstantiator(f =>
             {
                 var gender = f.PickRandom("Male", "Female", "Non-Binary", "Other", "Prefer not to say");
-                var firstName = gender == "Male" ? f.Name.FirstName(Bogus.DataSets.Name.Gender.Male) : f.Name.FirstName(Bogus.DataSets.Name.Gender.Female);
+                var firstName = gender == "Male"
+                    ? f.Name.FirstName(Bogus.DataSets.Name.Gender.Male)
+                    : f.Name.FirstName(Bogus.DataSets.Name.Gender.Female);
                 var lastName = f.Name.LastName();
 
-                // Generate realistic age distribution
-                // Weighted brackets: pick a base age, then add 0-14 years of variance within the bracket
                 var bracketStarts = new[] { 0, 5, 18, 30, 50, 70, 85 };
                 var bracketEnds = new[] { 4, 17, 29, 49, 69, 84, 100 };
                 var bracketWeights = new[] { 0.05f, 0.15f, 0.20f, 0.30f, 0.20f, 0.08f, 0.02f };
@@ -153,7 +202,6 @@ public class PatientSeeder
                 var ageDays = f.Random.Int(1, 365);
                 var dob = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-ageYears).AddDays(-ageDays));
 
-                // Ensure at least 1 day old (BR-P004)
                 var today = DateOnly.FromDateTime(DateTime.UtcNow);
                 if (dob >= today)
                 {

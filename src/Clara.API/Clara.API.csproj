@@ -42,11 +42,11 @@
     <Content Include="Prompts\**\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <!-- Skills and SeedData live at repo root — link into output for local dev -->
+  <!-- Skills and seed-data live at repo root — link into output for local dev -->
   <!-- Docker uses explicit COPY in Dockerfile; this handles dotnet run / dotnet test -->
   <ItemGroup>
     <Content Include="..\..\skills\core\**\*" Link="skills\core\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\..\SeedData\Guidelines\**\*" Link="SeedData\Guidelines\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\seed-data\Guidelines\**\*" Link="seed-data\Guidelines\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!-- Allow integration test project to access internal types (e.g. Program) -->

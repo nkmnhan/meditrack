@@ -20,7 +20,11 @@ docker-compose up -d postgres rabbitmq
 # 3. Start all services
 docker-compose up -d --build
 
-# 4. (Frontend only — hot reload)
+# 4. Seed test data (optional)
+docker compose --profile seed up simulator
+# Or: dotnet run --project src/MediTrack.Simulator
+
+# 5. (Frontend only — hot reload)
 cd src/MediTrack.Web
 npm install
 npm run dev
@@ -36,6 +40,7 @@ npm run dev
 | Appointment API | https://localhost:5003/health |
 | MedicalRecords API | https://localhost:5004/health |
 | Clara API (AI + SignalR) | https://localhost:5005/health |
+| Simulator | No external port (seeds data, then exits) |
 | RabbitMQ UI | http://localhost:15672 (guest/guest) |
 
 ### Clara API — Additional Setup

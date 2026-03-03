@@ -25,7 +25,6 @@ builder.Services.AddDbContext<PatientDbContext>(options =>
 // Services
 builder.Services.AddScoped<IPatientService, PatientService>();
 builder.Services.AddScoped<PatientAnalyticsService>();
-builder.Services.AddScoped<PatientSeeder>();
 
 // AutoMapper
 builder.Services.AddAutoMapper(configuration =>
@@ -69,10 +68,8 @@ app.UseAuthorization();
 app.MapPatientsApi();
 app.MapPatientAnalyticsEndpoints();
 
-// Development-only endpoints
 if (app.Environment.IsDevelopment())
 {
-    app.MapDevSeederApi();
     app.UseSwagger();
     app.UseSwaggerUI();
 }

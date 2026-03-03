@@ -156,8 +156,9 @@ cp .env.example .env  # edit with your POSTGRES_PASSWORD
 # Start all services
 docker-compose up -d --build
 
-# Seed test data (optional)
-curl -k -X POST "https://localhost:5002/api/dev/seed/patients?count=100"
+# Seed test data (optional — via standalone Simulator)
+dotnet run --project src/MediTrack.Simulator
+# Or via Docker:  docker compose --profile seed up simulator
 ```
 
 | Service | URL |
@@ -168,6 +169,7 @@ curl -k -X POST "https://localhost:5002/api/dev/seed/patients?count=100"
 | Appointment API | https://localhost:5003 |
 | Records API | https://localhost:5004 |
 | Clara API (AI + SignalR) | https://localhost:5005 |
+| Simulator | No external port (seeds data, then exits) |
 | RabbitMQ UI | http://localhost:15672 (guest/guest) |
 
 > See [docs/SEEDING.md](docs/SEEDING.md) for data generation options.
@@ -208,6 +210,10 @@ docker-compose up -d              # Start all services
 docker-compose up -d --build      # Rebuild and start
 docker-compose down               # Stop all services
 docker-compose logs -f <service>  # Tail logs
+
+# Seed test data (Simulator)
+dotnet run --project src/MediTrack.Simulator          # Local dev (direct)
+docker compose --profile seed up simulator            # Docker
 
 # Frontend (src/MediTrack.Web/)
 npm run dev                       # Dev server

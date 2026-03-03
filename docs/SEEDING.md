@@ -2,72 +2,97 @@
 
 ## Overview
 
-MediTrack uses **Bogus** library to generate realistic test data for development and testing purposes. The data generated includes:
+MediTrack uses a **standalone Simulator service** (`MediTrack.Simulator`) to generate realistic test data across all 6 databases. The simulator references entity models and DbContexts from the original services, seeds data via **direct DB access**, and exits cleanly when done.
 
-- Realistic names (male/female appropriate first names)
-- Valid email addresses
-- Proper phone number formats
-- Real US addresses (street, city, state, ZIP)
-- Medical information (blood types, allergies)
-- Emergency contacts
-- Insurance details (major US providers)
-- Age distribution matching real demographics
+**Key advantages over the previous per-service HTTP approach:**
+- Single process seeds all databases — no cross-service HTTP coupling
+- Not compiled into production services
+- Can run independently without all services being healthy
+- Configurable via `appsettings.json` or environment variables
 
-**No "test" or "dummy" prefixes are used** — all data looks like production data.
+### What Gets Seeded
+
+| Data Type | Default Count | Description |
+|-----------|---------------|-------------|
+| **Identity** | 2 users + roles | Admin + Doctor test users with login activity |
+| **Patients** | 50 | Realistic demographics, addresses, insurance, emergency contacts |
+| **Appointments** | 3 per patient (150) | Past + future appointments with status transitions |
+| **Medical Records** | 3 per patient (150) | Diagnoses, notes, prescriptions, vital signs |
+| **Audit Logs** | 15,000 | PHI access logs (hot + archived) + breach incidents |
+| **Clara Sessions** | 2,500 | AI sessions with clinical suggestions |
+
+All data uses **Bogus** library with a **deterministic seed (42)** for reproducible output. No "test" or "dummy" prefixes — data looks production-realistic.
 
 ---
 
 ## Quick Start
 
-### 1. **Using the API Endpoint** (Recommended)
+### 1. Aspire (automatic)
 
-The easiest way to seed data is via the development API endpoint:
+When running via Aspire AppHost, the simulator starts automatically after all services have finished their EF migrations:
 
 ```bash
-# Generate 50 patients (default)
-curl -X POST https://localhost:5002/api/dev/seed/patients
-
-# Generate 100 patients
-curl -X POST "https://localhost:5002/api/dev/seed/patients?count=100"
-
-# Clear existing patients and generate 200 new ones
-curl -X POST "https://localhost:5002/api/dev/seed/patients?count=200&clearExisting=true"
+dotnet run --project src/MediTrack.AppHost
+# Simulator appears in Aspire dashboard → seeds data → shows "Finished" state
 ```
 
-**Parameters:**
-- `count` (optional): Number of patients to generate (1-1000, default: 50)
-- `clearExisting` (optional): Delete all existing patients before seeding (default: false)
+### 2. Direct (local dev)
 
-**Note:** This endpoint is **only available in Development environment**.
+Run the simulator directly when services are already running and databases exist:
+
+```bash
+dotnet run --project src/MediTrack.Simulator
+```
+
+### 3. Docker
+
+Use the `seed` profile to run the simulator in Docker:
+
+```bash
+docker compose --profile seed up simulator
+```
+
+The simulator is in the `seed` profile so it does **not** auto-start with `docker compose up`.
 
 ---
 
-### 2. **Using Swagger UI**
+## Configuration
 
-1. Start the Patient.API service: `docker-compose up patient-api`
-2. Navigate to Swagger UI: https://localhost:5002/swagger
-3. Find the **"Development - Data Seeding"** section
-4. Execute the `POST /api/dev/seed/patients` endpoint
-5. Adjust parameters as needed
+All options are in `SimulatorOptions` and can be set via `appsettings.json` or environment variables:
 
----
-
-### 3. **Programmatically (in code)**
-
-```csharp
-// Example: Seed in integration tests
-public class PatientIntegrationTests
+```json
 {
-    private readonly PatientSeeder _seeder;
-    
-    [Fact]
-    public async Task SeedTestData()
-    {
-        // Generate 100 realistic patients
-        await _seeder.SeedPatientsAsync(count: 100);
-    }
+  "Simulator": {
+    "ClearExisting": false,
+    "PatientCount": 50,
+    "AppointmentsPerPatient": 3,
+    "MedicalRecordsPerPatient": 3,
+    "AuditLogCount": 15000,
+    "ClaraSessionCount": 2500
+  }
 }
 ```
+
+**Environment variable overrides** (for Docker):
+```bash
+Simulator__ClearExisting=true
+Simulator__PatientCount=100
+Simulator__AuditLogCount=5000
+```
+
+---
+
+## Execution Phases
+
+The simulator runs seeders in dependency order:
+
+| Phase | Seeder | Depends On |
+|-------|--------|------------|
+| **1** | Identity (users + roles + login activity) | None |
+| **2** | Patients → returns seed results | Phase 1 |
+| **3** (parallel) | Appointments, MedicalRecords, AuditLogs, ClaraSessions | Phase 2 (patient IDs) |
+
+Phase 3 seeders run concurrently — they write to different databases.
 
 ---
 
@@ -77,76 +102,27 @@ public class PatientIntegrationTests
 - **Male:** James Anderson, Michael Thompson, Robert Martinez
 - **Female:** Mary Johnson, Jennifer Williams, Linda Garcia
 
-### Email Addresses
-- `james.anderson@example.com`
-- `mary.johnson42@gmail.com`
-- `michael.t.smith@outlook.com`
-
 ### Addresses
 ```
 123 Oak Street, Apt 4B
 Springfield, IL 62701
-
-456 Maple Avenue
-Portland, OR 97205
 ```
 
 ### Medical Data
 - **Blood Types:** A+, A-, B+, B-, AB+, AB-, O+, O-
-- **Allergies:** Penicillin, Sulfa drugs, Latex, Peanuts, Shellfish, None known
+- **Allergies:** Penicillin, Sulfa drugs, Latex, Peanuts, Shellfish
 - **Insurance Providers:** Blue Cross Blue Shield, United Healthcare, Aetna, Cigna, Kaiser Permanente
 
 ### Age Distribution
-- **0-5 years:** 5%
-- **5-18 years:** 15%
-- **18-30 years:** 20%
-- **30-50 years:** 30%
-- **50-70 years:** 20%
-- **70-85 years:** 8%
-- **85+ years:** 2%
-
----
-
-## Configuration
-
-### Deterministic vs. Random Data
-
-By default, the seeder uses a **fixed seed (42)** to generate consistent data across runs. This is useful for:
-- Reproducible test scenarios
-- Demo environments
-- Training databases
-
-To generate **random data every time**, modify `PatientSeeder.cs`:
-
-```csharp
-// Remove this line from CreatePatientFaker()
-var seed = 42;
-
-// And remove .UseSeed(seed) from all Faker instances
-var addressFaker = new Faker<AddressDto>()
-    // .UseSeed(seed)  <-- Remove this
-    .CustomInstantiator(f => new AddressDto(...));
-```
-
-### Adjusting Data Characteristics
-
-**Change age distribution:**
-```csharp
-var ageYears = f.Random.WeightedRandom(
-    new[] { 0, 5, 18, 30, 50, 70, 85 },  // Age brackets
-    new[] { 0.10f, 0.20f, 0.30f, 0.20f, 0.10f, 0.07f, 0.03f } // New weights
-);
-```
-
-**Change insurance coverage rate (default: 85%):**
-```csharp
-Insurance: f.Random.Bool(0.95f) ? insuranceFaker.Generate() : null  // 95% have insurance
-```
-
-**Change emergency contact rate (default: 90%):**
-```csharp
-EmergencyContact: f.Random.Bool(0.99f) ? emergencyContactFaker.Generate() : null  // 99% have emergency contact
-```
+| Range | Weight |
+|-------|--------|
+| 0-4 | 5% |
+| 5-17 | 15% |
+| 18-29 | 20% |
+| 30-49 | 30% |
+| 50-69 | 20% |
+| 70-84 | 8% |
+| 85+ | 2% |
 
 ---
 
@@ -156,91 +132,49 @@ The seeder respects all business rules defined in `docs/business-logic.md`:
 
 | Rule | Enforcement |
 |------|-------------|
-| **BR-P001** | Email uniqueness (Bogus generates unique emails per run with seed) |
-| **BR-P002** | Date of birth in past (generated between 1 day and 100 years ago) |
+| **BR-P001** | Email uniqueness (deterministic seed + dedup check) |
+| **BR-P002** | Date of birth in past |
 | **BR-P003** | Valid phone format (###-###-####) |
-| **BR-P004** | Minimum 1 day old (enforced in age calculation) |
+| **BR-P004** | Minimum 1 day old |
 | **BR-P006** | MRN auto-generation (handled by Patient entity) |
-| **BR-P010** | Name character validation (Bogus generates only letters/spaces/hyphens) |
+| **BR-P010** | Name character validation (Bogus generates valid names) |
 
 ---
 
 ## Production Safety
 
-✅ **Safe for Production:**
-- Seeder endpoint is **only available in Development environment**
-- Conditional registration: `if (app.Environment.IsDevelopment())`
-- No accidental data generation in production
+The simulator is a **separate project** (`MediTrack.Simulator`) that is not compiled into any production service.
 
-⚠️ **Caution:**
-- `clearExisting=true` will **delete all patients** — use with care even in dev!
-- Always backup databases before clearing data
+- In **Docker**: only starts with `--profile seed` — never runs in production
+- In **Aspire**: runs as a separate process visible in dashboard
+- **No dev endpoints** remain in any production service
+
+**Caution:** `ClearExisting=true` will delete data — use only in dev/test environments.
 
 ---
 
-## Advanced Usage
+## Idempotent Behavior
 
-### Custom Seeder for Other Entities
-
-When implementing Appointment or MedicalRecords services, create similar seeders:
-
-```csharp
-public class AppointmentSeeder
-{
-    public async Task SeedAppointmentsAsync(int count = 100)
-    {
-        var faker = new Faker<CreateAppointmentRequest>()
-            .CustomInstantiator(f => new CreateAppointmentRequest(
-                PatientId: f.PickRandom(existingPatientIds),  // Link to real patients
-                ProviderId: f.PickRandom(existingProviderIds),
-                AppointmentDate: DateOnly.FromDateTime(f.Date.Future(60)),
-                // ... etc
-            ));
-        
-        var appointments = faker.Generate(count);
-        // ... create appointments
-    }
-}
-```
-
-### Integration with Entity Framework Migrations
-
-For permanent seed data (e.g., lookup tables), use EF Core seeding:
-
-```csharp
-protected override void OnModelCreating(ModelBuilder modelBuilder)
-{
-    modelBuilder.Entity<BloodType>().HasData(
-        new BloodType { Id = 1, Name = "A+" },
-        new BloodType { Id = 2, Name = "A-" },
-        // ... etc
-    );
-}
-```
+- **Patients**: Skipped if email already exists (returns existing patient for downstream seeders)
+- **Identity users**: Skipped if email already exists
+- **Appointments, Records, Audit, Sessions**: Added on each run (use `ClearExisting=true` to reset)
 
 ---
 
 ## Troubleshooting
 
-### "Email already exists" error
-- If using the same seed (42) and calling the endpoint multiple times without `clearExisting=true`, email collisions will occur
-- Solution: Use `clearExisting=true` or change the seed value
+### Simulator fails to connect to database
+- Ensure databases exist (services must have run their EF migrations first)
+- In Aspire, the `.WaitFor()` calls handle this automatically
+- For direct runs, start services first: `dotnet run --project src/MediTrack.AppHost`
 
-### Seeder endpoint not available
-- Verify you're running in Development environment
-- Check `ASPNETCORE_ENVIRONMENT=Development` in docker-compose.override.yml
+### "Email already exists" for patients
+- Expected on re-runs with deterministic seed — patients are skipped, downstream seeders still get their IDs
+- Use `Simulator__ClearExisting=true` to start fresh
 
-### Performance issues with large datasets
-- Generating 1000+ patients can take 30-60 seconds
-- Consider batching or running async if needed
-
----
-
-## Related Documentation
-
-- [Business Logic & Rules](./business-logic.md) — All business rules enforced by seeder
-- [Bogus Documentation](https://github.com/bchavez/Bogus) — Full Bogus library reference
-- Testing Strategy — planned for a future phase
+### Performance with large datasets
+- Audit logs (15K) and Clara sessions (2.5K) use batch inserts for performance
+- Full seeding takes ~30-60 seconds depending on hardware
 
 ---
 
@@ -248,4 +182,5 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 1.0 | 2026-02-24 | Initial seeder implementation with Bogus |
+| 2.0 | 2026-03-03 | Migrated to standalone Simulator service (consolidated from 6 per-service seeders) |
+| 1.0 | 2026-02-24 | Initial per-service seeder implementation with Bogus |

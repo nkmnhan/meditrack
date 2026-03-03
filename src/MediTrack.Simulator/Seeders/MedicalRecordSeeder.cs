@@ -3,31 +3,24 @@ using MediTrack.MedicalRecords.Domain.Aggregates;
 using MediTrack.MedicalRecords.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
-namespace MediTrack.MedicalRecords.API.Application.Services;
+namespace MediTrack.Simulator.Seeders;
 
 /// <summary>
-/// Generates realistic test data for medical records using Bogus library.
-/// For development and testing purposes only.
+/// Generates realistic medical record test data.
+/// Adapted from MedicalRecords.API/Application/Services/MedicalRecordSeeder.cs —
+/// receives patient IDs from orchestrator instead of resolving via HTTP.
 /// </summary>
 public sealed class MedicalRecordSeeder
 {
     private readonly MedicalRecordsDbContext _dbContext;
     private readonly ILogger<MedicalRecordSeeder> _logger;
 
-    public MedicalRecordSeeder(
-        MedicalRecordsDbContext dbContext,
-        ILogger<MedicalRecordSeeder> logger)
+    public MedicalRecordSeeder(MedicalRecordsDbContext dbContext, ILogger<MedicalRecordSeeder> logger)
     {
         _dbContext = dbContext;
         _logger = logger;
     }
 
-    /// <summary>
-    /// Seeds the database with realistic medical record data.
-    /// </summary>
-    /// <param name="patientIds">Patient IDs to create records for</param>
-    /// <param name="recordsPerPatient">Records per patient (default: 3, max: 20)</param>
-    /// <param name="clearExisting">If true, deletes all existing records before seeding</param>
     public async Task<(int CreatedCount, int FailedCount)> SeedMedicalRecordsAsync(
         IReadOnlyList<Guid> patientIds,
         int recordsPerPatient = 3,
@@ -95,7 +88,6 @@ public sealed class MedicalRecordSeeder
             recordedByDoctorId: doctorId,
             recordedByDoctorName: doctorName);
 
-        // Randomly assign a non-Active status to some records
         var statusRoll = faker.Random.Float();
         if (statusRoll < 0.15f) record.MarkRequiresFollowUp();
         else if (statusRoll < 0.35f) record.Resolve();

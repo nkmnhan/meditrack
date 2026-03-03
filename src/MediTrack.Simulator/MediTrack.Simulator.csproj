@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <PackageReference Include="Bogus" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Pgvector.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Identity.API\Identity.API.csproj" />
+    <ProjectReference Include="..\Patient.API\Patient.API.csproj" />
+    <ProjectReference Include="..\Appointment.API\Appointment.API.csproj" />
+    <ProjectReference Include="..\MedicalRecords.Domain\MedicalRecords.Domain.csproj" />
+    <ProjectReference Include="..\MedicalRecords.Infrastructure\MedicalRecords.Infrastructure.csproj" />
+    <ProjectReference Include="..\Notification.Worker\Notification.Worker.csproj" />
+    <ProjectReference Include="..\Clara.API\Clara.API.csproj" />
+    <ProjectReference Include="..\MediTrack.ServiceDefaults\MediTrack.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>

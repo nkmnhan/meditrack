@@ -217,6 +217,25 @@ services:
       identity-api:
         condition: service_started
 
+  simulator:
+    image: ${DOCKER_REGISTRY:-meditrack}/simulator:${TAG:-latest}
+    build:
+      context: .
+      dockerfile: src/MediTrack.Simulator/Dockerfile
+    environment:
+      - DOTNET_ENVIRONMENT=Production
+      - ConnectionStrings__IdentityDb=Host=postgres;Database=meditrack_identity;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD};
+      - ConnectionStrings__PatientDb=Host=postgres;Database=meditrack_patients;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD};
+      - ConnectionStrings__AppointmentDb=Host=postgres;Database=meditrack_appointments;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD};
+      - ConnectionStrings__MedicalRecordsDb=Host=postgres;Database=meditrack_records;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD};
+      - ConnectionStrings__AuditDatabase=Host=postgres;Database=meditrack_audit;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD};
+      - ConnectionStrings__ClaraDb=Host=postgres;Database=meditrack_clara;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD};
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - seed
+
   web:
     image: ${DOCKER_REGISTRY:-meditrack}/web:${TAG:-latest}
     build:

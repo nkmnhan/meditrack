@@ -119,6 +119,25 @@ var claraApi = builder.AddProject<Projects.Clara_API>("clara-api")
     .WithEnvironment("Kestrel__Certificates__Default__KeyPath", certKeyPath);
 
 // ──────────────────────────────────────────────────────
+// Simulator — seeds test data, then exits
+// Waits for all services (they run EF migrations on startup)
+// ──────────────────────────────────────────────────────
+var simulator = builder.AddProject<Projects.MediTrack_Simulator>("simulator")
+    .WithOtlpExporter()
+    .WithReference(identityDb)
+    .WithReference(patientDb)
+    .WithReference(appointmentDb)
+    .WithReference(medicalRecordsDb)
+    .WithReference(auditDb)
+    .WithReference(claraDb)
+    .WaitFor(identityApi)
+    .WaitFor(patientApi)
+    .WaitFor(appointmentApi)
+    .WaitFor(medicalRecordsApi)
+    .WaitFor(notificationWorker)
+    .WaitFor(claraApi);
+
+// ──────────────────────────────────────────────────────
 // Web frontend — https://localhost:3000 (matches docker-compose)
 // AddViteApp creates an HTTP endpoint + starts vite.
 // Override PORT=3000 so vite binds to port 3000 with HTTPS

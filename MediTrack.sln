@@ -37,6 +37,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{C9E2A3B4
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Clara.IntegrationTests", "tests\Clara.IntegrationTests\Clara.IntegrationTests.csproj", "{D1E2F3A4-B5C6-7890-ABCD-EF1234567814}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediTrack.Simulator", "src\MediTrack.Simulator\MediTrack.Simulator.csproj", "{FDCE3B07-0CF6-4E2C-A43B-F3D087EA6A23}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -227,6 +229,18 @@ Global
 		{D1E2F3A4-B5C6-7890-ABCD-EF1234567814}.Release|x64.Build.0 = Release|Any CPU
 		{D1E2F3A4-B5C6-7890-ABCD-EF1234567814}.Release|x86.ActiveCfg = Release|Any CPU
 		{D1E2F3A4-B5C6-7890-ABCD-EF1234567814}.Release|x86.Build.0 = Release|Any CPU
+		{FDCE3B07-0CF6-4E2C-A43B-F3D087EA6A23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDCE3B07-0CF6-4E2C-A43B-F3D087EA6A23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDCE3B07-0CF6-4E2C-A43B-F3D087EA6A23}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FDCE3B07-0CF6-4E2C-A43B-F3D087EA6A23}.Debug|x64.Build.0 = Debug|Any CPU
+		{FDCE3B07-0CF6-4E2C-A43B-F3D087EA6A23}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FDCE3B07-0CF6-4E2C-A43B-F3D087EA6A23}.Debug|x86.Build.0 = Debug|Any CPU
+		{FDCE3B07-0CF6-4E2C-A43B-F3D087EA6A23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDCE3B07-0CF6-4E2C-A43B-F3D087EA6A23}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDCE3B07-0CF6-4E2C-A43B-F3D087EA6A23}.Release|x64.ActiveCfg = Release|Any CPU
+		{FDCE3B07-0CF6-4E2C-A43B-F3D087EA6A23}.Release|x64.Build.0 = Release|Any CPU
+		{FDCE3B07-0CF6-4E2C-A43B-F3D087EA6A23}.Release|x86.ActiveCfg = Release|Any CPU
+		{FDCE3B07-0CF6-4E2C-A43B-F3D087EA6A23}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -235,5 +249,6 @@ Global
 		{8D32F513-203A-4CF5-8F28-F1EF0398EF88} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{E8FBA07E-8F59-4A3C-A7E0-F92330ABB4F8} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{D1E2F3A4-B5C6-7890-ABCD-EF1234567814} = {C9E2A3B4-D5F6-7890-ABCD-EF1234567813}
+		{FDCE3B07-0CF6-4E2C-A43B-F3D087EA6A23} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal

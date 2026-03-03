@@ -4,33 +4,26 @@ using Appointment.API.Models;
 using Microsoft.EntityFrameworkCore;
 using AppointmentEntity = Appointment.API.Models.Appointment;
 
-namespace Appointment.API.Services;
+namespace MediTrack.Simulator.Seeders;
 
 /// <summary>
-/// Generates realistic test data for Appointment entities using Bogus library.
-/// For development and testing purposes only.
+/// Generates realistic appointment test data.
+/// Adapted from Appointment.API/Services/AppointmentSeeder.cs — receives patient data
+/// from orchestrator instead of fetching via HTTP.
 /// </summary>
 public sealed class AppointmentSeeder
 {
     private readonly AppointmentDbContext _dbContext;
     private readonly ILogger<AppointmentSeeder> _logger;
 
-    public AppointmentSeeder(
-        AppointmentDbContext dbContext,
-        ILogger<AppointmentSeeder> logger)
+    public AppointmentSeeder(AppointmentDbContext dbContext, ILogger<AppointmentSeeder> logger)
     {
         _dbContext = dbContext;
         _logger = logger;
     }
 
-    /// <summary>
-    /// Seeds the database with realistic appointment data.
-    /// </summary>
-    /// <param name="patients">Patient info (id, name, email) from Patient.API</param>
-    /// <param name="appointmentsPerPatient">Number of appointments per patient (default: 3, max: 10)</param>
-    /// <param name="clearExisting">If true, deletes all existing appointments before seeding</param>
     public async Task<(int CreatedCount, int FailedCount)> SeedAppointmentsAsync(
-        IReadOnlyList<PatientSummary> patients,
+        IReadOnlyList<PatientSeedResult> patients,
         int appointmentsPerPatient = 3,
         bool clearExisting = false,
         CancellationToken cancellationToken = default)
@@ -83,7 +76,7 @@ public sealed class AppointmentSeeder
         return (createdCount, failedCount);
     }
 
-    private static AppointmentEntity CreateRealisticAppointment(Faker faker, PatientSummary patient)
+    private static AppointmentEntity CreateRealisticAppointment(Faker faker, PatientSeedResult patient)
     {
         var doctorIndex = faker.Random.Int(0, SeedDoctorIds.Length - 1);
         var doctorId = SeedDoctorIds[doctorIndex];
@@ -94,7 +87,6 @@ public sealed class AppointmentSeeder
         var reason = GetReasonForType(appointmentType, faker);
         var location = GetLocationForType(appointmentType, faker);
 
-        // Spread appointments across past 6 months to future 3 months
         var daysOffset = faker.Random.Int(-180, 90);
         var hour = faker.Random.Int(8, 16);
         var minute = faker.PickRandom(0, 15, 30, 45);
@@ -120,7 +112,6 @@ public sealed class AppointmentSeeder
             patientNotes: patientNotes,
             location: location);
 
-        // Apply realistic status transitions based on whether the appointment is past or future
         ApplyRealisticStatus(appointment, scheduledDateTime, faker);
 
         return appointment;
@@ -135,12 +126,10 @@ public sealed class AppointmentSeeder
 
         if (!isPast)
         {
-            // Future appointments: mostly Scheduled, some Confirmed
             if (faker.Random.Bool(0.4f))
             {
                 appointment.Confirm();
             }
-            // Small chance of cancellation for future appointments
             if (faker.Random.Bool(0.08f))
             {
                 appointment.Cancel(faker.PickRandom(CancellationReasons));
@@ -148,12 +137,10 @@ public sealed class AppointmentSeeder
             return;
         }
 
-        // Past appointments: simulate the full lifecycle
         var outcomeRoll = faker.Random.Float();
 
         if (outcomeRoll < 0.65f)
         {
-            // 65% — Completed (normal flow: Scheduled → Confirmed → CheckedIn → InProgress → Completed)
             appointment.Confirm();
             appointment.CheckIn();
             appointment.Start();
@@ -163,7 +150,6 @@ public sealed class AppointmentSeeder
         }
         else if (outcomeRoll < 0.80f)
         {
-            // 15% — Cancelled
             if (faker.Random.Bool(0.5f))
             {
                 appointment.Confirm();
@@ -172,7 +158,6 @@ public sealed class AppointmentSeeder
         }
         else if (outcomeRoll < 0.90f)
         {
-            // 10% — No-show
             if (faker.Random.Bool(0.5f))
             {
                 appointment.Confirm();
@@ -181,7 +166,6 @@ public sealed class AppointmentSeeder
         }
         else
         {
-            // 10% — Still in Confirmed/Scheduled (recently past, not yet processed)
             if (faker.Random.Bool(0.6f))
             {
                 appointment.Confirm();
@@ -277,7 +261,7 @@ public sealed class AppointmentSeeder
     {
         if (type == AppointmentType.Telehealth)
         {
-            return null; // Telehealth uses link, not physical location
+            return null;
         }
 
         return type switch
@@ -357,8 +341,3 @@ public sealed class AppointmentSeeder
         "Bringing medical records from previous provider",
     ];
 }
-
-/// <summary>
-/// Lightweight patient summary used for seeding appointments.
-/// </summary>
-public sealed record PatientSummary(Guid Id, string FirstName, string LastName, string Email);

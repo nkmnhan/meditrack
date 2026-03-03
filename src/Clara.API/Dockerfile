@@ -29,6 +29,6 @@ WORKDIR /app
 # Copy skills and seed data from repo root
 COPY --from=publish /app/publish .
 COPY skills/core/ /app/skills/core/
-COPY SeedData/Guidelines/ /app/SeedData/Guidelines/
+COPY seed-data/Guidelines/ /app/seed-data/Guidelines/
 
 ENTRYPOINT ["dotnet", "Clara.API.dll"]
