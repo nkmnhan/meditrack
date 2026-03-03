@@ -19,6 +19,24 @@ public sealed class AuditLogEntry
 }
 
 /// <summary>
+/// Read-only model mapping to the ArchivedPHIAuditLogs table.
+/// </summary>
+public sealed class ArchivedAuditLogEntry
+{
+    public Guid Id { get; set; }
+    public DateTimeOffset Timestamp { get; set; }
+    public string Username { get; set; } = string.Empty;
+    public string UserRole { get; set; } = string.Empty;
+    public string Action { get; set; } = string.Empty;
+    public string ResourceType { get; set; } = string.Empty;
+    public string ResourceId { get; set; } = string.Empty;
+    public string Severity { get; set; } = "Info";
+    public bool Success { get; set; }
+    public string? ErrorMessage { get; set; }
+    public DateTimeOffset ArchivedAt { get; set; }
+}
+
+/// <summary>
 /// DTO returned to the frontend for audit log entries.
 /// </summary>
 public sealed record AuditLogDto
@@ -33,6 +51,36 @@ public sealed record AuditLogDto
     public required string Severity { get; init; }
     public required bool Success { get; init; }
     public string? ErrorMessage { get; init; }
+}
+
+/// <summary>
+/// DTO returned to the frontend for archived audit log entries.
+/// </summary>
+public sealed record ArchivedAuditLogDto
+{
+    public required Guid Id { get; init; }
+    public required DateTimeOffset Timestamp { get; init; }
+    public required string Username { get; init; }
+    public required string UserRole { get; init; }
+    public required string Action { get; init; }
+    public required string ResourceType { get; init; }
+    public required string ResourceId { get; init; }
+    public required string Severity { get; init; }
+    public required bool Success { get; init; }
+    public string? ErrorMessage { get; init; }
+    public required DateTimeOffset ArchivedAt { get; init; }
+}
+
+/// <summary>
+/// Audit database statistics for admin dashboard.
+/// </summary>
+public sealed record AuditStatsResponse
+{
+    public required long HotRecordCount { get; init; }
+    public required long ArchivedRecordCount { get; init; }
+    public required DateTimeOffset? OldestHotRecord { get; init; }
+    public required DateTimeOffset? LastArchivalRun { get; init; }
+    public required int RetentionMonths { get; init; }
 }
 
 /// <summary>

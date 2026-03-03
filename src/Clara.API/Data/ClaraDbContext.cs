@@ -74,6 +74,10 @@ public sealed class ClaraDbContext : DbContext
                 .HasColumnName("speaker_map")
                 .HasColumnType("jsonb");
 
+            // Indexes for analytics queries
+            entity.HasIndex(session => session.StartedAt);
+            entity.HasIndex(session => session.DoctorId);
+
             entity.HasMany(session => session.TranscriptLines)
                 .WithOne(line => line.Session)
                 .HasForeignKey(line => line.SessionId)

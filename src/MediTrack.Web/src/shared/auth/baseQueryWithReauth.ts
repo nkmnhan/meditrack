@@ -32,10 +32,10 @@ export function createBaseQueryWithReauth(
     const result = await rawBaseQuery(args, api, extraOptions);
 
     if (result.error?.status === 401) {
-      // Token expired or invalid — clear stale session and redirect.
-      // ProtectedRoute will detect !isAuthenticated and call signinRedirect().
+      // Token expired or invalid — clear stale session and redirect to a protected route.
+      // ProtectedRoute will detect !isAuthenticated and trigger signinRedirect().
       clearOidcSession();
-      window.location.href = "/";
+      window.location.href = "/dashboard";
     }
 
     return result;

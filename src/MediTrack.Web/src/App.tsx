@@ -6,6 +6,9 @@ import { Layout, NotFound, PageSkeleton } from "./shared/components";
 /* ── Lazy-loaded page components ── */
 /* Import directly from component files (not barrel index.ts) for better tree-shaking */
 
+const LandingPage = lazy(() =>
+  import("./features/landing/components/LandingPage").then(module => ({ default: module.LandingPage }))
+);
 const DashboardPage = lazy(() =>
   import("./features/dashboard/components/DashboardPage").then(module => ({ default: module.DashboardPage }))
 );
@@ -23,6 +26,9 @@ const AppointmentCalendarPage = lazy(() =>
 );
 const AppointmentDetailPage = lazy(() =>
   import("./features/appointments/components/AppointmentDetailPage").then(module => ({ default: module.AppointmentDetailPage }))
+);
+const AdminDashboardPage = lazy(() =>
+  import("./features/admin/components/AdminDashboardPage").then(module => ({ default: module.AdminDashboardPage }))
 );
 const AdminReportsPage = lazy(() =>
   import("./features/admin/components/AdminReportsPage").then(module => ({ default: module.AdminReportsPage }))
@@ -64,6 +70,14 @@ export default function App() {
       <Route path="/callback" element={<CallbackPage />} />
       <Route
         path="/"
+        element={
+          <Suspense fallback={<PageSkeleton />}>
+            <LandingPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/dashboard"
         element={
           <ProtectedRoute>
             <Layout>
@@ -220,6 +234,20 @@ export default function App() {
               <Layout>
                 <Suspense fallback={<PageSkeleton />}>
                   <SessionSummary />
+                </Suspense>
+              </Layout>
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/dashboard"
+        element={
+          <ProtectedRoute>
+            <RoleGuard allowedRoles={[UserRole.Admin]}>
+              <Layout>
+                <Suspense fallback={<PageSkeleton />}>
+                  <AdminDashboardPage />
                 </Suspense>
               </Layout>
             </RoleGuard>

@@ -1,211 +1,78 @@
 namespace Notification.Worker.Models;
 
 /// <summary>
-/// Database model for PHI access audit log entries.
-/// Stores comprehensive audit trail for HIPAA compliance.
+/// Shared fields between hot (PHIAuditLog) and archive (ArchivedPHIAuditLog) audit records.
+/// Avoids field duplication across the two tables.
 /// </summary>
-public class PHIAuditLog
+public abstract class PHIAuditLogBase
+{
+    public Guid Id { get; set; }
+    public Guid EventId { get; set; }
+    public DateTimeOffset Timestamp { get; set; }
+    public string UserId { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
+    public string UserRole { get; set; } = string.Empty;
+    public string Action { get; set; } = string.Empty;
+    public string ResourceType { get; set; } = string.Empty;
+    public string ResourceId { get; set; } = string.Empty;
+    public Guid PatientId { get; set; }
+    public string? IpAddress { get; set; }
+    public string? UserAgent { get; set; }
+    public bool Success { get; set; }
+    public string? ErrorMessage { get; set; }
+    public string EventType { get; set; } = string.Empty;
+    public string? AdditionalContext { get; set; }
+    public string Severity { get; set; } = "Info";
+    public bool AlertTriggered { get; set; }
+    public bool Reviewed { get; set; }
+    public string? ReviewedBy { get; set; }
+    public DateTimeOffset? ReviewedAt { get; set; }
+    public string? ReviewNotes { get; set; }
+}
+
+/// <summary>
+/// Hot-tier audit log entry. Lives in PHIAuditLogs table.
+/// Records are archived after the configured retention period.
+/// </summary>
+public class PHIAuditLog : PHIAuditLogBase
+{
+}
+
+/// <summary>
+/// Archived audit log entry. Lives in ArchivedPHIAuditLogs table.
+/// Records moved here by AuditArchivalService after the retention period expires.
+/// </summary>
+public class ArchivedPHIAuditLog : PHIAuditLogBase
 {
     /// <summary>
-    /// Unique identifier for this audit log entry
+    /// When this record was moved from the hot table to the archive.
     /// </summary>
-    public Guid Id { get; set; }
-    
-    /// <summary>
-    /// Integration event ID (for correlation with event bus)
-    /// </summary>
-    public Guid EventId { get; set; }
-    
-    /// <summary>
-    /// Timestamp of the audit event
-    /// </summary>
-    public DateTimeOffset Timestamp { get; set; }
-    
-    /// <summary>
-    /// User ID who performed the action
-    /// </summary>
-    public string UserId { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Username (for human readability)
-    /// </summary>
-    public string Username { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// User's role at the time of action
-    /// </summary>
-    public string UserRole { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Type of action (Read, Create, Update, Delete, Export, Print)
-    /// </summary>
-    public string Action { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Type of PHI resource (Patient, MedicalRecord, Appointment, Prescription, LabResult)
-    /// </summary>
-    public string ResourceType { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// ID of the specific resource
-    /// </summary>
-    public string ResourceId { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Patient ID associated with this PHI
-    /// </summary>
-    public Guid PatientId { get; set; }
-    
-    /// <summary>
-    /// IP address of the client
-    /// </summary>
-    public string? IpAddress { get; set; }
-    
-    /// <summary>
-    /// User agent string
-    /// </summary>
-    public string? UserAgent { get; set; }
-    
-    /// <summary>
-    /// Whether the action was successful
-    /// </summary>
-    public bool Success { get; set; }
-    
-    /// <summary>
-    /// Error message if action failed
-    /// </summary>
-    public string? ErrorMessage { get; set; }
-    
-    /// <summary>
-    /// Event type (for categorization)
-    /// </summary>
-    public string EventType { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Additional context as JSON
-    /// </summary>
-    public string? AdditionalContext { get; set; }
-    
-    /// <summary>
-    /// Severity level for security events (Info, Warning, Error, Critical)
-    /// </summary>
-    public string Severity { get; set; } = "Info";
-    
-    /// <summary>
-    /// Whether this event triggered an alert
-    /// </summary>
-    public bool AlertTriggered { get; set; }
-    
-    /// <summary>
-    /// Whether this audit log has been reviewed by compliance officer
-    /// </summary>
-    public bool Reviewed { get; set; }
-    
-    /// <summary>
-    /// User ID of reviewer
-    /// </summary>
-    public string? ReviewedBy { get; set; }
-    
-    /// <summary>
-    /// Timestamp of review
-    /// </summary>
-    public DateTimeOffset? ReviewedAt { get; set; }
-    
-    /// <summary>
-    /// Reviewer notes
-    /// </summary>
-    public string? ReviewNotes { get; set; }
+    public DateTimeOffset ArchivedAt { get; set; }
 }
 
 /// <summary>
 /// Database model for PHI breach incidents.
 /// Separate table for tracking potential HIPAA breaches.
+/// Never archived — compliance-critical, always kept in hot tier.
 /// </summary>
 public class PHIBreachIncident
 {
-    /// <summary>
-    /// Unique identifier for this breach incident
-    /// </summary>
     public Guid Id { get; set; }
-    
-    /// <summary>
-    /// Integration event ID
-    /// </summary>
     public Guid EventId { get; set; }
-    
-    /// <summary>
-    /// Timestamp when breach was detected
-    /// </summary>
     public DateTimeOffset DetectedAt { get; set; }
-    
-    /// <summary>
-    /// User ID associated with breach
-    /// </summary>
     public string UserId { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Username
-    /// </summary>
     public string Username { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Patient ID affected
-    /// </summary>
     public Guid PatientId { get; set; }
-    
-    /// <summary>
-    /// Severity level (Low, Medium, High, Critical)
-    /// </summary>
     public string Severity { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Description of the breach
-    /// </summary>
     public string Description { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Number of patients affected
-    /// </summary>
     public int PatientsAffected { get; set; }
-    
-    /// <summary>
-    /// Whether breach notification is required under HIPAA (500+ patients or other criteria)
-    /// </summary>
     public bool RequiresBreachNotification { get; set; }
-    
-    /// <summary>
-    /// Status (Detected, UnderInvestigation, Confirmed, Resolved, FalsePositive)
-    /// </summary>
     public string Status { get; set; } = "Detected";
-    
-    /// <summary>
-    /// ID of compliance officer assigned to investigate
-    /// </summary>
     public string? AssignedTo { get; set; }
-    
-    /// <summary>
-    /// Investigation notes
-    /// </summary>
     public string? InvestigationNotes { get; set; }
-    
-    /// <summary>
-    /// Resolution description
-    /// </summary>
     public string? Resolution { get; set; }
-    
-    /// <summary>
-    /// When the incident was resolved
-    /// </summary>
     public DateTimeOffset? ResolvedAt { get; set; }
-    
-    /// <summary>
-    /// Whether breach notification was sent
-    /// </summary>
     public bool NotificationSent { get; set; }
-    
-    /// <summary>
-    /// When breach notification was sent
-    /// </summary>
     public DateTimeOffset? NotificationSentAt { get; set; }
 }
 

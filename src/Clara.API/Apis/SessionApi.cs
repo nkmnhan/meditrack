@@ -20,7 +20,7 @@ public static class SessionApi
     {
         var group = app.MapGroup("/api/sessions")
             .WithTags("Sessions")
-            .RequireAuthorization(policy => policy.RequireRole(UserRoles.Doctor));
+            .RequireAuthorization(policy => policy.RequireRole(UserRoles.Doctor, UserRoles.Admin));
 
         group.MapGet("/", GetSessions)
             .WithName("GetSessions")

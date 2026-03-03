@@ -9,7 +9,7 @@ import type { UserListItem } from "../types";
 /* ── Breadcrumb ── */
 
 const BREADCRUMB_ITEMS = [
-  { label: "Home", href: "/" },
+  { label: "Home", href: "/dashboard" },
   { label: "Admin", href: "/admin" },
   { label: "User Management" },
 ];

@@ -17,6 +17,11 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults("medicalrecords-api");
 
+// Dependency health checks
+builder.Services.AddHealthChecks()
+    .AddNpgsqlHealthCheck(builder.Configuration, "MedicalRecordsDb")
+    .AddRabbitMQHealthCheck(builder.Configuration);
+
 // Database
 builder.Services.AddDbContext<MedicalRecordsDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("MedicalRecordsDb")));

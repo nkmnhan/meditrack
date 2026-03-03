@@ -3,17 +3,22 @@ using MediTrack.EventBusRabbitMQ;
 using MediTrack.Notification;
 using MediTrack.Notification.EventHandlers;
 using MediTrack.Notification.Services;
+using MediTrack.ServiceDefaults;
 using MediTrack.ServiceDefaults.Extensions;
 using MediTrack.Shared.Events;
 using Microsoft.EntityFrameworkCore;
 using Notification.Worker.Data;
 using Notification.Worker.Services;
 
-HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
-// Add service defaults (health checks, OpenTelemetry)
-builder.Services.AddDefaultHealthChecks();
-builder.Services.AddDefaultOpenTelemetry("notification-worker");
+// Add service defaults (health checks, OpenTelemetry, response compression)
+builder.AddServiceDefaults("notification-worker");
+
+// Dependency health checks
+builder.Services.AddHealthChecks()
+    .AddNpgsqlHealthCheck(builder.Configuration, "AuditDatabase")
+    .AddRabbitMQHealthCheck(builder.Configuration);
 
 // Configure audit database
 builder.Services.AddDbContext<AuditDbContext>(options =>
@@ -54,17 +59,23 @@ builder.Services.AddRabbitMQEventBus(builder.Configuration);
 // Add background worker for processing
 builder.Services.AddHostedService<NotificationWorker>();
 
-IHost host = builder.Build();
+// Add audit archival background service (daily archival of old audit logs)
+builder.Services.AddHostedService<AuditArchivalService>();
 
-// Apply database migrations on startup — EF Core handles this automatically
-using (var scope = host.Services.CreateScope())
+var app = builder.Build();
+
+// Map health check endpoints (/health, /health/live, /health/details)
+app.MapDefaultEndpoints();
+
+// Apply database migrations on startup
+using (var scope = app.Services.CreateScope())
 {
     var auditDbContext = scope.ServiceProvider.GetRequiredService<AuditDbContext>();
     await auditDbContext.Database.MigrateAsync();
 }
 
 // Subscribe to integration events
-var eventBus = host.Services.GetRequiredService<IEventBus>();
+var eventBus = app.Services.GetRequiredService<IEventBus>();
 
 // Notification events
 eventBus.Subscribe<AppointmentCreatedIntegrationEvent, AppointmentCreatedIntegrationEventHandler>();
@@ -87,4 +98,4 @@ eventBus.Subscribe<PHIExportedIntegrationEvent, PHIExportedIntegrationEventHandl
 eventBus.Subscribe<UnauthorizedPHIAccessAttemptIntegrationEvent, UnauthorizedPHIAccessAttemptIntegrationEventHandler>();
 eventBus.Subscribe<PHIBreachDetectedIntegrationEvent, PHIBreachDetectedIntegrationEventHandler>();
 
-await host.RunAsync();
+await app.RunAsync();

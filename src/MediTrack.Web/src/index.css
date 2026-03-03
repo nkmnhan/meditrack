@@ -53,6 +53,8 @@
   }
 }
 
+/* shimmer and float animations are defined in tailwind.config.ts (animate-shimmer, animate-float) */
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

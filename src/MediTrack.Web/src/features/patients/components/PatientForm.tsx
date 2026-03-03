@@ -109,8 +109,8 @@ type PatientFormData = z.infer<typeof patientFormSchema>;
 // --- Sub-components ---
 
 const INPUT_CLASSES = "h-10 w-full rounded-md border px-3 text-sm text-neutral-900 placeholder:text-neutral-400 transition-shadow focus:border-transparent focus:outline-none focus:ring-2 bg-white";
-const INPUT_NORMAL = `${INPUT_CLASSES} border-neutral-200 focus:ring-primary-700`;
-const INPUT_ERROR = `${INPUT_CLASSES} border-error-500 focus:ring-error-500`;
+const INPUT_NORMAL = clsxMerge(INPUT_CLASSES, "border-neutral-200 focus:ring-primary-700");
+const INPUT_ERROR = clsxMerge(INPUT_CLASSES, "border-error-500 focus:ring-error-500");
 
 function FormLabel({
   htmlFor,
@@ -286,13 +286,13 @@ export function PatientForm() {
 
   const breadcrumbItems = isEditMode
     ? [
-        { label: "Home", href: "/" },
+        { label: "Home", href: "/dashboard" },
         { label: "Patients", href: "/patients" },
         { label: patient ? `${patient.firstName} ${patient.lastName}` : "...", href: `/patients/${id}` },
         { label: "Edit" },
       ]
     : [
-        { label: "Home", href: "/" },
+        { label: "Home", href: "/dashboard" },
         { label: "Patients", href: "/patients" },
         { label: "New Patient" },
       ];

@@ -194,7 +194,7 @@ export function PatientDetail() {
       {/* Breadcrumb */}
       <Breadcrumb
         items={[
-          { label: "Home", href: "/" },
+          { label: "Home", href: "/dashboard" },
           { label: "Patients", href: "/patients" },
           { label: fullName },
         ]}

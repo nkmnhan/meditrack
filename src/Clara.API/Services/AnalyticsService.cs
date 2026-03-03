@@ -83,7 +83,9 @@ public sealed class AnalyticsService
         int days,
         CancellationToken cancellationToken)
     {
-        DateTimeOffset startDate = DateTimeOffset.UtcNow.Date.AddDays(-days + 1);
+        // Use DateTimeOffset with UTC offset to satisfy Npgsql's timestamp with time zone requirement
+        var utcNow = DateTimeOffset.UtcNow;
+        var startDate = new DateTimeOffset(utcNow.Date.AddDays(-days + 1), TimeSpan.Zero);
 
         var grouped = await _dbContext.Sessions
             .Where(session => session.StartedAt >= startDate)
@@ -95,7 +97,7 @@ public sealed class AnalyticsService
         var result = new List<SessionVolumeEntry>();
         for (int dayOffset = 0; dayOffset < days; dayOffset++)
         {
-            var date = startDate.AddDays(dayOffset).DateTime;
+            var date = startDate.DateTime.AddDays(dayOffset);
             var match = grouped.FirstOrDefault(entry => entry.Date == date);
             result.Add(new SessionVolumeEntry
             {

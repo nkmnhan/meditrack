@@ -92,6 +92,8 @@ namespace MediTrack.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedAt");
+
                     b.HasIndex("DateOfBirth");
 
                     b.HasIndex("Email")

@@ -290,7 +290,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
               "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             )}
           >
-            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_3s_infinite]" />
+            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer" />
             {isLoading ? (
               <>
                 <Loader2 className="h-5 w-5 animate-spin relative z-10" />
@@ -482,13 +482,6 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
         </button>
       </div>
 
-      {/* Shimmer keyframe */}
-      <style>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-      `}</style>
     </div>
   );
 }

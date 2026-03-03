@@ -13,12 +13,18 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults("patient-api");
 
+// Dependency health checks
+builder.Services.AddHealthChecks()
+    .AddNpgsqlHealthCheck(builder.Configuration, "PatientDb")
+    .AddRabbitMQHealthCheck(builder.Configuration);
+
 // Database
 builder.Services.AddDbContext<PatientDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("PatientDb")));
 
 // Services
 builder.Services.AddScoped<IPatientService, PatientService>();
+builder.Services.AddScoped<PatientAnalyticsService>();
 builder.Services.AddScoped<PatientSeeder>();
 
 // AutoMapper
@@ -61,6 +67,7 @@ app.UseAuthorization();
 
 // Map APIs
 app.MapPatientsApi();
+app.MapPatientAnalyticsEndpoints();
 
 // Development-only endpoints
 if (app.Environment.IsDevelopment())

@@ -165,7 +165,7 @@ export function SessionSummary() {
     <>
       <Breadcrumb
         items={[
-          { label: "Home", href: "/" },
+          { label: "Home", href: "/dashboard" },
           { label: "Clara", href: "/clara" },
           { label: `Session ${sessionId?.slice(0, 8) ?? ""}`, href: `/clara/session/${sessionId}` },
           { label: "Summary" },

@@ -147,3 +147,4 @@ dev-certs/mkcert.exe
 
 # MCP config (may contain local paths)
 .mcp.json
+src/Identity.API/keys/

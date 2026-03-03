@@ -8,7 +8,7 @@ export function CallbackPage() {
 
   useEffect(() => {
     if (!auth.isLoading && auth.isAuthenticated) {
-      navigate("/", { replace: true });
+      navigate("/dashboard", { replace: true });
     }
   }, [auth.isLoading, auth.isAuthenticated, navigate]);
 

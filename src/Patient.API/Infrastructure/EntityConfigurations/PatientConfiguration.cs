@@ -160,6 +160,7 @@ public class PatientConfiguration : IEntityTypeConfiguration<Models.Patient>
         builder.HasIndex(patient => patient.LastName);
         builder.HasIndex(patient => patient.DateOfBirth);
         builder.HasIndex(patient => patient.IsActive);
+        builder.HasIndex(patient => patient.CreatedAt);
 
         // UserId index — required for IDOR ownership checks (IsOwnedByUserAsync)
         // Pre-existing patients have UserId = Guid.Empty, which is safe by default:

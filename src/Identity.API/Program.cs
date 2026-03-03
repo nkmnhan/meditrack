@@ -17,6 +17,10 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults("identity-api");
 
+// Dependency health checks (no RabbitMQ — Identity doesn't publish events)
+builder.Services.AddHealthChecks()
+    .AddNpgsqlHealthCheck(builder.Configuration, "IdentityDb");
+
 // EF Core + PostgreSQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("IdentityDb")));
@@ -156,6 +160,7 @@ app.UseIdentityServer();
 app.UseAuthorization();
 app.MapRazorPages();
 app.MapUsersApi();
+app.MapIdentityAnalyticsEndpoints();
 
 if (app.Environment.IsDevelopment())
 {

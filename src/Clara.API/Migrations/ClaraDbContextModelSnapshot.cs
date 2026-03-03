@@ -144,6 +144,13 @@ namespace MediTrack.Migrations
                         .HasColumnType("text")
                         .HasColumnName("patient_id");
 
+                    b.Property<string>("SessionType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("Consultation")
+                        .HasColumnName("session_type");
+
                     b.Property<Dictionary<string, string>>("SpeakerMap")
                         .HasColumnType("jsonb")
                         .HasColumnName("speaker_map");
@@ -152,18 +159,16 @@ namespace MediTrack.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("started_at");
 
-                    b.Property<string>("SessionType")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasDefaultValue("Consultation")
-                        .HasColumnName("session_type");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("status");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DoctorId");
+
+                    b.HasIndex("StartedAt");
 
                     b.ToTable("sessions", (string)null);
                 });

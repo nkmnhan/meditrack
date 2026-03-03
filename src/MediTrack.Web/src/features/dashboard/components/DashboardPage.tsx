@@ -200,7 +200,7 @@ export function DashboardPage() {
                 "transition-all duration-200 hover:scale-[1.01] hover:shadow-lg"
               )}
             >
-              <span className="absolute inset-0 -translate-x-full animate-[shimmer_3s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              <span className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
               <Sparkles className="relative z-10 h-4 w-4" />
               <span className="relative z-10">Start with Clara</span>
             </Link>
@@ -398,13 +398,6 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {/* Shimmer keyframe */}
-      <style>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-      `}</style>
     </>
   );
 }

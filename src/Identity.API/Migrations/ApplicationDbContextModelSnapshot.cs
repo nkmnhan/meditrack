@@ -89,6 +89,8 @@ namespace MediTrack.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("LastLoginAt");
+
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
 

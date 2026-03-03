@@ -115,12 +115,9 @@ export function AppointmentDetailPage() {
 
   return (
     <>
-      {/* Shimmer keyframe for Clara button */}
-      <style>{`@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}`}</style>
-
       <Breadcrumb
         items={[
-          { label: "Home", href: "/" },
+          { label: "Home", href: "/dashboard" },
           { label: "Appointments", href: "/appointments" },
           { label: `${appointment.patientName} \u2014 ${appointment.type}` },
         ]}
@@ -167,7 +164,7 @@ export function AppointmentDetailPage() {
                 "transition-all hover:shadow-lg disabled:opacity-50"
               )}
             >
-              <span className="pointer-events-none absolute inset-0 animate-[shimmer_3s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              <span className="pointer-events-none absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
               {isStartingSession ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               Start with Clara
             </button>

@@ -2,6 +2,8 @@ import { useGetAppointmentsQuery, useGetDashboardStatsQuery } from "@/features/a
 import { useGetMedicalRecordStatsQuery } from "@/features/medical-records/store/medicalRecordsApi";
 import { useGetSessionsQuery } from "@/features/clara/store/claraApi";
 import { useGetPatientsQuery } from "@/features/patients/store/patientApi";
+import { useRoles } from "@/shared/auth";
+import { UserRole } from "@/shared/auth/roles";
 
 function todayDateString(): string {
   return new Date().toISOString().split("T")[0];
@@ -9,10 +11,12 @@ function todayDateString(): string {
 
 export function useDashboard() {
   const today = todayDateString();
+  const { hasAnyRole } = useRoles();
+  const canViewSessions = hasAnyRole([UserRole.Doctor, UserRole.Admin]);
 
   const dashboardStats = useGetDashboardStatsQuery({ date: today });
   const medicalRecordStats = useGetMedicalRecordStatsQuery({});
-  const sessions = useGetSessionsQuery();
+  const sessions = useGetSessionsQuery(undefined, { skip: !canViewSessions });
   const patients = useGetPatientsQuery({ includeInactive: false });
   const todayAppointments = useGetAppointmentsQuery({
     fromDate: `${today}T00:00:00`,

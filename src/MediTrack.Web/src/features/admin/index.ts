@@ -1,3 +1,4 @@
+export { AdminDashboardPage } from "./components/AdminDashboardPage";
 export { AdminReportsPage } from "./components/AdminReportsPage";
 export { AdminUsersPage } from "./components/AdminUsersPage";
 export { AdminSystemPage } from "./components/AdminSystemPage";

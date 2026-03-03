@@ -52,6 +52,32 @@ builder.Services.AddScoped<SuggestionService>();
 // Analytics service (admin reports)
 builder.Services.AddScoped<AnalyticsService>();
 
+// Infrastructure monitoring services
+builder.Services.AddHttpClient<PrometheusService>(client =>
+{
+    var prometheusUrl = builder.Configuration["Monitoring:PrometheusUrl"] ?? "http://prometheus:9090";
+    client.BaseAddress = new Uri(prometheusUrl);
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
+builder.Services.AddHttpClient<RabbitMQMonitorService>(client =>
+{
+    var rabbitMQUrl = builder.Configuration["Monitoring:RabbitMQManagementUrl"] ?? "http://rabbitmq:15672";
+    client.BaseAddress = new Uri(rabbitMQUrl);
+    client.Timeout = TimeSpan.FromSeconds(10);
+
+    // RabbitMQ Management API uses Basic auth
+    var rabbitUser = builder.Configuration["RabbitMQ:UserName"] ?? "guest";
+    var rabbitPass = builder.Configuration["RabbitMQ:Password"] ?? "guest";
+    var credentials = Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes($"{rabbitUser}:{rabbitPass}"));
+    client.DefaultRequestHeaders.Authorization =
+        new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
+});
+builder.Services.AddSingleton<DatabaseMonitorService>();
+
+// Dashboard aggregator (caches results in IMemoryCache)
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<DashboardAggregatorService>();
+
 // Skill loader (loads YAML skills at startup)
 builder.Services.AddSingleton<SkillLoaderService>();
 
@@ -60,7 +86,9 @@ builder.Services.AddScoped<KnowledgeSeederService>();
 
 // Health checks
 builder.Services.AddHealthChecks()
-    .AddCheck<ClaraHealthCheck>("claradb");
+    .AddCheck<ClaraHealthCheck>("claradb")
+    .AddNpgsqlHealthCheck(builder.Configuration, "ClaraDb")
+    .AddRabbitMQHealthCheck(builder.Configuration);
 
 // Health check HTTP client (for system health aggregation endpoint)
 builder.Services.AddHttpClient("HealthCheck", client =>
@@ -126,6 +154,9 @@ app.MapKnowledgeEndpoints();
 app.MapAuditEndpoints();
 app.MapAnalyticsEndpoints();
 app.MapSystemHealthEndpoints();
+app.MapInfrastructureEndpoints();
+app.MapDashboardEndpoints();
+app.MapAnalyticsProxyEndpoints();
 
 // Map Controllers (DevController)
 // Note: DevController uses MVC for test/dev endpoints only. All production endpoints use minimal APIs for performance.

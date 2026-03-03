@@ -1,18 +1,22 @@
 import { useState } from "react";
-import { ShieldCheck, Search, ChevronDown, ChevronLeft, ChevronRight, Download, Loader2 } from "lucide-react";
+import { ShieldCheck, Search, ChevronDown, ChevronLeft, ChevronRight, Download, Loader2, Archive, Clock } from "lucide-react";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
 import { Breadcrumb } from "@/shared/components";
-import { useGetAuditLogsQuery } from "@/features/clara/store/claraApi";
+import { useGetAuditLogsQuery, useGetArchivedAuditLogsQuery, useGetAuditStatsQuery } from "@/features/clara/store/claraApi";
 import { getInitials, getAvatarColor } from "@/shared/utils/avatarUtils";
-import type { AuditLogDto } from "../types";
+import type { AuditLogDto, ArchivedAuditLogDto } from "../types";
 
 /* ── Breadcrumb ── */
 
 const BREADCRUMB_ITEMS = [
-  { label: "Home", href: "/" },
+  { label: "Home", href: "/dashboard" },
   { label: "Admin", href: "/admin" },
   { label: "Audit Log" },
 ];
+
+/* ── Types ── */
+
+type AuditTab = "recent" | "archived";
 
 /* ── Style maps ── */
 
@@ -47,26 +51,58 @@ function formatTimestamp(isoTimestamp: string): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
+function formatCount(count: number): string {
+  if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`;
+  if (count >= 1_000) return `${(count / 1_000).toFixed(1)}K`;
+  return count.toLocaleString();
+}
+
 /* ── Component ── */
 
 export function AdminAuditPage() {
+  const [activeTab, setActiveTab] = useState<AuditTab>("recent");
   const [searchQuery, setSearchQuery] = useState("");
   const [actionFilter, setActionFilter] = useState("");
   const [severityFilter, setSeverityFilter] = useState("");
   const [pageNumber, setPageNumber] = useState(1);
   const pageSize = 25;
 
-  const { data, isLoading, isError } = useGetAuditLogsQuery({
+  const queryParams = {
     action: actionFilter || undefined,
     search: searchQuery || undefined,
     severity: severityFilter || undefined,
     pageNumber,
     pageSize,
-  });
+  };
 
-  const entries = data?.items ?? [];
-  const totalCount = data?.totalCount ?? 0;
-  const totalPages = data?.totalPages ?? 0;
+  const recentQuery = useGetAuditLogsQuery(queryParams, { skip: activeTab !== "recent" });
+  const archivedQuery = useGetArchivedAuditLogsQuery(queryParams, { skip: activeTab !== "archived" });
+  const { data: auditStats } = useGetAuditStatsQuery();
+
+  const activeQuery = activeTab === "recent" ? recentQuery : archivedQuery;
+  const entries = activeQuery.data?.items ?? [];
+  const totalCount = activeQuery.data?.totalCount ?? 0;
+  const totalPages = activeQuery.data?.totalPages ?? 0;
+
+  function handleTabChange(tab: AuditTab) {
+    setActiveTab(tab);
+    setPageNumber(1);
+  }
+
+  function handleSearchChange(value: string) {
+    setSearchQuery(value);
+    setPageNumber(1);
+  }
+
+  function handleActionFilterChange(value: string) {
+    setActionFilter(value);
+    setPageNumber(1);
+  }
+
+  function handleSeverityFilterChange(value: string) {
+    setSeverityFilter(value);
+    setPageNumber(1);
+  }
 
   return (
     <div className="space-y-6">
@@ -96,6 +132,57 @@ export function AdminAuditPage() {
         </button>
       </div>
 
+      {/* Stats Banner */}
+      {auditStats && (
+        <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 sm:flex-row sm:items-center sm:gap-6">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-primary-700" />
+            <span className="text-sm text-neutral-700">
+              <span className="font-semibold text-neutral-900">{formatCount(auditStats.hotRecordCount)}</span>{" "}
+              recent logs (last {auditStats.retentionMonths} months)
+            </span>
+          </div>
+          <span className="hidden text-neutral-300 sm:inline">&middot;</span>
+          <div className="flex items-center gap-2">
+            <Archive className="h-4 w-4 text-neutral-500" />
+            <span className="text-sm text-neutral-700">
+              <span className="font-semibold text-neutral-900">{formatCount(auditStats.archivedRecordCount)}</span>{" "}
+              archived logs
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="flex gap-1 rounded-lg border border-neutral-200 bg-neutral-100 p-1">
+        <button
+          type="button"
+          onClick={() => handleTabChange("recent")}
+          className={clsxMerge(
+            "flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors",
+            activeTab === "recent"
+              ? "bg-white text-neutral-900 shadow-sm"
+              : "text-neutral-600 hover:text-neutral-900"
+          )}
+        >
+          <Clock className="mr-1.5 inline-block h-4 w-4" />
+          Recent
+        </button>
+        <button
+          type="button"
+          onClick={() => handleTabChange("archived")}
+          className={clsxMerge(
+            "flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors",
+            activeTab === "archived"
+              ? "bg-white text-neutral-900 shadow-sm"
+              : "text-neutral-600 hover:text-neutral-900"
+          )}
+        >
+          <Archive className="mr-1.5 inline-block h-4 w-4" />
+          Archived
+        </button>
+      </div>
+
       {/* Filters */}
       <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
@@ -105,10 +192,7 @@ export function AdminAuditPage() {
             <input
               type="text"
               value={searchQuery}
-              onChange={(event) => {
-                setSearchQuery(event.target.value);
-                setPageNumber(1);
-              }}
+              onChange={(event) => handleSearchChange(event.target.value)}
               placeholder="Search audit entries..."
               className={clsxMerge(
                 "h-10 w-full rounded-lg border border-neutral-200 pl-9 pr-3 text-sm",
@@ -123,10 +207,7 @@ export function AdminAuditPage() {
             <select
               value={actionFilter}
               aria-label="Filter by action"
-              onChange={(event) => {
-                setActionFilter(event.target.value);
-                setPageNumber(1);
-              }}
+              onChange={(event) => handleActionFilterChange(event.target.value)}
               className="h-10 appearance-none rounded-md border border-neutral-200 bg-white pl-3 pr-8 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
             >
               <option value="">All Actions</option>
@@ -145,10 +226,7 @@ export function AdminAuditPage() {
             <select
               value={severityFilter}
               aria-label="Filter by severity"
-              onChange={(event) => {
-                setSeverityFilter(event.target.value);
-                setPageNumber(1);
-              }}
+              onChange={(event) => handleSeverityFilterChange(event.target.value)}
               className="h-10 appearance-none rounded-md border border-neutral-200 bg-white pl-3 pr-8 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
             >
               <option value="">All Severities</option>
@@ -168,11 +246,11 @@ export function AdminAuditPage() {
 
       {/* Audit Timeline */}
       <div className="rounded-lg border border-neutral-200 bg-white shadow-sm">
-        {isLoading ? (
+        {activeQuery.isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
           </div>
-        ) : isError ? (
+        ) : activeQuery.isError ? (
           <div className="flex flex-col items-center justify-center px-5 py-12">
             <ShieldCheck className="h-10 w-10 text-error-300" />
             <p className="mt-3 text-sm font-medium text-neutral-900">Failed to load audit logs</p>
@@ -180,15 +258,22 @@ export function AdminAuditPage() {
           </div>
         ) : entries.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-5 py-12">
-            <ShieldCheck className="h-10 w-10 text-neutral-300" />
-            <p className="mt-3 text-sm font-medium text-neutral-900">No audit entries found</p>
+            {activeTab === "archived" ? (
+              <Archive className="h-10 w-10 text-neutral-300" />
+            ) : (
+              <ShieldCheck className="h-10 w-10 text-neutral-300" />
+            )}
+            <p className="mt-3 text-sm font-medium text-neutral-900">
+              No {activeTab === "archived" ? "archived " : ""}audit entries found
+            </p>
             <p className="mt-1 text-xs text-neutral-500">Try adjusting your search or filters</p>
           </div>
         ) : (
           <div className="divide-y divide-neutral-200">
-            {entries.map((entry: AuditLogDto) => {
+            {entries.map((entry: AuditLogDto | ArchivedAuditLogDto) => {
               const badgeStyle = ACTION_BADGE_STYLES[entry.action] ?? "border border-neutral-200 bg-neutral-100 text-neutral-700";
               const dotColor = ACTION_DOT_COLORS[entry.action] ?? "bg-neutral-300";
+              const isArchived = activeTab === "archived" && "archivedAt" in entry;
 
               return (
                 <div key={entry.id} className="flex items-start gap-4 px-5 py-4">
@@ -223,6 +308,15 @@ export function AdminAuditPage() {
                       <span className="text-xs text-neutral-500">{entry.username}</span>
                       <span className="text-neutral-200">&middot;</span>
                       <span className="text-xs text-neutral-500">{entry.userRole}</span>
+                      {isArchived && (
+                        <>
+                          <span className="text-neutral-200">&middot;</span>
+                          <span className="inline-flex items-center gap-1 text-xs text-neutral-400">
+                            <Archive className="h-3 w-3" />
+                            Archived {formatTimestamp((entry as ArchivedAuditLogDto).archivedAt)}
+                          </span>
+                        </>
+                      )}
                       <span className="ml-auto text-xs text-neutral-500 sm:hidden">{formatTimestamp(entry.timestamp)}</span>
                     </div>
                   </div>
@@ -246,22 +340,22 @@ export function AdminAuditPage() {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                disabled={!data?.hasPreviousPage}
+                disabled={!activeQuery.data?.hasPreviousPage}
                 onClick={() => setPageNumber((previousPage) => previousPage - 1)}
                 className={clsxMerge(
                   "inline-flex h-10 w-10 items-center justify-center rounded-md border border-neutral-200 text-neutral-700 transition-colors",
-                  data?.hasPreviousPage ? "hover:bg-neutral-50" : "cursor-not-allowed opacity-50"
+                  activeQuery.data?.hasPreviousPage ? "hover:bg-neutral-50" : "cursor-not-allowed opacity-50"
                 )}
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
               <button
                 type="button"
-                disabled={!data?.hasNextPage}
+                disabled={!activeQuery.data?.hasNextPage}
                 onClick={() => setPageNumber((previousPage) => previousPage + 1)}
                 className={clsxMerge(
                   "inline-flex h-10 w-10 items-center justify-center rounded-md border border-neutral-200 text-neutral-700 transition-colors",
-                  data?.hasNextPage ? "hover:bg-neutral-50" : "cursor-not-allowed opacity-50"
+                  activeQuery.data?.hasNextPage ? "hover:bg-neutral-50" : "cursor-not-allowed opacity-50"
                 )}
               >
                 <ChevronRight className="h-4 w-4" />

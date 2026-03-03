@@ -30,7 +30,7 @@ function getAvatarColor(patientId: string): string {
 }
 
 const BREADCRUMB_ITEMS = [
-  { label: "Home", href: "/" },
+  { label: "Home", href: "/dashboard" },
   { label: "Patients" },
 ];
 

@@ -11,11 +11,24 @@ import type {
 import type {
   AuditLogSearchParams,
   PagedAuditLogsResponse,
+  PagedArchivedAuditLogsResponse,
+  AuditStatsResponse,
   AnalyticsOverview,
   SessionVolumeEntry,
   SuggestionBreakdownEntry,
   ProviderLeaderboardEntry,
   SystemHealthResponse,
+  DashboardOverview,
+  InfrastructureMetrics,
+  TimeSeriesResponse,
+  RegistrationTrendEntry,
+  PatientDemographics,
+  AppointmentVolumeEntry,
+  StatusDistributionEntry,
+  TypeDistributionEntry,
+  BusiestHourEntry,
+  LoginActivityEntry,
+  UserStats,
 } from "@/features/admin/types";
 
 import { CLARA_API_URL } from "../config";
@@ -109,6 +122,26 @@ export const claraApi = createApi({
       providesTags: ["AuditLog"],
     }),
 
+    getArchivedAuditLogs: builder.query<PagedArchivedAuditLogsResponse, AuditLogSearchParams>({
+      query: (params) => ({
+        url: "/api/audit/archived",
+        params: {
+          ...(params.action && { action: params.action }),
+          ...(params.user && { user: params.user }),
+          ...(params.search && { search: params.search }),
+          ...(params.severity && { severity: params.severity }),
+          pageNumber: params.pageNumber ?? 1,
+          pageSize: params.pageSize ?? 25,
+        },
+      }),
+      providesTags: ["AuditLog"],
+    }),
+
+    getAuditStats: builder.query<AuditStatsResponse, void>({
+      query: () => "/api/audit/stats",
+      providesTags: ["AuditLog"],
+    }),
+
     // --- Admin: Analytics ---
 
     getAnalyticsOverview: builder.query<AnalyticsOverview, { period?: string }>({
@@ -147,6 +180,81 @@ export const claraApi = createApi({
     getSystemHealth: builder.query<SystemHealthResponse, void>({
       query: () => "/api/system/health",
     }),
+
+    // --- Admin: Dashboard ---
+
+    getDashboardOverview: builder.query<DashboardOverview, void>({
+      query: () => "/api/dashboard/overview",
+    }),
+
+    // --- Admin: Infrastructure Monitoring ---
+
+    getInfrastructureMetrics: builder.query<InfrastructureMetrics, void>({
+      query: () => "/api/infrastructure/metrics",
+    }),
+
+    getMetricsTimeseries: builder.query<TimeSeriesResponse, { metric: string; range: string }>({
+      query: (params) => ({
+        url: "/api/infrastructure/timeseries",
+        params,
+      }),
+    }),
+
+    // --- Admin: Patient Analytics (proxied via Clara.API) ---
+
+    getPatientRegistrationTrends: builder.query<RegistrationTrendEntry[], { days?: number }>({
+      query: (params) => ({
+        url: "/api/admin/patient/registration-trends",
+        params: { days: params.days ?? 30 },
+      }),
+    }),
+
+    getPatientDemographics: builder.query<PatientDemographics, void>({
+      query: () => "/api/admin/patient/demographics",
+    }),
+
+    // --- Admin: Appointment Analytics (proxied via Clara.API) ---
+
+    getAppointmentVolume: builder.query<AppointmentVolumeEntry[], { days?: number }>({
+      query: (params) => ({
+        url: "/api/admin/appointment/volume",
+        params: { days: params.days ?? 30 },
+      }),
+    }),
+
+    getAppointmentStatusDistribution: builder.query<StatusDistributionEntry[], { days?: number }>({
+      query: (params) => ({
+        url: "/api/admin/appointment/status-distribution",
+        params: { days: params.days ?? 30 },
+      }),
+    }),
+
+    getAppointmentTypeDistribution: builder.query<TypeDistributionEntry[], { days?: number }>({
+      query: (params) => ({
+        url: "/api/admin/appointment/type-distribution",
+        params: { days: params.days ?? 30 },
+      }),
+    }),
+
+    getAppointmentBusiestHours: builder.query<BusiestHourEntry[], { days?: number }>({
+      query: (params) => ({
+        url: "/api/admin/appointment/busiest-hours",
+        params: { days: params.days ?? 30 },
+      }),
+    }),
+
+    // --- Admin: Identity Analytics (proxied via Clara.API) ---
+
+    getLoginActivity: builder.query<LoginActivityEntry[], { days?: number }>({
+      query: (params) => ({
+        url: "/api/admin/identity/login-activity",
+        params: { days: params.days ?? 30 },
+      }),
+    }),
+
+    getUserStats: builder.query<UserStats, void>({
+      query: () => "/api/admin/identity/user-stats",
+    }),
   }),
 });
 
@@ -158,9 +266,22 @@ export const {
   useRequestSuggestionsMutation,
   useSearchKnowledgeMutation,
   useGetAuditLogsQuery,
+  useGetArchivedAuditLogsQuery,
+  useGetAuditStatsQuery,
   useGetAnalyticsOverviewQuery,
   useGetSessionVolumeQuery,
   useGetSuggestionBreakdownQuery,
   useGetProviderLeaderboardQuery,
   useGetSystemHealthQuery,
+  useGetDashboardOverviewQuery,
+  useGetInfrastructureMetricsQuery,
+  useGetMetricsTimeseriesQuery,
+  useGetPatientRegistrationTrendsQuery,
+  useGetPatientDemographicsQuery,
+  useGetAppointmentVolumeQuery,
+  useGetAppointmentStatusDistributionQuery,
+  useGetAppointmentTypeDistributionQuery,
+  useGetAppointmentBusiestHoursQuery,
+  useGetLoginActivityQuery,
+  useGetUserStatsQuery,
 } = claraApi;

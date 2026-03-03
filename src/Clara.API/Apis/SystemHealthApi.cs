@@ -1,11 +1,13 @@
-using MediTrack.Shared.Common;
 using System.Diagnostics;
+using System.Text.Json;
+using MediTrack.Shared.Common;
 
 namespace Clara.API.Apis;
 
 /// <summary>
 /// Aggregates health status from all microservices.
 /// Admin-only endpoint used by the System Health dashboard.
+/// Now calls /health/details for per-dependency status breakdown.
 /// </summary>
 public static class SystemHealthApi
 {
@@ -15,6 +17,8 @@ public static class SystemHealthApi
         ("Patient API", "Patient CRUD & demographics", "Services:PatientApi", "https://patient-api:8443"),
         ("Appointment API", "Calendar & scheduling engine", "Services:AppointmentApi", "https://appointment-api:8443"),
         ("Medical Records API", "EHR read/write & FHIR bridge", "Services:MedicalRecordsApi", "https://medicalrecords-api:8443"),
+        ("Notification Worker", "Event processing & audit logging", "Services:NotificationWorker", "http://notification-worker:8080"),
+        ("Clara AI Service", "AI clinical companion & MCP server", "Services:ClaraApi", "https://clara-api:8443"),
     ];
 
     public static void MapSystemHealthEndpoints(this IEndpointRouteBuilder app)
@@ -22,7 +26,7 @@ public static class SystemHealthApi
         app.MapGet("/api/system/health", GetSystemHealth)
             .WithTags("SystemHealth")
             .WithName("GetSystemHealth")
-            .WithSummary("Aggregate health status from all microservices")
+            .WithSummary("Aggregate health status from all microservices with dependency breakdown")
             .RequireAuthorization(policy => policy.RequireRole(UserRoles.Admin));
     }
 
@@ -31,17 +35,15 @@ public static class SystemHealthApi
         IConfiguration configuration,
         CancellationToken cancellationToken)
     {
-        var services = new List<ServiceHealthEntry>();
+        var tasks = ServiceDefinitions.Select(definition =>
+            CheckServiceHealthAsync(
+                httpClientFactory,
+                definition.Name,
+                definition.Description,
+                configuration[definition.ConfigKey] ?? definition.DefaultUrl,
+                cancellationToken));
 
-        foreach (var (name, description, configKey, defaultUrl) in ServiceDefinitions)
-        {
-            var baseUrl = configuration[configKey] ?? defaultUrl;
-            var healthUrl = $"{baseUrl.TrimEnd('/')}/health/live";
-
-            var entry = await CheckServiceHealthAsync(
-                httpClientFactory, name, description, healthUrl, cancellationToken);
-            services.Add(entry);
-        }
+        var services = await Task.WhenAll(tasks);
 
         var overallStatus = services.Any(service => service.Status == "Unhealthy")
             ? "Unhealthy"
@@ -51,27 +53,45 @@ public static class SystemHealthApi
 
         return Results.Ok(new SystemHealthResponse
         {
-            Services = services,
+            Services = [.. services],
             OverallStatus = overallStatus,
         });
     }
+
+    private static readonly TimeSpan HealthCheckTimeout = TimeSpan.FromSeconds(3);
 
     private static async Task<ServiceHealthEntry> CheckServiceHealthAsync(
         IHttpClientFactory httpClientFactory,
         string name,
         string description,
-        string healthUrl,
+        string baseUrl,
         CancellationToken cancellationToken)
     {
         var httpClient = httpClientFactory.CreateClient("HealthCheck");
+        var detailsUrl = $"{baseUrl.TrimEnd('/')}/health/details";
         var stopwatch = Stopwatch.StartNew();
 
         try
         {
-            using var response = await httpClient.GetAsync(healthUrl, cancellationToken);
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutCts.CancelAfter(HealthCheckTimeout);
+            using var response = await httpClient.GetAsync(detailsUrl, timeoutCts.Token);
             stopwatch.Stop();
 
-            var status = response.IsSuccessStatusCode ? "Healthy" : "Degraded";
+            if (!response.IsSuccessStatusCode)
+            {
+                // Fall back to basic health check
+                return await FallbackHealthCheckAsync(
+                    httpClient, name, description, baseUrl, stopwatch.ElapsedMilliseconds, timeoutCts.Token);
+            }
+
+            var json = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+
+            var status = json.TryGetProperty("status", out var statusElement)
+                ? statusElement.GetString() ?? "Unhealthy"
+                : "Healthy";
+
+            var dependencies = ParseDependencies(json);
 
             return new ServiceHealthEntry
             {
@@ -79,6 +99,7 @@ public static class SystemHealthApi
                 Description = description,
                 Status = status,
                 ResponseMs = (int)stopwatch.ElapsedMilliseconds,
+                Dependencies = dependencies,
             };
         }
         catch
@@ -91,9 +112,93 @@ public static class SystemHealthApi
                 Description = description,
                 Status = "Unhealthy",
                 ResponseMs = (int)stopwatch.ElapsedMilliseconds,
+                Dependencies = [],
             };
         }
     }
+
+    private static async Task<ServiceHealthEntry> FallbackHealthCheckAsync(
+        HttpClient httpClient,
+        string name,
+        string description,
+        string baseUrl,
+        long alreadyElapsedMs,
+        CancellationToken cancellationToken)
+    {
+        var liveUrl = $"{baseUrl.TrimEnd('/')}/health/live";
+        var stopwatch = Stopwatch.StartNew();
+
+        try
+        {
+            using var response = await httpClient.GetAsync(liveUrl, cancellationToken);
+            stopwatch.Stop();
+
+            return new ServiceHealthEntry
+            {
+                Name = name,
+                Description = description,
+                Status = response.IsSuccessStatusCode ? "Healthy" : "Degraded",
+                ResponseMs = (int)(alreadyElapsedMs + stopwatch.ElapsedMilliseconds),
+                Dependencies = [],
+            };
+        }
+        catch
+        {
+            stopwatch.Stop();
+
+            return new ServiceHealthEntry
+            {
+                Name = name,
+                Description = description,
+                Status = "Unhealthy",
+                ResponseMs = (int)(alreadyElapsedMs + stopwatch.ElapsedMilliseconds),
+                Dependencies = [],
+            };
+        }
+    }
+
+    private static List<DependencyHealthEntry> ParseDependencies(JsonElement json)
+    {
+        var dependencies = new List<DependencyHealthEntry>();
+
+        if (!json.TryGetProperty("checks", out var checks))
+            return dependencies;
+
+        foreach (var check in checks.EnumerateArray())
+        {
+            var checkName = check.TryGetProperty("name", out var nameElement)
+                ? nameElement.GetString() ?? "unknown"
+                : "unknown";
+
+            // Skip the "self" check — it's always healthy and not a real dependency
+            if (checkName == "self")
+                continue;
+
+            var status = check.TryGetProperty("status", out var statusElement)
+                ? statusElement.GetString() ?? "Unhealthy"
+                : "Unhealthy";
+
+            var durationMs = check.TryGetProperty("durationMs", out var durationElement)
+                ? durationElement.GetInt32()
+                : 0;
+
+            dependencies.Add(new DependencyHealthEntry
+            {
+                Name = checkName,
+                Status = status,
+                DurationMs = durationMs,
+            });
+        }
+
+        return dependencies;
+    }
+}
+
+public sealed record DependencyHealthEntry
+{
+    public required string Name { get; init; }
+    public required string Status { get; init; }
+    public required int DurationMs { get; init; }
 }
 
 public sealed record ServiceHealthEntry
@@ -102,6 +207,7 @@ public sealed record ServiceHealthEntry
     public required string Description { get; init; }
     public required string Status { get; init; }
     public required int ResponseMs { get; init; }
+    public List<DependencyHealthEntry> Dependencies { get; init; } = [];
 }
 
 public sealed record SystemHealthResponse

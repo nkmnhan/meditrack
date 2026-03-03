@@ -14,6 +14,7 @@ public sealed class AuditReadContext : DbContext
     }
 
     public DbSet<AuditLogEntry> AuditLogs => Set<AuditLogEntry>();
+    public DbSet<ArchivedAuditLogEntry> ArchivedAuditLogs => Set<ArchivedAuditLogEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,6 +34,23 @@ public sealed class AuditReadContext : DbContext
             entity.Property(log => log.Severity).HasMaxLength(50);
             entity.Property(log => log.Success).IsRequired();
             entity.Property(log => log.ErrorMessage).HasMaxLength(1000);
+        });
+
+        modelBuilder.Entity<ArchivedAuditLogEntry>(entity =>
+        {
+            entity.ToTable("ArchivedPHIAuditLogs");
+            entity.HasKey(log => log.Id);
+
+            entity.Property(log => log.Timestamp).IsRequired();
+            entity.Property(log => log.Username).HasMaxLength(255);
+            entity.Property(log => log.UserRole).HasMaxLength(100);
+            entity.Property(log => log.Action).HasMaxLength(50);
+            entity.Property(log => log.ResourceType).HasMaxLength(100);
+            entity.Property(log => log.ResourceId).HasMaxLength(255);
+            entity.Property(log => log.Severity).HasMaxLength(50);
+            entity.Property(log => log.Success).IsRequired();
+            entity.Property(log => log.ErrorMessage).HasMaxLength(1000);
+            entity.Property(log => log.ArchivedAt).IsRequired();
         });
     }
 }

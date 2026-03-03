@@ -206,6 +206,8 @@ services:
       - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
       - AI__OpenAI__ApiKey=${OPENAI_API_KEY:-}
       - AI__Deepgram__ApiKey=${DEEPGRAM_API_KEY:-}
+      - Monitoring__PrometheusUrl=http://prometheus:9090
+      - Monitoring__RabbitMQManagementUrl=http://rabbitmq:15672
       - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     depends_on:
       postgres:

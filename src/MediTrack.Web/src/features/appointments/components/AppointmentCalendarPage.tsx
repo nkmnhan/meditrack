@@ -96,7 +96,7 @@ export function AppointmentCalendarPage() {
     <div className="flex flex-col gap-6">
       <Breadcrumb
         items={[
-          { label: "Home", href: "/" },
+          { label: "Home", href: "/dashboard" },
           { label: "Appointments" },
         ]}
       />

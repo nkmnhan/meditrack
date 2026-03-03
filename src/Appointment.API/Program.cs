@@ -14,6 +14,11 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults("appointment-api");
 
+// Dependency health checks
+builder.Services.AddHealthChecks()
+    .AddNpgsqlHealthCheck(builder.Configuration, "AppointmentDb")
+    .AddRabbitMQHealthCheck(builder.Configuration);
+
 // Database
 builder.Services.AddDbContext<AppointmentDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("AppointmentDb")));
@@ -26,6 +31,7 @@ builder.Services.AddHttpContextAccessor();
 
 // Services
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+builder.Services.AddScoped<AppointmentAnalyticsService>();
 builder.Services.AddScoped<AppointmentSeeder>();
 
 // HttpClient for dev seeder to fetch patient data (no auth, dev-only)
@@ -80,6 +86,7 @@ if (app.Environment.IsDevelopment())
 
 // Map Minimal APIs
 app.MapAppointmentsApi();
+app.MapAppointmentAnalyticsEndpoints();
 
 // Development-only endpoints
 if (app.Environment.IsDevelopment())

@@ -35,9 +35,7 @@ interface NavItem {
 
 function NavLink({ to, icon: Icon, label, onNavigate }: NavItem & { readonly onNavigate?: () => void }) {
   const location = useLocation();
-  const isActive = to === "/"
-    ? location.pathname === "/"
-    : location.pathname === to || location.pathname.startsWith(`${to}/`);
+  const isActive = location.pathname === to || location.pathname.startsWith(`${to}/`);
 
   return (
     <Link
@@ -57,13 +55,14 @@ function NavLink({ to, icon: Icon, label, onNavigate }: NavItem & { readonly onN
 }
 
 const clinicalNavItems: NavItem[] = [
-  { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/patients", icon: Users, label: "Patients" },
   { to: "/appointments", icon: CalendarDays, label: "Appointments" },
   { to: "/medical-records", icon: FileText, label: "Medical Records" },
 ];
 
 const adminNavItems: NavItem[] = [
+  { to: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/admin/reports", icon: BarChart3, label: "Reports" },
   { to: "/admin/users", icon: UserCog, label: "User Management" },
   { to: "/admin/system", icon: Activity, label: "System Health" },
@@ -170,7 +169,7 @@ export function Layout({ children }: LayoutProps) {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/dashboard" className="flex items-center gap-2">
             <Stethoscope className="h-6 w-6 text-primary-700" />
             <span className="text-lg font-bold text-primary-700">MediTrack</span>
           </Link>
