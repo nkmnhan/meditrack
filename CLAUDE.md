@@ -190,6 +190,39 @@ npm test                                                  # Frontend tests (src/
 
 ---
 
+## Development Workflow
+
+For non-trivial work, follow this sequence:
+
+1. **Design** — explore requirements and constraints before coding
+2. **Plan** — create step-by-step implementation plan (save to `docs/superpowers/plans/`)
+3. **Isolate** — use a feature branch or git worktree (`.worktrees/`)
+4. **Execute** — implement in small, verifiable steps
+5. **Verify** — run `npm run lint` + `npm run build` (frontend), `dotnet build` (backend when SDK available)
+6. **Finish** — merge or create PR
+
+**If the `superpowers` plugin is installed**, use its skills to automate these steps:
+`/superpowers:brainstorming` → `/superpowers:writing-plans` → `/superpowers:using-git-worktrees` → `/superpowers:executing-plans` → `/superpowers:verification-before-completion` → `/superpowers:finishing-a-development-branch`
+
+**TDD is mandatory for all new code** — use `/superpowers:test-driven-development` when available.
+
+**Test commands:**
+```bash
+dotnet test                                              # All tests
+dotnet test --filter "FullyQualifiedName~UnitTests"      # Unit tests only (no DB needed)
+dotnet test --filter "FullyQualifiedName~IntegrationTests" # Integration tests (needs Docker)
+npm test                                                  # Frontend tests (src/MediTrack.Web/)
+```
+
+**Test project map:**
+| Project | Type | Dependencies | When to use |
+|---------|------|-------------|-------------|
+| `Clara.UnitTests` | Unit | NSubstitute | Services, handlers, domain logic |
+| `MedicalRecords.UnitTests` | Unit | NSubstitute | Domain entities, value objects, CQRS handlers |
+| `Clara.IntegrationTests` | Integration | PostgreSQL + pgvector | API endpoints, SignalR, DB queries |
+
+---
+
 ## Detailed Rules
 
 Backend, frontend, security, dependency, and AI rules are in `.claude/rules/`.
