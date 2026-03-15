@@ -2,6 +2,7 @@
 paths:
   - "src/**/*.cs"
   - "src/MediTrack.Web/**"
+  - "design/**"
   - "docker-compose*"
 ---
 

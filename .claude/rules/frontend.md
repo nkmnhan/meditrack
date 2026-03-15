@@ -1,6 +1,7 @@
 ---
 paths:
   - "src/MediTrack.Web/**"
+  - "design/**"
 ---
 
 # Frontend Rules
