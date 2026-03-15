@@ -1,0 +1,22 @@
+@page
+@model MediTrack.Identity.Pages.Error.Index
+
+<div class="error-page">
+    <div class="login-card">
+        <div class="login-header">
+            <h1>Error</h1>
+            <p>Sorry, there was an error.</p>
+        </div>
+
+        @if (Model.View.Error is not null)
+        {
+            <div class="alert alert-danger">
+                <strong>@Model.View.Error.Error</strong>
+                @if (Model.View.Error.ErrorDescription is not null)
+                {
+                    <p>@Model.View.Error.ErrorDescription</p>
+                }
+            </div>
+        }
+    </div>
+</div>

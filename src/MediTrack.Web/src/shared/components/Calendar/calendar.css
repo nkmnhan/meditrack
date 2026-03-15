@@ -1,0 +1,17 @@
+/* ScheduleX calendar overrides — loaded when a Calendar component is rendered */
+
+/* Calendar wrapper — needs explicit dimensions */
+.sx-calendar-wrapper {
+  width: 100%;
+  height: calc(100vh - 180px);
+  min-height: 600px;
+}
+
+@media (max-width: 768px) {
+  .sx-calendar-wrapper {
+    height: calc(100vh - 200px);
+    min-height: 500px;
+  }
+}
+
+

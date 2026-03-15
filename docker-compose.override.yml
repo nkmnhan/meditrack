@@ -1,0 +1,165 @@
+services:
+  rabbitmq:
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+
+  identity-api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080;https://+:8443
+      - Kestrel__Certificates__Default__Path=/certs/localhost.pem
+      - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
+      - ConnectionStrings__IdentityDb=Host=postgres;Database=meditrack_identity;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
+      - WebClientUrl=https://localhost:3000
+      - ServiceClientSecret=${SERVICE_CLIENT_SECRET:-service-secret-dev}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+    volumes:
+      - ./dev-certs/certs:/certs:ro
+      - identity-dataprotection-keys:/root/.aspnet/DataProtection-Keys
+      - identity-signing-keys:/app/keys
+    depends_on:
+      postgres:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+
+  patient-api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080;https://+:8443
+      - Kestrel__Certificates__Default__Path=/certs/localhost.pem
+      - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
+      - ConnectionStrings__PatientDb=Host=postgres;Database=meditrack_patients;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
+      - IdentityUrl=http://identity-api:8080
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+    volumes:
+      - ./dev-certs/certs:/certs:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      identity-api:
+        condition: service_started
+      otel-collector:
+        condition: service_started
+
+  appointment-api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080;https://+:8443
+      - Kestrel__Certificates__Default__Path=/certs/localhost.pem
+      - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
+      - ConnectionStrings__AppointmentDb=Host=postgres;Database=meditrack_appointments;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
+      - IdentityUrl=http://identity-api:8080
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+    volumes:
+      - ./dev-certs/certs:/certs:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      identity-api:
+        condition: service_started
+      otel-collector:
+        condition: service_started
+
+  medicalrecords-api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080;https://+:8443
+      - Kestrel__Certificates__Default__Path=/certs/localhost.pem
+      - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
+      - ConnectionStrings__MedicalRecordsDb=Host=postgres;Database=meditrack_records;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
+      - IdentityUrl=http://identity-api:8080
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+    volumes:
+      - ./dev-certs/certs:/certs:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      identity-api:
+        condition: service_started
+      otel-collector:
+        condition: service_started
+
+  notification-worker:
+    environment:
+      - DOTNET_ENVIRONMENT=Development
+      - ConnectionStrings__AuditDatabase=Host=postgres;Database=meditrack_audit;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+
+  clara-api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080;https://+:8443
+      - Kestrel__Certificates__Default__Path=/certs/localhost.pem
+      - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
+      - ConnectionStrings__ClaraDb=Host=postgres;Database=meditrack_clara;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
+      - IdentityUrl=https://identity-api:8443
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
+      - AI__OpenAI__ApiKey=${OPENAI_API_KEY:-sk-placeholder-for-dev}
+      - AI__Deepgram__ApiKey=${DEEPGRAM_API_KEY:-placeholder-for-dev}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+    volumes:
+      - ./dev-certs/certs:/certs:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      identity-api:
+        condition: service_started
+      otel-collector:
+        condition: service_started
+
+  simulator:
+    environment:
+      - DOTNET_ENVIRONMENT=Development
+      - ConnectionStrings__IdentityDb=Host=postgres;Database=meditrack_identity;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
+      - ConnectionStrings__PatientDb=Host=postgres;Database=meditrack_patients;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
+      - ConnectionStrings__AppointmentDb=Host=postgres;Database=meditrack_appointments;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
+      - ConnectionStrings__MedicalRecordsDb=Host=postgres;Database=meditrack_records;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
+      - ConnectionStrings__AuditDatabase=Host=postgres;Database=meditrack_audit;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
+      - ConnectionStrings__ClaraDb=Host=postgres;Database=meditrack_clara;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+    depends_on:
+      postgres:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+
+  web:
+    environment:
+      - VITE_IDENTITY_URL=https://localhost:5001
+      - VITE_PATIENT_API_URL=https://localhost:5002
+      - VITE_APPOINTMENT_API_URL=https://localhost:5003
+      - VITE_MEDICALRECORDS_API_URL=https://localhost:5004
+      - VITE_CLARA_API_URL=https://localhost:5005
+    volumes:
+      - ./dev-certs/certs:/certs:ro

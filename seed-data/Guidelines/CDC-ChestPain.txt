@@ -1,0 +1,51 @@
+# CDC Guidelines for Chest Pain Evaluation
+
+## Overview
+Chest pain is one of the most common reasons for emergency department visits. Proper evaluation is critical to identify life-threatening conditions while avoiding unnecessary interventions.
+
+## Risk Stratification
+
+### High Risk Features
+- Age > 65
+- Known coronary artery disease
+- Diabetes mellitus
+- Hyperlipidemia
+- Hypertension
+- Family history of premature CAD
+- Smoking history
+
+### Pain Characteristics Suggesting ACS
+- Substernal pressure or squeezing
+- Radiation to arm, neck, jaw, or back
+- Associated with diaphoresis, nausea, dyspnea
+- Duration > 20 minutes
+- Not relieved by rest or nitroglycerin
+
+### Pain Characteristics Suggesting Non-Cardiac Etiology
+- Sharp, stabbing, positional
+- Reproducible with palpation
+- Very brief (seconds) or very prolonged (days)
+- Localized to small area
+
+## Recommended Evaluation
+
+### Immediate (< 10 minutes)
+1. 12-lead ECG
+2. Continuous cardiac monitoring
+3. IV access
+4. Aspirin 325mg (if not contraindicated)
+
+### Within 1 Hour
+1. Cardiac troponin (initial)
+2. Complete metabolic panel
+3. Complete blood count
+4. Chest X-ray
+
+### Serial Testing
+1. Repeat troponin at 3-6 hours
+2. Consider high-sensitivity troponin protocols
+
+## Disposition
+- STEMI: Immediate cardiology consultation, consider PCI
+- NSTEMI/UA: Admission, risk stratification, cardiology consultation
+- Low risk: Consider observation unit, stress testing, outpatient follow-up

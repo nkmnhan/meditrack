@@ -1,0 +1,39 @@
+{
+  "scenario": "medication-review",
+  "description": "Patient with multiple medications - triggers medication-review skill",
+  "patientId": "test-patient-002",
+  "lines": [
+    {
+      "speaker": "Doctor",
+      "text": "Let's review your current medications today. What are you taking right now?"
+    },
+    {
+      "speaker": "Patient",
+      "text": "I take metformin for my diabetes, lisinopril for blood pressure, and aspirin."
+    },
+    {
+      "speaker": "Doctor",
+      "text": "Are you taking any over-the-counter medications or supplements?"
+    },
+    {
+      "speaker": "Patient",
+      "text": "I've been taking ibuprofen for my knee pain, and fish oil supplements."
+    },
+    {
+      "speaker": "Doctor",
+      "text": "How often are you taking the ibuprofen?"
+    },
+    {
+      "speaker": "Patient",
+      "text": "About two or three times a day. My knee has been really bothering me lately."
+    },
+    {
+      "speaker": "Doctor",
+      "text": "Have you had any stomach issues or changes in your blood sugar readings?"
+    },
+    {
+      "speaker": "Patient",
+      "text": "Actually, my blood sugar has been a bit higher than usual the past week."
+    }
+  ]
+}

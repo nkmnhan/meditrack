@@ -1,0 +1,44 @@
+# AHA Heart Failure Guidelines Summary
+
+## Classification
+
+### NYHA Functional Classification
+- Class I: No limitation of physical activity
+- Class II: Slight limitation; comfortable at rest
+- Class III: Marked limitation; comfortable only at rest
+- Class IV: Unable to carry on any physical activity without symptoms
+
+### ACC/AHA Stages
+- Stage A: At risk for HF but no structural disease or symptoms
+- Stage B: Structural heart disease but no symptoms
+- Stage C: Structural disease with prior or current symptoms
+- Stage D: Refractory HF requiring specialized interventions
+
+## Key Recommendations
+
+### Medications (HFrEF, EF ≤ 40%)
+1. ACE inhibitor or ARB (or ARNI)
+2. Beta-blocker (carvedilol, metoprolol succinate, or bisoprolol)
+3. Mineralocorticoid receptor antagonist (if EF ≤ 35%)
+4. SGLT2 inhibitor (newer guideline addition)
+5. Diuretics for volume management
+
+### Devices
+- ICD for primary prevention if EF ≤ 35% despite optimal medical therapy
+- CRT if LBBB, QRS ≥ 150ms, EF ≤ 35%
+
+### Lifestyle Modifications
+- Sodium restriction (< 2g/day for Stage C/D)
+- Fluid restriction (1.5-2L/day if hyponatremic or volume overloaded)
+- Daily weight monitoring
+- Regular exercise (cardiac rehabilitation)
+- Smoking cessation
+- Limit alcohol
+
+## Red Flags Requiring Urgent Evaluation
+- Worsening dyspnea at rest
+- Weight gain > 3 lbs in 24 hours or > 5 lbs in a week
+- New or worsening edema
+- Persistent cough or wheezing
+- Worsening fatigue or exercise intolerance
+- Confusion or altered mental status

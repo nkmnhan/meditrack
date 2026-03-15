@@ -1,0 +1,50 @@
+---
+name: General Triage
+triggers:
+  - general
+  - checkup
+  - routine
+  - wellness
+  - follow up
+priority: 50
+---
+
+# General Triage Skill
+
+Default skill for general consultations and initial assessments.
+
+## Chief Complaint Assessment
+1. What brings you in today?
+2. How long has this been going on?
+3. How would you rate severity (1-10)?
+4. What makes it better or worse?
+5. Have you tried any treatments?
+
+## Vital Signs Review
+- Blood pressure
+- Heart rate
+- Temperature
+- Respiratory rate
+- Oxygen saturation
+- Weight changes
+
+## Review of Systems
+- Constitutional (fever, fatigue, weight changes)
+- Cardiovascular
+- Respiratory
+- Gastrointestinal
+- Neurological
+- Musculoskeletal
+- Skin
+
+## Prevention Reminders
+Based on patient demographics, consider:
+- Immunization status
+- Cancer screenings (age-appropriate)
+- Chronic disease management
+- Lifestyle counseling (diet, exercise, smoking)
+
+## Documentation
+- Update problem list
+- Reconcile medications
+- Address preventive care gaps

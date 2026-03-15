@@ -1,0 +1,42 @@
+---
+name: Medication Review
+triggers:
+  - medication
+  - medicine
+  - prescription
+  - drug interaction
+  - taking pills
+  - side effects
+priority: 70
+---
+
+# Medication Review Skill
+
+When reviewing patient medications, assess:
+
+## Key Questions
+1. Current medications (prescription, OTC, supplements)?
+2. Dosage and frequency for each?
+3. Adherence (missed doses, timing)?
+4. Recent changes to medications?
+5. Allergies or adverse reactions?
+6. Who prescribed each medication?
+
+## Interaction Checks
+- NSAIDs + ACE inhibitors/ARBs (reduced efficacy, renal risk)
+- Warfarin + NSAIDs (bleeding risk)
+- Metformin + contrast agents (lactic acidosis risk)
+- SSRIs + MAOIs (serotonin syndrome)
+- Statins + certain antibiotics (myopathy risk)
+
+## Common Issues
+- Polypharmacy in elderly patients
+- Duplicate therapy
+- Subtherapeutic dosing
+- Patient not taking as prescribed
+- OTC medications not disclosed
+
+## Documentation Reminders
+- Update medication list in record
+- Note any discontinued medications and reasons
+- Document patient education provided

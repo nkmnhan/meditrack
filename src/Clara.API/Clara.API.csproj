@@ -1,0 +1,63 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <!-- Data -->
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Pgvector.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+
+    <!-- AI Abstraction Layer (Microsoft.Extensions.AI) -->
+    <PackageReference Include="Microsoft.Extensions.AI" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
+
+    <!-- AI Providers -->
+    <PackageReference Include="OpenAI" />
+
+    <!-- Resilience -->
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
+
+    <!-- Utilities -->
+    <PackageReference Include="YamlDotNet" />
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="AutoMapper" />
+
+    <!-- Health Checks -->
+    <PackageReference Include="AspNetCore.HealthChecks.NpgSql" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EventBus\EventBus.csproj" />
+    <ProjectReference Include="..\EventBusRabbitMQ\EventBusRabbitMQ.csproj" />
+    <ProjectReference Include="..\MediTrack.ServiceDefaults\MediTrack.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\MediTrack.Shared\MediTrack.Shared.csproj" />
+  </ItemGroup>
+
+  <!-- Include Prompts/ files in publish output -->
+  <ItemGroup>
+    <Content Include="Prompts\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- Skills and seed-data live at repo root — link into output for local dev -->
+  <!-- Docker uses explicit COPY in Dockerfile; this handles dotnet run / dotnet test -->
+  <ItemGroup>
+    <Content Include="..\..\skills\core\**\*" Link="skills\core\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\seed-data\Guidelines\**\*" Link="seed-data\Guidelines\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- Allow integration test project to access internal types (e.g. Program) -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Clara.IntegrationTests" />
+  </ItemGroup>
+
+  <!-- Include test-data/ in Debug only (not in production image) -->
+  <!-- Use Update instead of Include since SDK auto-includes content items -->
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <Content Update="test-data\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

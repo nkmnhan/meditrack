@@ -1,0 +1,45 @@
+---
+name: Chest Pain Assessment
+triggers:
+  - chest pain
+  - cardiac
+  - heart
+  - angina
+  - radiating pain
+  - pressure in chest
+priority: 90
+---
+
+# Chest Pain Assessment Skill
+
+When a patient presents with chest pain, systematically assess:
+
+## Critical Red Flags (Immediate Action)
+- Radiating to left arm, jaw, or back
+- Associated with shortness of breath, sweating, nausea
+- History of cardiac disease
+- Age > 40 with risk factors
+
+## Assessment Questions
+1. Location and character of pain (sharp, dull, pressure)?
+2. Duration and onset?
+3. Radiation pattern?
+4. Associated symptoms (dyspnea, diaphoresis, nausea)?
+5. Aggravating/relieving factors?
+6. Previous cardiac history?
+7. Risk factors (smoking, diabetes, hypertension, family history)?
+
+## Differential Considerations
+- Acute coronary syndrome (STEMI/NSTEMI)
+- Unstable angina
+- Pulmonary embolism
+- Aortic dissection
+- Pericarditis
+- Musculoskeletal
+- GERD/esophageal
+
+## Suggested Actions
+- ECG within 10 minutes if cardiac suspected
+- Troponin levels
+- Chest X-ray
+- Consider aspirin if ACS suspected (unless contraindicated)

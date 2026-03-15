@@ -1,0 +1,39 @@
+{
+  "scenario": "general-checkup",
+  "description": "Routine annual checkup with general health questions",
+  "patientId": "test-patient-003",
+  "lines": [
+    {
+      "speaker": "Doctor",
+      "text": "This is your annual checkup. How have you been feeling overall?"
+    },
+    {
+      "speaker": "Patient",
+      "text": "Pretty good, just a bit tired lately. I've been working long hours."
+    },
+    {
+      "speaker": "Doctor",
+      "text": "How's your sleep been?"
+    },
+    {
+      "speaker": "Patient",
+      "text": "I usually get about 5 to 6 hours. I have trouble falling asleep."
+    },
+    {
+      "speaker": "Doctor",
+      "text": "Any changes in your diet or exercise routine?"
+    },
+    {
+      "speaker": "Patient",
+      "text": "I've been eating more fast food because of work. Haven't had time to exercise."
+    },
+    {
+      "speaker": "Doctor",
+      "text": "Have you noticed any weight changes?"
+    },
+    {
+      "speaker": "Patient",
+      "text": "I think I've gained about 10 pounds over the past few months."
+    }
+  ]
+}
