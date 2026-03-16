@@ -13,6 +13,10 @@
     <meta name="twitter:title" content="MediTrack — AI-Powered Clinical Platform" />
     <meta name="twitter:description" content="Electronic medical records, smart scheduling, and Clara — an AI companion that listens, transcribes, and suggests in real time." />
     <title>MediTrack</title>
+    <script>
+      // Prevent FOUC: apply dark class before first paint
+      (function(){var t=localStorage.getItem('meditrack-theme');var d=t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches);if(d)document.documentElement.classList.add('dark')})();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />

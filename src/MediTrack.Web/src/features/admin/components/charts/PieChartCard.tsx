@@ -7,7 +7,7 @@ import {
   Tooltip,
 } from "recharts";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
-import { CHART_TOOLTIP_STYLE } from "@/shared/utils/chartColors";
+import { getChartTooltipStyle, getChartSurface } from "@/shared/utils/chartColors";
 
 interface PieChartDataItem {
   readonly name: string;
@@ -73,7 +73,7 @@ export function PieChartCard({
   return (
     <div
       className={clsxMerge(
-        "rounded-lg border border-neutral-200 bg-white p-5 shadow-sm",
+        "rounded-lg border border-border bg-card p-5 shadow-sm",
         className
       )}
     >
@@ -106,17 +106,13 @@ export function PieChartCard({
                 <Cell
                   key={`cell-${index}`}
                   fill={colors[index % colors.length]}
-                  stroke="white"
+                  stroke={getChartSurface()}
                   strokeWidth={2}
                 />
               ))}
             </Pie>
             <Tooltip
-              contentStyle={{
-                borderRadius: 8,
-                ...CHART_TOOLTIP_STYLE,
-                fontSize: 12,
-              }}
+              contentStyle={getChartTooltipStyle()}
             />
             {showLegend && (
               <Legend

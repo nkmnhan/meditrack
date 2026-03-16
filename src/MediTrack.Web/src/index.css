@@ -41,6 +41,87 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Chart — surface-aware colors for Recharts tooltip/grid */
+    --chart-surface: 0 0% 100%;
+    --chart-grid: 214 32% 91%;
+    --chart-text: 215 16% 47%;
+    --chart-tooltip-border: 214 32% 91%;
+    --chart-tooltip-shadow: 0 0% 0% / 0.1;
+  }
+
+  /*
+   * ════════════════════════════════════════════════════════════════
+   *  DEEP OCEAN — Dark Mode
+   * ════════════════════════════════════════════════════════════════
+   *
+   *  Design direction:
+   *    • Rich, saturated deep navy — like the Healthish dashboard
+   *    • NOT dark gray — true blue with high saturation
+   *    • Cards are a lighter navy, creating depth like ocean layers
+   *    • Teal/cyan accents glow beautifully against navy
+   *    • Feels like a calm ocean at night, not a dark cave
+   *
+   *  Key colors (extracted from reference):
+   *    Page bg:  ~#0B1437  (hsl 228 65% 13%)
+   *    Cards:    ~#111C44  (hsl 228 60% 17%)
+   *    Sidebar:  ~#081028  (hsl 228 68% 9%)
+   *    Borders:  ~#1B2B5E  (hsl 227 55% 24%)
+   *    Text:     ~#E2E8F0  (off-white with cool tint)
+   *    Muted:    ~#8B9DC3  (soft blue-gray)
+   *
+   *  WCAG 2.1 AA: 4.5:1 text, 3:1 UI — non-negotiable
+   * ════════════════════════════════════════════════════════════════
+   */
+  .dark {
+    /* ── Layout ────────────────────────────────────────────────── */
+    /* Deep saturated navy — like the Healthish reference #0B1A3B */
+    --background: 225 66% 14%;
+    --foreground: 0 0% 96%;
+
+    /* ── Cards / Popovers — clearly lighter navy ───────────────── */
+    /* Big contrast jump from bg — cards must "float" visibly */
+    /* Reference cards are ~#132145, ours target similar feel */
+    --card: 225 52% 18%;
+    --card-foreground: 0 0% 96%;
+    --popover: 225 48% 22%;
+    --popover-foreground: 0 0% 96%;
+
+    /* ── Brand — vivid on deep navy ────────────────────────────── */
+    --primary: 224 85% 58%;
+    --primary-foreground: 0 0% 100%;
+    /* Teal/cyan — the reference's signature accent color */
+    --secondary: 174 72% 52%;
+    --secondary-foreground: 0 0% 100%;
+    /* Violet — Clara AI glow */
+    --accent: 270 76% 72%;
+    --accent-foreground: 0 0% 100%;
+
+    /* ── Utility ───────────────────────────────────────────────── */
+    --muted: 225 48% 22%;
+    --muted-foreground: 222 25% 62%;
+    --destructive: 0 72% 63%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 225 40% 26%;
+    --input: 225 45% 24%;
+    --ring: 224 85% 58%;
+
+    /* ── Sidebar — deepest navy, clearly distinct from content ─── */
+    --sidebar-background: 228 70% 10%;
+    --sidebar-foreground: 220 30% 78%;
+    --sidebar-primary: 224 85% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 225 52% 18%;
+    --sidebar-accent-foreground: 0 0% 96%;
+    --sidebar-border: 225 45% 20%;
+    --sidebar-ring: 224 85% 58%;
+
+    /* ── Chart ─────────────────────────────────────────────────── */
+    --chart-surface: 225 52% 18%;
+    --chart-grid: 225 40% 26%;
+    --chart-text: 222 25% 62%;
+    --chart-tooltip-border: 225 38% 30%;
+    --chart-tooltip-shadow: 228 80% 5% / 0.5;
   }
 }
 
@@ -50,6 +131,125 @@
   }
   body {
     @apply bg-background text-foreground font-sans;
+    transition: background-color 200ms ease, color 200ms ease;
+  }
+}
+
+/*
+ * ── Dark mode global overrides ───────────────────────────────────────
+ * Many components use bg-white, bg-neutral-50, border-neutral-200,
+ * text-neutral-900, etc. In dark mode, these need to adapt automatically
+ * without modifying every component individually.
+ *
+ * This layer ensures semantic consistency: "white cards" become dark
+ * cards, "gray borders" become dark borders, etc.
+ */
+@layer utilities {
+  .dark .bg-white {
+    background-color: hsl(var(--card));
+  }
+  .dark .bg-neutral-50 {
+    background-color: hsl(var(--background));
+  }
+  .dark .bg-neutral-100 {
+    background-color: hsl(var(--muted));
+  }
+  .dark .border-neutral-200 {
+    border-color: hsl(var(--border));
+  }
+  .dark .border-neutral-100 {
+    border-color: hsl(var(--border));
+  }
+  .dark .text-neutral-900 {
+    color: hsl(var(--foreground));
+  }
+  .dark .text-neutral-800 {
+    color: hsl(0 0% 90%);
+  }
+  .dark .text-neutral-700 {
+    color: hsl(220 20% 82%);
+  }
+  .dark .text-neutral-600 {
+    color: hsl(222 20% 72%);
+  }
+  .dark .text-neutral-500 {
+    color: hsl(var(--muted-foreground));
+  }
+  .dark .text-neutral-400 {
+    color: hsl(222 18% 52%);
+  }
+  .dark .divide-neutral-200 > :not([hidden]) ~ :not([hidden]) {
+    border-color: hsl(var(--border));
+  }
+  .dark .ring-neutral-200 {
+    --tw-ring-color: hsl(var(--border));
+  }
+  /* Ensure bg-white/95 (used in header/nav with backdrop-blur) also adapts */
+  .dark .bg-white\/95 {
+    background-color: hsl(var(--card) / 0.95);
+  }
+  /* Hover states */
+  .dark .hover\:bg-neutral-50:hover {
+    background-color: hsl(var(--muted));
+  }
+  .dark .hover\:bg-neutral-100:hover {
+    background-color: hsl(225 48% 24%);
+  }
+  /* Healing palette → bright blue pill style in dark (like reference) */
+  .dark .bg-healing-50 {
+    background-color: hsl(225 48% 22%);
+  }
+  .dark .bg-healing-100 {
+    background-color: hsl(224 70% 28%);
+  }
+  .dark .hover\:bg-healing-50:hover {
+    background-color: hsl(225 48% 22%);
+  }
+  /* Healing text → bright teal/cyan accent in dark mode */
+  .dark .text-healing-500 {
+    color: hsl(174 72% 56%);
+  }
+  .dark .text-healing-400 {
+    color: hsl(174 72% 60%);
+  }
+  .dark .bg-healing-400 {
+    background-color: hsl(174 72% 52%);
+  }
+  /* Form inputs — textarea, input, select */
+  .dark textarea,
+  .dark input[type="text"],
+  .dark input[type="email"],
+  .dark input[type="search"],
+  .dark input[type="number"],
+  .dark input[type="tel"],
+  .dark input[type="url"],
+  .dark input[type="password"],
+  .dark input[type="date"],
+  .dark select {
+    background-color: hsl(var(--muted));
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--border));
+  }
+  /* Primary-700 → brighter in dark for logo, active nav */
+  .dark .text-primary-700 {
+    color: hsl(224 85% 65%);
+  }
+  .dark .bg-primary-700 {
+    background-color: hsl(224 85% 55%);
+  }
+  /* border-t/dividers inside dark cards */
+  .dark .border-t {
+    border-color: hsl(var(--border));
+  }
+  /* Soft navy shadows — cards float above the deep ocean background */
+  .dark .shadow-sm {
+    box-shadow: 0 2px 8px 0 hsl(228 80% 4% / 0.5);
+  }
+  .dark .shadow, .dark .shadow-md {
+    box-shadow: 0 4px 16px -2px hsl(228 80% 4% / 0.6);
+  }
+  .dark .shadow-lg {
+    box-shadow: 0 8px 30px -4px hsl(228 80% 4% / 0.7);
   }
 }
 

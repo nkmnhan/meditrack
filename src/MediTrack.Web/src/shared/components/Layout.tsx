@@ -27,6 +27,7 @@ import { ClaraFab } from "./clara/ClaraFab";
 import { ClaraPanel } from "./clara/ClaraPanel";
 import { FeatureGuideButton } from "./FeatureGuide";
 import { CommandPalette } from "./CommandPalette";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface LayoutProps {
   readonly children: ReactNode;
@@ -142,7 +143,7 @@ function MobileBottomNav() {
 
   return (
     <>
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-neutral-200 bg-white/95 backdrop-blur-sm md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-white/95 dark:bg-card/95 backdrop-blur-sm md:hidden">
         <div className="flex items-stretch">
           {mobileBottomNavItems.map((item) => {
             const isActive = location.pathname === item.to || location.pathname.startsWith(`${item.to}/`);
@@ -273,9 +274,10 @@ function SidebarContent({ onNavigate }: { readonly onNavigate?: () => void }) {
             <p className="truncate text-sm font-semibold text-neutral-900">{userName}</p>
             <p className="text-xs text-neutral-500">{userRole}</p>
           </div>
+          <ThemeToggle />
           <button
             onClick={handleSignOut}
-            className="rounded-lg p-1.5 text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-700"
+            className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             aria-label="Sign out"
           >
             <LogOut className="h-4 w-4" />
@@ -289,14 +291,14 @@ function SidebarContent({ onNavigate }: { readonly onNavigate?: () => void }) {
 export function Layout({ children }: LayoutProps) {
   return (
     <ClaraPanelProvider>
-      <div className="min-h-screen bg-gradient-to-b from-healing-50 to-healing-100/30">
+      <div className="min-h-screen bg-gradient-to-b from-healing-50 to-healing-100/30 dark:from-background dark:to-background">
         {/* Sidebar — Desktop */}
-        <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-neutral-200 bg-gradient-to-b from-white to-healing-50 md:flex md:flex-col">
+        <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-border bg-gradient-to-b from-white to-healing-50 dark:from-sidebar dark:to-sidebar md:flex md:flex-col">
           <SidebarContent />
         </aside>
 
         {/* Mobile Header — logo only */}
-        <header className="sticky top-0 z-20 flex h-14 items-center justify-center bg-white/95 backdrop-blur-sm shadow-sm md:hidden">
+        <header className="sticky top-0 z-20 flex h-14 items-center justify-center bg-white/95 dark:bg-card/95 backdrop-blur-sm shadow-sm md:hidden">
           <Link to="/dashboard" className="flex items-center gap-2">
             <Stethoscope className="h-5 w-5 text-primary-700" />
             <span className="text-base font-bold text-primary-700">MediTrack</span>
