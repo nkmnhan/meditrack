@@ -577,7 +577,7 @@ public static class AppointmentsApi
     /// Checks if the current user can access an appointment.
     /// Staff (Admin, Doctor, Nurse, Receptionist) can access all appointments.
     /// Patients can only access their own appointments.
-    /// (OWASP A01 - Broken Access Control: IDOR Prevention)
+    /// (OWASP A01:2025 - Broken Access Control: IDOR Prevention)
     /// </summary>
     private static async Task<bool> CanAccessAppointmentAsync(
         ClaimsPrincipal user,
@@ -626,7 +626,7 @@ public static class AppointmentsApi
     /// Checks if the current user can access appointments for a specific patient.
     /// Staff (Admin, Doctor, Nurse, Receptionist) can access all patients' appointments.
     /// Patients can only access their own appointments.
-    /// (OWASP A01 - Broken Access Control: IDOR Prevention)
+    /// (OWASP A01:2025 - Broken Access Control: IDOR Prevention)
     /// </summary>
     private static async Task<bool> CanAccessPatientAppointmentsAsync(
         ClaimsPrincipal user,

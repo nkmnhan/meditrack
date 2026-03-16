@@ -47,7 +47,7 @@ public class LoggedOut : PageModel
     /// <paramref name="postLogoutRedirectUri"/> and guards against open redirect attacks.
     /// Returns null when the URI is invalid, not on the allowlist, or would redirect back
     /// to the identity server itself.
-    /// (OWASP A01 - Broken Access Control: Open Redirect Prevention)
+    /// (OWASP A01:2025 - Broken Access Control: Open Redirect Prevention)
     /// </summary>
     private string? ResolveClientOrigin(string? postLogoutRedirectUri)
     {
@@ -74,7 +74,7 @@ public class LoggedOut : PageModel
             return null;
         }
 
-        // OWASP A01: Validate against allowlist of known client origins
+        // OWASP A01:2025: Validate against allowlist of known client origins
         // Only allow redirects to the configured WebClientUrl origin
         var allowedOrigin = _configuration["WebClientUrl"];
         if (!string.IsNullOrEmpty(allowedOrigin) &&

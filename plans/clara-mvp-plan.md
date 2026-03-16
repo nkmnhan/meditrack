@@ -1479,7 +1479,7 @@ All Clara routes require Doctor role. Add `RoleGuard` wrapper in the router:
 }
 ```
 
-**Note**: `RoleGuard` is UX only (per CLAUDE.md OWASP A01). Real security is enforced server-side by `[Authorize(Roles = UserRoles.Doctor)]` on all API endpoints and the SignalR hub.
+**Note**: `RoleGuard` is UX only (per CLAUDE.md OWASP A01:2025). Real security is enforced server-side by `[Authorize(Roles = UserRoles.Doctor)]` on all API endpoints and the SignalR hub.
 
 #### Component Structure
 

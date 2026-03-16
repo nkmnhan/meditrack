@@ -10,7 +10,7 @@ export const oidcConfig: UserManagerSettings = {
   response_type: "code",
   scope: "openid profile roles patient-api appointment-api medicalrecords-api offline_access",
   automaticSilentRenew: true,
-  // Security hardening (OWASP A07)
+  // Security hardening (OWASP A07:2025 - Identification and Authentication Failures)
   monitorSession: true,
   revokeTokensOnSignout: true,
   accessTokenExpiringNotificationTimeInSeconds: 60,

@@ -452,7 +452,7 @@ public static class MedicalRecordsApi
     /// Checks if the current user can access a specific medical record.
     /// Medical staff (Admin, Doctor, Nurse) can access all records.
     /// Patients can only access their own records.
-    /// (OWASP A01 - Broken Access Control: IDOR Prevention)
+    /// (OWASP A01:2025 - Broken Access Control: IDOR Prevention)
     /// </summary>
     private static async Task<bool> CanAccessMedicalRecordAsync(
         ClaimsPrincipal user,
@@ -501,7 +501,7 @@ public static class MedicalRecordsApi
     /// Checks if the current user can access medical records for a specific patient.
     /// Medical staff can access all patients' records.
     /// Patients can only access their own records.
-    /// (OWASP A01 - Broken Access Control: IDOR Prevention)
+    /// (OWASP A01:2025 - Broken Access Control: IDOR Prevention)
     /// </summary>
     private static async Task<bool> CanAccessPatientRecordsAsync(
         ClaimsPrincipal user,

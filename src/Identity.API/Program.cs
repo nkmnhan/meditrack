@@ -35,7 +35,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
         options.Password.RequireNonAlphanumeric = true;
         options.Password.RequiredLength = 8;
 
-        // Lockout policy (OWASP A07 - prevents brute-force attacks)
+        // Lockout policy (OWASP A07:2025 - Identification and Authentication Failures)
         options.Lockout.MaxFailedAccessAttempts = 5; // Lock after 5 failed attempts
         options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15); // Lock for 15 minutes
         options.Lockout.AllowedForNewUsers = true; // Enable lockout for all users
@@ -84,10 +84,10 @@ builder.Services
 // CORS
 builder.Services.AddDefaultCors(builder.Configuration, builder.Environment);
 
-// Rate Limiting (OWASP A04/A07 - prevents brute-force attacks)
+// Rate Limiting (OWASP A07:2025 - Identification and Authentication Failures)
 builder.Services.AddRateLimiter(options =>
 {
-    // Per-IP rate limit for login attempts to prevent brute-force attacks (OWASP A04/A07)
+    // Per-IP rate limit for login attempts to prevent brute-force attacks (OWASP A07:2025)
     // Keyed by remote IP so one attacker doesn't exhaust the limit for all users
     options.AddPolicy("login", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(

@@ -4,7 +4,7 @@ namespace MediTrack.ServiceDefaults.Middleware;
 
 /// <summary>
 /// Middleware that adds security headers to all HTTP responses.
-/// Protects against common web vulnerabilities (OWASP A05).
+/// Protects against common web vulnerabilities (OWASP A02:2025 - Security Misconfiguration).
 /// </summary>
 public class SecurityHeadersMiddleware
 {
