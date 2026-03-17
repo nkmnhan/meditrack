@@ -143,7 +143,7 @@ export function FeatureGuideButton() {
       {/* Panel — positioned to the left of where the ribbon docks */}
       {guide.isOpen && (
         <div className="fixed bottom-20 left-[16rem] z-40 animate-in fade-in slide-in-from-bottom-3 duration-200">
-          <div className="w-80 rounded-xl border border-border bg-card shadow-xl">
+          <div className="w-80 rounded-xl border border-border bg-card dark:bg-popover shadow-xl">
             {panelContent}
           </div>
         </div>

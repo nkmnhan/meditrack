@@ -64,17 +64,17 @@ export function FeatureGuidePanel({
                 key={step.id}
                 onClick={() => handleStepClick(step.id, step.navigateTo)}
                 className={clsxMerge(
-                  "flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors",
+                  "flex w-full items-center gap-3 rounded-lg border px-3 py-3 text-left transition-colors",
                   isCompleted
-                    ? "bg-muted hover:bg-muted/80"
-                    : "hover:bg-muted"
+                    ? "bg-muted border-border hover:bg-muted/80"
+                    : "border-transparent hover:bg-muted hover:border-border"
                 )}
               >
                 {/* Icon */}
                 <div
                   className={clsxMerge(
                     "flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg",
-                    isCompleted ? "bg-success-50" : step.iconBg
+                    isCompleted ? "bg-success-50 dark:bg-success-900/30" : step.iconBg
                   )}
                 >
                   {isCompleted ? (
