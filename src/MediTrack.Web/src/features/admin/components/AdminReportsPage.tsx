@@ -921,7 +921,7 @@ function ClaraAITab({ dateRange }: { readonly dateRange: DateRangeState }) {
                       </td>
                       <td className="px-5 py-3">
                         <div className="flex items-center justify-end gap-2">
-                          <div className="h-2 w-16 rounded-full bg-neutral-200">
+                          <div className="h-2 w-16 rounded-full bg-border">
                             <div
                               className={clsxMerge("h-full rounded-full", saveRateColor)}
                               style={{ width: `${Math.min(provider.saveRate, 100)}%` }}
@@ -978,7 +978,7 @@ function ClaraAITab({ dateRange }: { readonly dateRange: DateRangeState }) {
                         {provider.sessionCount} sessions &middot; {provider.suggestionsSaved} saved
                       </p>
                       <div className="mt-1.5 flex items-center gap-2">
-                        <div className="h-1.5 w-20 rounded-full bg-neutral-200">
+                        <div className="h-1.5 w-20 rounded-full bg-border">
                           <div
                             className={clsxMerge("h-full rounded-full", saveRateColor)}
                             style={{ width: `${Math.min(provider.saveRate, 100)}%` }}
@@ -1136,9 +1136,9 @@ function PatientsTab({ dateRange }: { readonly dateRange: DateRangeState }) {
       <div className="flex gap-4">
         {isDemographicsLoading ? (
           <div className="flex gap-4 animate-pulse">
-            <div className="h-5 w-20 rounded bg-neutral-200" />
-            <div className="h-5 w-16 rounded bg-neutral-200" />
-            <div className="h-5 w-16 rounded bg-neutral-200" />
+            <div className="h-5 w-20 rounded bg-border" />
+            <div className="h-5 w-16 rounded bg-border" />
+            <div className="h-5 w-16 rounded bg-border" />
           </div>
         ) : demographics ? (
           <>
@@ -1246,8 +1246,8 @@ function UserActivityTab({ dateRange }: { readonly dateRange: DateRangeState }) 
       <div className="flex gap-4">
         {isStatsLoading ? (
           <div className="flex gap-4 animate-pulse">
-            <div className="h-5 w-28 rounded bg-neutral-200" />
-            <div className="h-5 w-24 rounded bg-neutral-200" />
+            <div className="h-5 w-28 rounded bg-border" />
+            <div className="h-5 w-24 rounded bg-border" />
           </div>
         ) : userStats ? (
           <>

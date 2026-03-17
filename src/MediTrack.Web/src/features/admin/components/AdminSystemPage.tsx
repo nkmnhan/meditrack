@@ -412,9 +412,9 @@ export function AdminSystemPage() {
           {Array.from({ length: 4 }).map((_, index) => (
             <div key={index} className="animate-pulse rounded-lg border border-border bg-card p-5 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="h-10 w-10 rounded-lg bg-neutral-200" />
+                <div className="h-10 w-10 rounded-lg bg-border" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 w-32 rounded bg-neutral-200" />
+                  <div className="h-4 w-32 rounded bg-border" />
                   <div className="h-3 w-48 rounded bg-muted" />
                 </div>
               </div>
@@ -634,7 +634,7 @@ export function AdminSystemPage() {
         </div>
         {/* Visual SLA bar */}
         <div className="mt-4">
-          <div className="relative h-3 w-full overflow-hidden rounded-full bg-neutral-200">
+          <div className="relative h-3 w-full overflow-hidden rounded-full bg-border">
             <div
               className={clsxMerge(
                 "h-full rounded-full transition-all",

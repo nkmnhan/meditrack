@@ -136,65 +136,11 @@
 }
 
 /*
- * ── Dark mode global overrides ───────────────────────────────────────
- * Many components use bg-white, bg-neutral-50, border-neutral-200,
- * text-neutral-900, etc. In dark mode, these need to adapt automatically
- * without modifying every component individually.
- *
- * This layer ensures semantic consistency: "white cards" become dark
- * cards, "gray borders" become dark borders, etc.
+ * ── Dark mode overrides (shadows + healing brand tokens) ─────────────
+ * Neutral overrides removed — components now use semantic tokens.
+ * Only shadow theming and healing brand colors remain.
  */
 @layer utilities {
-  .dark .bg-white {
-    background-color: hsl(var(--card));
-  }
-  .dark .bg-neutral-50 {
-    background-color: hsl(var(--background));
-  }
-  .dark .bg-neutral-100 {
-    background-color: hsl(var(--muted));
-  }
-  .dark .border-neutral-200 {
-    border-color: hsl(var(--border));
-  }
-  .dark .border-neutral-100 {
-    border-color: hsl(var(--border));
-  }
-  .dark .text-neutral-900 {
-    color: hsl(var(--foreground));
-  }
-  .dark .text-neutral-800 {
-    color: hsl(0 0% 90%);
-  }
-  .dark .text-neutral-700 {
-    color: hsl(220 20% 82%);
-  }
-  .dark .text-neutral-600 {
-    color: hsl(222 20% 72%);
-  }
-  .dark .text-neutral-500 {
-    color: hsl(var(--muted-foreground));
-  }
-  .dark .text-neutral-400 {
-    color: hsl(222 18% 52%);
-  }
-  .dark .divide-neutral-200 > :not([hidden]) ~ :not([hidden]) {
-    border-color: hsl(var(--border));
-  }
-  .dark .ring-neutral-200 {
-    --tw-ring-color: hsl(var(--border));
-  }
-  /* Ensure bg-white/95 (used in header/nav with backdrop-blur) also adapts */
-  .dark .bg-white\/95 {
-    background-color: hsl(var(--card) / 0.95);
-  }
-  /* Hover states */
-  .dark .hover\:bg-neutral-50:hover {
-    background-color: hsl(var(--muted));
-  }
-  .dark .hover\:bg-neutral-100:hover {
-    background-color: hsl(225 48% 24%);
-  }
   /* Healing palette → bright blue pill style in dark (like reference) */
   .dark .bg-healing-50 {
     background-color: hsl(225 48% 22%);
@@ -214,32 +160,6 @@
   }
   .dark .bg-healing-400 {
     background-color: hsl(174 72% 52%);
-  }
-  /* Form inputs — textarea, input, select */
-  .dark textarea,
-  .dark input[type="text"],
-  .dark input[type="email"],
-  .dark input[type="search"],
-  .dark input[type="number"],
-  .dark input[type="tel"],
-  .dark input[type="url"],
-  .dark input[type="password"],
-  .dark input[type="date"],
-  .dark select {
-    background-color: hsl(var(--muted));
-    color: hsl(var(--foreground));
-    border-color: hsl(var(--border));
-  }
-  /* Primary-700 → brighter in dark for logo, active nav */
-  .dark .text-primary-700 {
-    color: hsl(224 85% 65%);
-  }
-  .dark .bg-primary-700 {
-    background-color: hsl(224 85% 55%);
-  }
-  /* border-t/dividers inside dark cards */
-  .dark .border-t {
-    border-color: hsl(var(--border));
   }
   /* Soft navy shadows — cards float above the deep ocean background */
   .dark .shadow-sm {

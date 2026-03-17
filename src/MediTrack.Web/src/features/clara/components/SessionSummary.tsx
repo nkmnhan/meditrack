@@ -708,12 +708,12 @@ export function SessionSummary() {
               <MessageSquare className="h-3.5 w-3.5" />
               <span>{session.transcriptLines.length} exchanges</span>
             </div>
-            <div className="h-4 w-px bg-neutral-200" />
+            <div className="h-4 w-px bg-border" />
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Clock className="h-3.5 w-3.5" />
               <span>{patientStatements.length} patient statements</span>
             </div>
-            <div className="h-4 w-px bg-neutral-200" />
+            <div className="h-4 w-px bg-border" />
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Sparkles className="h-3.5 w-3.5 text-accent-500" />
               <span>{session.suggestions.length} suggestions</span>
@@ -783,7 +783,7 @@ export function SessionSummary() {
                             "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold",
                             slotIndex === 0
                               ? "bg-primary-100 text-primary-700"
-                              : "bg-neutral-200 text-foreground/80",
+                              : "bg-border text-foreground/80",
                           )}>
                             {rankLabel}
                           </span>
@@ -963,7 +963,7 @@ export function SessionSummary() {
                   <button
                     type="button"
                     onClick={handleAddSecondaryDiagnosis}
-                    className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-3 py-2 text-xs font-medium text-muted-foreground hover:border-primary-300 hover:text-primary-700 transition-colors"
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-dashed border-border px-3 py-2 text-xs font-medium text-muted-foreground hover:border-primary-300 hover:text-primary-700 transition-colors"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     Add {DIAGNOSIS_RANK_LABELS[diagnoses.length] ?? "Additional"} Diagnosis

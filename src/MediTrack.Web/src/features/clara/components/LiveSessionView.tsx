@@ -592,7 +592,7 @@ export function LiveSessionView() {
             "h-14 w-14 rounded-full flex items-center justify-center shadow-lg transition-all flex-shrink-0",
             isRecording
               ? "bg-accent-500 text-white ring-4 ring-accent-500/20"
-              : "bg-neutral-200 text-foreground/80",
+              : "bg-border text-foreground/80",
             "disabled:opacity-50 disabled:cursor-not-allowed"
           )}
         >
@@ -937,7 +937,7 @@ function MobilePatientSheet({
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-card rounded-t-2xl shadow-xl max-h-[75dvh] flex flex-col animate-in slide-in-from-bottom duration-200">
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-          <div className="w-10 h-1 rounded-full bg-neutral-300" />
+          <div className="w-10 h-1 rounded-full bg-border" />
         </div>
 
         {/* Header */}

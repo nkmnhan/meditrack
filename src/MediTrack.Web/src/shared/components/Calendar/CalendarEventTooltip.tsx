@@ -94,7 +94,7 @@ export function CalendarEventTooltip({
             zIndex: 9999,
             width: TOOLTIP_WIDTH,
           }}
-          className="rounded-lg border border-neutral-200 bg-white p-3 shadow-xl pointer-events-none"
+          className="rounded-lg border border-border bg-popover p-3 shadow-xl pointer-events-none"
         >
           {tooltipContent}
         </div>,

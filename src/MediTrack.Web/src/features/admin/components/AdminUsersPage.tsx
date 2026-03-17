@@ -360,7 +360,7 @@ function EditUserModal({
               onClick={() => setForm({ ...form, isActive: !form.isActive })}
               className={clsxMerge(
                 "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors",
-                form.isActive ? "bg-success-500" : "bg-neutral-300"
+                form.isActive ? "bg-success-500" : "bg-border"
               )}
             >
               <span
@@ -383,7 +383,7 @@ function EditUserModal({
               onClick={() => setForm({ ...form, is2faEnabled: !form.is2faEnabled })}
               className={clsxMerge(
                 "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors",
-                form.is2faEnabled ? "bg-success-500" : "bg-neutral-300"
+                form.is2faEnabled ? "bg-success-500" : "bg-border"
               )}
             >
               <span

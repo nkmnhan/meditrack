@@ -31,22 +31,22 @@ export function FeatureGuidePanel({
   return (
     <div className="flex flex-col">
       {/* Header */}
-      <div className="border-b border-neutral-200 px-4 pb-3 pt-4">
+      <div className="border-b border-border px-4 pb-3 pt-4">
         <div className="flex items-center gap-2">
           <BookOpen className="h-5 w-5 text-primary-700" />
-          <h3 className="text-sm font-bold text-neutral-900">Quick Tour</h3>
+          <h3 className="text-sm font-bold text-foreground">Quick Tour</h3>
         </div>
-        <p className="mt-1 text-xs text-neutral-500">Explore MediTrack at your own pace</p>
+        <p className="mt-1 text-xs text-muted-foreground">Explore MediTrack at your own pace</p>
 
         {/* Progress bar */}
         <div className="mt-3 flex items-center gap-2">
-          <div className="h-1.5 flex-1 rounded-full bg-neutral-200">
+          <div className="h-1.5 flex-1 rounded-full bg-border">
             <div
               className="h-1.5 rounded-full bg-primary-700 transition-all duration-300"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
-          <span className="text-[10px] font-medium text-neutral-500">
+          <span className="text-[10px] font-medium text-muted-foreground">
             {completionCount}/{totalSteps}
           </span>
         </div>
@@ -66,8 +66,8 @@ export function FeatureGuidePanel({
                 className={clsxMerge(
                   "flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors",
                   isCompleted
-                    ? "bg-neutral-50 hover:bg-neutral-100"
-                    : "hover:bg-neutral-50"
+                    ? "bg-muted hover:bg-muted/80"
+                    : "hover:bg-muted"
                 )}
               >
                 {/* Icon */}
@@ -89,12 +89,12 @@ export function FeatureGuidePanel({
                   <p
                     className={clsxMerge(
                       "text-sm font-medium",
-                      isCompleted ? "text-neutral-500" : "text-neutral-900"
+                      isCompleted ? "text-muted-foreground" : "text-foreground"
                     )}
                   >
                     {step.title}
                   </p>
-                  <p className="mt-0.5 line-clamp-2 text-xs text-neutral-500">
+                  <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
                     {step.description}
                   </p>
                 </div>
@@ -103,7 +103,7 @@ export function FeatureGuidePanel({
                 <ChevronRight
                   className={clsxMerge(
                     "h-4 w-4 flex-shrink-0",
-                    isCompleted ? "text-neutral-300" : "text-neutral-400"
+                    isCompleted ? "text-border" : "text-muted-foreground"
                   )}
                 />
               </button>
@@ -113,10 +113,10 @@ export function FeatureGuidePanel({
       </div>
 
       {/* Footer */}
-      <div className="border-t border-neutral-200 px-4 py-3">
+      <div className="border-t border-border px-4 py-3">
         <button
           onClick={onDismiss}
-          className="text-xs font-medium text-neutral-400 transition-colors hover:text-neutral-600"
+          className="text-xs font-medium text-muted-foreground/70 transition-colors hover:text-muted-foreground"
         >
           Don't show again
         </button>

@@ -262,8 +262,8 @@ interface AudioQualityIndicatorProps {
 function AudioQualityIndicator({ quality }: AudioQualityIndicatorProps) {
   const qualityConfig = {
     good: { color: "text-success-600", barColors: ["bg-success-500", "bg-success-500", "bg-success-500"], label: "Good" },
-    fair: { color: "text-warning-600", barColors: ["bg-warning-500", "bg-warning-500", "bg-neutral-300"], label: "Fair" },
-    poor: { color: "text-error-600", barColors: ["bg-error-500", "bg-neutral-300", "bg-neutral-300"], label: "Poor" },
+    fair: { color: "text-warning-600", barColors: ["bg-warning-500", "bg-warning-500", "bg-border"], label: "Fair" },
+    poor: { color: "text-error-600", barColors: ["bg-error-500", "bg-border", "bg-border"], label: "Poor" },
   } as const;
 
   const config = qualityConfig[quality];

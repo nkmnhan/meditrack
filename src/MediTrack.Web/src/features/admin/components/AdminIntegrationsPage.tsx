@@ -169,8 +169,8 @@ const STATUS_CONFIG: Record<IntegrationStatus, {
   not_configured: {
     label: "Not Configured",
     icon: Settings2,
-    badgeClasses: "border border-neutral-300 bg-muted text-muted-foreground",
-    dotColor: "bg-neutral-300",
+    badgeClasses: "border border-border bg-muted text-muted-foreground",
+    dotColor: "bg-border",
   },
 };
 

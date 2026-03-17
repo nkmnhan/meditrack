@@ -216,7 +216,7 @@ function StepIndicator({ currentStep }: StepIndicatorProps) {
                   "flex h-10 w-10 items-center justify-center rounded-full border-2 transition-colors",
                   isCompleted && "border-success-500 bg-success-500 text-white",
                   isActive && "border-primary-700 bg-primary-700 text-white",
-                  !isCompleted && !isActive && "border-neutral-300 bg-card text-muted-foreground/70",
+                  !isCompleted && !isActive && "border-border bg-card text-muted-foreground/70",
                 )}
               >
                 {isCompleted ? (
@@ -238,7 +238,7 @@ function StepIndicator({ currentStep }: StepIndicatorProps) {
               <div
                 className={clsxMerge(
                   "mb-5 h-0.5 w-6 sm:w-12 md:w-20",
-                  index < currentStep ? "bg-success-500" : "bg-neutral-200",
+                  index < currentStep ? "bg-success-500" : "bg-border",
                 )}
               />
             )}
@@ -296,7 +296,7 @@ function UploadStep({ selectedFile, onFileSelect }: UploadStepProps) {
           "flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-colors sm:p-12",
           isDragOver
             ? "border-primary-500 bg-primary-50"
-            : "border-neutral-300 bg-muted hover:border-primary-400 hover:bg-primary-50/50",
+            : "border-border bg-muted hover:border-primary-400 hover:bg-primary-50/50",
         )}
       >
         <div
@@ -481,7 +481,7 @@ function MapFieldsStep({ fieldMappings, onMappingChange, onLoadTemplate }: MapFi
                 "flex h-9 items-center gap-1.5 rounded-lg px-4 text-sm font-medium text-white transition-colors",
                 templateNameInput.trim()
                   ? "bg-primary-700 hover:bg-primary-800"
-                  : "cursor-not-allowed bg-neutral-300",
+                  : "cursor-not-allowed bg-border",
               )}
             >
               <Save className="h-3.5 w-3.5" />
@@ -963,7 +963,7 @@ function ConfirmStep({
               Importing records...
             </p>
           </div>
-          <div className="h-3 overflow-hidden rounded-full bg-neutral-200">
+          <div className="h-3 overflow-hidden rounded-full bg-border">
             <div
               className="h-full rounded-full bg-primary-700 transition-all duration-300"
               style={{ width: `${importProgress}%` }}
@@ -1180,7 +1180,7 @@ export function AdminImportWizardPage() {
               className={clsxMerge(
                 "flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-medium text-white transition-colors",
                 isNextDisabled
-                  ? "cursor-not-allowed bg-neutral-300"
+                  ? "cursor-not-allowed bg-border"
                   : "bg-primary-700 hover:bg-primary-800",
               )}
             >

@@ -32,7 +32,7 @@ const ACTION_BADGE_STYLES: Record<string, string> = {
 
 const ACTION_DOT_COLORS: Record<string, string> = {
   Create: "bg-success-500",
-  Read: "bg-neutral-300",
+  Read: "bg-border",
   Update: "bg-primary-700",
   Delete: "bg-error-500",
   Search: "bg-info-500",
@@ -297,7 +297,7 @@ export function AdminAuditPage() {
           <div className="divide-y divide-border">
             {entries.map((entry: AuditLogDto | ArchivedAuditLogDto) => {
               const badgeStyle = ACTION_BADGE_STYLES[entry.action] ?? "border border-border bg-muted text-foreground/80";
-              const dotColor = ACTION_DOT_COLORS[entry.action] ?? "bg-neutral-300";
+              const dotColor = ACTION_DOT_COLORS[entry.action] ?? "bg-border";
               const isArchived = activeTab === "archived" && "archivedAt" in entry;
 
               return (

@@ -21,7 +21,7 @@ const badgeVariants = cva(
         info: "border border-transparent bg-info-50 text-info-700",
         accent: "border border-transparent bg-accent-50 text-accent-700",
         primary: "border border-transparent bg-primary-100 text-primary-700",
-        neutral: "border border-transparent bg-neutral-100 text-neutral-600",
+        neutral: "border border-transparent bg-muted text-muted-foreground",
 
         /* ── Semantic bordered ── */
         "success-bordered": "border border-success-200 bg-success-50 text-success-700",
@@ -30,7 +30,7 @@ const badgeVariants = cva(
         "info-bordered": "border border-info-200 bg-info-50 text-info-700",
         "accent-bordered": "border border-accent-200 bg-accent-50 text-accent-700",
         "primary-bordered": "border border-primary-200 bg-primary-50 text-primary-700",
-        "neutral-bordered": "border border-neutral-200 bg-neutral-100 text-neutral-600",
+        "neutral-bordered": "border border-border bg-muted text-muted-foreground",
       },
       size: {
         xs: "px-1.5 py-0.5 text-[10px]",

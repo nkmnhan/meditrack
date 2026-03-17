@@ -3,16 +3,16 @@ import { FileQuestion } from "lucide-react";
 
 export function NotFound() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-neutral-50">
+    <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="text-center px-4">
         <div className="flex justify-center mb-4">
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary-50">
             <FileQuestion className="h-10 w-10 text-primary-700" />
           </div>
         </div>
-        <h1 className="text-6xl font-bold text-neutral-900">404</h1>
-        <p className="mt-3 text-xl font-semibold text-neutral-700">Page not found</p>
-        <p className="mt-2 text-neutral-500">
+        <h1 className="text-6xl font-bold text-foreground">404</h1>
+        <p className="mt-3 text-xl font-semibold text-foreground">Page not found</p>
+        <p className="mt-2 text-muted-foreground">
           The page you're looking for doesn't exist or has been moved.
         </p>
         <Link

@@ -527,7 +527,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
             >
               <div className="flex items-center gap-3">
                 <span className="min-w-[72px] font-mono text-sm font-semibold text-foreground">{appointment.time}</span>
-                <div className="h-8 w-px bg-neutral-200" />
+                <div className="h-8 w-px bg-border" />
                 <div>
                   <p className="text-sm font-medium text-foreground">{appointment.patient}</p>
                   <p className="text-xs text-muted-foreground">{appointment.type}</p>
