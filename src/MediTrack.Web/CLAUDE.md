@@ -108,10 +108,10 @@ import { clsxMerge } from "@/shared/utils/clsxMerge";
 className={clsxMerge(
   "flex items-center justify-center",     // Layout
   "w-full h-12 px-4 py-2",                // Sizing/Spacing
-  "rounded-lg border border-neutral-200", // Shape/Border
-  "bg-white text-neutral-900",            // Colors
+  "rounded-lg border border-border",      // Shape/Border
+  "bg-card text-foreground",              // Colors (semantic tokens!)
   "transition-all duration-200",          // Animation
-  "hover:bg-neutral-50 focus:ring-2",     // States
+  "hover:bg-muted focus:ring-2",          // States
   props.className                         // Caller overrides — always last
 )}
 ```
@@ -125,28 +125,32 @@ className={clsxMerge(
 
 ## Design Tokens (MANDATORY)
 
-**Never** use raw Tailwind colors (`blue-500`, `gray-700`). Always use project tokens:
+**Never** use `bg-white`, `text-neutral-*`, `border-neutral-*`, or raw Tailwind colors.
+**Always** use semantic tokens (resolve to CSS variables, auto-adapt to any theme):
 
-| Token | Usage | WCAG Note |
-|-------|-------|-----------|
-| `primary-700/800` | Buttons, headers, links | |
-| `secondary-700` | Secondary actions | |
-| `accent-500` | Violet CTAs (sparingly) | |
-| `neutral-900` | Headings | |
-| `neutral-700` | Body text | |
-| `neutral-500` | Muted text | Only on large text or backgrounds |
-| `neutral-200` | Borders, dividers | |
-| `neutral-50` / `white` | Page bg / Card bg | |
-| `success/warning/error/info-500` | Status feedback | Use `-600`+ for text on white |
-| `status-scheduled/completed/...` | Appointment workflow | |
-| `triage-critical/urgent/routine` | Medical urgency | |
+| Token | Usage | BANNED |
+|-------|-------|--------|
+| `bg-background` | Page background | ~~`bg-neutral-50`~~ |
+| `bg-card` | Cards, modals, surfaces | ~~`bg-white`~~ |
+| `bg-muted` | Subtle surfaces, alt rows | ~~`bg-neutral-100`~~ |
+| `text-foreground` | Headings, body text | ~~`text-neutral-900/800/700`~~ |
+| `text-muted-foreground` | Labels, secondary text | ~~`text-neutral-600/500/400`~~ |
+| `border-border` | Borders, dividers | ~~`border-neutral-200`~~ |
+| `primary-*` | Buttons, headers, links | Allowed |
+| `secondary-*` | Secondary actions | Allowed |
+| `accent-*` | Violet CTAs | Allowed |
+| `success/warning/error/info-*` | Status feedback | Allowed (use `-600`+ for text) |
+| `status-scheduled/completed/...` | Appointment workflow | Allowed |
+| `triage-critical/urgent/routine` | Medical urgency | Allowed |
+
+**Why semantic tokens:** See `docs/theming-guide.md`. New theme = 25 CSS variables, zero component changes.
 
 ## Icons (MANDATORY)
 
 ```tsx
 import { Stethoscope } from "lucide-react";
 <Stethoscope className="h-5 w-5 text-primary-700" />  // UI size
-<Stethoscope className="h-4 w-4 text-neutral-500" />  // Inline with text
+<Stethoscope className="h-4 w-4 text-muted-foreground" />  // Inline with text
 ```
 
 Never use raw SVGs, Font Awesome, or other icon libraries.
