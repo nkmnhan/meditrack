@@ -21,10 +21,10 @@ const techBadges = [
 ];
 
 const categoryColors: Record<string, string> = {
-  frontend: "border-primary-200 bg-primary-50 text-primary-700",
-  backend: "border-secondary-200 bg-secondary-50 text-secondary-700",
+  frontend: "border-primary-200 dark:border-primary-700 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
+  backend: "border-secondary-200 dark:border-secondary-700 bg-secondary-50 dark:bg-secondary-900/30 text-secondary-700 dark:text-secondary-300",
   infra: "border-border bg-muted text-foreground/80",
-  ai: "border-accent-200 bg-accent-50 text-accent-700",
+  ai: "border-accent-200 dark:border-accent-700 bg-accent-50 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300",
 };
 
 export function TechStackSection() {

@@ -21,13 +21,13 @@ type AuditTab = "recent" | "archived";
 /* ── Style maps ── */
 
 const ACTION_BADGE_STYLES: Record<string, string> = {
-  Create: "border border-success-500/30 bg-success-50 text-success-700",
+  Create: "border border-success-500/30 bg-success-50 dark:bg-success-900/30 text-success-700 dark:text-success-300",
   Read: "border border-border bg-muted text-foreground/80",
-  Update: "border border-primary-200 bg-primary-50 text-primary-700",
-  Delete: "border border-error-500/30 bg-error-50 text-error-700",
-  Search: "border border-info-500/30 bg-info-50 text-info-700",
-  Export: "border border-warning-500/30 bg-warning-50 text-warning-700",
-  PHI: "border border-accent-200 bg-accent-50 text-accent-700",
+  Update: "border border-primary-200 dark:border-primary-700 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
+  Delete: "border border-error-500/30 bg-error-50 dark:bg-error-900/30 text-error-700 dark:text-error-300",
+  Search: "border border-info-500/30 bg-info-50 dark:bg-info-900/30 text-info-700 dark:text-info-300",
+  Export: "border border-warning-500/30 bg-warning-50 dark:bg-warning-900/30 text-warning-700 dark:text-warning-300",
+  PHI: "border border-accent-200 dark:border-accent-700 bg-accent-50 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300",
 };
 
 const ACTION_DOT_COLORS: Record<string, string> = {
@@ -127,8 +127,8 @@ export function AdminAuditPage() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-50">
-            <ShieldCheck className="h-5 w-5 text-primary-700" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-50 dark:bg-primary-900/20">
+            <ShieldCheck className="h-5 w-5 text-primary-700 dark:text-primary-300" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-foreground sm:text-2xl">Audit Log</h1>
@@ -316,7 +316,7 @@ export function AdminAuditPage() {
                       </span>
                       <span className="text-sm font-medium text-foreground">{entry.resourceType}</span>
                       {isPhiResource(entry.resourceType) && (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-accent-200 bg-accent-50 px-1.5 py-0.5 text-xs font-medium text-accent-700">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-accent-200 dark:border-accent-700 bg-accent-50 dark:bg-accent-900/30 px-1.5 py-0.5 text-xs font-medium text-accent-700 dark:text-accent-300">
                           <Shield className="h-3 w-3" />
                           PHI
                         </span>
@@ -327,7 +327,7 @@ export function AdminAuditPage() {
                         </span>
                       )}
                       {!entry.success && (
-                        <span className="inline-flex items-center rounded-full border border-error-500/30 bg-error-50 px-2 py-0.5 text-xs font-medium text-error-700">
+                        <span className="inline-flex items-center rounded-full border border-error-500/30 bg-error-50 dark:bg-error-900/30 px-2 py-0.5 text-xs font-medium text-error-700 dark:text-error-300">
                           Failed
                         </span>
                       )}

@@ -36,11 +36,11 @@ const DEPARTMENT_OPTIONS = [
 ] as const;
 
 const ROLE_BADGE_STYLES: Record<string, string> = {
-  Doctor: "border border-primary-200 bg-primary-100 text-primary-700",
-  Admin: "border border-accent-200 bg-accent-100 text-accent-700",
-  Nurse: "border border-secondary-200 bg-secondary-100 text-secondary-700",
+  Doctor: "border border-primary-200 dark:border-primary-700 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
+  Admin: "border border-accent-200 dark:border-accent-700 bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300",
+  Nurse: "border border-secondary-200 dark:border-secondary-700 bg-secondary-100 dark:bg-secondary-900/30 text-secondary-700 dark:text-secondary-300",
   Receptionist: "border border-border bg-muted text-muted-foreground",
-  Patient: "border border-info-200 bg-info-100 text-info-700",
+  Patient: "border border-info-200 dark:border-info-700 bg-info-100 dark:bg-info-900/30 text-info-700 dark:text-info-300",
 };
 
 /* ── Demo data helpers ── */
@@ -493,8 +493,8 @@ export function AdminUsersPage() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-50">
-            <UserCog className="h-5 w-5 text-primary-700" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-50 dark:bg-primary-900/20">
+            <UserCog className="h-5 w-5 text-primary-700 dark:text-primary-300" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-foreground sm:text-2xl">User Management</h1>
@@ -629,7 +629,7 @@ export function AdminUsersPage() {
                       key={user.id}
                       className={clsxMerge(
                         "transition-colors hover:bg-muted",
-                        !is2faEnabled && "bg-warning-50/40"
+                        !is2faEnabled && "bg-warning-50/40 dark:bg-warning-900/10"
                       )}
                     >
                       <td className="px-5 py-3">
@@ -652,7 +652,7 @@ export function AdminUsersPage() {
                         <span className={clsxMerge(
                           "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
                           effectiveActive
-                            ? "border border-success-500/30 bg-success-50 text-success-700"
+                            ? "border border-success-500/30 bg-success-50 dark:bg-success-900/30 text-success-700 dark:text-success-300"
                             : "border border-border bg-muted text-muted-foreground"
                         )}>
                           {effectiveActive ? "Active" : "Inactive"}
@@ -740,7 +740,7 @@ export function AdminUsersPage() {
                   key={user.id}
                   className={clsxMerge(
                     "rounded-lg border border-border bg-card p-4 shadow-sm",
-                    !is2faEnabled && "border-warning-200 bg-warning-50/30"
+                    !is2faEnabled && "border-warning-200 dark:border-warning-700 bg-warning-50/30 dark:bg-warning-900/10"
                   )}
                 >
                   <div className="flex items-start gap-3">
@@ -792,7 +792,7 @@ export function AdminUsersPage() {
                         <span className={clsxMerge(
                           "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
                           effectiveActive
-                            ? "border border-success-500/30 bg-success-50 text-success-700"
+                            ? "border border-success-500/30 bg-success-50 dark:bg-success-900/30 text-success-700 dark:text-success-300"
                             : "border border-border bg-muted text-muted-foreground"
                         )}>
                           {effectiveActive ? "Active" : "Inactive"}
@@ -800,8 +800,8 @@ export function AdminUsersPage() {
                         <span className={clsxMerge(
                           "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
                           is2faEnabled
-                            ? "text-success-700"
-                            : "border border-warning-200 bg-warning-50 text-warning-700"
+                            ? "text-success-700 dark:text-success-300"
+                            : "border border-warning-200 dark:border-warning-700 bg-warning-50 dark:bg-warning-900/30 text-warning-700 dark:text-warning-300"
                         )}>
                           {is2faEnabled ? (
                             <><ShieldCheck className="h-3.5 w-3.5" /> 2FA</>

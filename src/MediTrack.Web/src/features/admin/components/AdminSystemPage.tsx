@@ -33,11 +33,11 @@ const BREADCRUMB_ITEMS = [
 /* ── Style maps ── */
 
 const SERVICE_ICON_MAP: Record<string, { icon: typeof Sparkles; iconBg: string; iconColor: string }> = {
-  "Clara AI Service": { icon: Sparkles, iconBg: "bg-accent-50", iconColor: "text-accent-600" },
-  "Identity API": { icon: Users, iconBg: "bg-warning-50", iconColor: "text-warning-600" },
-  "Patient API": { icon: Users, iconBg: "bg-primary-50", iconColor: "text-primary-700" },
-  "Appointment API": { icon: Clock, iconBg: "bg-secondary-50", iconColor: "text-secondary-700" },
-  "Medical Records API": { icon: FileText, iconBg: "bg-info-50", iconColor: "text-info-600" },
+  "Clara AI Service": { icon: Sparkles, iconBg: "bg-accent-50 dark:bg-accent-900/20", iconColor: "text-accent-600" },
+  "Identity API": { icon: Users, iconBg: "bg-warning-50 dark:bg-warning-900/20", iconColor: "text-warning-600" },
+  "Patient API": { icon: Users, iconBg: "bg-primary-50 dark:bg-primary-900/20", iconColor: "text-primary-700 dark:text-primary-300" },
+  "Appointment API": { icon: Clock, iconBg: "bg-secondary-50 dark:bg-secondary-900/20", iconColor: "text-secondary-700 dark:text-secondary-300" },
+  "Medical Records API": { icon: FileText, iconBg: "bg-info-50 dark:bg-info-900/20", iconColor: "text-info-600" },
   "Notification Worker": { icon: Bell, iconBg: "bg-muted", iconColor: "text-muted-foreground" },
 };
 
@@ -48,17 +48,17 @@ type ServiceStatus = "Healthy" | "Degraded" | "Unhealthy";
 const SERVICE_STATUS_STYLES: Record<ServiceStatus, { dot: string; badge: string; label: string }> = {
   Healthy: {
     dot: "bg-success-500",
-    badge: "border border-success-500/30 bg-success-50 text-success-700",
+    badge: "border border-success-500/30 bg-success-50 dark:bg-success-900/30 text-success-700 dark:text-success-300",
     label: "Operational",
   },
   Degraded: {
     dot: "bg-warning-500",
-    badge: "border border-warning-500/30 bg-warning-50 text-warning-700",
+    badge: "border border-warning-500/30 bg-warning-50 dark:bg-warning-900/30 text-warning-700 dark:text-warning-300",
     label: "Degraded",
   },
   Unhealthy: {
     dot: "bg-error-500",
-    badge: "border border-error-500/30 bg-error-50 text-error-700",
+    badge: "border border-error-500/30 bg-error-50 dark:bg-error-900/30 text-error-700 dark:text-error-300",
     label: "Down",
   },
 };
@@ -85,9 +85,9 @@ interface DerivedAlert {
 }
 
 const ALERT_STYLES: Record<AlertType, { bar: string; badge: string; icon: typeof AlertTriangle; iconColor: string }> = {
-  warning: { bar: "bg-warning-500", badge: "border border-warning-500/30 bg-warning-50 text-warning-700", icon: AlertTriangle, iconColor: "text-warning-600" },
-  info: { bar: "bg-info-500", badge: "border border-info-500/30 bg-info-50 text-info-700", icon: Info, iconColor: "text-info-600" },
-  resolved: { bar: "bg-success-500", badge: "border border-success-500/30 bg-success-50 text-success-700", icon: CheckCircle, iconColor: "text-success-600" },
+  warning: { bar: "bg-warning-500", badge: "border border-warning-500/30 bg-warning-50 dark:bg-warning-900/30 text-warning-700 dark:text-warning-300", icon: AlertTriangle, iconColor: "text-warning-600" },
+  info: { bar: "bg-info-500", badge: "border border-info-500/30 bg-info-50 dark:bg-info-900/30 text-info-700 dark:text-info-300", icon: Info, iconColor: "text-info-600" },
+  resolved: { bar: "bg-success-500", badge: "border border-success-500/30 bg-success-50 dark:bg-success-900/30 text-success-700 dark:text-success-300", icon: CheckCircle, iconColor: "text-success-600" },
 };
 
 const RANGE_OPTIONS = [
@@ -100,34 +100,34 @@ const RANGE_OPTIONS = [
 function getOverallBanner(overallStatus: string) {
   if (overallStatus === "Unhealthy") {
     return {
-      border: "border-error-200 bg-error-50",
+      border: "border-error-200 dark:border-error-700 bg-error-50 dark:bg-error-900/30",
       icon: XCircle,
       iconColor: "text-error-600",
       title: "Service disruption detected",
-      titleColor: "text-error-700",
+      titleColor: "text-error-700 dark:text-error-300",
       sub: "One or more services are unreachable",
-      subColor: "text-error-600",
+      subColor: "text-error-600 dark:text-error-400",
     };
   }
   if (overallStatus === "Degraded") {
     return {
-      border: "border-warning-200 bg-warning-50",
+      border: "border-warning-200 dark:border-warning-700 bg-warning-50 dark:bg-warning-900/30",
       icon: AlertTriangle,
       iconColor: "text-warning-600",
       title: "Some services degraded",
-      titleColor: "text-warning-700",
+      titleColor: "text-warning-700 dark:text-warning-300",
       sub: "Performance may be affected",
-      subColor: "text-warning-600",
+      subColor: "text-warning-600 dark:text-warning-400",
     };
   }
   return {
-    border: "border-success-200 bg-success-50",
+    border: "border-success-200 dark:border-success-700 bg-success-50 dark:bg-success-900/30",
     icon: CheckCircle2,
     iconColor: "text-success-600",
     title: "All systems operational",
-    titleColor: "text-success-700",
+    titleColor: "text-success-700 dark:text-success-300",
     sub: "All services responding normally",
-    subColor: "text-success-600",
+    subColor: "text-success-600 dark:text-success-400",
   };
 }
 
@@ -246,9 +246,9 @@ function uptimeColor(uptimePercent: number): string {
 }
 
 function uptimeBgColor(uptimePercent: number): string {
-  if (uptimePercent >= SLA_TARGET_PERCENT) return "bg-success-50 border-success-200";
-  if (uptimePercent >= 99) return "bg-warning-50 border-warning-200";
-  return "bg-error-50 border-error-200";
+  if (uptimePercent >= SLA_TARGET_PERCENT) return "bg-success-50 dark:bg-success-900/30 border-success-200 dark:border-success-700";
+  if (uptimePercent >= 99) return "bg-warning-50 dark:bg-warning-900/30 border-warning-200 dark:border-warning-700";
+  return "bg-error-50 dark:bg-error-900/30 border-error-200 dark:border-error-700";
 }
 
 /* ── Component ── */
@@ -327,8 +327,8 @@ export function AdminSystemPage() {
       {/* Header */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-50">
-            <Activity className="h-5 w-5 text-primary-700" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-50 dark:bg-primary-900/20">
+            <Activity className="h-5 w-5 text-primary-700 dark:text-primary-300" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-foreground sm:text-2xl">System Health</h1>
@@ -430,8 +430,8 @@ export function AdminSystemPage() {
           <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-secondary-50">
-                  <HeartPulse className="h-5 w-5 text-secondary-700" />
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-secondary-50 dark:bg-secondary-900/20">
+                  <HeartPulse className="h-5 w-5 text-secondary-700 dark:text-secondary-300" />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-foreground">FHIR R4 Endpoint</p>
@@ -776,7 +776,7 @@ export function AdminSystemPage() {
           <Bell className="h-5 w-5 text-foreground/80" />
           <h2 className="font-semibold text-foreground">Active Alerts</h2>
           {alerts.filter((alert) => alert.type === "warning").length > 0 && (
-            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-warning-50 text-xs font-semibold text-warning-700">
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-warning-50 dark:bg-warning-900/30 text-xs font-semibold text-warning-700 dark:text-warning-300">
               {alerts.filter((alert) => alert.type === "warning").length}
             </span>
           )}

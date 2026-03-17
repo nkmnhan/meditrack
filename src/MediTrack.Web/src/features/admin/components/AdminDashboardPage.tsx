@@ -59,9 +59,9 @@ function formatShortDate(dateString: string): string {
 
 function SystemStatusBanner({ status }: { readonly status: string }) {
   const config = {
-    Healthy: { icon: CheckCircle, label: "All Systems Operational", bg: "bg-success-50", border: "border-success-200", text: "text-success-700", iconColor: "text-success-600" },
-    Degraded: { icon: AlertTriangle, label: "Some Systems Degraded", bg: "bg-warning-50", border: "border-warning-200", text: "text-warning-700", iconColor: "text-warning-600" },
-    Unhealthy: { icon: XCircle, label: "System Issues Detected", bg: "bg-error-50", border: "border-error-200", text: "text-error-700", iconColor: "text-error-600" },
+    Healthy: { icon: CheckCircle, label: "All Systems Operational", bg: "bg-success-50 dark:bg-success-900/30", border: "border-success-200 dark:border-success-700", text: "text-success-700 dark:text-success-300", iconColor: "text-success-600" },
+    Degraded: { icon: AlertTriangle, label: "Some Systems Degraded", bg: "bg-warning-50 dark:bg-warning-900/30", border: "border-warning-200 dark:border-warning-700", text: "text-warning-700 dark:text-warning-300", iconColor: "text-warning-600" },
+    Unhealthy: { icon: XCircle, label: "System Issues Detected", bg: "bg-error-50 dark:bg-error-900/30", border: "border-error-200 dark:border-error-700", text: "text-error-700 dark:text-error-300", iconColor: "text-error-600" },
   }[status] ?? { icon: Activity, label: "Status Unknown", bg: "bg-muted", border: "border-border", text: "text-foreground/80", iconColor: "text-muted-foreground" };
 
   const StatusIcon = config.icon;
@@ -311,7 +311,7 @@ export function AdminDashboardPage() {
             trend={overview?.patientsTrend}
             trendLabel="vs prev period"
             icon={Users}
-            iconClassName="bg-primary-50 text-primary-700"
+            iconClassName="bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300"
             sparklineData={registrationSparkline}
             sparklineColor={PRIMARY_700}
           />
@@ -321,7 +321,7 @@ export function AdminDashboardPage() {
             trend={overview?.appointmentsTrend}
             trendLabel="vs yesterday"
             icon={CalendarDays}
-            iconClassName="bg-secondary-50 text-secondary-700"
+            iconClassName="bg-secondary-50 dark:bg-secondary-900/20 text-secondary-700 dark:text-secondary-300"
             sparklineData={appointmentSparkline}
             sparklineColor={SECONDARY_700}
           />
@@ -331,7 +331,7 @@ export function AdminDashboardPage() {
             trend={overview?.claraSessionsTrend}
             trendLabel="vs prev period"
             icon={Sparkles}
-            iconClassName="bg-accent-50 text-accent-600"
+            iconClassName="bg-accent-50 dark:bg-accent-900/20 text-accent-600"
           />
           <MetricCard
             title="Active Users (30d)"
@@ -339,7 +339,7 @@ export function AdminDashboardPage() {
             trend={overview?.activeUsersTrend}
             trendLabel="engagement"
             icon={Users}
-            iconClassName="bg-info-50 text-info-600"
+            iconClassName="bg-info-50 dark:bg-info-900/20 text-info-600"
           />
         </div>
       )}
@@ -355,7 +355,7 @@ export function AdminDashboardPage() {
           trend={-8.2}
           trendLabel="vs prev month"
           icon={Clock}
-          iconClassName="bg-primary-50 text-primary-700"
+          iconClassName="bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300"
           sparklineData={[
             { value: 15.1 }, { value: 14.6 }, { value: 14.0 },
             { value: 13.5 }, { value: 13.2 }, { value: 12.8 }, { value: 12.4 },
@@ -368,7 +368,7 @@ export function AdminDashboardPage() {
           trend={2.1}
           trendLabel="vs prev month"
           icon={CheckCircle}
-          iconClassName="bg-success-50 text-success-700"
+          iconClassName="bg-success-50 dark:bg-success-900/20 text-success-700 dark:text-success-300"
           sparklineData={[
             { value: 90.5 }, { value: 91.2 }, { value: 92.0 },
             { value: 92.8 }, { value: 93.3 }, { value: 93.9 }, { value: 94.2 },
@@ -381,7 +381,7 @@ export function AdminDashboardPage() {
           trend={3.4}
           trendLabel="vs prev month"
           icon={CalendarCheck}
-          iconClassName="bg-info-50 text-info-600"
+          iconClassName="bg-info-50 dark:bg-info-900/20 text-info-600"
           sparklineData={[
             { value: 82.1 }, { value: 83.5 }, { value: 84.8 },
             { value: 85.6 }, { value: 86.2 }, { value: 87.0 }, { value: 87.6 },

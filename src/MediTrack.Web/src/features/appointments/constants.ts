@@ -13,17 +13,17 @@ interface StatusConfig {
 
 /** Tailwind classes for calendar event status styling */
 export const STATUS_STYLES: Record<AppointmentStatus, string> = {
-  Scheduled: "bg-primary-100 border-l-primary-700 text-primary-900",
-  Confirmed: "bg-accent-100 border-l-accent-700 text-accent-900",
-  CheckedIn: "bg-info-50 border-l-info-700 text-info-900",
-  InProgress: "bg-warning-50 border-l-warning-500 text-warning-900",
-  Completed: "bg-success-50 border-l-success-500 text-success-900",
-  Cancelled: "bg-neutral-100 border-l-neutral-400 text-neutral-700",
-  NoShow: "bg-error-50 border-l-error-500 text-error-900",
-  Rescheduled: "bg-neutral-100 border-l-neutral-500 text-neutral-800",
+  Scheduled: "bg-primary-100 dark:bg-primary-900/30 border-l-primary-700 dark:border-l-primary-400 text-primary-900 dark:text-primary-200",
+  Confirmed: "bg-accent-100 dark:bg-accent-900/30 border-l-accent-700 dark:border-l-accent-400 text-accent-900 dark:text-accent-200",
+  CheckedIn: "bg-info-50 dark:bg-info-900/30 border-l-info-700 dark:border-l-info-400 text-info-900 dark:text-info-200",
+  InProgress: "bg-warning-50 dark:bg-warning-900/30 border-l-warning-500 dark:border-l-warning-400 text-warning-900 dark:text-warning-200",
+  Completed: "bg-success-50 dark:bg-success-900/30 border-l-success-500 dark:border-l-success-400 text-success-900 dark:text-success-200",
+  Cancelled: "bg-neutral-100 dark:bg-neutral-800/30 border-l-neutral-400 dark:border-l-neutral-500 text-neutral-700 dark:text-neutral-300",
+  NoShow: "bg-error-50 dark:bg-error-900/30 border-l-error-500 dark:border-l-error-400 text-error-900 dark:text-error-200",
+  Rescheduled: "bg-neutral-100 dark:bg-neutral-800/30 border-l-neutral-500 dark:border-l-neutral-400 text-neutral-800 dark:text-neutral-300",
 };
 
-export const DEFAULT_STATUS_STYLE = "bg-primary-100 border-l-primary-700 text-primary-900";
+export const DEFAULT_STATUS_STYLE = "bg-primary-100 dark:bg-primary-900/30 border-l-primary-700 dark:border-l-primary-400 text-primary-900 dark:text-primary-200";
 
 export const STATUS_CONFIG: Record<AppointmentStatus, StatusConfig> = {
   Scheduled: {
