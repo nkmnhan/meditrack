@@ -17,6 +17,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 - Updated `.claude/rules/frontend.md` — semantic tokens mandatory, hardcoded neutrals banned (2026-03-17)
 - Developer + AI theming guide: `docs/theming-guide.md` — new palette = 30 min, zero component changes (2026-03-17)
 
+### Fixed
+- Dark mode contrast: calendar event cards, Clara chat bubbles, admin badges now use `dark:` variant pairs (2026-03-18)
+  - Appointment events: `bg-primary-100` → `dark:bg-primary-900/30 dark:text-primary-200` (8 status styles)
+  - Landing decorative circles: reduced opacity to 7% in dark mode (no more bright blobs)
+  - Clara panel: user/assistant message bubbles have dark-appropriate tinted backgrounds
+  - Admin pages: audit badges, user role badges, system status indicators all dark-mode-aware
+  - 19 files across web + design (dual-update enforced)
+
 ### Added
 - Clara.UnitTests: 106 unit tests covering validators, domain, services, and security (2026-03-17)
   - Validators: StartSessionRequest, KnowledgeSearchRequest
