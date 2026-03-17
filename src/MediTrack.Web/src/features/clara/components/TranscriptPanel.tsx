@@ -64,15 +64,15 @@ export function TranscriptPanel({
   return (
     <div
       className={clsxMerge(
-        "flex flex-col bg-white rounded-lg border border-neutral-200 shadow-sm",
+        "flex flex-col bg-card rounded-lg border border-border shadow-sm",
         className
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border flex-shrink-0">
         <div className="flex items-center gap-2">
           <Mic className="w-4 h-4 text-primary-700" />
-          <h2 className="text-sm font-semibold text-neutral-900">Live Transcript</h2>
+          <h2 className="text-sm font-semibold text-foreground">Live Transcript</h2>
         </div>
         <div className="flex items-center gap-3">
           {isRecording && (
@@ -118,7 +118,7 @@ export function TranscriptPanel({
       </div>
 
       {/* Desktop action bar */}
-      <div className="hidden items-center gap-3 border-t border-neutral-200 px-4 py-3 lg:flex">
+      <div className="hidden items-center gap-3 border-t border-border px-4 py-3 lg:flex">
         {onToggleRecording && (
           <button
             type="button"
@@ -128,7 +128,7 @@ export function TranscriptPanel({
               "flex h-10 w-10 items-center justify-center rounded-full transition-all",
               isRecording
                 ? "bg-error-500 text-white shadow-md hover:bg-error-600"
-                : "border border-neutral-200 text-neutral-700 hover:bg-neutral-50",
+                : "border border-border text-foreground/80 hover:bg-muted",
               "disabled:opacity-50"
             )}
             aria-label={isRecording ? "Stop recording" : "Start recording"}
@@ -210,7 +210,7 @@ function TranscriptLineItem({ line, effectiveSpeaker, hasUrgentKeyword, onCorrec
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-neutral-700 leading-relaxed break-words">{line.text}</p>
+        <p className="text-sm text-foreground/80 leading-relaxed break-words">{line.text}</p>
         {line.confidence !== undefined && line.confidence < 0.8 && (
           <div className="flex items-center gap-1 mt-1">
             <AlertTriangle className="w-3.5 h-3.5 text-warning-600 flex-shrink-0" />
@@ -225,7 +225,7 @@ function TranscriptLineItem({ line, effectiveSpeaker, hasUrgentKeyword, onCorrec
       </div>
 
       {/* Timestamp */}
-      <span className="text-xs text-neutral-500 flex-shrink-0 pt-0.5">
+      <span className="text-xs text-muted-foreground flex-shrink-0 pt-0.5">
         {formatTimestamp(line.timestamp)}
       </span>
     </div>
@@ -241,10 +241,10 @@ interface EmptyStateProps {
 function EmptyState({ isRecording }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center py-8">
-      <div className="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center mb-3">
-        <Stethoscope className="h-6 w-6 text-neutral-400" />
+      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+        <Stethoscope className="h-6 w-6 text-muted-foreground/70" />
       </div>
-      <p className="text-sm text-neutral-500">
+      <p className="text-sm text-muted-foreground">
         {isRecording
           ? "Listening... speak to see the transcript"
           : "Start recording to see the transcript"}

@@ -39,7 +39,7 @@ export function AutoRefreshIndicator({
   }
 
   return (
-    <div className={clsxMerge("flex items-center gap-2 text-xs text-neutral-500", className)}>
+    <div className={clsxMerge("flex items-center gap-2 text-xs text-muted-foreground", className)}>
       <RefreshCw
         className={clsxMerge(
           "h-3.5 w-3.5",
@@ -49,7 +49,7 @@ export function AutoRefreshIndicator({
       <span>
         {isFetching ? "Refreshing…" : `Updated ${formatAge(secondsAgo)}`}
       </span>
-      <span className="hidden sm:inline text-neutral-400">
+      <span className="hidden sm:inline text-muted-foreground/70">
         · auto-refresh every {intervalSeconds}s
       </span>
     </div>

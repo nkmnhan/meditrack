@@ -56,7 +56,7 @@ export function PreviousSessionsList({
   if (isLoading) {
     return (
       <div className={clsxMerge("flex items-center justify-center py-4", className)}>
-        <Loader2 className="h-4 w-4 animate-spin text-neutral-400" />
+        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground/70" />
       </div>
     );
   }
@@ -64,7 +64,7 @@ export function PreviousSessionsList({
   if (filteredSessions.length === 0) {
     return (
       <div className={clsxMerge("py-3", className)}>
-        <p className="text-xs text-neutral-400 italic">No previous sessions</p>
+        <p className="text-xs text-muted-foreground/70 italic">No previous sessions</p>
       </div>
     );
   }
@@ -75,29 +75,29 @@ export function PreviousSessionsList({
         <Link
           key={session.id}
           to={`/clara/session/${session.id}/summary`}
-          className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white px-3 py-2.5 hover:border-primary-200 hover:bg-primary-50/50 transition-colors"
+          className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 hover:border-primary-200 hover:bg-primary-50/50 transition-colors"
         >
-          <FileText className="h-4 w-4 flex-shrink-0 text-neutral-400" />
+          <FileText className="h-4 w-4 flex-shrink-0 text-muted-foreground/70" />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-neutral-700">
+              <span className="text-xs font-medium text-foreground/80">
                 {formatShortDate(session.startedAt)}
               </span>
               <span
                 className={clsxMerge(
                   "inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium",
-                  SESSION_TYPE_COLORS[session.sessionType] ?? "bg-neutral-100 text-neutral-600",
+                  SESSION_TYPE_COLORS[session.sessionType] ?? "bg-muted text-muted-foreground",
                 )}
               >
                 {session.sessionType}
               </span>
             </div>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="inline-flex items-center gap-1 text-[10px] text-neutral-400">
+              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground/70">
                 <Clock className="h-3 w-3" />
                 {formatDuration(session.startedAt, session.endedAt)}
               </span>
-              <span className="inline-flex items-center gap-1 text-[10px] text-neutral-400">
+              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground/70">
                 <Sparkles className="h-3 w-3" />
                 {session.suggestionCount} suggestions
               </span>

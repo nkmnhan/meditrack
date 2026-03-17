@@ -504,8 +504,8 @@ export function SessionSummary() {
   if (error || !session) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <AlertCircle className="mb-3 h-12 w-12 text-neutral-300" />
-        <p className="text-lg font-semibold text-neutral-700">Session not found</p>
+        <AlertCircle className="mb-3 h-12 w-12 text-muted-foreground/50" />
+        <p className="text-lg font-semibold text-foreground/80">Session not found</p>
         <Link to="/clara" className="mt-2 text-sm text-primary-700 hover:underline">
           &larr; Back to Clara
         </Link>
@@ -550,30 +550,30 @@ export function SessionSummary() {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-200 text-neutral-700 hover:bg-neutral-50 transition-colors"
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-foreground/80 hover:bg-muted transition-colors"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-bold text-neutral-900">Review AI-Generated Draft</h1>
+              <h1 className="text-2xl font-bold text-foreground">Review AI-Generated Draft</h1>
               <span className="inline-flex items-center gap-1 rounded-full border border-accent-200 bg-accent-50 px-2.5 py-0.5 text-xs font-semibold text-accent-700">
                 <Sparkles className="h-3 w-3" />
                 AI Draft
               </span>
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center gap-1 text-xs text-neutral-500">
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                 <Mic className="h-3.5 w-3.5" />
                 {session.transcriptLines.length} exchanges
               </span>
-              <span className="text-neutral-300">&middot;</span>
-              <span className="inline-flex items-center gap-1 text-xs text-neutral-500">
+              <span className="text-muted-foreground/50">&middot;</span>
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                 <Clock className="h-3.5 w-3.5" />
                 {sessionId?.slice(0, 8).toUpperCase()}
               </span>
-              <span className="text-neutral-300">&middot;</span>
-              <span className="inline-flex items-center gap-1 text-xs text-neutral-500">
+              <span className="text-muted-foreground/50">&middot;</span>
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                 <Sparkles className="h-3.5 w-3.5 text-accent-500" />
                 {session.suggestions.length} suggestions
               </span>
@@ -587,7 +587,7 @@ export function SessionSummary() {
             type="button"
             onClick={undo}
             disabled={!canUndo}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-200 text-neutral-700 hover:bg-neutral-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border text-foreground/80 hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="Undo"
             title="Undo"
           >
@@ -597,7 +597,7 @@ export function SessionSummary() {
             type="button"
             onClick={redo}
             disabled={!canRedo}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-200 text-neutral-700 hover:bg-neutral-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border text-foreground/80 hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="Redo"
             title="Redo"
           >
@@ -610,7 +610,7 @@ export function SessionSummary() {
               "inline-flex h-10 items-center gap-2 rounded-lg border px-4 text-sm font-medium transition-colors",
               isDiffViewActive
                 ? "border-primary-200 bg-primary-50 text-primary-700"
-                : "border-neutral-200 text-neutral-700 hover:bg-neutral-50",
+                : "border-border text-foreground/80 hover:bg-muted",
             )}
           >
             <GitCompareArrows className="h-4 w-4" />
@@ -624,19 +624,19 @@ export function SessionSummary() {
         {/* Left column — Session data */}
         <div className="lg:w-[40%] lg:sticky lg:top-6 lg:self-start space-y-4">
           {/* Patient statements */}
-          <div className="rounded-lg border border-neutral-200 bg-white p-5">
-            <div className="flex items-center gap-2 mb-4 border-b border-neutral-200 pb-3">
+          <div className="rounded-lg border border-border bg-card p-5">
+            <div className="flex items-center gap-2 mb-4 border-b border-border pb-3">
               <MessageSquare className="h-4 w-4 text-secondary-700" />
-              <h3 className="text-sm font-semibold text-neutral-900">Key Patient Statements</h3>
+              <h3 className="text-sm font-semibold text-foreground">Key Patient Statements</h3>
             </div>
             <div className="max-h-64 overflow-y-auto space-y-3">
               {patientStatements.length === 0 ? (
-                <p className="text-sm text-neutral-500">No patient statements recorded.</p>
+                <p className="text-sm text-muted-foreground">No patient statements recorded.</p>
               ) : (
                 patientStatements.map((line) => (
                   <div
                     key={line.id}
-                    className="rounded-lg border border-secondary-100 bg-secondary-50 px-3 py-2.5 text-xs text-neutral-700 leading-relaxed"
+                    className="rounded-lg border border-secondary-100 bg-secondary-50 px-3 py-2.5 text-xs text-foreground/80 leading-relaxed"
                   >
                     {line.text}
                   </div>
@@ -646,17 +646,17 @@ export function SessionSummary() {
           </div>
 
           {/* AI Suggestions */}
-          <div className="rounded-lg border border-neutral-200 bg-white p-5">
-            <div className="flex items-center gap-2 mb-4 border-b border-neutral-200 pb-3">
+          <div className="rounded-lg border border-border bg-card p-5">
+            <div className="flex items-center gap-2 mb-4 border-b border-border pb-3">
               <Sparkles className="h-5 w-5 text-accent-500" />
-              <h3 className="text-sm font-semibold text-neutral-900">Clara&apos;s Suggestions</h3>
+              <h3 className="text-sm font-semibold text-foreground">Clara&apos;s Suggestions</h3>
               <span className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-accent-100 text-xs font-semibold text-accent-700">
                 {session.suggestions.length}
               </span>
             </div>
             <div className="max-h-64 overflow-y-auto space-y-2.5">
               {session.suggestions.length === 0 ? (
-                <p className="text-sm text-neutral-500">No suggestions were generated.</p>
+                <p className="text-sm text-muted-foreground">No suggestions were generated.</p>
               ) : (
                 session.suggestions.map((suggestion) => {
                   const config = SUGGESTION_TYPE_CONFIG[suggestion.type] ?? DEFAULT_SUGGESTION_STYLE;
@@ -664,7 +664,7 @@ export function SessionSummary() {
                   return (
                     <div
                       key={suggestion.id}
-                      className="flex overflow-hidden rounded-lg border border-neutral-200 bg-white"
+                      className="flex overflow-hidden rounded-lg border border-border bg-card"
                     >
                       <div className={clsxMerge("w-1 flex-shrink-0", config.barColor)} />
                       <div className="flex-1 p-3">
@@ -675,7 +675,7 @@ export function SessionSummary() {
                           <SuggestionIcon className="h-3 w-3" />
                           {suggestion.type}
                         </span>
-                        <p className="text-xs leading-relaxed text-neutral-700 line-clamp-2">
+                        <p className="text-xs leading-relaxed text-foreground/80 line-clamp-2">
                           {suggestion.content}
                         </p>
                       </div>
@@ -688,8 +688,8 @@ export function SessionSummary() {
 
           {/* Previous Visits (Enhancement 5) */}
           {session.patientId && (
-            <details className="rounded-lg border border-neutral-200 bg-white p-5">
-              <summary className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-neutral-900">
+            <details className="rounded-lg border border-border bg-card p-5">
+              <summary className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-foreground">
                 <Clock className="h-4 w-4 text-primary-700" />
                 Previous Visits
               </summary>
@@ -703,18 +703,18 @@ export function SessionSummary() {
           )}
 
           {/* Session stats strip */}
-          <div className="flex items-center justify-around rounded-lg border border-neutral-200 bg-white px-4 py-3 shadow-sm">
-            <div className="flex items-center gap-1.5 text-xs text-neutral-500">
+          <div className="flex items-center justify-around rounded-lg border border-border bg-card px-4 py-3 shadow-sm">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <MessageSquare className="h-3.5 w-3.5" />
               <span>{session.transcriptLines.length} exchanges</span>
             </div>
             <div className="h-4 w-px bg-neutral-200" />
-            <div className="flex items-center gap-1.5 text-xs text-neutral-500">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Clock className="h-3.5 w-3.5" />
               <span>{patientStatements.length} patient statements</span>
             </div>
             <div className="h-4 w-px bg-neutral-200" />
-            <div className="flex items-center gap-1.5 text-xs text-neutral-500">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Sparkles className="h-3.5 w-3.5 text-accent-500" />
               <span>{session.suggestions.length} suggestions</span>
             </div>
@@ -736,10 +736,10 @@ export function SessionSummary() {
             sectionConfidences={SOAP_SECTIONS.map((section) => section.confidence as ConfidenceLevel)}
           />
 
-          <div className="rounded-lg border border-neutral-200 bg-white shadow-sm">
-            <div className="flex items-center gap-2 border-b border-neutral-200 px-6 pb-3 pt-5">
+          <div className="rounded-lg border border-border bg-card shadow-sm">
+            <div className="flex items-center gap-2 border-b border-border px-6 pb-3 pt-5">
               <FileText className="h-5 w-5 text-primary-700" />
-              <h3 className="font-semibold text-neutral-900">Medical Record Draft</h3>
+              <h3 className="font-semibold text-foreground">Medical Record Draft</h3>
             </div>
 
             <div className="space-y-6 p-6">
@@ -747,7 +747,7 @@ export function SessionSummary() {
               <div>
                 <label
                   htmlFor="chiefComplaint"
-                  className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-neutral-500"
+                  className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground"
                 >
                   Chief Complaint <span className="text-error-500">*</span>
                 </label>
@@ -758,13 +758,13 @@ export function SessionSummary() {
                   onChange={(event) => setChiefComplaint(event.target.value)}
                   onBlur={handleFormBlur}
                   placeholder="e.g. Persistent headache for 3 days"
-                  className="w-full resize-none rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
+                  className="w-full resize-none rounded-lg border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
                 />
               </div>
 
               {/* Multi-Diagnosis Section (P2 — secondary diagnosis support) */}
               <div>
-                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-neutral-500">
+                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Diagnoses <span className="text-error-500">*</span>
                 </label>
 
@@ -776,14 +776,14 @@ export function SessionSummary() {
                     return (
                       <div
                         key={slotIndex}
-                        className="rounded-lg border border-neutral-200 bg-neutral-50 p-3"
+                        className="rounded-lg border border-border bg-muted p-3"
                       >
                         <div className="mb-2 flex items-center justify-between">
                           <span className={clsxMerge(
                             "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold",
                             slotIndex === 0
                               ? "bg-primary-100 text-primary-700"
-                              : "bg-neutral-200 text-neutral-700",
+                              : "bg-neutral-200 text-foreground/80",
                           )}>
                             {rankLabel}
                           </span>
@@ -791,7 +791,7 @@ export function SessionSummary() {
                             <button
                               type="button"
                               onClick={() => handleRemoveSecondaryDiagnosis(slotIndex)}
-                              className="flex h-6 w-6 items-center justify-center rounded text-neutral-500 hover:bg-neutral-200 hover:text-error-600 transition-colors"
+                              className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-error-600 transition-colors"
                               aria-label={`Remove ${rankLabel.toLowerCase()} diagnosis`}
                             >
                               <X className="h-3.5 w-3.5" />
@@ -802,14 +802,14 @@ export function SessionSummary() {
                         {/* Selected diagnosis chip */}
                         {diagnosisSlot.code && diagnosisSlot.description && !diagnosisSlot.isManualEntry && (
                           <div className="inline-flex items-center gap-2 rounded-lg border border-primary-200 bg-primary-50 px-3 py-2">
-                            <span className="rounded border border-neutral-200 bg-white px-2 py-0.5 font-mono text-xs font-medium text-neutral-900">
+                            <span className="rounded border border-border bg-card px-2 py-0.5 font-mono text-xs font-medium text-foreground">
                               {diagnosisSlot.code}
                             </span>
-                            <span className="text-sm text-neutral-700">{diagnosisSlot.description}</span>
+                            <span className="text-sm text-foreground/80">{diagnosisSlot.description}</span>
                             <button
                               type="button"
                               onClick={() => handleClearDiagnosis(slotIndex)}
-                              className="ml-1 flex h-5 w-5 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-200 hover:text-neutral-700 transition-colors"
+                              className="ml-1 flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground/80 transition-colors"
                               aria-label="Clear diagnosis"
                             >
                               <X className="h-3.5 w-3.5" />
@@ -824,7 +824,7 @@ export function SessionSummary() {
                             className="relative"
                           >
                             <div className="relative">
-                              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+                              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                               <input
                                 type="text"
                                 value={diagnosisSlot.searchQuery}
@@ -840,16 +840,16 @@ export function SessionSummary() {
                                   }
                                 }}
                                 placeholder="Search ICD-10 code or description..."
-                                className="h-10 w-full rounded-lg border border-neutral-200 bg-white pl-9 pr-3 text-sm text-neutral-900 placeholder:text-neutral-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
+                                className="h-10 w-full rounded-lg border border-border bg-card pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
                               />
                             </div>
 
                             {/* Dropdown results */}
                             {diagnosisSlot.isDropdownOpen && (
-                              <div className="absolute z-20 mt-1 w-full rounded-lg border border-neutral-200 bg-white shadow-lg">
+                              <div className="absolute z-20 mt-1 w-full rounded-lg border border-border bg-card shadow-lg">
                                 <ul className="max-h-[320px] overflow-y-auto py-1">
                                   {filteredCodes.length === 0 ? (
-                                    <li className="px-3 py-2.5 text-sm text-neutral-500">
+                                    <li className="px-3 py-2.5 text-sm text-muted-foreground">
                                       No matching codes found.
                                     </li>
                                   ) : (
@@ -863,13 +863,13 @@ export function SessionSummary() {
                                           <button
                                             type="button"
                                             onClick={() => handleSelectIcd10(slotIndex, entry)}
-                                            className="flex w-full items-start gap-3 px-3 py-2.5 text-left hover:bg-neutral-50 transition-colors"
+                                            className="flex w-full items-start gap-3 px-3 py-2.5 text-left hover:bg-muted transition-colors"
                                           >
-                                            <span className="flex-shrink-0 rounded border border-neutral-200 bg-neutral-50 px-2 py-0.5 font-mono text-xs font-medium text-neutral-900">
+                                            <span className="flex-shrink-0 rounded border border-border bg-muted px-2 py-0.5 font-mono text-xs font-medium text-foreground">
                                               {codeMatchStart >= 0 ? (
                                                 <>
                                                   {entry.code.slice(0, codeMatchStart)}
-                                                  <mark className="bg-warning-200 text-neutral-900">
+                                                  <mark className="bg-warning-200 text-foreground">
                                                     {entry.code.slice(codeMatchStart, codeMatchStart + diagnosisSlot.searchQuery.length)}
                                                   </mark>
                                                   {entry.code.slice(codeMatchStart + diagnosisSlot.searchQuery.length)}
@@ -878,11 +878,11 @@ export function SessionSummary() {
                                                 entry.code
                                               )}
                                             </span>
-                                            <span className="text-sm text-neutral-700">
+                                            <span className="text-sm text-foreground/80">
                                               {descriptionMatchStart >= 0 ? (
                                                 <>
                                                   {entry.description.slice(0, descriptionMatchStart)}
-                                                  <mark className="bg-warning-200 text-neutral-900">
+                                                  <mark className="bg-warning-200 text-foreground">
                                                     {entry.description.slice(descriptionMatchStart, descriptionMatchStart + diagnosisSlot.searchQuery.length)}
                                                   </mark>
                                                   {entry.description.slice(descriptionMatchStart + diagnosisSlot.searchQuery.length)}
@@ -897,7 +897,7 @@ export function SessionSummary() {
                                     })
                                   )}
                                 </ul>
-                                <div className="border-t border-neutral-200 px-3 py-2">
+                                <div className="border-t border-border px-3 py-2">
                                   <button
                                     type="button"
                                     onClick={() => handleSwitchToManualEntry(slotIndex)}
@@ -922,7 +922,7 @@ export function SessionSummary() {
                                   handleUpdateDiagnosis(slotIndex, { code: event.target.value })
                                 }
                                 placeholder="e.g. R51.9"
-                                className="h-10 w-full rounded-lg border border-neutral-200 bg-white px-3 font-mono text-sm text-neutral-900 placeholder:text-neutral-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
+                                className="h-10 w-full rounded-lg border border-border bg-card px-3 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
                               />
                               <input
                                 type="text"
@@ -931,7 +931,7 @@ export function SessionSummary() {
                                   handleUpdateDiagnosis(slotIndex, { description: event.target.value })
                                 }
                                 placeholder="Diagnosis description"
-                                className="h-10 w-full rounded-lg border border-neutral-200 bg-white px-3 text-sm text-neutral-900 placeholder:text-neutral-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
+                                className="h-10 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
                               />
                             </div>
                             <div className="mt-2 flex items-center gap-3">
@@ -944,10 +944,10 @@ export function SessionSummary() {
                               </button>
                               {diagnosisSlot.code && diagnosisSlot.description && (
                                 <div className="inline-flex items-center gap-1.5">
-                                  <span className="rounded border border-neutral-200 bg-neutral-50 px-2 py-0.5 font-mono text-xs text-neutral-700">
+                                  <span className="rounded border border-border bg-muted px-2 py-0.5 font-mono text-xs text-foreground/80">
                                     {diagnosisSlot.code}
                                   </span>
-                                  <span className="text-xs text-neutral-600">{diagnosisSlot.description}</span>
+                                  <span className="text-xs text-muted-foreground">{diagnosisSlot.description}</span>
                                 </div>
                               )}
                             </div>
@@ -963,7 +963,7 @@ export function SessionSummary() {
                   <button
                     type="button"
                     onClick={handleAddSecondaryDiagnosis}
-                    className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-600 hover:border-primary-300 hover:text-primary-700 transition-colors"
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-dashed border-neutral-300 px-3 py-2 text-xs font-medium text-muted-foreground hover:border-primary-300 hover:text-primary-700 transition-colors"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     Add {DIAGNOSIS_RANK_LABELS[diagnoses.length] ?? "Additional"} Diagnosis
@@ -976,7 +976,7 @@ export function SessionSummary() {
               <div>
                 <label
                   htmlFor="severity"
-                  className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-neutral-500"
+                  className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground"
                 >
                   Severity
                 </label>
@@ -987,7 +987,7 @@ export function SessionSummary() {
                     onChange={(event) =>
                       setSeverity(event.target.value as DiagnosisSeverity)
                     }
-                    className="h-10 w-full appearance-none rounded-lg border border-neutral-200 bg-white pl-3 pr-8 text-sm text-neutral-700 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
+                    className="h-10 w-full appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-sm text-foreground/80 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
                   >
                     {SEVERITY_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -995,13 +995,13 @@ export function SessionSummary() {
                       </option>
                     ))}
                   </select>
-                  <Stethoscope className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+                  <Stethoscope className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 </div>
               </div>
               <div>
                 <label
                   htmlFor="diagnosisStatus"
-                  className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-neutral-500"
+                  className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground"
                 >
                   Status
                 </label>
@@ -1010,20 +1010,20 @@ export function SessionSummary() {
                     id="diagnosisStatus"
                     value={diagnosisStatus}
                     onChange={(event) => setDiagnosisStatus(event.target.value)}
-                    className="h-10 w-full appearance-none rounded-lg border border-neutral-200 bg-white pl-3 pr-8 text-sm text-neutral-700 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
+                    className="h-10 w-full appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-sm text-foreground/80 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
                   >
                     {STATUS_OPTIONS.map((option) => (
                       <option key={option} value={option}>{option}</option>
                     ))}
                   </select>
-                  <ChevronRight className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+                  <ChevronRight className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 </div>
               </div>
               </div>
 
               {/* SOAP Sections with AI Confidence Indicators (P1) */}
               <div>
-                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-neutral-500">
+                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Clinical Notes (SOAP)
                 </label>
                 <div className="space-y-3">
@@ -1035,14 +1035,14 @@ export function SessionSummary() {
                       <div
                         key={section.key}
                         className={clsxMerge(
-                          "rounded-lg border bg-white",
+                          "rounded-lg border bg-card",
                           !isHighConfidence
                             ? "border-l-4 border-l-warning-400 border-t-neutral-200 border-r-neutral-200 border-b-neutral-200"
-                            : "border-neutral-200",
+                            : "border-border",
                         )}
                       >
-                        <div className="flex items-center justify-between px-3 py-2 border-b border-neutral-100">
-                          <span className="text-xs font-semibold text-neutral-700">
+                        <div className="flex items-center justify-between px-3 py-2 border-b border-border">
+                          <span className="text-xs font-semibold text-foreground/80">
                             {section.prefix} {section.label}
                           </span>
                           {/* Confidence badge */}
@@ -1062,7 +1062,7 @@ export function SessionSummary() {
                         {/* Diff view (P2) */}
                         {hasDiffData ? (
                           <div className="px-3 py-2">
-                            <p className="text-xs leading-relaxed text-neutral-700">
+                            <p className="text-xs leading-relaxed text-foreground/80">
                               {DEMO_DIFF_SECTIONS[section.key]!.map((segment, segmentIndex) => {
                                 if (segment.type === "addition") {
                                   return (
@@ -1092,7 +1092,7 @@ export function SessionSummary() {
                               onChange={(event) => handleSoapSectionChange(section.key, event.target.value)}
                               rows={2}
                               placeholder={`${section.prefix} ...`}
-                              className="mt-2 w-full resize-none rounded-md border border-neutral-200 px-3 py-2 font-mono text-xs leading-relaxed text-neutral-900 placeholder:text-neutral-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
+                              className="mt-2 w-full resize-none rounded-md border border-border px-3 py-2 font-mono text-xs leading-relaxed text-foreground placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
                             />
                           </div>
                         ) : (
@@ -1101,7 +1101,7 @@ export function SessionSummary() {
                             onChange={(event) => handleSoapSectionChange(section.key, event.target.value)}
                             rows={2}
                             placeholder={`${section.prefix} ...`}
-                            className="w-full resize-none border-0 px-3 py-2 font-mono text-xs leading-relaxed text-neutral-900 placeholder:text-neutral-500 focus:outline-none focus:ring-0"
+                            className="w-full resize-none border-0 px-3 py-2 font-mono text-xs leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0"
                           />
                         )}
                       </div>
@@ -1115,7 +1115,7 @@ export function SessionSummary() {
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Pill className="h-4 w-4 text-secondary-700" />
-                    <span className="text-sm font-semibold text-neutral-900">Suggested Prescriptions</span>
+                    <span className="text-sm font-semibold text-foreground">Suggested Prescriptions</span>
                     <span className="inline-flex items-center gap-1 rounded-full bg-accent-50 px-2 py-0.5 text-xs font-medium text-accent-700">
                       <Sparkles className="h-3 w-3" />
                       Clara suggested
@@ -1124,7 +1124,7 @@ export function SessionSummary() {
                   <button
                     type="button"
                     onClick={handleAddPrescription}
-                    className="inline-flex items-center gap-1 rounded-md border border-neutral-200 px-2.5 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-50 transition-colors"
+                    className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1 text-xs font-medium text-foreground/80 hover:bg-muted transition-colors"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     Add
@@ -1132,7 +1132,7 @@ export function SessionSummary() {
                 </div>
 
                 {prescriptions.length === 0 ? (
-                  <p className="text-sm text-neutral-500">
+                  <p className="text-sm text-muted-foreground">
                     No prescriptions added. Click &ldquo;Add&rdquo; to create one.
                   </p>
                 ) : (
@@ -1146,16 +1146,16 @@ export function SessionSummary() {
                       return (
                         <div
                           key={prescriptionIndex}
-                          className="rounded-lg border border-neutral-200 bg-neutral-50 p-4"
+                          className="rounded-lg border border-border bg-muted p-4"
                         >
                           <div className="mb-3 flex items-center justify-between">
-                            <span className="text-xs font-medium text-neutral-500">
+                            <span className="text-xs font-medium text-muted-foreground">
                               Prescription #{prescriptionIndex + 1}
                             </span>
                             <button
                               type="button"
                               onClick={() => handleRemovePrescription(prescriptionIndex)}
-                              className="rounded p-1 text-neutral-500 hover:bg-neutral-200 hover:text-error-600 transition-colors"
+                              className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-error-600 transition-colors"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>
@@ -1169,7 +1169,7 @@ export function SessionSummary() {
                               {prescription.medicationName ? (
                                 <div className="flex h-9 items-center gap-2 rounded-md border border-primary-200 bg-primary-50 px-3">
                                   <Pill className="h-3.5 w-3.5 flex-shrink-0 text-primary-600" />
-                                  <span className="flex-1 truncate text-sm text-neutral-900">
+                                  <span className="flex-1 truncate text-sm text-foreground">
                                     {prescription.medicationName}
                                   </span>
                                   <button
@@ -1179,7 +1179,7 @@ export function SessionSummary() {
                                       handlePrescriptionChange(prescriptionIndex, "dosage", "");
                                       handlePrescriptionChange(prescriptionIndex, "frequency", "");
                                     }}
-                                    className="flex h-5 w-5 items-center justify-center rounded-full text-neutral-500 hover:text-neutral-700 transition-colors"
+                                    className="flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground hover:text-foreground/80 transition-colors"
                                   >
                                     <X className="h-3 w-3" />
                                   </button>
@@ -1187,7 +1187,7 @@ export function SessionSummary() {
                               ) : (
                                 <>
                                   <div className="relative">
-                                    <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-500" />
+                                    <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                                     <input
                                       type="text"
                                       value={medicationQuery}
@@ -1210,15 +1210,15 @@ export function SessionSummary() {
                                         }
                                       }}
                                       placeholder="Search medication..."
-                                      className="h-9 w-full rounded-md border border-neutral-200 bg-white pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700"
+                                      className="h-9 w-full rounded-md border border-border bg-card pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700"
                                     />
                                   </div>
 
                                   {isMedicationDropdownVisible && (
-                                    <div className="absolute z-20 mt-1 w-full rounded-lg border border-neutral-200 bg-white shadow-lg">
+                                    <div className="absolute z-20 mt-1 w-full rounded-lg border border-border bg-card shadow-lg">
                                       <ul className="max-h-[240px] overflow-y-auto py-1">
                                         {filteredMedications.length === 0 ? (
-                                          <li className="px-3 py-2 text-sm text-neutral-500">
+                                          <li className="px-3 py-2 text-sm text-muted-foreground">
                                             No matching medications.
                                           </li>
                                         ) : (
@@ -1231,13 +1231,13 @@ export function SessionSummary() {
                                                 <button
                                                   type="button"
                                                   onClick={() => handleSelectMedication(prescriptionIndex, medication)}
-                                                  className="flex w-full flex-col gap-0.5 px-3 py-2 text-left hover:bg-neutral-50 transition-colors"
+                                                  className="flex w-full flex-col gap-0.5 px-3 py-2 text-left hover:bg-muted transition-colors"
                                                 >
-                                                  <span className="text-sm font-medium text-neutral-900">
+                                                  <span className="text-sm font-medium text-foreground">
                                                     {matchStart >= 0 ? (
                                                       <>
                                                         {medication.name.slice(0, matchStart)}
-                                                        <mark className="bg-warning-200 text-neutral-900">
+                                                        <mark className="bg-warning-200 text-foreground">
                                                           {medication.name.slice(matchStart, matchStart + medicationQuery.length)}
                                                         </mark>
                                                         {medication.name.slice(matchStart + medicationQuery.length)}
@@ -1246,7 +1246,7 @@ export function SessionSummary() {
                                                       medication.name
                                                     )}
                                                   </span>
-                                                  <span className="text-xs text-neutral-500">
+                                                  <span className="text-xs text-muted-foreground">
                                                     {medication.commonDosages.join(", ")}
                                                   </span>
                                                 </button>
@@ -1255,7 +1255,7 @@ export function SessionSummary() {
                                           })
                                         )}
                                       </ul>
-                                      <div className="border-t border-neutral-200 px-3 py-2">
+                                      <div className="border-t border-border px-3 py-2">
                                         <button
                                           type="button"
                                           onClick={() => {
@@ -1281,7 +1281,7 @@ export function SessionSummary() {
                                 onChange={(event) =>
                                   handlePrescriptionChange(prescriptionIndex, "dosage", event.target.value)
                                 }
-                                className="h-9 rounded-md border border-neutral-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700"
+                                className="h-9 rounded-md border border-border bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700"
                               >
                                 <option value="">Select dosage</option>
                                 {selectedMedication.commonDosages.map((dosage) => (
@@ -1296,7 +1296,7 @@ export function SessionSummary() {
                                   handlePrescriptionChange(prescriptionIndex, "dosage", event.target.value)
                                 }
                                 placeholder="Dosage (e.g. 500mg)"
-                                className="h-9 rounded-md border border-neutral-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700"
+                                className="h-9 rounded-md border border-border bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700"
                               />
                             )}
 
@@ -1307,7 +1307,7 @@ export function SessionSummary() {
                                 onChange={(event) =>
                                   handlePrescriptionChange(prescriptionIndex, "frequency", event.target.value)
                                 }
-                                className="h-9 rounded-md border border-neutral-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700"
+                                className="h-9 rounded-md border border-border bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700"
                               >
                                 <option value="">Select frequency</option>
                                 {selectedMedication.commonFrequencies.map((frequency) => (
@@ -1322,7 +1322,7 @@ export function SessionSummary() {
                                   handlePrescriptionChange(prescriptionIndex, "frequency", event.target.value)
                                 }
                                 placeholder="Frequency (e.g. twice daily)"
-                                className="h-9 rounded-md border border-neutral-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700"
+                                className="h-9 rounded-md border border-border bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700"
                               />
                             )}
 
@@ -1333,7 +1333,7 @@ export function SessionSummary() {
                                 handlePrescriptionChange(prescriptionIndex, "durationDays", event.target.value)
                               }
                               placeholder="Duration (days)"
-                              className="h-9 rounded-md border border-neutral-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700"
+                              className="h-9 rounded-md border border-border bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700"
                             />
                           </div>
                           <input
@@ -1343,7 +1343,7 @@ export function SessionSummary() {
                               handlePrescriptionChange(prescriptionIndex, "instructions", event.target.value)
                             }
                             placeholder="Instructions (optional)"
-                            className="mt-3 h-9 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700"
+                            className="mt-3 h-9 w-full rounded-md border border-border bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700"
                           />
                         </div>
                       );
@@ -1356,7 +1356,7 @@ export function SessionSummary() {
               <div>
                 <label
                   htmlFor="followUp"
-                  className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-neutral-500"
+                  className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground"
                 >
                   Recommended Follow-up
                 </label>
@@ -1367,7 +1367,7 @@ export function SessionSummary() {
                     value={followUp}
                     onChange={(event) => setFollowUp(event.target.value)}
                     placeholder="e.g. Follow-up in 2 weeks if symptoms persist"
-                    className="h-10 flex-1 rounded-lg border border-neutral-200 px-3 text-sm text-neutral-900 placeholder:text-neutral-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
+                    className="h-10 flex-1 rounded-lg border border-border px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
                   />
                   <button
                     type="button"
@@ -1386,7 +1386,7 @@ export function SessionSummary() {
       </div>
 
       {/* Footer — fixed on mobile, relative on desktop */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-neutral-200 bg-white px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] lg:relative lg:bottom-auto lg:left-auto lg:right-auto lg:z-auto lg:mt-6 lg:px-0 lg:py-0 lg:shadow-none">
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] lg:relative lg:bottom-auto lg:left-auto lg:right-auto lg:z-auto lg:mt-6 lg:px-0 lg:py-0 lg:shadow-none">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
           <button
             type="button"

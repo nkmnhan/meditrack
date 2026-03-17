@@ -39,7 +39,7 @@ const ROLE_BADGE_STYLES: Record<string, string> = {
   Doctor: "border border-primary-200 bg-primary-100 text-primary-700",
   Admin: "border border-accent-200 bg-accent-100 text-accent-700",
   Nurse: "border border-secondary-200 bg-secondary-100 text-secondary-700",
-  Receptionist: "border border-neutral-200 bg-neutral-100 text-neutral-600",
+  Receptionist: "border border-border bg-muted text-muted-foreground",
   Patient: "border border-info-200 bg-info-100 text-info-700",
 };
 
@@ -144,7 +144,7 @@ function InviteUserModal({
         <div className="space-y-4">
           {/* Email */}
           <div>
-            <label htmlFor="invite-email" className="mb-1 block text-sm font-medium text-neutral-700">
+            <label htmlFor="invite-email" className="mb-1 block text-sm font-medium text-foreground/80">
               Email <span className="text-error-500">*</span>
             </label>
             <input
@@ -160,7 +160,7 @@ function InviteUserModal({
               className={clsxMerge(
                 "h-10 w-full rounded-lg border pl-3 pr-3 text-sm",
                 "focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors",
-                emailError ? "border-error-500" : "border-neutral-200"
+                emailError ? "border-error-500" : "border-border"
               )}
             />
             {emailError && <p className="mt-1 text-xs text-error-600">{emailError}</p>}
@@ -168,45 +168,45 @@ function InviteUserModal({
 
           {/* Role */}
           <div>
-            <label htmlFor="invite-role" className="mb-1 block text-sm font-medium text-neutral-700">Role</label>
+            <label htmlFor="invite-role" className="mb-1 block text-sm font-medium text-foreground/80">Role</label>
             <div className="relative">
               <select
                 id="invite-role"
                 value={form.role}
                 onChange={(event) => setForm({ ...form, role: event.target.value })}
-                className="h-10 w-full appearance-none rounded-lg border border-neutral-200 bg-white pl-3 pr-8 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-shadow"
+                className="h-10 w-full appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-sm text-foreground/80 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-shadow"
               >
                 {ROLE_OPTIONS.map((role) => (
                   <option key={role} value={role}>{role}</option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             </div>
           </div>
 
           {/* Department */}
           <div>
-            <label htmlFor="invite-department" className="mb-1 block text-sm font-medium text-neutral-700">Department</label>
+            <label htmlFor="invite-department" className="mb-1 block text-sm font-medium text-foreground/80">Department</label>
             <div className="relative">
               <select
                 id="invite-department"
                 value={form.department}
                 onChange={(event) => setForm({ ...form, department: event.target.value })}
-                className="h-10 w-full appearance-none rounded-lg border border-neutral-200 bg-white pl-3 pr-8 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-shadow"
+                className="h-10 w-full appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-sm text-foreground/80 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-shadow"
               >
                 <option value="">Select department</option>
                 {DEPARTMENT_OPTIONS.map((department) => (
                   <option key={department} value={department}>{department}</option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             </div>
           </div>
 
           {/* Message */}
           <div>
-            <label htmlFor="invite-message" className="mb-1 block text-sm font-medium text-neutral-700">
-              Message <span className="text-neutral-400">(optional)</span>
+            <label htmlFor="invite-message" className="mb-1 block text-sm font-medium text-foreground/80">
+              Message <span className="text-muted-foreground/70">(optional)</span>
             </label>
             <textarea
               id="invite-message"
@@ -215,7 +215,7 @@ function InviteUserModal({
               onChange={(event) => setForm({ ...form, message: event.target.value })}
               placeholder="Add a personal note..."
               className={clsxMerge(
-                "w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm",
+                "w-full rounded-lg border border-border px-3 py-2 text-sm",
                 "focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors",
                 "resize-none"
               )}
@@ -227,7 +227,7 @@ function InviteUserModal({
           <button
             type="button"
             onClick={handleClose}
-            className="h-10 rounded-lg border border-neutral-200 px-4 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
+            className="h-10 rounded-lg border border-border px-4 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted"
           >
             Cancel
           </button>
@@ -305,53 +305,53 @@ function EditUserModal({
         <div className="space-y-4">
           {/* Name (read-only) */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">Name</label>
-            <p className="h-10 flex items-center rounded-lg border border-neutral-100 bg-neutral-50 px-3 text-sm text-neutral-600">
+            <label className="mb-1 block text-sm font-medium text-foreground/80">Name</label>
+            <p className="h-10 flex items-center rounded-lg border border-border bg-muted px-3 text-sm text-muted-foreground">
               {fullName}
             </p>
           </div>
 
           {/* Role */}
           <div>
-            <label htmlFor="edit-role" className="mb-1 block text-sm font-medium text-neutral-700">Role</label>
+            <label htmlFor="edit-role" className="mb-1 block text-sm font-medium text-foreground/80">Role</label>
             <div className="relative">
               <select
                 id="edit-role"
                 value={form.role}
                 onChange={(event) => setForm({ ...form, role: event.target.value })}
-                className="h-10 w-full appearance-none rounded-lg border border-neutral-200 bg-white pl-3 pr-8 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-shadow"
+                className="h-10 w-full appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-sm text-foreground/80 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-shadow"
               >
                 {ROLE_OPTIONS.map((role) => (
                   <option key={role} value={role}>{role}</option>
                 ))}
                 <option value="Patient">Patient</option>
               </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             </div>
           </div>
 
           {/* Department */}
           <div>
-            <label htmlFor="edit-department" className="mb-1 block text-sm font-medium text-neutral-700">Department</label>
+            <label htmlFor="edit-department" className="mb-1 block text-sm font-medium text-foreground/80">Department</label>
             <div className="relative">
               <select
                 id="edit-department"
                 value={form.department}
                 onChange={(event) => setForm({ ...form, department: event.target.value })}
-                className="h-10 w-full appearance-none rounded-lg border border-neutral-200 bg-white pl-3 pr-8 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-shadow"
+                className="h-10 w-full appearance-none rounded-lg border border-border bg-card pl-3 pr-8 text-sm text-foreground/80 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-shadow"
               >
                 <option value="">Select department</option>
                 {DEPARTMENT_OPTIONS.map((department) => (
                   <option key={department} value={department}>{department}</option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             </div>
           </div>
 
           {/* Status toggle */}
           <div className="flex items-center justify-between">
-            <label htmlFor="edit-status" className="text-sm font-medium text-neutral-700">Active</label>
+            <label htmlFor="edit-status" className="text-sm font-medium text-foreground/80">Active</label>
             <button
               id="edit-status"
               type="button"
@@ -365,7 +365,7 @@ function EditUserModal({
             >
               <span
                 className={clsxMerge(
-                  "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transition-transform",
+                  "pointer-events-none inline-block h-5 w-5 rounded-full bg-card shadow transition-transform",
                   form.isActive ? "translate-x-5" : "translate-x-0"
                 )}
               />
@@ -374,7 +374,7 @@ function EditUserModal({
 
           {/* 2FA toggle */}
           <div className="flex items-center justify-between">
-            <label htmlFor="edit-2fa" className="text-sm font-medium text-neutral-700">Two-Factor Auth</label>
+            <label htmlFor="edit-2fa" className="text-sm font-medium text-foreground/80">Two-Factor Auth</label>
             <button
               id="edit-2fa"
               type="button"
@@ -388,7 +388,7 @@ function EditUserModal({
             >
               <span
                 className={clsxMerge(
-                  "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transition-transform",
+                  "pointer-events-none inline-block h-5 w-5 rounded-full bg-card shadow transition-transform",
                   form.is2faEnabled ? "translate-x-5" : "translate-x-0"
                 )}
               />
@@ -400,7 +400,7 @@ function EditUserModal({
           <button
             type="button"
             onClick={onClose}
-            className="h-10 rounded-lg border border-neutral-200 px-4 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
+            className="h-10 rounded-lg border border-border px-4 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted"
           >
             Cancel
           </button>
@@ -497,8 +497,8 @@ export function AdminUsersPage() {
             <UserCog className="h-5 w-5 text-primary-700" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-neutral-900 sm:text-2xl">User Management</h1>
-            <p className="text-sm text-neutral-500">{totalCount} total users</p>
+            <h1 className="text-xl font-bold text-foreground sm:text-2xl">User Management</h1>
+            <p className="text-sm text-muted-foreground">{totalCount} total users</p>
           </div>
         </div>
         <button
@@ -516,11 +516,11 @@ export function AdminUsersPage() {
       </div>
 
       {/* Filters */}
-      <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+      <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           {/* Search */}
           <div className="relative flex-1 sm:max-w-xs">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
             <input
               type="text"
               value={searchQuery}
@@ -530,7 +530,7 @@ export function AdminUsersPage() {
               }}
               placeholder="Search users..."
               className={clsxMerge(
-                "h-10 w-full rounded-lg border border-neutral-200 pl-9 pr-3 text-sm",
+                "h-10 w-full rounded-lg border border-border pl-9 pr-3 text-sm",
                 "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500",
                 "transition-colors"
               )}
@@ -546,7 +546,7 @@ export function AdminUsersPage() {
                 setRoleFilter(event.target.value);
                 setPageNumber(1);
               }}
-              className="h-10 appearance-none rounded-md border border-neutral-200 bg-white pl-3 pr-8 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
+              className="h-10 appearance-none rounded-md border border-border bg-card pl-3 pr-8 text-sm text-foreground/80 focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
             >
               <option value="">All Roles</option>
               <option value="Doctor">Doctor</option>
@@ -555,7 +555,7 @@ export function AdminUsersPage() {
               <option value="Receptionist">Receptionist</option>
               <option value="Patient">Patient</option>
             </select>
-            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           </div>
 
           {/* Status filter */}
@@ -567,16 +567,16 @@ export function AdminUsersPage() {
                 setStatusFilter(event.target.value);
                 setPageNumber(1);
               }}
-              className="h-10 appearance-none rounded-md border border-neutral-200 bg-white pl-3 pr-8 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
+              className="h-10 appearance-none rounded-md border border-border bg-card pl-3 pr-8 text-sm text-foreground/80 focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
             >
               <option value="">All Statuses</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
-            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           </div>
 
-          <span className="text-sm text-neutral-500 sm:ml-auto" aria-live="polite">
+          <span className="text-sm text-muted-foreground sm:ml-auto" aria-live="polite">
             {totalCount} {totalCount === 1 ? "user" : "users"}
           </span>
         </div>
@@ -585,27 +585,27 @@ export function AdminUsersPage() {
       {/* Content */}
       {isLoading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground/70" />
         </div>
       ) : isError ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-neutral-200 bg-white px-5 py-12 shadow-sm">
+        <div className="flex flex-col items-center justify-center rounded-lg border border-border bg-card px-5 py-12 shadow-sm">
           <UserCog className="h-10 w-10 text-error-300" />
-          <p className="mt-3 text-sm font-medium text-neutral-900">Failed to load users</p>
-          <p className="mt-1 text-xs text-neutral-500">Check your connection and try again</p>
+          <p className="mt-3 text-sm font-medium text-foreground">Failed to load users</p>
+          <p className="mt-1 text-xs text-muted-foreground">Check your connection and try again</p>
         </div>
       ) : users.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-neutral-200 bg-white px-5 py-12 shadow-sm">
-          <UserCog className="h-10 w-10 text-neutral-300" />
-          <p className="mt-3 text-sm font-medium text-neutral-900">No users found</p>
-          <p className="mt-1 text-xs text-neutral-500">Try adjusting your search or filters</p>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-border bg-card px-5 py-12 shadow-sm">
+          <UserCog className="h-10 w-10 text-muted-foreground/50" />
+          <p className="mt-3 text-sm font-medium text-foreground">No users found</p>
+          <p className="mt-1 text-xs text-muted-foreground">Try adjusting your search or filters</p>
         </div>
       ) : (
         <>
           {/* Desktop table */}
-          <div className="hidden rounded-lg border border-neutral-200 bg-white shadow-sm md:block">
+          <div className="hidden rounded-lg border border-border bg-card shadow-sm md:block">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+                <tr className="border-b border-border bg-muted text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   <th className="px-5 py-3">User</th>
                   <th className="px-5 py-3">Role</th>
                   <th className="px-5 py-3">Status</th>
@@ -615,7 +615,7 @@ export function AdminUsersPage() {
                   <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-200">
+              <tbody className="divide-y divide-border">
                 {users.map((user) => {
                   const fullName = getUserFullName(user);
                   const effectiveRole = getEffectiveRole(user);
@@ -628,7 +628,7 @@ export function AdminUsersPage() {
                     <tr
                       key={user.id}
                       className={clsxMerge(
-                        "transition-colors hover:bg-neutral-50",
+                        "transition-colors hover:bg-muted",
                         !is2faEnabled && "bg-warning-50/40"
                       )}
                     >
@@ -638,13 +638,13 @@ export function AdminUsersPage() {
                             {getInitials(fullName)}
                           </div>
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-neutral-900">{fullName}</p>
-                            <p className="truncate text-xs text-neutral-500">{user.email}</p>
+                            <p className="truncate text-sm font-medium text-foreground">{fullName}</p>
+                            <p className="truncate text-xs text-muted-foreground">{user.email}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-5 py-3">
-                        <span className={clsxMerge("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", ROLE_BADGE_STYLES[effectiveRole] ?? "border border-neutral-200 bg-neutral-100 text-neutral-600")}>
+                        <span className={clsxMerge("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", ROLE_BADGE_STYLES[effectiveRole] ?? "border border-border bg-muted text-muted-foreground")}>
                           {effectiveRole}
                         </span>
                       </td>
@@ -653,7 +653,7 @@ export function AdminUsersPage() {
                           "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
                           effectiveActive
                             ? "border border-success-500/30 bg-success-50 text-success-700"
-                            : "border border-neutral-200 bg-neutral-100 text-neutral-600"
+                            : "border border-border bg-muted text-muted-foreground"
                         )}>
                           {effectiveActive ? "Active" : "Inactive"}
                         </span>
@@ -661,7 +661,7 @@ export function AdminUsersPage() {
                       <td className="px-5 py-3">
                         <span className={clsxMerge(
                           "inline-flex items-center gap-1 text-xs font-medium",
-                          is2faEnabled ? "text-success-700" : "text-neutral-400"
+                          is2faEnabled ? "text-success-700" : "text-muted-foreground/70"
                         )}>
                           {is2faEnabled ? (
                             <><ShieldCheck className="h-4 w-4" /> Enabled</>
@@ -681,17 +681,17 @@ export function AdminUsersPage() {
                             {sessionCount} sessions
                           </button>
                         ) : (
-                          <span className="text-xs text-neutral-400">&mdash;</span>
+                          <span className="text-xs text-muted-foreground/70">&mdash;</span>
                         )}
                       </td>
-                      <td className="px-5 py-3 text-sm text-neutral-600">{formatLastActive(user.lastLoginAt)}</td>
+                      <td className="px-5 py-3 text-sm text-muted-foreground">{formatLastActive(user.lastLoginAt)}</td>
                       <td className="px-5 py-3">
                         <div className="flex items-center justify-end gap-1">
                           <button
                             type="button"
                             aria-label={`Edit ${fullName}`}
                             onClick={() => setEditingUser(user)}
-                            className="flex h-10 w-10 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700"
+                            className="flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground/80"
                           >
                             <Pencil className="h-4 w-4" />
                           </button>
@@ -704,8 +704,8 @@ export function AdminUsersPage() {
                               "flex h-10 w-10 items-center justify-center rounded-md transition-colors",
                               isToggling && "cursor-not-allowed opacity-50",
                               effectiveActive
-                                ? "text-neutral-400 hover:bg-error-50 hover:text-error-600"
-                                : "text-neutral-400 hover:bg-success-50 hover:text-success-600"
+                                ? "text-muted-foreground/70 hover:bg-error-50 hover:text-error-600"
+                                : "text-muted-foreground/70 hover:bg-success-50 hover:text-success-600"
                             )}
                           >
                             {isToggling ? (
@@ -739,7 +739,7 @@ export function AdminUsersPage() {
                 <div
                   key={user.id}
                   className={clsxMerge(
-                    "rounded-lg border border-neutral-200 bg-white p-4 shadow-sm",
+                    "rounded-lg border border-border bg-card p-4 shadow-sm",
                     !is2faEnabled && "border-warning-200 bg-warning-50/30"
                   )}
                 >
@@ -750,15 +750,15 @@ export function AdminUsersPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-neutral-900">{fullName}</p>
-                          <p className="truncate text-xs text-neutral-500">{user.email}</p>
+                          <p className="truncate text-sm font-medium text-foreground">{fullName}</p>
+                          <p className="truncate text-xs text-muted-foreground">{user.email}</p>
                         </div>
                         <div className="flex flex-shrink-0 items-center gap-1">
                           <button
                             type="button"
                             aria-label={`Edit ${fullName}`}
                             onClick={() => setEditingUser(user)}
-                            className="flex h-10 w-10 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700"
+                            className="flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground/80"
                           >
                             <Pencil className="h-4 w-4" />
                           </button>
@@ -771,8 +771,8 @@ export function AdminUsersPage() {
                               "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md transition-colors",
                               isToggling && "cursor-not-allowed opacity-50",
                               effectiveActive
-                                ? "text-neutral-400 hover:bg-error-50 hover:text-error-600"
-                                : "text-neutral-400 hover:bg-success-50 hover:text-success-600"
+                                ? "text-muted-foreground/70 hover:bg-error-50 hover:text-error-600"
+                                : "text-muted-foreground/70 hover:bg-success-50 hover:text-success-600"
                             )}
                           >
                             {isToggling ? (
@@ -786,14 +786,14 @@ export function AdminUsersPage() {
                         </div>
                       </div>
                       <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <span className={clsxMerge("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", ROLE_BADGE_STYLES[effectiveRole] ?? "border border-neutral-200 bg-neutral-100 text-neutral-600")}>
+                        <span className={clsxMerge("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", ROLE_BADGE_STYLES[effectiveRole] ?? "border border-border bg-muted text-muted-foreground")}>
                           {effectiveRole}
                         </span>
                         <span className={clsxMerge(
                           "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
                           effectiveActive
                             ? "border border-success-500/30 bg-success-50 text-success-700"
-                            : "border border-neutral-200 bg-neutral-100 text-neutral-600"
+                            : "border border-border bg-muted text-muted-foreground"
                         )}>
                           {effectiveActive ? "Active" : "Inactive"}
                         </span>
@@ -811,7 +811,7 @@ export function AdminUsersPage() {
                         </span>
                       </div>
                       <div className="mt-2 flex items-center justify-between">
-                        <p className="text-xs text-neutral-500">Last active: {formatLastActive(user.lastLoginAt)}</p>
+                        <p className="text-xs text-muted-foreground">Last active: {formatLastActive(user.lastLoginAt)}</p>
                         {sessionCount !== null && (
                           <button
                             type="button"
@@ -832,8 +832,8 @@ export function AdminUsersPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white px-5 py-3 shadow-sm">
-              <p className="text-sm text-neutral-500">
+            <div className="flex items-center justify-between rounded-lg border border-border bg-card px-5 py-3 shadow-sm">
+              <p className="text-sm text-muted-foreground">
                 Page {pageNumber} of {totalPages}
               </p>
               <div className="flex items-center gap-2">
@@ -842,8 +842,8 @@ export function AdminUsersPage() {
                   disabled={!data?.hasPreviousPage}
                   onClick={() => setPageNumber((previousPage) => previousPage - 1)}
                   className={clsxMerge(
-                    "inline-flex h-10 w-10 items-center justify-center rounded-md border border-neutral-200 text-neutral-700 transition-colors",
-                    data?.hasPreviousPage ? "hover:bg-neutral-50" : "cursor-not-allowed opacity-50"
+                    "inline-flex h-10 w-10 items-center justify-center rounded-md border border-border text-foreground/80 transition-colors",
+                    data?.hasPreviousPage ? "hover:bg-muted" : "cursor-not-allowed opacity-50"
                   )}
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -853,8 +853,8 @@ export function AdminUsersPage() {
                   disabled={!data?.hasNextPage}
                   onClick={() => setPageNumber((previousPage) => previousPage + 1)}
                   className={clsxMerge(
-                    "inline-flex h-10 w-10 items-center justify-center rounded-md border border-neutral-200 text-neutral-700 transition-colors",
-                    data?.hasNextPage ? "hover:bg-neutral-50" : "cursor-not-allowed opacity-50"
+                    "inline-flex h-10 w-10 items-center justify-center rounded-md border border-border text-foreground/80 transition-colors",
+                    data?.hasNextPage ? "hover:bg-muted" : "cursor-not-allowed opacity-50"
                   )}
                 >
                   <ChevronRight className="h-4 w-4" />

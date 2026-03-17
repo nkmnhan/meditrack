@@ -190,7 +190,7 @@ function DateRangePicker({
             className="h-9 w-36 text-xs"
             aria-label="From date"
           />
-          <span className="text-xs text-neutral-500">to</span>
+          <span className="text-xs text-muted-foreground">to</span>
           <Input
             type="date"
             value={value.customTo}
@@ -204,7 +204,7 @@ function DateRangePicker({
       )}
 
       {value.preset !== "custom" && (
-        <span className="text-xs text-neutral-500">
+        <span className="text-xs text-muted-foreground">
           vs previous {getDateRangeLabel(value.preset).toLowerCase().replace("last ", "").replace("this ", "")}
         </span>
       )}
@@ -225,9 +225,9 @@ function SuggestionAcceptanceFunnel() {
   const maxCount = FUNNEL_DATA[0].count;
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
-      <h3 className="text-sm font-semibold text-neutral-900">AI Suggestion Acceptance Funnel</h3>
-      <p className="mt-1 text-xs text-neutral-500">From suggestion shown to applied in medical record</p>
+    <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-foreground">AI Suggestion Acceptance Funnel</h3>
+      <p className="mt-1 text-xs text-muted-foreground">From suggestion shown to applied in medical record</p>
 
       <div className="mt-5 space-y-3">
         {FUNNEL_DATA.map((step, index) => {
@@ -240,19 +240,19 @@ function SuggestionAcceptanceFunnel() {
           return (
             <div key={step.label} className="space-y-1">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-medium text-neutral-700">{step.label}</span>
+                <span className="font-medium text-foreground/80">{step.label}</span>
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-neutral-900">
+                  <span className="font-semibold text-foreground">
                     {step.count.toLocaleString()}
                   </span>
                   {conversionFromPrevious && (
-                    <span className="text-neutral-500">
+                    <span className="text-muted-foreground">
                       ({conversionFromPrevious}%)
                     </span>
                   )}
                 </div>
               </div>
-              <div className="h-7 w-full rounded-sm bg-neutral-100">
+              <div className="h-7 w-full rounded-sm bg-muted">
                 <div
                   className={clsxMerge(
                     "flex h-full items-center justify-end rounded-sm pr-2 transition-all",
@@ -270,8 +270,8 @@ function SuggestionAcceptanceFunnel() {
         })}
       </div>
 
-      <div className="mt-4 flex items-center justify-between border-t border-neutral-200 pt-3 text-xs">
-        <span className="text-neutral-500">Overall conversion</span>
+      <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-xs">
+        <span className="text-muted-foreground">Overall conversion</span>
         <span className="font-bold text-primary-700">
           {((FUNNEL_DATA[FUNNEL_DATA.length - 1].count / FUNNEL_DATA[0].count) * 100).toFixed(1)}%
         </span>
@@ -309,7 +309,7 @@ function generateHeatmapData(): number[][] {
 const HEATMAP_DATA = generateHeatmapData();
 
 function getHeatmapCellColor(value: number): string {
-  if (value === 0) return "bg-neutral-100";
+  if (value === 0) return "bg-muted";
   if (value <= 3) return "bg-primary-100";
   if (value <= 8) return "bg-primary-200";
   if (value <= 14) return "bg-primary-300";
@@ -333,9 +333,9 @@ function PeakUsageHeatmap() {
   } | null>(null);
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
-      <h3 className="text-sm font-semibold text-neutral-900">Peak Usage Heatmap</h3>
-      <p className="mt-1 text-xs text-neutral-500">Clara session activity by day and hour</p>
+    <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-foreground">Peak Usage Heatmap</h3>
+      <p className="mt-1 text-xs text-muted-foreground">Clara session activity by day and hour</p>
 
       <div className="mt-4 overflow-x-auto">
         <div className="min-w-[600px]">
@@ -346,7 +346,7 @@ function PeakUsageHeatmap() {
               {HOURS.filter((hour) => hour % 3 === 0).map((hour) => (
                 <div
                   key={hour}
-                  className="text-[10px] text-neutral-400"
+                  className="text-[10px] text-muted-foreground/70"
                   style={{ width: `${(3 / 24) * 100}%` }}
                 >
                   {formatHour(hour)}
@@ -358,7 +358,7 @@ function PeakUsageHeatmap() {
           {/* Grid rows */}
           {DAYS_OF_WEEK.map((day, dayIndex) => (
             <div key={day} className="mb-0.5 flex items-center">
-              <div className="w-10 flex-shrink-0 text-[10px] font-medium text-neutral-500">
+              <div className="w-10 flex-shrink-0 text-[10px] font-medium text-muted-foreground">
                 {day}
               </div>
               <div className="flex flex-1 gap-0.5">
@@ -395,8 +395,8 @@ function PeakUsageHeatmap() {
 
           {/* Legend */}
           <div className="mt-3 flex items-center justify-end gap-1">
-            <span className="mr-1 text-[10px] text-neutral-400">Less</span>
-            {["bg-neutral-100", "bg-primary-100", "bg-primary-300", "bg-primary-500", "bg-primary-700"].map(
+            <span className="mr-1 text-[10px] text-muted-foreground/70">Less</span>
+            {["bg-muted", "bg-primary-100", "bg-primary-300", "bg-primary-500", "bg-primary-700"].map(
               (colorClass) => (
                 <div
                   key={colorClass}
@@ -404,7 +404,7 @@ function PeakUsageHeatmap() {
                 />
               )
             )}
-            <span className="ml-1 text-[10px] text-neutral-400">More</span>
+            <span className="ml-1 text-[10px] text-muted-foreground/70">More</span>
           </div>
         </div>
       </div>
@@ -428,34 +428,34 @@ function DepartmentComparisonChart() {
   const maxDuration = Math.max(...DEPARTMENT_DATA.map((dept) => dept.avgSessionMinutes));
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
-      <h3 className="text-sm font-semibold text-neutral-900">Department Comparison</h3>
-      <p className="mt-1 text-xs text-neutral-500">Clara usage across departments</p>
+    <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-foreground">Department Comparison</h3>
+      <p className="mt-1 text-xs text-muted-foreground">Clara usage across departments</p>
 
       {/* Legend */}
       <div className="mt-3 flex flex-wrap gap-4 text-xs">
         <div className="flex items-center gap-1.5">
           <div className="h-2.5 w-2.5 rounded-sm bg-primary-700" />
-          <span className="text-neutral-600">Clara Sessions</span>
+          <span className="text-muted-foreground">Clara Sessions</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="h-2.5 w-2.5 rounded-sm bg-secondary-700" />
-          <span className="text-neutral-600">Records Created</span>
+          <span className="text-muted-foreground">Records Created</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="h-2.5 w-2.5 rounded-sm bg-accent-500" />
-          <span className="text-neutral-600">Avg Duration (min)</span>
+          <span className="text-muted-foreground">Avg Duration (min)</span>
         </div>
       </div>
 
       <div className="mt-4 space-y-4">
         {DEPARTMENT_DATA.map((dept) => (
           <div key={dept.name} className="space-y-1.5">
-            <span className="text-xs font-medium text-neutral-700">{dept.name}</span>
+            <span className="text-xs font-medium text-foreground/80">{dept.name}</span>
 
             {/* Clara Sessions bar */}
             <div className="flex items-center gap-2">
-              <div className="h-4 flex-1 rounded-sm bg-neutral-100">
+              <div className="h-4 flex-1 rounded-sm bg-muted">
                 <div
                   className="flex h-full items-center rounded-sm bg-primary-700 px-1.5 text-[10px] font-semibold text-white"
                   style={{ width: `${(dept.claraSessions / maxClaraSessions) * 100}%` }}
@@ -467,7 +467,7 @@ function DepartmentComparisonChart() {
 
             {/* Records Created bar */}
             <div className="flex items-center gap-2">
-              <div className="h-4 flex-1 rounded-sm bg-neutral-100">
+              <div className="h-4 flex-1 rounded-sm bg-muted">
                 <div
                   className="flex h-full items-center rounded-sm bg-secondary-700 px-1.5 text-[10px] font-semibold text-white"
                   style={{ width: `${(dept.recordsCreated / maxRecords) * 100}%` }}
@@ -479,7 +479,7 @@ function DepartmentComparisonChart() {
 
             {/* Avg Session Duration bar */}
             <div className="flex items-center gap-2">
-              <div className="h-4 flex-1 rounded-sm bg-neutral-100">
+              <div className="h-4 flex-1 rounded-sm bg-muted">
                 <div
                   className="flex h-full items-center rounded-sm bg-accent-500 px-1.5 text-[10px] font-semibold text-white"
                   style={{ width: `${(dept.avgSessionMinutes / maxDuration) * 100}%` }}
@@ -567,7 +567,7 @@ function ScheduleReportModal({
 
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-700">Frequency</label>
+            <label className="text-sm font-medium text-foreground/80">Frequency</label>
             <Select value={frequency} onValueChange={setFrequency}>
               <SelectTrigger className="h-9 text-sm">
                 <SelectValue />
@@ -581,7 +581,7 @@ function ScheduleReportModal({
 
           {frequency === "weekly" && (
             <div className="space-y-2">
-              <label className="text-sm font-medium text-neutral-700">Day of week</label>
+              <label className="text-sm font-medium text-foreground/80">Day of week</label>
               <Select value={dayOfWeek} onValueChange={setDayOfWeek}>
                 <SelectTrigger className="h-9 text-sm">
                   <SelectValue />
@@ -598,7 +598,7 @@ function ScheduleReportModal({
           )}
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-700">Email address</label>
+            <label className="text-sm font-medium text-foreground/80">Email address</label>
             <Input
               type="email"
               placeholder="admin@meditrack.com"
@@ -614,7 +614,7 @@ function ScheduleReportModal({
           <DialogClose asChild>
             <button
               type="button"
-              className="rounded-md px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+              className="rounded-md px-4 py-2 text-sm font-medium text-foreground/80 hover:bg-muted"
             >
               Cancel
             </button>
@@ -643,7 +643,7 @@ function getSortIcon(
   currentDirection: SortDirection
 ) {
   if (column !== currentColumn) {
-    return <ArrowUpDown className="ml-1 inline h-3 w-3 text-neutral-400" />;
+    return <ArrowUpDown className="ml-1 inline h-3 w-3 text-muted-foreground/70" />;
   }
   return currentDirection === "asc" ? (
     <ChevronUp className="ml-1 inline h-3 w-3 text-primary-700" />
@@ -829,38 +829,38 @@ function ClaraAITab({ dateRange }: { readonly dateRange: DateRangeState }) {
 
       {/* Enhanced Provider Leaderboard */}
       {sortedLeaderboard.length > 0 && (
-        <div className="rounded-lg border border-neutral-200 bg-white shadow-sm">
-          <div className="flex items-center gap-2 border-b border-neutral-200 px-5 pb-3 pt-5">
+        <div className="rounded-lg border border-border bg-card shadow-sm">
+          <div className="flex items-center gap-2 border-b border-border px-5 pb-3 pt-5">
             <Users className="h-5 w-5 text-primary-700" />
-            <h2 className="font-semibold text-neutral-900">Top Providers by Clara Usage</h2>
+            <h2 className="font-semibold text-foreground">Top Providers by Clara Usage</h2>
           </div>
           {/* Desktop table */}
           <div className="hidden md:block">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+                <tr className="border-b border-border bg-muted text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   <th className="px-5 py-3">#</th>
                   <th
-                    className="cursor-pointer select-none px-5 py-3 hover:text-neutral-700"
+                    className="cursor-pointer select-none px-5 py-3 hover:text-foreground/80"
                     onClick={() => handleSortClick("provider")}
                   >
                     Provider {getSortIcon("provider", sortColumn, sortDirection)}
                   </th>
                   <th className="px-5 py-3 text-center">Trend (30d)</th>
                   <th
-                    className="cursor-pointer select-none px-5 py-3 text-right hover:text-neutral-700"
+                    className="cursor-pointer select-none px-5 py-3 text-right hover:text-foreground/80"
                     onClick={() => handleSortClick("sessions")}
                   >
                     Sessions {getSortIcon("sessions", sortColumn, sortDirection)}
                   </th>
                   <th
-                    className="cursor-pointer select-none px-5 py-3 text-right hover:text-neutral-700"
+                    className="cursor-pointer select-none px-5 py-3 text-right hover:text-foreground/80"
                     onClick={() => handleSortClick("saved")}
                   >
                     Saved {getSortIcon("saved", sortColumn, sortDirection)}
                   </th>
                   <th
-                    className="cursor-pointer select-none px-5 py-3 text-right hover:text-neutral-700"
+                    className="cursor-pointer select-none px-5 py-3 text-right hover:text-foreground/80"
                     onClick={() => handleSortClick("saveRate")}
                   >
                     Save Rate {getSortIcon("saveRate", sortColumn, sortDirection)}
@@ -868,7 +868,7 @@ function ClaraAITab({ dateRange }: { readonly dateRange: DateRangeState }) {
                   <th className="px-5 py-3 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-200">
+              <tbody className="divide-y divide-border">
                 {sortedLeaderboard.map((provider, index) => {
                   const originalIndex = leaderboardEntries.findIndex(
                     (entry) => entry.doctorId === provider.doctorId
@@ -882,14 +882,14 @@ function ClaraAITab({ dateRange }: { readonly dateRange: DateRangeState }) {
                         : "bg-error-500";
 
                   return (
-                    <tr key={provider.doctorId} className="transition-colors hover:bg-neutral-50">
+                    <tr key={provider.doctorId} className="transition-colors hover:bg-muted">
                       <td className="px-5 py-3">
                         <span
                           className={clsxMerge(
                             "inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold",
                             index < 3
                               ? "bg-primary-100 text-primary-700"
-                              : "bg-neutral-100 text-neutral-600"
+                              : "bg-muted text-muted-foreground"
                           )}
                         >
                           {index + 1}
@@ -905,7 +905,7 @@ function ClaraAITab({ dateRange }: { readonly dateRange: DateRangeState }) {
                           >
                             {getInitials(provider.doctorName)}
                           </div>
-                          <span className="text-sm font-medium text-neutral-900">
+                          <span className="text-sm font-medium text-foreground">
                             {provider.doctorName}
                           </span>
                         </div>
@@ -913,10 +913,10 @@ function ClaraAITab({ dateRange }: { readonly dateRange: DateRangeState }) {
                       <td className="px-5 py-3 text-center">
                         <Sparkline data={sparklineData} />
                       </td>
-                      <td className="px-5 py-3 text-right text-sm font-medium text-neutral-900">
+                      <td className="px-5 py-3 text-right text-sm font-medium text-foreground">
                         {provider.sessionCount}
                       </td>
-                      <td className="px-5 py-3 text-right text-sm text-neutral-600">
+                      <td className="px-5 py-3 text-right text-sm text-muted-foreground">
                         {provider.suggestionsSaved}
                       </td>
                       <td className="px-5 py-3">
@@ -927,7 +927,7 @@ function ClaraAITab({ dateRange }: { readonly dateRange: DateRangeState }) {
                               style={{ width: `${Math.min(provider.saveRate, 100)}%` }}
                             />
                           </div>
-                          <span className="w-10 text-right text-xs font-medium text-neutral-700">
+                          <span className="w-10 text-right text-xs font-medium text-foreground/80">
                             {provider.saveRate}%
                           </span>
                         </div>
@@ -948,7 +948,7 @@ function ClaraAITab({ dateRange }: { readonly dateRange: DateRangeState }) {
             </table>
           </div>
           {/* Mobile cards */}
-          <div className="divide-y divide-neutral-200 md:hidden">
+          <div className="divide-y divide-border md:hidden">
             {sortedLeaderboard.map((provider, index) => {
               const saveRateColor =
                 provider.saveRate >= 90
@@ -965,16 +965,16 @@ function ClaraAITab({ dateRange }: { readonly dateRange: DateRangeState }) {
                         "flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold",
                         index < 3
                           ? "bg-primary-100 text-primary-700"
-                          : "bg-neutral-100 text-neutral-600"
+                          : "bg-muted text-muted-foreground"
                       )}
                     >
                       {index + 1}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-neutral-900">
+                      <p className="truncate text-sm font-medium text-foreground">
                         {provider.doctorName}
                       </p>
-                      <p className="text-xs text-neutral-500">
+                      <p className="text-xs text-muted-foreground">
                         {provider.sessionCount} sessions &middot; {provider.suggestionsSaved} saved
                       </p>
                       <div className="mt-1.5 flex items-center gap-2">
@@ -984,7 +984,7 @@ function ClaraAITab({ dateRange }: { readonly dateRange: DateRangeState }) {
                             style={{ width: `${Math.min(provider.saveRate, 100)}%` }}
                           />
                         </div>
-                        <span className="text-[10px] font-medium text-neutral-600">
+                        <span className="text-[10px] font-medium text-muted-foreground">
                           {provider.saveRate}%
                         </span>
                       </div>
@@ -1143,22 +1143,22 @@ function PatientsTab({ dateRange }: { readonly dateRange: DateRangeState }) {
         ) : demographics ? (
           <>
             <div className="text-sm">
-              <span className="font-semibold text-neutral-900">
+              <span className="font-semibold text-foreground">
                 {demographics.totalPatients.toLocaleString()}
               </span>
-              <span className="ml-1 text-neutral-500">total</span>
+              <span className="ml-1 text-muted-foreground">total</span>
             </div>
             <div className="text-sm">
               <span className="font-semibold text-success-700">
                 {demographics.activePatients.toLocaleString()}
               </span>
-              <span className="ml-1 text-neutral-500">active</span>
+              <span className="ml-1 text-muted-foreground">active</span>
             </div>
             <div className="text-sm">
-              <span className="font-semibold text-neutral-500">
+              <span className="font-semibold text-muted-foreground">
                 {demographics.inactivePatients.toLocaleString()}
               </span>
-              <span className="ml-1 text-neutral-500">inactive</span>
+              <span className="ml-1 text-muted-foreground">inactive</span>
             </div>
           </>
         ) : null}
@@ -1252,16 +1252,16 @@ function UserActivityTab({ dateRange }: { readonly dateRange: DateRangeState }) 
         ) : userStats ? (
           <>
             <div className="text-sm">
-              <span className="font-semibold text-neutral-900">
+              <span className="font-semibold text-foreground">
                 {userStats.totalUsers.toLocaleString()}
               </span>
-              <span className="ml-1 text-neutral-500">total users</span>
+              <span className="ml-1 text-muted-foreground">total users</span>
             </div>
             <div className="text-sm">
               <span className="font-semibold text-success-700">
                 {userStats.activeUsersLast30Days.toLocaleString()}
               </span>
-              <span className="ml-1 text-neutral-500">active (30d)</span>
+              <span className="ml-1 text-muted-foreground">active (30d)</span>
             </div>
           </>
         ) : null}
@@ -1309,20 +1309,20 @@ function UserActivityTab({ dateRange }: { readonly dateRange: DateRangeState }) 
               innerRadius={50}
             />
             {userStats && (
-              <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
-                <h3 className="text-sm font-semibold text-neutral-900">User Statistics</h3>
+              <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+                <h3 className="text-sm font-semibold text-foreground">User Statistics</h3>
                 <div className="mt-4 space-y-3">
                   {userStats.usersByRole.map((entry) => (
                     <div key={entry.role} className="flex items-center justify-between">
-                      <span className="text-sm text-neutral-600">{entry.role}</span>
-                      <span className="text-sm font-semibold text-neutral-900">
+                      <span className="text-sm text-muted-foreground">{entry.role}</span>
+                      <span className="text-sm font-semibold text-foreground">
                         {entry.count.toLocaleString()}
                       </span>
                     </div>
                   ))}
-                  <div className="border-t border-neutral-200 pt-3">
+                  <div className="border-t border-border pt-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-neutral-700">Engagement Rate</span>
+                      <span className="text-sm font-medium text-foreground/80">Engagement Rate</span>
                       <span className="text-sm font-bold text-primary-700">
                         {userStats.totalUsers > 0
                           ? `${Math.round((userStats.activeUsersLast30Days / userStats.totalUsers) * 100)}%`
@@ -1369,8 +1369,8 @@ export function AdminReportsPage() {
             <BarChart3 className="h-5 w-5 text-primary-700" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-neutral-900 sm:text-2xl">Reports & Analytics</h1>
-            <p className="text-sm text-neutral-500">Business performance and usage metrics</p>
+            <h1 className="text-xl font-bold text-foreground sm:text-2xl">Reports & Analytics</h1>
+            <p className="text-sm text-muted-foreground">Business performance and usage metrics</p>
           </div>
         </div>
 
@@ -1379,7 +1379,7 @@ export function AdminReportsPage() {
           <button
             type="button"
             onClick={handleExportPdf}
-            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-3 text-xs font-medium text-neutral-700 shadow-sm hover:bg-neutral-50"
+            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-card px-3 text-xs font-medium text-foreground/80 shadow-sm hover:bg-muted"
           >
             <FileText className="h-4 w-4" />
             <span className="hidden sm:inline">Export</span> PDF
@@ -1387,7 +1387,7 @@ export function AdminReportsPage() {
           <button
             type="button"
             onClick={handleExportCsv}
-            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-3 text-xs font-medium text-neutral-700 shadow-sm hover:bg-neutral-50"
+            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-card px-3 text-xs font-medium text-foreground/80 shadow-sm hover:bg-muted"
           >
             <Download className="h-4 w-4" />
             <span className="hidden sm:inline">Export</span> CSV

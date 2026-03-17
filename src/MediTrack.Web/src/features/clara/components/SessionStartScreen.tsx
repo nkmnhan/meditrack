@@ -169,7 +169,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
   const showDropdown = isDropdownOpen && patientSearchText.trim().length >= 2 && !selectedPatient;
 
   return (
-    <div className={clsxMerge("min-h-screen -mx-4 sm:-mx-6 lg:-mx-8 -mt-4 px-4 sm:px-6 lg:px-8 pt-4 pb-24 md:pb-8 bg-gradient-to-b from-neutral-50 to-accent-50/30", className)}>
+    <div className={clsxMerge("min-h-screen -mx-4 sm:-mx-6 lg:-mx-8 -mt-4 px-4 sm:px-6 lg:px-8 pt-4 pb-24 md:pb-8 bg-gradient-to-b from-background to-accent-50/30", className)}>
 
       {/* ── Hero Section ──────────────────────────────────── */}
       <div className="text-center pt-6 md:pt-10 pb-6 max-w-2xl mx-auto">
@@ -188,7 +188,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
         <p className="text-xs font-semibold text-accent-500 uppercase tracking-widest mt-1">
           Your AI Medical Secretary
         </p>
-        <p className="text-lg text-neutral-700 mt-3">
+        <p className="text-lg text-foreground/80 mt-3">
           {getTimeGreeting(displayName)}
         </p>
 
@@ -196,38 +196,38 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
         <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 mt-6">
           <div className="flex items-center gap-1.5">
             <Sparkles className="h-4 w-4 text-accent-500" />
-            <span className="text-xs md:text-sm font-medium text-neutral-700">
+            <span className="text-xs md:text-sm font-medium text-foreground/80">
               {recentSessions.length} session{recentSessions.length !== 1 ? "s" : ""} today
             </span>
           </div>
           <div className="flex items-center gap-1.5">
             <Lightbulb className="h-4 w-4 text-success-500" />
-            <span className="text-xs md:text-sm font-medium text-neutral-700">12 suggestions accepted</span>
+            <span className="text-xs md:text-sm font-medium text-foreground/80">12 suggestions accepted</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Clock className="h-4 w-4 text-primary-700" />
-            <span className="text-xs md:text-sm font-medium text-neutral-700">1.2 hrs saved</span>
+            <span className="text-xs md:text-sm font-medium text-foreground/80">1.2 hrs saved</span>
           </div>
         </div>
       </div>
 
       {/* ── Start Session Card ─────────────────────────────── */}
-      <div className="mx-0 md:max-w-lg md:mx-auto mt-8 bg-white rounded-xl md:rounded-2xl shadow-md border border-accent-200/50 p-6">
+      <div className="mx-0 md:max-w-lg md:mx-auto mt-8 bg-card rounded-xl md:rounded-2xl shadow-md border border-accent-200/50 p-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-neutral-900">Start New Session</h2>
+          <h2 className="text-lg font-semibold text-foreground">Start New Session</h2>
           <div className="relative h-8 w-8 rounded-full bg-accent-50 flex items-center justify-center">
             <Mic className="h-4 w-4 text-accent-500" />
-            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-success-500 ring-2 ring-white" />
+            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-success-500 ring-2 ring-card" />
           </div>
         </div>
 
         {/* Patient search */}
         <div className="mt-4">
-          <label htmlFor="patientSearch" className="text-sm font-medium text-neutral-700">
-            Link a patient <span className="text-neutral-500">(optional)</span>
+          <label htmlFor="patientSearch" className="text-sm font-medium text-foreground/80">
+            Link a patient <span className="text-muted-foreground">(optional)</span>
           </label>
           <div className="relative mt-1.5">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               ref={patientSearchInputRef}
               id="patientSearch"
@@ -246,25 +246,25 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
               }}
               placeholder="Search by name or MRN..."
               className={clsxMerge(
-                "w-full h-11 pl-10 pr-3 rounded-lg border border-neutral-200 text-sm text-neutral-900",
-                "placeholder:text-neutral-500",
+                "w-full h-11 pl-10 pr-3 rounded-lg border border-border text-sm text-foreground",
+                "placeholder:text-muted-foreground",
                 "focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent",
-                "transition-shadow bg-white"
+                "transition-shadow bg-card"
               )}
             />
           </div>
 
           {/* Patient search dropdown */}
           {showDropdown && (
-            <div className="mt-1 bg-white rounded-lg border border-neutral-200 shadow-lg overflow-hidden">
+            <div className="mt-1 bg-card rounded-lg border border-border shadow-lg overflow-hidden">
               {isSearching && (
-                <div className="flex items-center gap-2 px-3 py-2.5 text-sm text-neutral-500">
+                <div className="flex items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Searching...
                 </div>
               )}
               {!isSearching && searchResults.length === 0 && (
-                <div className="px-3 py-2.5 text-sm text-neutral-500">No patients found</div>
+                <div className="px-3 py-2.5 text-sm text-muted-foreground">No patients found</div>
               )}
               {!isSearching && searchResults.map((patient) => (
                 <button
@@ -286,8 +286,8 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
                     {getInitials(patient.fullName)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-neutral-900 truncate">{patient.fullName}</p>
-                    <span className="text-xs font-mono text-neutral-500">{patient.medicalRecordNumber}</span>
+                    <p className="text-sm font-medium text-foreground truncate">{patient.fullName}</p>
+                    <span className="text-xs font-mono text-muted-foreground">{patient.medicalRecordNumber}</span>
                   </div>
                 </button>
               ))}
@@ -295,13 +295,13 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
           )}
 
           {/* Keyboard shortcut hint */}
-          <p className="flex items-center gap-1 text-xs text-neutral-500 mt-1.5">
+          <p className="flex items-center gap-1 text-xs text-muted-foreground mt-1.5">
             <Sparkles className="h-3 w-3 text-accent-500" />
             Clara provides better suggestions with patient context
           </p>
-          <p className="flex items-center gap-1 text-xs text-neutral-400 mt-0.5">
+          <p className="flex items-center gap-1 text-xs text-muted-foreground/70 mt-0.5">
             <Keyboard className="h-3 w-3" />
-            Tip: Press <kbd className="mx-0.5 px-1 py-0.5 rounded bg-neutral-100 border border-neutral-200 text-neutral-500 font-mono text-[10px]">Ctrl+Shift+C</kbd> to quick-start
+            Tip: Press <kbd className="mx-0.5 px-1 py-0.5 rounded bg-muted border border-border text-muted-foreground font-mono text-[10px]">Ctrl+Shift+C</kbd> to quick-start
           </p>
         </div>
 
@@ -319,8 +319,8 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
                   {getInitials(selectedPatient.fullName)}
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-neutral-900">{selectedPatient.fullName}</p>
-                  <p className="text-xs font-mono text-neutral-500">{selectedPatient.medicalRecordNumber}</p>
+                  <p className="text-sm font-semibold text-foreground">{selectedPatient.fullName}</p>
+                  <p className="text-xs font-mono text-muted-foreground">{selectedPatient.medicalRecordNumber}</p>
                 </div>
               </div>
               <button
@@ -334,14 +334,14 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
               <div className="flex items-center gap-1.5">
-                <User className="h-3.5 w-3.5 text-neutral-500 flex-shrink-0" />
-                <span className="text-xs text-neutral-700">
+                <User className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                <span className="text-xs text-foreground/80">
                   {selectedPatient.age}y, {selectedPatient.gender}
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
-                <Pill className="h-3.5 w-3.5 text-neutral-500 flex-shrink-0" />
-                <span className="text-xs text-neutral-700">
+                <Pill className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                <span className="text-xs text-foreground/80">
                   {selectedPatient.medications?.length ?? 0} medication{(selectedPatient.medications?.length ?? 0) !== 1 ? "s" : ""}
                 </span>
               </div>
@@ -355,8 +355,8 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
               )}
               {selectedPatient.lastVisitDate && (
                 <div className="flex items-center gap-1.5">
-                  <CalendarDays className="h-3.5 w-3.5 text-neutral-500 flex-shrink-0" />
-                  <span className="text-xs text-neutral-700">
+                  <CalendarDays className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                  <span className="text-xs text-foreground/80">
                     Last: {new Date(selectedPatient.lastVisitDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                   </span>
                 </div>
@@ -374,7 +374,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
 
         {/* Session type selector */}
         <div className="mt-4">
-          <label className="text-sm font-medium text-neutral-700">Session type</label>
+          <label className="text-sm font-medium text-foreground/80">Session type</label>
           <div className="flex gap-2 mt-1.5">
             {SESSION_TYPES.map((sessionType) => (
               <button
@@ -385,7 +385,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
                   "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
                   selectedSessionType === sessionType
                     ? "bg-accent-500 text-white"
-                    : "bg-white border border-neutral-200 text-neutral-700 hover:border-accent-300"
+                    : "bg-card border border-border text-foreground/80 hover:border-accent-300"
                 )}
               >
                 {sessionType}
@@ -396,7 +396,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
 
         {/* ── Session Template Selector ────────────────────── */}
         <div className="mt-4">
-          <label className="text-sm font-medium text-neutral-700">Template <span className="text-neutral-500">(optional)</span></label>
+          <label className="text-sm font-medium text-foreground/80">Template <span className="text-muted-foreground">(optional)</span></label>
           <div className="relative mt-1.5">
             <button
               type="button"
@@ -404,20 +404,20 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
               onBlur={() => setTimeout(() => setIsTemplateDropdownOpen(false), 200)}
               className={clsxMerge(
                 "w-full h-11 px-3 rounded-lg border text-sm text-left flex items-center justify-between",
-                "transition-shadow bg-white",
+                "transition-shadow bg-card",
                 "focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent",
-                selectedTemplate ? "border-accent-300 text-neutral-900" : "border-neutral-200 text-neutral-500"
+                selectedTemplate ? "border-accent-300 text-foreground" : "border-border text-muted-foreground"
               )}
             >
               <div className="flex items-center gap-2 min-w-0">
-                <LayoutTemplate className="h-4 w-4 text-neutral-400 flex-shrink-0" />
+                <LayoutTemplate className="h-4 w-4 text-muted-foreground/70 flex-shrink-0" />
                 <span className="truncate">{selectedTemplate ? selectedTemplate.name : "Choose a session template..."}</span>
               </div>
-              <ChevronRight className={clsxMerge("h-4 w-4 text-neutral-400 flex-shrink-0 transition-transform", isTemplateDropdownOpen && "rotate-90")} />
+              <ChevronRight className={clsxMerge("h-4 w-4 text-muted-foreground/70 flex-shrink-0 transition-transform", isTemplateDropdownOpen && "rotate-90")} />
             </button>
 
             {isTemplateDropdownOpen && (
-              <div className="absolute z-20 mt-1 w-full bg-white rounded-lg border border-neutral-200 shadow-lg overflow-hidden">
+              <div className="absolute z-20 mt-1 w-full bg-card rounded-lg border border-border shadow-lg overflow-hidden">
                 {selectedTemplate && (
                   <button
                     type="button"
@@ -426,7 +426,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
                       setSelectedTemplate(null);
                       setIsTemplateDropdownOpen(false);
                     }}
-                    className="w-full px-3 py-2 text-xs text-neutral-500 hover:bg-neutral-50 text-left border-b border-neutral-100"
+                    className="w-full px-3 py-2 text-xs text-muted-foreground hover:bg-muted text-left border-b border-border"
                   >
                     Clear selection
                   </button>
@@ -447,10 +447,10 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
                     )}
                   >
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-neutral-900">{template.name}</p>
-                      <span className="text-xs font-mono text-neutral-500 flex-shrink-0 ml-2">~{template.estimatedMinutes} min</span>
+                      <p className="text-sm font-medium text-foreground">{template.name}</p>
+                      <span className="text-xs font-mono text-muted-foreground flex-shrink-0 ml-2">~{template.estimatedMinutes} min</span>
                     </div>
-                    <p className="text-xs text-neutral-500 mt-0.5">{template.description}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{template.description}</p>
                   </button>
                 ))}
               </div>
@@ -462,8 +462,8 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
             <div className="mt-2 flex items-center gap-3 rounded-lg border border-accent-100 bg-accent-50/50 px-3 py-2">
               <LayoutTemplate className="h-4 w-4 text-accent-600 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-neutral-900">{selectedTemplate.name}</p>
-                <p className="text-xs text-neutral-500 truncate">{selectedTemplate.description}</p>
+                <p className="text-xs font-medium text-foreground">{selectedTemplate.name}</p>
+                <p className="text-xs text-muted-foreground truncate">{selectedTemplate.description}</p>
               </div>
               <span className="text-xs font-mono text-accent-700 flex-shrink-0">~{selectedTemplate.estimatedMinutes} min</span>
             </div>
@@ -504,7 +504,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
               </>
             )}
           </button>
-          <p className="text-xs text-neutral-500 text-center mt-2">
+          <p className="text-xs text-muted-foreground text-center mt-2">
             Clara will listen, transcribe, and suggest — all in real-time
           </p>
         </div>
@@ -514,8 +514,8 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
       <div className="max-w-lg mx-auto mt-8">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <CalendarDays className="h-4 w-4 text-neutral-500" />
-            <h3 className="text-sm font-semibold text-neutral-900">Upcoming Appointments</h3>
+            <CalendarDays className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold text-foreground">Upcoming Appointments</h3>
           </div>
           <Link to="/appointments" className="text-xs text-accent-700 hover:underline">View all</Link>
         </div>
@@ -523,14 +523,14 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
           {upcomingAppointments.map((appointment) => (
             <div
               key={appointment.time}
-              className="min-w-[280px] md:min-w-0 flex-shrink-0 md:flex-shrink snap-start rounded-xl border border-neutral-200 bg-white p-4 flex items-center justify-between transition-all hover:border-accent-200 hover:shadow-sm"
+              className="min-w-[280px] md:min-w-0 flex-shrink-0 md:flex-shrink snap-start rounded-xl border border-border bg-card p-4 flex items-center justify-between transition-all hover:border-accent-200 hover:shadow-sm"
             >
               <div className="flex items-center gap-3">
-                <span className="min-w-[72px] font-mono text-sm font-semibold text-neutral-900">{appointment.time}</span>
+                <span className="min-w-[72px] font-mono text-sm font-semibold text-foreground">{appointment.time}</span>
                 <div className="h-8 w-px bg-neutral-200" />
                 <div>
-                  <p className="text-sm font-medium text-neutral-900">{appointment.patient}</p>
-                  <p className="text-xs text-neutral-500">{appointment.type}</p>
+                  <p className="text-sm font-medium text-foreground">{appointment.patient}</p>
+                  <p className="text-xs text-muted-foreground">{appointment.type}</p>
                 </div>
               </div>
               <button
@@ -551,8 +551,8 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
       {recentSessions.length > 0 && (
         <div className="max-w-lg mx-auto mt-8">
           <div className="flex items-center gap-2 mb-3">
-            <History className="h-4 w-4 text-neutral-500" />
-            <h3 className="text-sm font-semibold text-neutral-900">Recent Sessions</h3>
+            <History className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold text-foreground">Recent Sessions</h3>
           </div>
           <div className="space-y-2">
             {recentSessions.map((session) => {
@@ -565,25 +565,25 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
                 <Link
                   key={session.id}
                   to={`/clara/session/${session.id}/summary`}
-                  className="block bg-white rounded-xl border border-neutral-200 p-4 hover:border-accent-300 hover:shadow-sm transition-all group"
+                  className="block bg-card rounded-xl border border-border p-4 hover:border-accent-300 hover:shadow-sm transition-all group"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <span className={clsxMerge("w-2.5 h-2.5 rounded-full flex-shrink-0", isCompleted ? "bg-success-500" : "bg-warning-500")} />
                       <div>
-                        <p className="text-sm font-medium text-neutral-900">{session.sessionType}</p>
-                        <p className="text-xs text-neutral-500">{formattedDate} at {formattedTime}</p>
+                        <p className="text-sm font-medium text-foreground">{session.sessionType}</p>
+                        <p className="text-xs text-muted-foreground">{formattedDate} at {formattedTime}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs bg-accent-100 text-accent-700 rounded-full px-2 py-0.5">
                         {session.suggestionCount} suggestions
                       </span>
-                      <ChevronRight className="h-4 w-4 text-neutral-400 group-hover:text-accent-500 transition-colors" />
+                      <ChevronRight className="h-4 w-4 text-muted-foreground/70 group-hover:text-accent-500 transition-colors" />
                     </div>
                   </div>
                   <div className="flex items-center justify-between mt-2 ml-5.5">
-                    <p className="text-xs text-neutral-400 italic truncate max-w-[200px] sm:max-w-[280px]">
+                    <p className="text-xs text-muted-foreground/70 italic truncate max-w-[200px] sm:max-w-[280px]">
                       Session transcript preview...
                     </p>
                     <span className="flex items-center gap-1 text-xs text-accent-700 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-2">
@@ -599,18 +599,18 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
 
       {/* ── Feature Cards ────────────────────────────────── */}
       <div className="max-w-3xl mx-auto mt-10">
-        <h3 className="text-sm font-semibold text-neutral-900 mb-4 text-center">What Clara Can Do</h3>
+        <h3 className="text-sm font-semibold text-foreground mb-4 text-center">What Clara Can Do</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {featureCards.map((card) => (
             <div
               key={card.title}
-              className="bg-white rounded-xl border border-neutral-200 p-5 text-center hover:shadow-md hover:border-accent-200 transition-all duration-200 group"
+              className="bg-card rounded-xl border border-border p-5 text-center hover:shadow-md hover:border-accent-200 transition-all duration-200 group"
             >
               <div className="bg-accent-50 rounded-xl p-2.5 mx-auto w-fit">
                 <card.icon className="h-8 w-8 text-accent-500" />
               </div>
-              <p className="text-sm font-semibold text-neutral-900 mt-3">{card.title}</p>
-              <p className="text-xs text-neutral-500 mt-1">{card.description}</p>
+              <p className="text-sm font-semibold text-foreground mt-3">{card.title}</p>
+              <p className="text-xs text-muted-foreground mt-1">{card.description}</p>
               <p className="text-xs font-mono text-accent-700 mt-2">{card.stat}</p>
             </div>
           ))}
@@ -619,28 +619,28 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
 
       {/* ── How It Works ──────────────────────────────────── */}
       <div className="max-w-2xl mx-auto mt-10 mb-6">
-        <h3 className="text-sm font-semibold text-neutral-900 text-center mb-6">How It Works</h3>
+        <h3 className="text-sm font-semibold text-foreground text-center mb-6">How It Works</h3>
 
         {/* Desktop: horizontal stepper */}
         <div className="hidden md:flex items-start justify-between relative">
-          <div className="absolute top-[44px] left-[10%] right-[10%] border-t-2 border-dashed border-neutral-200" />
+          <div className="absolute top-[44px] left-[10%] right-[10%] border-t-2 border-dashed border-border" />
           {howItWorksSteps.map((step, stepIndex) => (
             <div key={step.label} className="flex flex-col items-center text-center relative z-10 w-1/4">
-              <div className="bg-white rounded-xl p-2.5 mb-3">
+              <div className="bg-card rounded-xl p-2.5 mb-3">
                 <step.icon className="h-5 w-5 text-accent-500" />
               </div>
               <div className="h-7 w-7 rounded-full bg-accent-500 text-white text-xs font-bold flex items-center justify-center">
                 {stepIndex + 1}
               </div>
-              <p className="text-sm font-medium text-neutral-900 mt-2">{step.label}</p>
-              <p className="text-xs text-neutral-500 mt-1">{step.description}</p>
+              <p className="text-sm font-medium text-foreground mt-2">{step.label}</p>
+              <p className="text-xs text-muted-foreground mt-1">{step.description}</p>
             </div>
           ))}
         </div>
 
         {/* Mobile: vertical stepper */}
         <div className="md:hidden relative pl-10">
-          <div className="absolute left-[14px] top-4 bottom-4 border-l-2 border-dashed border-neutral-200" />
+          <div className="absolute left-[14px] top-4 bottom-4 border-l-2 border-dashed border-border" />
           <div className="space-y-6">
             {howItWorksSteps.map((step, stepIndex) => (
               <div key={step.label} className="relative flex items-start gap-4">
@@ -652,9 +652,9 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <step.icon className="h-4 w-4 text-accent-500" />
-                    <p className="text-sm font-medium text-neutral-900">{step.label}</p>
+                    <p className="text-sm font-medium text-foreground">{step.label}</p>
                   </div>
-                  <p className="text-xs text-neutral-500">{step.description}</p>
+                  <p className="text-xs text-muted-foreground">{step.description}</p>
                 </div>
               </div>
             ))}
@@ -665,16 +665,16 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
       {/* ── HIPAA Footer ──────────────────────────────────── */}
       <div className="text-center mt-6 mb-8 max-w-md mx-auto">
         <div className="flex items-center justify-center gap-2">
-          <Shield className="h-4 w-4 text-neutral-500 flex-shrink-0" />
-          <p className="text-xs text-neutral-500">
+          <Shield className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <p className="text-xs text-muted-foreground">
             End-to-end encrypted. HIPAA-compliant. Clara never stores audio recordings.
           </p>
         </div>
-        <p className="text-xs text-neutral-400 mt-1">Clara v1.0 — Powered by MediTrack AI</p>
+        <p className="text-xs text-muted-foreground/70 mt-1">Clara v1.0 — Powered by MediTrack AI</p>
       </div>
 
       {/* ── Mobile Fixed Bottom Bar ───────────────────────── */}
-      <div className="fixed bottom-0 left-0 right-0 md:hidden bg-white shadow-[0_-4px_12px_rgba(0,0,0,0.05)] px-4 py-3 z-40">
+      <div className="fixed bottom-0 left-0 right-0 md:hidden bg-card shadow-[0_-4px_12px_rgba(0,0,0,0.05)] px-4 py-3 z-40">
         <button
           type="button"
           onClick={handleStartSession}

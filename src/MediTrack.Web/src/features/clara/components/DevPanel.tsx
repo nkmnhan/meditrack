@@ -46,7 +46,7 @@ export function DevPanel({ className }: DevPanelProps) {
   return (
     <div
       className={clsxMerge(
-        "fixed bottom-4 right-4 z-50 w-80 bg-white rounded-lg border border-neutral-200 shadow-lg overflow-hidden",
+        "fixed bottom-4 right-4 z-50 w-80 bg-card rounded-lg border border-border shadow-lg overflow-hidden",
         className
       )}
     >
@@ -54,16 +54,16 @@ export function DevPanel({ className }: DevPanelProps) {
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between px-4 py-2 bg-neutral-100 hover:bg-neutral-200 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-2 bg-muted hover:bg-muted transition-colors"
       >
-        <span className="flex items-center gap-2 text-sm font-medium text-neutral-700">
+        <span className="flex items-center gap-2 text-sm font-medium text-foreground/80">
           <Bug className="h-4 w-4" />
           Dev Panel
         </span>
         {isExpanded ? (
-          <ChevronUp className="h-4 w-4 text-neutral-500" />
+          <ChevronUp className="h-4 w-4 text-muted-foreground" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-neutral-500" />
+          <ChevronDown className="h-4 w-4 text-muted-foreground" />
         )}
       </button>
 
@@ -72,7 +72,7 @@ export function DevPanel({ className }: DevPanelProps) {
         <div className="p-4 space-y-4 max-h-96 overflow-y-auto">
           {/* Knowledge Search */}
           <div>
-            <label className="block text-xs font-medium text-neutral-600 mb-1">
+            <label className="block text-xs font-medium text-muted-foreground mb-1">
               Knowledge Search
             </label>
             <div className="flex gap-2">
@@ -84,7 +84,7 @@ export function DevPanel({ className }: DevPanelProps) {
                   if (event.key === "Enter") handleSearch();
                 }}
                 placeholder="Search medical knowledge..."
-                className="flex-1 h-8 px-2 text-sm rounded border border-neutral-200 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="flex-1 h-8 px-2 text-sm rounded border border-border focus:outline-none focus:ring-1 focus:ring-primary-500"
               />
               <button
                 type="button"
@@ -108,7 +108,7 @@ export function DevPanel({ className }: DevPanelProps) {
           {/* Search Results */}
           {searchResults.length > 0 && (
             <div className="space-y-2">
-              <h3 className="text-xs font-medium text-neutral-600">
+              <h3 className="text-xs font-medium text-muted-foreground">
                 Results ({searchResults.length})
               </h3>
               {searchResults.map((result) => (
@@ -118,11 +118,11 @@ export function DevPanel({ className }: DevPanelProps) {
           )}
 
           {/* Environment Info */}
-          <div className="pt-2 border-t border-neutral-200">
-            <h3 className="text-xs font-medium text-neutral-600 mb-2">
+          <div className="pt-2 border-t border-border">
+            <h3 className="text-xs font-medium text-muted-foreground mb-2">
               Environment
             </h3>
-            <div className="space-y-1 text-xs text-neutral-500">
+            <div className="space-y-1 text-xs text-muted-foreground">
               <p>
                 Mode:{" "}
                 <span className="font-mono">
@@ -155,14 +155,14 @@ function SearchResultCard({ result }: SearchResultCardProps) {
       : result.content;
 
   return (
-    <div className="p-2 bg-neutral-50 rounded border border-neutral-200 text-xs">
+    <div className="p-2 bg-muted rounded border border-border text-xs">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-neutral-800 truncate">
+          <p className="font-medium text-foreground truncate">
             {result.documentName}
           </p>
           {result.category && (
-            <span className="text-neutral-500">{result.category}</span>
+            <span className="text-muted-foreground">{result.category}</span>
           )}
         </div>
         <span className="flex-shrink-0 px-1.5 py-0.5 rounded bg-primary-100 text-primary-700 text-xs">
@@ -170,7 +170,7 @@ function SearchResultCard({ result }: SearchResultCardProps) {
         </span>
       </div>
 
-      <p className="text-neutral-600 mt-1">
+      <p className="text-muted-foreground mt-1">
         {isExpanded ? result.content : truncatedContent}
       </p>
 

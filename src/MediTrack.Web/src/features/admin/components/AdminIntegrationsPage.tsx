@@ -169,7 +169,7 @@ const STATUS_CONFIG: Record<IntegrationStatus, {
   not_configured: {
     label: "Not Configured",
     icon: Settings2,
-    badgeClasses: "border border-neutral-300 bg-neutral-50 text-neutral-500",
+    badgeClasses: "border border-neutral-300 bg-muted text-muted-foreground",
     dotColor: "bg-neutral-300",
   },
 };
@@ -242,7 +242,7 @@ function SyncErrorDetails({ syncErrors }: { readonly syncErrors: readonly SyncEr
           {syncErrors.map((syncError) => (
             <div
               key={`${syncError.resourceType}-${syncError.resourceId}`}
-              className="rounded border border-error-200 bg-white p-2.5"
+              className="rounded border border-error-200 bg-card p-2.5"
             >
               <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                 <span className="text-xs font-semibold text-error-700">
@@ -265,29 +265,29 @@ function SyncHistoryLog({ syncHistory }: { readonly syncHistory: readonly SyncHi
   if (syncHistory.length === 0) return null;
 
   return (
-    <div className="mt-3 rounded-md border border-neutral-200 bg-neutral-50">
+    <div className="mt-3 rounded-md border border-border bg-muted">
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
         className={clsxMerge(
-          "flex h-10 w-full items-center justify-between gap-2 px-3 text-left text-xs font-medium text-neutral-700",
-          "hover:bg-neutral-100 transition-colors rounded-md"
+          "flex h-10 w-full items-center justify-between gap-2 px-3 text-left text-xs font-medium text-foreground/80",
+          "hover:bg-muted transition-colors rounded-md"
         )}
       >
         <span className="flex items-center gap-1.5">
-          <Clock className="h-3.5 w-3.5 flex-shrink-0 text-neutral-500" />
+          <Clock className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
           Recent Syncs
         </span>
         <ChevronDown
           className={clsxMerge(
-            "h-3.5 w-3.5 flex-shrink-0 text-neutral-500 transition-transform duration-200",
+            "h-3.5 w-3.5 flex-shrink-0 text-muted-foreground transition-transform duration-200",
             isExpanded && "rotate-180"
           )}
         />
       </button>
 
       {isExpanded && (
-        <div className="border-t border-neutral-200 px-3 pb-3 pt-2 space-y-1.5">
+        <div className="border-t border-border px-3 pb-3 pt-2 space-y-1.5">
           {syncHistory.map((entry, entryIndex) => {
             const statusConfig = SYNC_STATUS_CONFIG[entry.status];
             const EntryStatusIcon = statusConfig.icon;
@@ -295,7 +295,7 @@ function SyncHistoryLog({ syncHistory }: { readonly syncHistory: readonly SyncHi
             return (
               <div
                 key={`${entry.timestamp}-${entryIndex}`}
-                className="flex flex-col gap-1.5 rounded border border-neutral-200 bg-white p-2.5 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-1.5 rounded border border-border bg-card p-2.5 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex items-start gap-2 sm:items-center">
                   <EntryStatusIcon className={clsxMerge("h-3.5 w-3.5 flex-shrink-0 mt-0.5 sm:mt-0", statusConfig.iconClass)} />
@@ -304,12 +304,12 @@ function SyncHistoryLog({ syncHistory }: { readonly syncHistory: readonly SyncHi
                       <span className={clsxMerge("text-xs font-medium", statusConfig.labelClass)}>
                         {statusConfig.label}
                       </span>
-                      <span className="text-[10px] text-neutral-500">{entry.timestamp}</span>
+                      <span className="text-[10px] text-muted-foreground">{entry.timestamp}</span>
                     </div>
-                    <p className="mt-0.5 text-xs text-neutral-600">{entry.details}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{entry.details}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 text-[10px] text-neutral-500 pl-5 sm:pl-0 sm:flex-shrink-0">
+                <div className="flex items-center gap-3 text-[10px] text-muted-foreground pl-5 sm:pl-0 sm:flex-shrink-0">
                   <span>{entry.recordsSynced} records</span>
                   <span>{entry.duration}</span>
                 </div>
@@ -354,8 +354,8 @@ export function AdminIntegrationsPage() {
             <Cable className="h-5 w-5 text-primary-700" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-neutral-900 sm:text-2xl">Integrations</h1>
-            <p className="text-sm text-neutral-500">Connected EHR systems and FHIR endpoints</p>
+            <h1 className="text-xl font-bold text-foreground sm:text-2xl">Integrations</h1>
+            <p className="text-sm text-muted-foreground">Connected EHR systems and FHIR endpoints</p>
           </div>
         </div>
       </div>
@@ -366,20 +366,20 @@ export function AdminIntegrationsPage() {
           "flex flex-col gap-2 rounded-lg border px-5 py-4 sm:flex-row sm:items-center sm:justify-between",
           activeCount > 0
             ? "border-success-200 bg-success-50"
-            : "border-neutral-200 bg-neutral-50"
+            : "border-border bg-muted"
         )}
       >
         <div className="flex items-center gap-2.5">
           <Cable
             className={clsxMerge(
               "h-5 w-5 flex-shrink-0",
-              activeCount > 0 ? "text-success-700" : "text-neutral-500"
+              activeCount > 0 ? "text-success-700" : "text-muted-foreground"
             )}
           />
           <span
             className={clsxMerge(
               "text-sm font-semibold",
-              activeCount > 0 ? "text-success-700" : "text-neutral-700"
+              activeCount > 0 ? "text-success-700" : "text-foreground/80"
             )}
           >
             {activeCount} of {totalCount} integrations active
@@ -388,7 +388,7 @@ export function AdminIntegrationsPage() {
         <span
           className={clsxMerge(
             "text-xs",
-            activeCount > 0 ? "text-success-600" : "text-neutral-500"
+            activeCount > 0 ? "text-success-600" : "text-muted-foreground"
           )}
         >
           {activeCount > 0
@@ -409,13 +409,13 @@ export function AdminIntegrationsPage() {
           return (
             <div
               key={integration.name}
-              className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm"
+              className="rounded-lg border border-border bg-card p-5 shadow-sm"
             >
               {/* Top row: name + status badge */}
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-neutral-900">{integration.name}</p>
-                  <p className="mt-0.5 text-xs text-neutral-500">{integration.description}</p>
+                  <p className="text-sm font-semibold text-foreground">{integration.name}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{integration.description}</p>
                 </div>
                 <span
                   className={clsxMerge(
@@ -444,19 +444,19 @@ export function AdminIntegrationsPage() {
               </div>
 
               {/* Metrics row */}
-              <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-neutral-200 pt-3">
+              <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-border pt-3">
                 <div className="flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5 text-neutral-400" />
+                  <Clock className="h-3.5 w-3.5 text-muted-foreground/70" />
                   <div>
-                    <p className="text-[10px] text-neutral-500">Last Sync</p>
-                    <p className="text-xs font-medium text-neutral-700">{displayedLastSync}</p>
+                    <p className="text-[10px] text-muted-foreground">Last Sync</p>
+                    <p className="text-xs font-medium text-foreground/80">{displayedLastSync}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Database className="h-3.5 w-3.5 text-neutral-400" />
+                  <Database className="h-3.5 w-3.5 text-muted-foreground/70" />
                   <div>
-                    <p className="text-[10px] text-neutral-500">Records</p>
-                    <p className="text-xs font-medium text-neutral-700">{integration.recordCount}</p>
+                    <p className="text-[10px] text-muted-foreground">Records</p>
+                    <p className="text-xs font-medium text-foreground/80">{integration.recordCount}</p>
                   </div>
                 </div>
               </div>
@@ -499,7 +499,7 @@ export function AdminIntegrationsPage() {
                   className={clsxMerge(
                     "inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-medium transition-colors",
                     isConfigured
-                      ? "border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
+                      ? "border border-border bg-card text-foreground/80 hover:bg-muted"
                       : "bg-primary-700 text-white hover:bg-primary-800"
                   )}
                 >

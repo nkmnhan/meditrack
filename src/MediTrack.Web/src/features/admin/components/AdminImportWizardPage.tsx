@@ -216,7 +216,7 @@ function StepIndicator({ currentStep }: StepIndicatorProps) {
                   "flex h-10 w-10 items-center justify-center rounded-full border-2 transition-colors",
                   isCompleted && "border-success-500 bg-success-500 text-white",
                   isActive && "border-primary-700 bg-primary-700 text-white",
-                  !isCompleted && !isActive && "border-neutral-300 bg-white text-neutral-400",
+                  !isCompleted && !isActive && "border-neutral-300 bg-card text-muted-foreground/70",
                 )}
               >
                 {isCompleted ? (
@@ -228,7 +228,7 @@ function StepIndicator({ currentStep }: StepIndicatorProps) {
               <span
                 className={clsxMerge(
                   "mt-1.5 text-xs font-medium",
-                  isActive ? "text-primary-700" : isCompleted ? "text-success-700" : "text-neutral-400",
+                  isActive ? "text-primary-700" : isCompleted ? "text-success-700" : "text-muted-foreground/70",
                 )}
               >
                 {step.label}
@@ -296,29 +296,29 @@ function UploadStep({ selectedFile, onFileSelect }: UploadStepProps) {
           "flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-colors sm:p-12",
           isDragOver
             ? "border-primary-500 bg-primary-50"
-            : "border-neutral-300 bg-neutral-50 hover:border-primary-400 hover:bg-primary-50/50",
+            : "border-neutral-300 bg-muted hover:border-primary-400 hover:bg-primary-50/50",
         )}
       >
         <div
           className={clsxMerge(
             "mb-4 flex h-14 w-14 items-center justify-center rounded-full",
-            isDragOver ? "bg-primary-100" : "bg-neutral-100",
+            isDragOver ? "bg-primary-100" : "bg-muted",
           )}
         >
           <FileUp
             className={clsxMerge(
               "h-7 w-7",
-              isDragOver ? "text-primary-700" : "text-neutral-500",
+              isDragOver ? "text-primary-700" : "text-muted-foreground",
             )}
           />
         </div>
-        <p className="text-sm font-medium text-neutral-900">
+        <p className="text-sm font-medium text-foreground">
           Drag and drop your file here
         </p>
-        <p className="mt-1 text-sm text-neutral-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           or click to browse files
         </p>
-        <p className="mt-3 text-xs text-neutral-400">
+        <p className="mt-3 text-xs text-muted-foreground/70">
           Accepted formats: .json, .csv
         </p>
         <input
@@ -334,10 +334,10 @@ function UploadStep({ selectedFile, onFileSelect }: UploadStepProps) {
         <div className="flex items-center gap-3 rounded-lg border border-success-200 bg-success-50 px-4 py-3">
           <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-success-600" />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-neutral-900">
+            <p className="truncate text-sm font-medium text-foreground">
               {selectedFile.name}
             </p>
-            <p className="text-xs text-neutral-500">
+            <p className="text-xs text-muted-foreground">
               {formatFileSize(selectedFile.size)}
             </p>
           </div>
@@ -391,22 +391,22 @@ function MapFieldsStep({ fieldMappings, onMappingChange, onLoadTemplate }: MapFi
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-neutral-600">
+      <p className="text-sm text-muted-foreground">
         Map source fields from your file to MediTrack FHIR fields.
       </p>
 
       {/* Template management bar */}
-      <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted p-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="flex items-center gap-2">
-            <FolderOpen className="h-4 w-4 text-neutral-500" />
-            <span className="text-xs font-medium text-neutral-700">Templates</span>
+            <FolderOpen className="h-4 w-4 text-muted-foreground" />
+            <span className="text-xs font-medium text-foreground/80">Templates</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {templates.map((template, templateIndex) => (
               <div
                 key={template.name}
-                className="flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-2 py-1"
+                className="flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1"
               >
                 <button
                   onClick={() => handleLoadTemplate(template.name)}
@@ -416,7 +416,7 @@ function MapFieldsStep({ fieldMappings, onMappingChange, onLoadTemplate }: MapFi
                 </button>
                 <button
                   onClick={() => handleDeleteTemplate(templateIndex)}
-                  className="ml-1 rounded p-0.5 text-neutral-400 hover:bg-neutral-100 hover:text-error-600"
+                  className="ml-1 rounded p-0.5 text-muted-foreground/70 hover:bg-muted hover:text-error-600"
                   aria-label={`Delete template ${template.name}`}
                 >
                   <X className="h-3 w-3" />
@@ -424,15 +424,15 @@ function MapFieldsStep({ fieldMappings, onMappingChange, onLoadTemplate }: MapFi
               </div>
             ))}
             {templates.length === 0 && (
-              <span className="text-xs text-neutral-400">No saved templates</span>
+              <span className="text-xs text-muted-foreground/70">No saved templates</span>
             )}
           </div>
         </div>
         <button
           onClick={() => setIsSaveModalOpen(true)}
           className={clsxMerge(
-            "flex h-8 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-3 text-xs font-medium transition-colors",
-            "text-neutral-700 hover:bg-neutral-50",
+            "flex h-8 items-center gap-1.5 rounded-md border border-border bg-card px-3 text-xs font-medium transition-colors",
+            "text-foreground/80 hover:bg-muted",
           )}
         >
           <Save className="h-3.5 w-3.5" />
@@ -451,7 +451,7 @@ function MapFieldsStep({ fieldMappings, onMappingChange, onLoadTemplate }: MapFi
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <label htmlFor="template-name" className="text-sm font-medium text-neutral-700">
+              <label htmlFor="template-name" className="text-sm font-medium text-foreground/80">
                 Template Name
               </label>
               <Input
@@ -470,7 +470,7 @@ function MapFieldsStep({ fieldMappings, onMappingChange, onLoadTemplate }: MapFi
           <DialogFooter>
             <button
               onClick={() => setIsSaveModalOpen(false)}
-              className="flex h-9 items-center rounded-lg border border-neutral-200 px-4 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+              className="flex h-9 items-center rounded-lg border border-border px-4 text-sm font-medium text-foreground/80 hover:bg-muted"
             >
               Cancel
             </button>
@@ -492,17 +492,17 @@ function MapFieldsStep({ fieldMappings, onMappingChange, onLoadTemplate }: MapFi
       </Dialog>
 
       {/* Field mapping table */}
-      <div className="overflow-x-auto rounded-lg border border-neutral-200">
+      <div className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-neutral-200 bg-neutral-50">
-              <th className="px-4 py-3 text-left font-medium text-neutral-700">
+            <tr className="border-b border-border bg-muted">
+              <th className="px-4 py-3 text-left font-medium text-foreground/80">
                 Source Field
               </th>
-              <th className="px-4 py-3 text-center font-medium text-neutral-400">
+              <th className="px-4 py-3 text-center font-medium text-muted-foreground/70">
                 &rarr;
               </th>
-              <th className="px-4 py-3 text-left font-medium text-neutral-700">
+              <th className="px-4 py-3 text-left font-medium text-foreground/80">
                 Target Field
               </th>
             </tr>
@@ -511,11 +511,11 @@ function MapFieldsStep({ fieldMappings, onMappingChange, onLoadTemplate }: MapFi
             {fieldMappings.map((mapping, index) => (
               <tr key={mapping.sourceField}>
                 <td className="px-4 py-3">
-                  <code className="rounded bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">
+                  <code className="rounded bg-muted px-2 py-0.5 text-xs font-medium text-foreground/80">
                     {mapping.sourceField}
                   </code>
                 </td>
-                <td className="px-4 py-3 text-center text-neutral-300">
+                <td className="px-4 py-3 text-center text-muted-foreground/50">
                   <ArrowRight className="mx-auto h-4 w-4" />
                 </td>
                 <td className="px-4 py-3">
@@ -575,7 +575,7 @@ function PreviewStep({ skippedRows, onToggleSkipRow }: PreviewStepProps) {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-neutral-600">
+      <p className="text-sm text-muted-foreground">
         Preview the first 5 rows of data to verify the import looks correct.
       </p>
 
@@ -597,7 +597,7 @@ function PreviewStep({ skippedRows, onToggleSkipRow }: PreviewStepProps) {
                 return (
                   <div
                     key={errorType}
-                    className="flex items-center gap-1.5 rounded-md bg-white/70 px-2.5 py-1.5"
+                    className="flex items-center gap-1.5 rounded-md bg-card/70 px-2.5 py-1.5"
                   >
                     <ErrorIcon className="h-3.5 w-3.5 text-warning-700" />
                     <span className="text-xs text-warning-800">
@@ -612,22 +612,22 @@ function PreviewStep({ skippedRows, onToggleSkipRow }: PreviewStepProps) {
       )}
 
       {/* Data table */}
-      <div className="overflow-x-auto rounded-lg border border-neutral-200">
+      <div className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-neutral-200 bg-neutral-50">
-              <th className="px-3 py-2.5 text-left text-xs font-medium text-neutral-500">
+            <tr className="border-b border-border bg-muted">
+              <th className="px-3 py-2.5 text-left text-xs font-medium text-muted-foreground">
                 #
               </th>
               {DEMO_PREVIEW_HEADERS.map((header) => (
                 <th
                   key={header}
-                  className="px-3 py-2.5 text-left text-xs font-medium text-neutral-700"
+                  className="px-3 py-2.5 text-left text-xs font-medium text-foreground/80"
                 >
                   {header}
                 </th>
               ))}
-              <th className="px-3 py-2.5 text-center text-xs font-medium text-neutral-700">
+              <th className="px-3 py-2.5 text-center text-xs font-medium text-foreground/80">
                 Actions
               </th>
             </tr>
@@ -640,11 +640,11 @@ function PreviewStep({ skippedRows, onToggleSkipRow }: PreviewStepProps) {
                 <tr
                   key={rowIndex}
                   className={clsxMerge(
-                    "hover:bg-neutral-50",
+                    "hover:bg-muted",
                     isSkipped && "opacity-40",
                   )}
                 >
-                  <td className="px-3 py-2.5 text-xs text-neutral-400">
+                  <td className="px-3 py-2.5 text-xs text-muted-foreground/70">
                     {rowIndex + 1}
                   </td>
                   {row.map((cell, cellIndex) => {
@@ -656,7 +656,7 @@ function PreviewStep({ skippedRows, onToggleSkipRow }: PreviewStepProps) {
                           "whitespace-nowrap px-3 py-2.5 text-xs",
                           cellError && !isSkipped
                             ? "text-error-700"
-                            : "text-neutral-700",
+                            : "text-foreground/80",
                         )}
                       >
                         <div
@@ -680,7 +680,7 @@ function PreviewStep({ skippedRows, onToggleSkipRow }: PreviewStepProps) {
                           <>
                             <button
                               onClick={() => onToggleSkipRow(rowIndex)}
-                              className="flex h-7 items-center gap-1 rounded border border-neutral-200 px-2 text-xs font-medium text-neutral-600 hover:bg-neutral-50"
+                              className="flex h-7 items-center gap-1 rounded border border-border px-2 text-xs font-medium text-muted-foreground hover:bg-muted"
                               title="Skip this row during import"
                             >
                               <SkipForward className="h-3 w-3" />
@@ -697,7 +697,7 @@ function PreviewStep({ skippedRows, onToggleSkipRow }: PreviewStepProps) {
                         ) : (
                           <button
                             onClick={() => onToggleSkipRow(rowIndex)}
-                            className="flex h-7 items-center gap-1 rounded border border-neutral-200 px-2 text-xs font-medium text-neutral-600 hover:bg-neutral-50"
+                            className="flex h-7 items-center gap-1 rounded border border-border px-2 text-xs font-medium text-muted-foreground hover:bg-muted"
                             title="Include this row again"
                           >
                             <Plus className="h-3 w-3" />
@@ -713,7 +713,7 @@ function PreviewStep({ skippedRows, onToggleSkipRow }: PreviewStepProps) {
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-neutral-400">
+      <p className="text-xs text-muted-foreground/70">
         Showing 5 of 5 records
         {skippedRows.size > 0 && (
           <span className="ml-2 text-warning-600">
@@ -738,7 +738,7 @@ function DuplicateStep({ duplicateActions, onDuplicateActionChange }: DuplicateS
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-neutral-600">
+      <p className="text-sm text-muted-foreground">
         We found potential duplicates in your import. Review each match and choose an action.
       </p>
 
@@ -766,7 +766,7 @@ function DuplicateStep({ duplicateActions, onDuplicateActionChange }: DuplicateS
                 "rounded-lg border p-4",
                 selectedAction
                   ? "border-success-200 bg-success-50/30"
-                  : "border-neutral-200 bg-white",
+                  : "border-border bg-card",
               )}
             >
               {/* Confidence badge */}
@@ -776,29 +776,29 @@ function DuplicateStep({ duplicateActions, onDuplicateActionChange }: DuplicateS
                     "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold",
                     match.confidence === "high"
                       ? "bg-warning-100 text-warning-800"
-                      : "bg-neutral-100 text-neutral-700",
+                      : "bg-muted text-foreground/80",
                   )}
                 >
                   {match.confidence === "high" ? "High" : "Medium"} confidence
                 </span>
-                <span className="text-xs text-neutral-500">
+                <span className="text-xs text-muted-foreground">
                   {match.matchReason}
                 </span>
               </div>
 
               {/* Comparison */}
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-                <div className="flex-1 rounded-md border border-neutral-200 bg-white p-3">
-                  <p className="text-xs font-medium text-neutral-500">Imported Record</p>
-                  <p className="mt-1 text-sm font-semibold text-neutral-900">{match.importedName}</p>
+                <div className="flex-1 rounded-md border border-border bg-card p-3">
+                  <p className="text-xs font-medium text-muted-foreground">Imported Record</p>
+                  <p className="mt-1 text-sm font-semibold text-foreground">{match.importedName}</p>
                 </div>
-                <div className="hidden text-neutral-300 sm:block">
+                <div className="hidden text-muted-foreground/50 sm:block">
                   <ArrowRight className="h-5 w-5" />
                 </div>
-                <div className="flex-1 rounded-md border border-neutral-200 bg-white p-3">
-                  <p className="text-xs font-medium text-neutral-500">Existing Record</p>
-                  <p className="mt-1 text-sm font-semibold text-neutral-900">{match.existingName}</p>
-                  <p className="mt-0.5 text-xs text-neutral-500">MRN: {match.existingMrn}</p>
+                <div className="flex-1 rounded-md border border-border bg-card p-3">
+                  <p className="text-xs font-medium text-muted-foreground">Existing Record</p>
+                  <p className="mt-1 text-sm font-semibold text-foreground">{match.existingName}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">MRN: {match.existingMrn}</p>
                 </div>
               </div>
 
@@ -810,7 +810,7 @@ function DuplicateStep({ duplicateActions, onDuplicateActionChange }: DuplicateS
                     "flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors",
                     selectedAction === "merge"
                       ? "border-primary-300 bg-primary-100 text-primary-800"
-                      : "border-neutral-200 text-neutral-600 hover:bg-neutral-50",
+                      : "border-border text-muted-foreground hover:bg-muted",
                   )}
                 >
                   <GitMerge className="h-3.5 w-3.5" />
@@ -822,7 +822,7 @@ function DuplicateStep({ duplicateActions, onDuplicateActionChange }: DuplicateS
                     "flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors",
                     selectedAction === "skip"
                       ? "border-warning-300 bg-warning-100 text-warning-800"
-                      : "border-neutral-200 text-neutral-600 hover:bg-neutral-50",
+                      : "border-border text-muted-foreground hover:bg-muted",
                   )}
                 >
                   <SkipForward className="h-3.5 w-3.5" />
@@ -834,7 +834,7 @@ function DuplicateStep({ duplicateActions, onDuplicateActionChange }: DuplicateS
                     "flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors",
                     selectedAction === "create_new"
                       ? "border-success-300 bg-success-100 text-success-800"
-                      : "border-neutral-200 text-neutral-600 hover:bg-neutral-50",
+                      : "border-border text-muted-foreground hover:bg-muted",
                   )}
                 >
                   <Plus className="h-3.5 w-3.5" />
@@ -885,30 +885,30 @@ function ConfirmStep({
     <div className="space-y-6">
       {!isImporting && !isImportComplete && (
         <div className="space-y-4">
-          <p className="text-sm text-neutral-600">
+          <p className="text-sm text-muted-foreground">
             Review your import configuration before starting.
           </p>
-          <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 sm:p-5">
+          <div className="rounded-lg border border-border bg-muted p-4 sm:p-5">
             <dl className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <dt className="font-medium text-neutral-500">File</dt>
-                <dd className="text-neutral-900">
+                <dt className="font-medium text-muted-foreground">File</dt>
+                <dd className="text-foreground">
                   {selectedFile?.name ?? "No file selected"}
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="font-medium text-neutral-500">File Size</dt>
-                <dd className="text-neutral-900">
+                <dt className="font-medium text-muted-foreground">File Size</dt>
+                <dd className="text-foreground">
                   {selectedFile ? formatFileSize(selectedFile.size) : "--"}
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="font-medium text-neutral-500">Total Records</dt>
-                <dd className="text-neutral-900">{totalRecords}</dd>
+                <dt className="font-medium text-muted-foreground">Total Records</dt>
+                <dd className="text-foreground">{totalRecords}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="font-medium text-neutral-500">Records to Import</dt>
-                <dd className="text-neutral-900">{importableRecords}</dd>
+                <dt className="font-medium text-muted-foreground">Records to Import</dt>
+                <dd className="text-foreground">{importableRecords}</dd>
               </div>
               {skippedRowCount > 0 && (
                 <div className="flex justify-between">
@@ -930,13 +930,13 @@ function ConfirmStep({
               )}
               {createNewCount > 0 && (
                 <div className="flex justify-between">
-                  <dt className="font-medium text-neutral-500">Creating new (despite duplicate)</dt>
-                  <dd className="text-neutral-900">{createNewCount}</dd>
+                  <dt className="font-medium text-muted-foreground">Creating new (despite duplicate)</dt>
+                  <dd className="text-foreground">{createNewCount}</dd>
                 </div>
               )}
               <div className="flex justify-between">
-                <dt className="font-medium text-neutral-500">Mapped Fields</dt>
-                <dd className="text-neutral-900">
+                <dt className="font-medium text-muted-foreground">Mapped Fields</dt>
+                <dd className="text-foreground">
                   {activeMappings.length} of {fieldMappings.length}
                 </dd>
               </div>
@@ -959,7 +959,7 @@ function ConfirmStep({
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <Loader2 className="h-5 w-5 animate-spin text-primary-700" />
-            <p className="text-sm font-medium text-neutral-900">
+            <p className="text-sm font-medium text-foreground">
               Importing records...
             </p>
           </div>
@@ -969,7 +969,7 @@ function ConfirmStep({
               style={{ width: `${importProgress}%` }}
             />
           </div>
-          <p className="text-xs text-neutral-500">
+          <p className="text-xs text-muted-foreground">
             {importProgress}% complete
           </p>
         </div>
@@ -981,10 +981,10 @@ function ConfirmStep({
             <CheckCircle2 className="h-8 w-8 text-success-600" />
           </div>
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-neutral-900">
+            <h3 className="text-lg font-semibold text-foreground">
               Import Complete
             </h3>
-            <p className="mt-1 text-sm text-neutral-500">
+            <p className="mt-1 text-sm text-muted-foreground">
               {importableRecords} records have been successfully imported.
             </p>
           </div>
@@ -1101,10 +1101,10 @@ export function AdminImportWizardPage() {
             <FileUp className="h-5 w-5 text-primary-700" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-neutral-900 sm:text-2xl">
+            <h1 className="text-xl font-bold text-foreground sm:text-2xl">
               Data Import Wizard
             </h1>
-            <p className="text-sm text-neutral-500">
+            <p className="text-sm text-muted-foreground">
               Import patient data from external files
             </p>
           </div>
@@ -1112,12 +1112,12 @@ export function AdminImportWizardPage() {
       </div>
 
       {/* Step Indicator */}
-      <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-6">
+      <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
         <StepIndicator currentStep={currentStep} />
       </div>
 
       {/* Step Content */}
-      <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-6">
+      <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
         {currentStep === 0 && (
           <UploadStep
             selectedFile={selectedFile}
@@ -1166,8 +1166,8 @@ export function AdminImportWizardPage() {
             className={clsxMerge(
               "flex h-10 items-center gap-2 rounded-lg border px-4 text-sm font-medium transition-colors",
               currentStep === 0
-                ? "cursor-not-allowed border-neutral-200 text-neutral-300"
-                : "border-neutral-200 text-neutral-700 hover:bg-neutral-50",
+                ? "cursor-not-allowed border-border text-muted-foreground/50"
+                : "border-border text-foreground/80 hover:bg-muted",
             )}
           >
             <ArrowLeft className="h-4 w-4" />

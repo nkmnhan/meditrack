@@ -35,7 +35,7 @@ export function ErrorState({
         <button
           onClick={onRetry}
           className={clsxMerge(
-            "mt-3 inline-flex items-center gap-1.5 rounded-md border border-error-300 bg-white font-medium text-error-700",
+            "mt-3 inline-flex items-center gap-1.5 rounded-md border border-error-300 bg-card font-medium text-error-700",
             "transition-colors hover:bg-error-50",
             compact ? "px-2.5 py-1.5 text-xs" : "px-3 py-2 text-sm"
           )}

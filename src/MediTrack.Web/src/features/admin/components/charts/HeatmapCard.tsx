@@ -13,10 +13,10 @@ interface HeatmapCardProps {
 }
 
 function getIntensityClass(count: number, maxCount: number): string {
-  if (maxCount === 0) return "bg-neutral-50";
+  if (maxCount === 0) return "bg-muted";
 
   const ratio = count / maxCount;
-  if (ratio === 0) return "bg-neutral-50";
+  if (ratio === 0) return "bg-muted";
   if (ratio < 0.2) return "bg-primary-50";
   if (ratio < 0.4) return "bg-primary-100";
   if (ratio < 0.6) return "bg-primary-200";
@@ -25,12 +25,12 @@ function getIntensityClass(count: number, maxCount: number): string {
 }
 
 function getTextClass(count: number, maxCount: number): string {
-  if (maxCount === 0) return "text-neutral-400";
+  if (maxCount === 0) return "text-muted-foreground/70";
 
   const ratio = count / maxCount;
   if (ratio >= 0.6) return "text-white font-medium";
   if (ratio >= 0.2) return "text-primary-800";
-  return "text-neutral-500";
+  return "text-muted-foreground";
 }
 
 function formatHour(hour: number): string {
@@ -57,20 +57,20 @@ export function HeatmapCard({
   return (
     <div
       className={clsxMerge(
-        "rounded-lg border border-neutral-200 bg-white p-5 shadow-sm",
+        "rounded-lg border border-border bg-card p-5 shadow-sm",
         className
       )}
     >
       <div className="mb-4">
-        <h3 className="text-sm font-semibold text-neutral-900">{title}</h3>
+        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
         {description && (
-          <p className="mt-0.5 text-xs text-neutral-500">{description}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
         )}
       </div>
 
       {data.length === 0 ? (
         <div className="flex items-center justify-center py-12">
-          <p className="text-sm text-neutral-400">No data available</p>
+          <p className="text-sm text-muted-foreground/70">No data available</p>
         </div>
       ) : (
         <>
@@ -97,13 +97,13 @@ export function HeatmapCard({
 
           {/* Legend */}
           <div className="mt-3 flex items-center justify-end gap-1.5">
-            <span className="text-[10px] text-neutral-500">Less</span>
-            <div className="h-3 w-3 rounded-sm bg-neutral-50 ring-1 ring-neutral-200" />
+            <span className="text-[10px] text-muted-foreground">Less</span>
+            <div className="h-3 w-3 rounded-sm bg-muted ring-1 ring-border" />
             <div className="h-3 w-3 rounded-sm bg-primary-100" />
             <div className="h-3 w-3 rounded-sm bg-primary-200" />
             <div className="h-3 w-3 rounded-sm bg-primary-300" />
             <div className="h-3 w-3 rounded-sm bg-primary-500" />
-            <span className="text-[10px] text-neutral-500">More</span>
+            <span className="text-[10px] text-muted-foreground">More</span>
           </div>
         </>
       )}

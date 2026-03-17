@@ -22,7 +22,7 @@ type AuditTab = "recent" | "archived";
 
 const ACTION_BADGE_STYLES: Record<string, string> = {
   Create: "border border-success-500/30 bg-success-50 text-success-700",
-  Read: "border border-neutral-200 bg-neutral-100 text-neutral-700",
+  Read: "border border-border bg-muted text-foreground/80",
   Update: "border border-primary-200 bg-primary-50 text-primary-700",
   Delete: "border border-error-500/30 bg-error-50 text-error-700",
   Search: "border border-info-500/30 bg-info-50 text-info-700",
@@ -131,16 +131,16 @@ export function AdminAuditPage() {
             <ShieldCheck className="h-5 w-5 text-primary-700" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-neutral-900 sm:text-2xl">Audit Log</h1>
-            <p className="text-sm text-neutral-500">Track all user actions and data access</p>
+            <h1 className="text-xl font-bold text-foreground sm:text-2xl">Audit Log</h1>
+            <p className="text-sm text-muted-foreground">Track all user actions and data access</p>
           </div>
         </div>
         <button
           type="button"
           className={clsxMerge(
             "inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4",
-            "border border-neutral-200 bg-white text-sm font-medium text-neutral-700",
-            "transition-colors hover:bg-neutral-50"
+            "border border-border bg-card text-sm font-medium text-foreground/80",
+            "transition-colors hover:bg-muted"
           )}
         >
           <Download className="h-4 w-4" />
@@ -150,27 +150,27 @@ export function AdminAuditPage() {
 
       {/* Stats Banner */}
       {auditStats && (
-        <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 sm:flex-row sm:items-center sm:gap-6">
+        <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted px-4 py-3 sm:flex-row sm:items-center sm:gap-6">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-primary-700" />
-            <span className="text-sm text-neutral-700">
-              <span className="font-semibold text-neutral-900">{formatCount(auditStats.hotRecordCount)}</span>{" "}
+            <span className="text-sm text-foreground/80">
+              <span className="font-semibold text-foreground">{formatCount(auditStats.hotRecordCount)}</span>{" "}
               recent logs (last {auditStats.retentionMonths} months)
             </span>
           </div>
-          <span className="hidden text-neutral-300 sm:inline">&middot;</span>
+          <span className="hidden text-muted-foreground/50 sm:inline">&middot;</span>
           <div className="flex items-center gap-2">
-            <Archive className="h-4 w-4 text-neutral-500" />
-            <span className="text-sm text-neutral-700">
-              <span className="font-semibold text-neutral-900">{formatCount(auditStats.archivedRecordCount)}</span>{" "}
+            <Archive className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-foreground/80">
+              <span className="font-semibold text-foreground">{formatCount(auditStats.archivedRecordCount)}</span>{" "}
               archived logs
             </span>
           </div>
-          <span className="hidden text-neutral-300 sm:inline">&middot;</span>
+          <span className="hidden text-muted-foreground/50 sm:inline">&middot;</span>
           <div className="flex items-center gap-2">
             <Shield className="h-4 w-4 text-accent-500" />
-            <span className="text-sm text-neutral-700">
-              <span className="font-semibold text-neutral-900">{phiAccessCount}</span>{" "}
+            <span className="text-sm text-foreground/80">
+              <span className="font-semibold text-foreground">{phiAccessCount}</span>{" "}
               PHI access {phiAccessCount === 1 ? "event" : "events"}
             </span>
           </div>
@@ -178,15 +178,15 @@ export function AdminAuditPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 rounded-lg border border-neutral-200 bg-neutral-100 p-1">
+      <div className="flex gap-1 rounded-lg border border-border bg-muted p-1">
         <button
           type="button"
           onClick={() => handleTabChange("recent")}
           className={clsxMerge(
             "flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors",
             activeTab === "recent"
-              ? "bg-white text-neutral-900 shadow-sm"
-              : "text-neutral-600 hover:text-neutral-900"
+              ? "bg-card text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
           )}
         >
           <Clock className="mr-1.5 inline-block h-4 w-4" />
@@ -198,8 +198,8 @@ export function AdminAuditPage() {
           className={clsxMerge(
             "flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors",
             activeTab === "archived"
-              ? "bg-white text-neutral-900 shadow-sm"
-              : "text-neutral-600 hover:text-neutral-900"
+              ? "bg-card text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
           )}
         >
           <Archive className="mr-1.5 inline-block h-4 w-4" />
@@ -208,18 +208,18 @@ export function AdminAuditPage() {
       </div>
 
       {/* Filters */}
-      <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+      <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           {/* Search */}
           <div className="relative flex-1 sm:max-w-xs">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
             <input
               type="text"
               value={searchQuery}
               onChange={(event) => handleSearchChange(event.target.value)}
               placeholder="Search audit entries..."
               className={clsxMerge(
-                "h-10 w-full rounded-lg border border-neutral-200 pl-9 pr-3 text-sm",
+                "h-10 w-full rounded-lg border border-border pl-9 pr-3 text-sm",
                 "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500",
                 "transition-colors"
               )}
@@ -232,7 +232,7 @@ export function AdminAuditPage() {
               value={actionFilter}
               aria-label="Filter by action"
               onChange={(event) => handleActionFilterChange(event.target.value)}
-              className="h-10 appearance-none rounded-md border border-neutral-200 bg-white pl-3 pr-8 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
+              className="h-10 appearance-none rounded-md border border-border bg-card pl-3 pr-8 text-sm text-foreground/80 focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
             >
               <option value="">All Actions</option>
               <option value="Create">Create</option>
@@ -243,7 +243,7 @@ export function AdminAuditPage() {
               <option value="Export">Export</option>
               <option value="PHI">PHI Access</option>
             </select>
-            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           </div>
 
           {/* Severity filter */}
@@ -252,7 +252,7 @@ export function AdminAuditPage() {
               value={severityFilter}
               aria-label="Filter by severity"
               onChange={(event) => handleSeverityFilterChange(event.target.value)}
-              className="h-10 appearance-none rounded-md border border-neutral-200 bg-white pl-3 pr-8 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
+              className="h-10 appearance-none rounded-md border border-border bg-card pl-3 pr-8 text-sm text-foreground/80 focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
             >
               <option value="">All Severities</option>
               <option value="Info">Info</option>
@@ -260,43 +260,43 @@ export function AdminAuditPage() {
               <option value="Error">Error</option>
               <option value="Critical">Critical</option>
             </select>
-            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           </div>
 
-          <span className="text-sm text-neutral-500 sm:ml-auto" aria-live="polite">
+          <span className="text-sm text-muted-foreground sm:ml-auto" aria-live="polite">
             {totalCount} {totalCount === 1 ? "entry" : "entries"}
           </span>
         </div>
       </div>
 
       {/* Audit Timeline */}
-      <div className="rounded-lg border border-neutral-200 bg-white shadow-sm">
+      <div className="rounded-lg border border-border bg-card shadow-sm">
         {activeQuery.isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground/70" />
           </div>
         ) : activeQuery.isError ? (
           <div className="flex flex-col items-center justify-center px-5 py-12">
             <ShieldCheck className="h-10 w-10 text-error-300" />
-            <p className="mt-3 text-sm font-medium text-neutral-900">Failed to load audit logs</p>
-            <p className="mt-1 text-xs text-neutral-500">Check your connection and try again</p>
+            <p className="mt-3 text-sm font-medium text-foreground">Failed to load audit logs</p>
+            <p className="mt-1 text-xs text-muted-foreground">Check your connection and try again</p>
           </div>
         ) : entries.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-5 py-12">
             {activeTab === "archived" ? (
-              <Archive className="h-10 w-10 text-neutral-300" />
+              <Archive className="h-10 w-10 text-muted-foreground/50" />
             ) : (
-              <ShieldCheck className="h-10 w-10 text-neutral-300" />
+              <ShieldCheck className="h-10 w-10 text-muted-foreground/50" />
             )}
-            <p className="mt-3 text-sm font-medium text-neutral-900">
+            <p className="mt-3 text-sm font-medium text-foreground">
               No {activeTab === "archived" ? "archived " : ""}audit entries found
             </p>
-            <p className="mt-1 text-xs text-neutral-500">Try adjusting your search or filters</p>
+            <p className="mt-1 text-xs text-muted-foreground">Try adjusting your search or filters</p>
           </div>
         ) : (
-          <div className="divide-y divide-neutral-200">
+          <div className="divide-y divide-border">
             {entries.map((entry: AuditLogDto | ArchivedAuditLogDto) => {
-              const badgeStyle = ACTION_BADGE_STYLES[entry.action] ?? "border border-neutral-200 bg-neutral-100 text-neutral-700";
+              const badgeStyle = ACTION_BADGE_STYLES[entry.action] ?? "border border-border bg-muted text-foreground/80";
               const dotColor = ACTION_DOT_COLORS[entry.action] ?? "bg-neutral-300";
               const isArchived = activeTab === "archived" && "archivedAt" in entry;
 
@@ -314,7 +314,7 @@ export function AdminAuditPage() {
                         <span className={clsxMerge("mr-1.5 h-1.5 w-1.5 rounded-full", dotColor)} />
                         {entry.action}
                       </span>
-                      <span className="text-sm font-medium text-neutral-900">{entry.resourceType}</span>
+                      <span className="text-sm font-medium text-foreground">{entry.resourceType}</span>
                       {isPhiResource(entry.resourceType) && (
                         <span className="inline-flex items-center gap-1 rounded-full border border-accent-200 bg-accent-50 px-1.5 py-0.5 text-xs font-medium text-accent-700">
                           <Shield className="h-3 w-3" />
@@ -322,7 +322,7 @@ export function AdminAuditPage() {
                         </span>
                       )}
                       {entry.resourceId && (
-                        <span className="hidden rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-mono text-xs text-neutral-500 sm:inline">
+                        <span className="hidden rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground sm:inline">
                           {entry.resourceId}
                         </span>
                       )}
@@ -336,24 +336,24 @@ export function AdminAuditPage() {
                       <p className="text-sm text-error-600">{entry.errorMessage}</p>
                     )}
                     <div className="mt-1 flex flex-wrap items-center gap-2">
-                      <span className="text-xs text-neutral-500">{entry.username}</span>
+                      <span className="text-xs text-muted-foreground">{entry.username}</span>
                       <span className="text-neutral-200">&middot;</span>
-                      <span className="text-xs text-neutral-500">{entry.userRole}</span>
+                      <span className="text-xs text-muted-foreground">{entry.userRole}</span>
                       {isArchived && (
                         <>
                           <span className="text-neutral-200">&middot;</span>
-                          <span className="inline-flex items-center gap-1 text-xs text-neutral-400">
+                          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground/70">
                             <Archive className="h-3 w-3" />
                             Archived {formatTimestamp((entry as ArchivedAuditLogDto).archivedAt)}
                           </span>
                         </>
                       )}
-                      <span className="ml-auto text-xs text-neutral-500 sm:hidden">{formatTimestamp(entry.timestamp)}</span>
+                      <span className="ml-auto text-xs text-muted-foreground sm:hidden">{formatTimestamp(entry.timestamp)}</span>
                     </div>
                   </div>
 
                   {/* Timestamp (desktop) */}
-                  <span className="mt-0.5 hidden flex-shrink-0 whitespace-nowrap text-xs text-neutral-500 sm:block">
+                  <span className="mt-0.5 hidden flex-shrink-0 whitespace-nowrap text-xs text-muted-foreground sm:block">
                     {formatTimestamp(entry.timestamp)}
                   </span>
                 </div>
@@ -364,8 +364,8 @@ export function AdminAuditPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-neutral-200 px-5 py-3">
-            <p className="text-sm text-neutral-500">
+          <div className="flex items-center justify-between border-t border-border px-5 py-3">
+            <p className="text-sm text-muted-foreground">
               Page {pageNumber} of {totalPages}
             </p>
             <div className="flex items-center gap-2">
@@ -374,8 +374,8 @@ export function AdminAuditPage() {
                 disabled={!activeQuery.data?.hasPreviousPage}
                 onClick={() => setPageNumber((previousPage) => previousPage - 1)}
                 className={clsxMerge(
-                  "inline-flex h-10 w-10 items-center justify-center rounded-md border border-neutral-200 text-neutral-700 transition-colors",
-                  activeQuery.data?.hasPreviousPage ? "hover:bg-neutral-50" : "cursor-not-allowed opacity-50"
+                  "inline-flex h-10 w-10 items-center justify-center rounded-md border border-border text-foreground/80 transition-colors",
+                  activeQuery.data?.hasPreviousPage ? "hover:bg-muted" : "cursor-not-allowed opacity-50"
                 )}
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -385,8 +385,8 @@ export function AdminAuditPage() {
                 disabled={!activeQuery.data?.hasNextPage}
                 onClick={() => setPageNumber((previousPage) => previousPage + 1)}
                 className={clsxMerge(
-                  "inline-flex h-10 w-10 items-center justify-center rounded-md border border-neutral-200 text-neutral-700 transition-colors",
-                  activeQuery.data?.hasNextPage ? "hover:bg-neutral-50" : "cursor-not-allowed opacity-50"
+                  "inline-flex h-10 w-10 items-center justify-center rounded-md border border-border text-foreground/80 transition-colors",
+                  activeQuery.data?.hasNextPage ? "hover:bg-muted" : "cursor-not-allowed opacity-50"
                 )}
               >
                 <ChevronRight className="h-4 w-4" />

@@ -400,7 +400,7 @@ function HighlightedText({
         key={`match-${foundIndex}`}
         className={clsxMerge(
           "rounded px-0.5",
-          isCurrentMatch ? "bg-warning-300 text-neutral-900" : "bg-warning-100 text-neutral-900",
+          isCurrentMatch ? "bg-warning-300 text-foreground" : "bg-warning-100 text-foreground",
         )}
       >
         {text.slice(foundIndex, foundIndex + searchTerm.length)}
@@ -430,15 +430,15 @@ function JsonNode({ nodeKey, value, depth, searchTerm, currentMatchIndex, matchC
   if (value === null) {
     return (
       <div className="flex items-center gap-1" style={{ paddingLeft: depth * 16 }}>
-        <HighlightedText text={`${nodeKey}:`} className="text-neutral-500" {...highlightProps} />
-        <span className="italic text-neutral-400">null</span>
+        <HighlightedText text={`${nodeKey}:`} className="text-muted-foreground" {...highlightProps} />
+        <span className="italic text-muted-foreground/70">null</span>
       </div>
     );
   }
   if (typeof value === "boolean") {
     return (
       <div className="flex items-center gap-1" style={{ paddingLeft: depth * 16 }}>
-        <HighlightedText text={`${nodeKey}:`} className="text-neutral-500" {...highlightProps} />
+        <HighlightedText text={`${nodeKey}:`} className="text-muted-foreground" {...highlightProps} />
         <HighlightedText text={String(value)} className="text-accent-600" {...highlightProps} />
       </div>
     );
@@ -446,7 +446,7 @@ function JsonNode({ nodeKey, value, depth, searchTerm, currentMatchIndex, matchC
   if (typeof value === "number") {
     return (
       <div className="flex items-center gap-1" style={{ paddingLeft: depth * 16 }}>
-        <HighlightedText text={`${nodeKey}:`} className="text-neutral-500" {...highlightProps} />
+        <HighlightedText text={`${nodeKey}:`} className="text-muted-foreground" {...highlightProps} />
         <HighlightedText text={String(value)} className="text-info-600" {...highlightProps} />
       </div>
     );
@@ -456,7 +456,7 @@ function JsonNode({ nodeKey, value, depth, searchTerm, currentMatchIndex, matchC
       <div className="flex items-start gap-1" style={{ paddingLeft: depth * 16 }}>
         <HighlightedText
           text={`${nodeKey}:`}
-          className="flex-shrink-0 text-neutral-500"
+          className="flex-shrink-0 text-muted-foreground"
           {...highlightProps}
         />
         <HighlightedText text={`"${value}"`} className="break-all text-success-700" {...highlightProps} />
@@ -468,15 +468,15 @@ function JsonNode({ nodeKey, value, depth, searchTerm, currentMatchIndex, matchC
       <div style={{ paddingLeft: depth * 16 }}>
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="-ml-1 flex items-center gap-1 rounded px-1 text-left hover:bg-neutral-50"
+          className="-ml-1 flex items-center gap-1 rounded px-1 text-left hover:bg-muted"
         >
           {isExpanded ? (
-            <ChevronDown className="h-3.5 w-3.5 text-neutral-400" />
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/70" />
           ) : (
-            <ChevronRight className="h-3.5 w-3.5 text-neutral-400" />
+            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/70" />
           )}
-          <HighlightedText text={`${nodeKey}:`} className="text-neutral-500" {...highlightProps} />
-          <span className="text-neutral-400">[{value.length}]</span>
+          <HighlightedText text={`${nodeKey}:`} className="text-muted-foreground" {...highlightProps} />
+          <span className="text-muted-foreground/70">[{value.length}]</span>
         </button>
         {isExpanded &&
           value.map((item, index) => (
@@ -497,15 +497,15 @@ function JsonNode({ nodeKey, value, depth, searchTerm, currentMatchIndex, matchC
       <div style={{ paddingLeft: depth * 16 }}>
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="-ml-1 flex items-center gap-1 rounded px-1 text-left hover:bg-neutral-50"
+          className="-ml-1 flex items-center gap-1 rounded px-1 text-left hover:bg-muted"
         >
           {isExpanded ? (
-            <ChevronDown className="h-3.5 w-3.5 text-neutral-400" />
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/70" />
           ) : (
-            <ChevronRight className="h-3.5 w-3.5 text-neutral-400" />
+            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/70" />
           )}
-          <HighlightedText text={`${nodeKey}:`} className="text-neutral-500" {...highlightProps} />
-          <span className="text-neutral-400">
+          <HighlightedText text={`${nodeKey}:`} className="text-muted-foreground" {...highlightProps} />
+          <span className="text-muted-foreground/70">
             {"{"}{entries.length}{"}"}
           </span>
         </button>
@@ -534,7 +534,7 @@ function highlightJsonString(raw: string, searchTerm?: string): string {
   let highlighted = escaped
     .replace(
       /(&quot;(?:\\.|[^&])*?&quot;)\s*:/g,
-      '<span class="text-neutral-700 font-medium">$1</span>:',
+      '<span class="text-foreground/80 font-medium">$1</span>:',
     )
     .replace(
       /:\s*(&quot;(?:\\.|[^&])*?&quot;)/g,
@@ -550,7 +550,7 @@ function highlightJsonString(raw: string, searchTerm?: string): string {
     )
     .replace(
       /:\s*(null)/g,
-      ': <span class="italic text-neutral-400">$1</span>',
+      ': <span class="italic text-muted-foreground/70">$1</span>',
     );
 
   if (searchTerm) {
@@ -558,7 +558,7 @@ function highlightJsonString(raw: string, searchTerm?: string): string {
     const searchRegex = new RegExp(`(${escapedTerm})`, "gi");
     highlighted = highlighted.replace(
       searchRegex,
-      '<mark class="rounded px-0.5 bg-warning-100 text-neutral-900">$1</mark>',
+      '<mark class="rounded px-0.5 bg-warning-100 text-foreground">$1</mark>',
     );
   }
 
@@ -677,10 +677,10 @@ export function AdminFhirViewerPage() {
             <FileJson className="h-5 w-5 text-primary-700" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-neutral-900 sm:text-2xl">
+            <h1 className="text-xl font-bold text-foreground sm:text-2xl">
               FHIR Resource Viewer
             </h1>
-            <p className="text-sm text-neutral-500">
+            <p className="text-sm text-muted-foreground">
               Browse and query FHIR R4 bundles by resource type
             </p>
           </div>
@@ -693,7 +693,7 @@ export function AdminFhirViewerPage() {
               checked={isLiveMode}
               onCheckedChange={setIsLiveMode}
             />
-            <Label htmlFor="live-mode-toggle" className="text-sm text-neutral-700">
+            <Label htmlFor="live-mode-toggle" className="text-sm text-foreground/80">
               Fetch Live
             </Label>
           </div>
@@ -703,7 +703,7 @@ export function AdminFhirViewerPage() {
               Live
             </Badge>
           ) : (
-            <Badge variant="secondary" className="bg-neutral-100 text-neutral-600 hover:bg-neutral-100">
+            <Badge variant="secondary" className="bg-muted text-muted-foreground hover:bg-muted">
               Demo Data
             </Badge>
           )}
@@ -712,9 +712,9 @@ export function AdminFhirViewerPage() {
 
       {/* Live mode search bar */}
       {isLiveMode && (
-        <div className="flex flex-col gap-2 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:gap-3">
+        <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
             <Input
               placeholder="Enter Patient ID or Resource ID"
               value={resourceIdQuery}
@@ -754,7 +754,7 @@ export function AdminFhirViewerPage() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <label
             htmlFor="resource-type"
-            className="text-sm font-medium text-neutral-700"
+            className="text-sm font-medium text-foreground/80"
           >
             Resource Type
           </label>
@@ -780,14 +780,14 @@ export function AdminFhirViewerPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded-lg border border-neutral-200 bg-white">
+          <div className="flex rounded-lg border border-border bg-card">
             <button
               onClick={() => setViewMode("raw")}
               className={clsxMerge(
                 "flex items-center gap-1.5 rounded-l-lg px-3 py-2 text-sm font-medium transition-colors",
                 viewMode === "raw"
                   ? "bg-primary-700 text-white"
-                  : "text-neutral-600 hover:bg-neutral-50",
+                  : "text-muted-foreground hover:bg-muted",
               )}
             >
               <Code2 className="h-4 w-4" />
@@ -799,7 +799,7 @@ export function AdminFhirViewerPage() {
                 "flex items-center gap-1.5 rounded-r-lg px-3 py-2 text-sm font-medium transition-colors",
                 viewMode === "tree"
                   ? "bg-primary-700 text-white"
-                  : "text-neutral-600 hover:bg-neutral-50",
+                  : "text-muted-foreground hover:bg-muted",
               )}
             >
               <ChevronRight className="h-4 w-4" />
@@ -814,7 +814,7 @@ export function AdminFhirViewerPage() {
               "flex h-10 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition-colors",
               isValidationVisible
                 ? "border-success-300 bg-success-50 text-success-700"
-                : "border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50",
+                : "border-border bg-card text-muted-foreground hover:bg-muted",
               "disabled:cursor-not-allowed disabled:opacity-50",
             )}
           >
@@ -832,7 +832,7 @@ export function AdminFhirViewerPage() {
               "flex h-10 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition-colors",
               hasCopied
                 ? "border-success-300 bg-success-50 text-success-700"
-                : "border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50",
+                : "border-border bg-card text-muted-foreground hover:bg-muted",
             )}
           >
             {hasCopied ? (
@@ -858,17 +858,17 @@ export function AdminFhirViewerPage() {
       {!isFetching && (
         <div
           ref={viewerContainerRef}
-          className="rounded-xl border border-neutral-200 bg-white shadow-sm"
+          className="rounded-xl border border-border bg-card shadow-sm"
           tabIndex={-1}
         >
           {/* Viewer header */}
-          <div className="flex flex-col gap-2 border-b border-neutral-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <div className="flex flex-col gap-2 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
             <div className="flex items-center gap-2">
               <FileJson className="h-4 w-4 text-primary-700" />
-              <span className="text-sm font-medium text-neutral-900">
+              <span className="text-sm font-medium text-foreground">
                 {selectedResource} Bundle
               </span>
-              <span className="text-xs text-neutral-500">
+              <span className="text-xs text-muted-foreground">
                 {entryCount} resource(s)
               </span>
             </div>
@@ -876,7 +876,7 @@ export function AdminFhirViewerPage() {
             {/* Bundle search */}
             <div className="flex items-center gap-2">
               <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
+                <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/70" />
                 <input
                   data-bundle-search-input
                   type="text"
@@ -884,16 +884,16 @@ export function AdminFhirViewerPage() {
                   value={bundleSearchTerm}
                   onChange={(event) => handleBundleSearchChange(event.target.value)}
                   className={clsxMerge(
-                    "h-8 w-full rounded-md border border-neutral-200 bg-neutral-50 pl-8 pr-3 text-xs text-neutral-900",
-                    "placeholder:text-neutral-400",
-                    "focus:border-primary-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary-300",
+                    "h-8 w-full rounded-md border border-border bg-muted pl-8 pr-3 text-xs text-foreground",
+                    "placeholder:text-muted-foreground/70",
+                    "focus:border-primary-300 focus:bg-card focus:outline-none focus:ring-1 focus:ring-primary-300",
                     "sm:w-48",
                   )}
                 />
               </div>
               {bundleSearchTerm && (
                 <div className="flex items-center gap-1">
-                  <span className="whitespace-nowrap text-xs text-neutral-500">
+                  <span className="whitespace-nowrap text-xs text-muted-foreground">
                     {totalMatches > 0
                       ? `${currentMatchIndex + 1} of ${totalMatches}`
                       : "0 matches"}
@@ -901,7 +901,7 @@ export function AdminFhirViewerPage() {
                   <button
                     onClick={handlePreviousMatch}
                     disabled={totalMatches === 0}
-                    className="flex h-6 w-6 items-center justify-center rounded text-neutral-500 hover:bg-neutral-100 disabled:opacity-30"
+                    className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-muted disabled:opacity-30"
                     aria-label="Previous match"
                   >
                     <ArrowUp className="h-3.5 w-3.5" />
@@ -909,7 +909,7 @@ export function AdminFhirViewerPage() {
                   <button
                     onClick={handleNextMatch}
                     disabled={totalMatches === 0}
-                    className="flex h-6 w-6 items-center justify-center rounded text-neutral-500 hover:bg-neutral-100 disabled:opacity-30"
+                    className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-muted disabled:opacity-30"
                     aria-label="Next match"
                   >
                     <ArrowDown className="h-3.5 w-3.5" />
@@ -949,16 +949,16 @@ export function AdminFhirViewerPage() {
 
       {/* Validation results panel */}
       {isValidationVisible && !isFetching && (
-        <div className="rounded-xl border border-neutral-200 bg-white shadow-sm">
-          <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-3 sm:px-5">
+        <div className="rounded-xl border border-border bg-card shadow-sm">
+          <div className="flex items-center justify-between border-b border-border px-4 py-3 sm:px-5">
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-primary-700" />
-              <span className="text-sm font-medium text-neutral-900">
+              <span className="text-sm font-medium text-foreground">
                 FHIR R4 Validation Results
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-xs text-neutral-500">
+              <span className="text-xs text-muted-foreground">
                 <span className="font-medium text-success-700">{passCount} passed</span>
                 {", "}
                 <span className="font-medium text-warning-700">{warningCount} warning{warningCount !== 1 ? "s" : ""}</span>
@@ -967,7 +967,7 @@ export function AdminFhirViewerPage() {
               </span>
               <button
                 onClick={() => setIsValidationVisible(false)}
-                className="flex h-6 w-6 items-center justify-center rounded text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+                className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground/70 hover:bg-muted hover:text-muted-foreground"
                 aria-label="Close validation panel"
               >
                 <ChevronUp className="h-4 w-4" />
@@ -982,7 +982,7 @@ export function AdminFhirViewerPage() {
               >
                 <ValidationIcon severity={result.severity} />
                 <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
-                  <span className="text-xs font-medium text-neutral-900">
+                  <span className="text-xs font-medium text-foreground">
                     {result.field}:
                   </span>
                   <span

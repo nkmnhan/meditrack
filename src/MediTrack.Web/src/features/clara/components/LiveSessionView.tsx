@@ -253,28 +253,28 @@ export function LiveSessionView() {
   if (!sessionId) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-neutral-500">Invalid session</p>
+        <p className="text-muted-foreground">Invalid session</p>
       </div>
     );
   }
 
   return (
-    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-8 flex flex-col bg-neutral-50">
+    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-8 flex flex-col bg-muted">
       {/* ── Top Bar ─────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 bg-white shadow-sm flex items-center justify-between h-14 px-4 flex-shrink-0 border-b border-neutral-200">
+      <header className="sticky top-0 z-50 bg-card shadow-sm flex items-center justify-between h-14 px-4 flex-shrink-0 border-b border-border">
         {/* Left: Back + session ID */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate("/clara")}
-            className="p-2 -ml-2 rounded-lg text-neutral-700 hover:bg-neutral-100 transition-colors"
+            className="p-2 -ml-2 rounded-lg text-foreground/80 hover:bg-muted transition-colors"
             aria-label="Back to Clara"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <span className="font-mono text-sm text-neutral-900 hidden sm:inline">
+          <span className="font-mono text-sm text-foreground hidden sm:inline">
             Session {shortSessionId}
           </span>
-          <span className="font-mono text-sm text-neutral-900 sm:hidden">
+          <span className="font-mono text-sm text-foreground sm:hidden">
             {shortSessionId}
           </span>
 
@@ -283,10 +283,10 @@ export function LiveSessionView() {
             <button
               type="button"
               onClick={() => setIsMobilePatientSheetOpen(true)}
-              className="lg:hidden flex items-center gap-1.5 ml-2 px-2 py-1 rounded-md bg-neutral-50 border border-neutral-200 text-xs"
+              className="lg:hidden flex items-center gap-1.5 ml-2 px-2 py-1 rounded-md bg-muted border border-border text-xs"
             >
-              <User className="w-3.5 h-3.5 text-neutral-500" />
-              <span className="text-neutral-700 font-medium truncate max-w-[80px]">
+              <User className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-foreground/80 font-medium truncate max-w-[80px]">
                 {patient.firstName}
               </span>
               {allergyCount > 0 && (
@@ -308,8 +308,8 @@ export function LiveSessionView() {
               "flex items-center gap-1.5",
               timerWarningLevel === "critical" && "text-error-600",
               timerWarningLevel === "warning" && "text-warning-600",
-              timerWarningLevel === "pulse" && "text-neutral-700",
-              timerWarningLevel === "normal" && "text-neutral-700"
+              timerWarningLevel === "pulse" && "text-foreground/80",
+              timerWarningLevel === "normal" && "text-foreground/80"
             )}
           >
             <Clock
@@ -317,8 +317,8 @@ export function LiveSessionView() {
                 "w-4 h-4",
                 timerWarningLevel === "critical" && "text-error-600",
                 timerWarningLevel === "warning" && "text-warning-600",
-                timerWarningLevel === "normal" && "text-neutral-500",
-                timerWarningLevel === "pulse" && "text-neutral-500"
+                timerWarningLevel === "normal" && "text-muted-foreground",
+                timerWarningLevel === "pulse" && "text-muted-foreground"
               )}
             />
             <span
@@ -332,8 +332,8 @@ export function LiveSessionView() {
             </span>
           </div>
           <div className="hidden md:flex items-center gap-3">
-            <span className="text-xs text-neutral-500">{transcriptLines.length} lines</span>
-            <span className="text-xs text-neutral-500">{suggestions.length} suggestions</span>
+            <span className="text-xs text-muted-foreground">{transcriptLines.length} lines</span>
+            <span className="text-xs text-muted-foreground">{suggestions.length} suggestions</span>
             <div className="flex items-center gap-1 text-accent-700">
               <Sparkles className="w-4 h-4" />
               <span className="text-xs font-medium">Clara</span>
@@ -352,9 +352,9 @@ export function LiveSessionView() {
 
       {/* ── Desktop Patient Context Banner ──────────────── */}
       {hasLinkedPatient && (
-        <div className="hidden lg:flex items-center justify-between px-4 py-2 bg-white border-b border-neutral-200 flex-shrink-0">
+        <div className="hidden lg:flex items-center justify-between px-4 py-2 bg-card border-b border-border flex-shrink-0">
           {isPatientLoading ? (
-            <div className="flex items-center gap-2 text-neutral-500 text-sm">
+            <div className="flex items-center gap-2 text-muted-foreground text-sm">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span>Loading patient data...</span>
             </div>
@@ -364,14 +364,14 @@ export function LiveSessionView() {
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4 text-primary-700" />
-                  <span className="text-sm font-semibold text-neutral-900">
+                  <span className="text-sm font-semibold text-foreground">
                     {patient.fullName}
                   </span>
                 </div>
-                <span className="text-xs text-neutral-500">
+                <span className="text-xs text-muted-foreground">
                   {patient.age}y &middot; {patient.gender}
                 </span>
-                <span className="text-xs font-mono text-neutral-400">
+                <span className="text-xs font-mono text-muted-foreground/70">
                   MRN: {patient.medicalRecordNumber}
                 </span>
               </div>
@@ -406,7 +406,7 @@ export function LiveSessionView() {
               </button>
             </>
           ) : (
-            <div className="flex items-center gap-2 text-neutral-500 text-sm">
+            <div className="flex items-center gap-2 text-muted-foreground text-sm">
               <AlertTriangle className="w-4 h-4" />
               <span>Patient data unavailable</span>
             </div>
@@ -416,8 +416,8 @@ export function LiveSessionView() {
 
       {/* ── No Patient Linked Banner ───────────────────── */}
       {!hasLinkedPatient && sessionData && (
-        <div className="flex items-center justify-center gap-2 px-4 py-2 bg-neutral-100 text-neutral-600 text-sm flex-shrink-0 border-b border-neutral-200">
-          <UserX className="w-4 h-4 text-neutral-400" />
+        <div className="flex items-center justify-center gap-2 px-4 py-2 bg-muted text-muted-foreground text-sm flex-shrink-0 border-b border-border">
+          <UserX className="w-4 h-4 text-muted-foreground/70" />
           <span>No patient linked to this session.</span>
           <Link
             to="/clara"
@@ -471,7 +471,7 @@ export function LiveSessionView() {
       )}
 
       {/* ── Mobile Tab Toggle ────────────────────────────── */}
-      <div className="lg:hidden flex items-center bg-white border-b border-neutral-200 px-4 flex-shrink-0">
+      <div className="lg:hidden flex items-center bg-card border-b border-border px-4 flex-shrink-0">
         <button
           type="button"
           onClick={() => setActiveTab("transcript")}
@@ -479,7 +479,7 @@ export function LiveSessionView() {
             "flex-1 py-3 text-sm font-medium text-center border-b-2 transition-colors",
             activeTab === "transcript"
               ? "border-accent-500 text-accent-700"
-              : "border-transparent text-neutral-500 hover:text-neutral-700"
+              : "border-transparent text-muted-foreground hover:text-foreground/80"
           )}
         >
           Transcript
@@ -491,7 +491,7 @@ export function LiveSessionView() {
             "flex-1 py-3 text-sm font-medium text-center border-b-2 transition-colors inline-flex items-center justify-center gap-2",
             activeTab === "suggestions"
               ? "border-accent-500 text-accent-700"
-              : "border-transparent text-neutral-500 hover:text-neutral-700"
+              : "border-transparent text-muted-foreground hover:text-foreground/80"
           )}
         >
           Clara&apos;s Notes
@@ -568,7 +568,7 @@ export function LiveSessionView() {
       )}
 
       {/* ── Mobile Floating Actions ──────────────────────── */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] px-4 py-3 z-40 flex items-center justify-center gap-4">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-[0_-4px_12px_rgba(0,0,0,0.05)] px-4 py-3 z-40 flex items-center justify-center gap-4">
         <button
           type="button"
           onClick={handleRequestSuggestions}
@@ -592,7 +592,7 @@ export function LiveSessionView() {
             "h-14 w-14 rounded-full flex items-center justify-center shadow-lg transition-all flex-shrink-0",
             isRecording
               ? "bg-accent-500 text-white ring-4 ring-accent-500/20"
-              : "bg-neutral-200 text-neutral-700",
+              : "bg-neutral-200 text-foreground/80",
             "disabled:opacity-50 disabled:cursor-not-allowed"
           )}
         >
@@ -746,7 +746,7 @@ function PatientBadge({ icon, label, variant }: PatientBadgeProps) {
         "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium",
         variant === "warning"
           ? "bg-warning-100 text-warning-700"
-          : "bg-neutral-100 text-neutral-600"
+          : "bg-muted text-muted-foreground"
       )}
     >
       {icon}
@@ -779,14 +779,14 @@ function PatientContextSidebar({
   }
 
   return (
-    <aside className="hidden lg:flex flex-col w-72 min-h-[65vh] lg:min-h-[calc(100dvh-12rem)] bg-white rounded-xl border border-neutral-200 shadow-sm overflow-y-auto flex-shrink-0">
+    <aside className="hidden lg:flex flex-col w-72 min-h-[65vh] lg:min-h-[calc(100dvh-12rem)] bg-card rounded-xl border border-border shadow-sm overflow-y-auto flex-shrink-0">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
-        <h3 className="text-sm font-semibold text-neutral-900">Patient Context</h3>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+        <h3 className="text-sm font-semibold text-foreground">Patient Context</h3>
         <button
           type="button"
           onClick={onClose}
-          className="p-1 rounded-md text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-colors"
+          className="p-1 rounded-md text-muted-foreground/70 hover:text-muted-foreground hover:bg-muted transition-colors"
           aria-label="Close patient sidebar"
         >
           <X className="w-4 h-4" />
@@ -796,18 +796,18 @@ function PatientContextSidebar({
       <div className="flex flex-col gap-5 p-4">
         {/* Demographics */}
         <section>
-          <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
             Demographics
           </h4>
           <div className="space-y-1.5">
-            <p className="text-sm font-medium text-neutral-900">{patient.fullName}</p>
-            <p className="text-xs text-neutral-600">
+            <p className="text-sm font-medium text-foreground">{patient.fullName}</p>
+            <p className="text-xs text-muted-foreground">
               {patient.age} years old &middot; {patient.gender}
             </p>
-            <p className="text-xs text-neutral-500">
+            <p className="text-xs text-muted-foreground">
               DOB: {formatShortDate(patient.dateOfBirth)}
             </p>
-            <p className="text-xs font-mono text-neutral-400">
+            <p className="text-xs font-mono text-muted-foreground/70">
               MRN: {patient.medicalRecordNumber}
             </p>
           </div>
@@ -815,7 +815,7 @@ function PatientContextSidebar({
 
         {/* Allergies */}
         <section>
-          <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
             <ShieldAlert className="w-3.5 h-3.5 text-warning-600" />
             Allergies
           </h4>
@@ -831,13 +831,13 @@ function PatientContextSidebar({
               ))}
             </div>
           ) : (
-            <p className="text-xs text-neutral-400 italic">No allergies on file</p>
+            <p className="text-xs text-muted-foreground/70 italic">No allergies on file</p>
           )}
         </section>
 
         {/* Active Medications */}
         <section>
-          <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
             <Pill className="w-3.5 h-3.5 text-primary-700" />
             Active Medications
           </h4>
@@ -846,23 +846,23 @@ function PatientContextSidebar({
               {activeMedications.map((medication) => (
                 <li
                   key={`${medication.name}-${medication.dosage}`}
-                  className="text-xs text-neutral-700"
+                  className="text-xs text-foreground/80"
                 >
                   <span className="font-medium">{medication.name}</span>
                   {medication.dosage && (
-                    <span className="text-neutral-500"> — {medication.dosage}</span>
+                    <span className="text-muted-foreground"> — {medication.dosage}</span>
                   )}
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-xs text-neutral-400 italic">No medications on file</p>
+            <p className="text-xs text-muted-foreground/70 italic">No medications on file</p>
           )}
         </section>
 
         {/* Recent Diagnoses */}
         <section>
-          <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
             <FileText className="w-3.5 h-3.5 text-info-600" />
             Recent Diagnoses
           </h4>
@@ -873,24 +873,24 @@ function PatientContextSidebar({
                   key={`${diagnosis.code}-${diagnosis.date}`}
                   className="text-xs"
                 >
-                  <p className="font-medium text-neutral-700">
+                  <p className="font-medium text-foreground/80">
                     {diagnosis.description}
                   </p>
-                  <p className="text-neutral-400">
+                  <p className="text-muted-foreground/70">
                     {diagnosis.code} &middot; {formatShortDate(diagnosis.date)}
                   </p>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-xs text-neutral-400 italic">No recent diagnoses</p>
+            <p className="text-xs text-muted-foreground/70 italic">No recent diagnoses</p>
           )}
         </section>
 
         {/* Previous Sessions (Enhancement 5) */}
         {patient && (
           <section>
-            <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-primary-700" />
               Previous Sessions
             </h4>
@@ -934,19 +934,19 @@ function MobilePatientSheet({
       />
 
       {/* Sheet */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl shadow-xl max-h-[75dvh] flex flex-col animate-in slide-in-from-bottom duration-200">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-card rounded-t-2xl shadow-xl max-h-[75dvh] flex flex-col animate-in slide-in-from-bottom duration-200">
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
           <div className="w-10 h-1 rounded-full bg-neutral-300" />
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 pb-3 border-b border-neutral-200 flex-shrink-0">
-          <h3 className="text-base font-semibold text-neutral-900">Patient Context</h3>
+        <div className="flex items-center justify-between px-4 pb-3 border-b border-border flex-shrink-0">
+          <h3 className="text-base font-semibold text-foreground">Patient Context</h3>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-colors"
+            className="p-2 rounded-lg text-muted-foreground/70 hover:text-muted-foreground hover:bg-muted transition-colors"
             aria-label="Close patient details"
           >
             <X className="w-5 h-5" />
@@ -957,24 +957,24 @@ function MobilePatientSheet({
         <div className="overflow-y-auto px-4 py-4 space-y-5">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-5 h-5 animate-spin text-neutral-400" />
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground/70" />
             </div>
           ) : patient ? (
             <>
               {/* Demographics */}
               <section>
-                <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                   Demographics
                 </h4>
                 <div className="space-y-1.5">
-                  <p className="text-sm font-medium text-neutral-900">{patient.fullName}</p>
-                  <p className="text-xs text-neutral-600">
+                  <p className="text-sm font-medium text-foreground">{patient.fullName}</p>
+                  <p className="text-xs text-muted-foreground">
                     {patient.age} years old &middot; {patient.gender}
                   </p>
-                  <p className="text-xs text-neutral-500">
+                  <p className="text-xs text-muted-foreground">
                     DOB: {formatShortDate(patient.dateOfBirth)}
                   </p>
-                  <p className="text-xs font-mono text-neutral-400">
+                  <p className="text-xs font-mono text-muted-foreground/70">
                     MRN: {patient.medicalRecordNumber}
                   </p>
                 </div>
@@ -982,7 +982,7 @@ function MobilePatientSheet({
 
               {/* Allergies */}
               <section>
-                <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
                   <ShieldAlert className="w-3.5 h-3.5 text-warning-600" />
                   Allergies
                 </h4>
@@ -998,13 +998,13 @@ function MobilePatientSheet({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-neutral-400 italic">No allergies on file</p>
+                  <p className="text-xs text-muted-foreground/70 italic">No allergies on file</p>
                 )}
               </section>
 
               {/* Active Medications */}
               <section>
-                <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
                   <Pill className="w-3.5 h-3.5 text-primary-700" />
                   Active Medications
                 </h4>
@@ -1013,23 +1013,23 @@ function MobilePatientSheet({
                     {activeMedications.map((medication) => (
                       <li
                         key={`${medication.name}-${medication.dosage}`}
-                        className="text-xs text-neutral-700"
+                        className="text-xs text-foreground/80"
                       >
                         <span className="font-medium">{medication.name}</span>
                         {medication.dosage && (
-                          <span className="text-neutral-500"> — {medication.dosage}</span>
+                          <span className="text-muted-foreground"> — {medication.dosage}</span>
                         )}
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-xs text-neutral-400 italic">No medications on file</p>
+                  <p className="text-xs text-muted-foreground/70 italic">No medications on file</p>
                 )}
               </section>
 
               {/* Recent Diagnoses */}
               <section>
-                <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
                   <FileText className="w-3.5 h-3.5 text-info-600" />
                   Recent Diagnoses
                 </h4>
@@ -1040,22 +1040,22 @@ function MobilePatientSheet({
                         key={`${diagnosis.code}-${diagnosis.date}`}
                         className="text-xs"
                       >
-                        <p className="font-medium text-neutral-700">
+                        <p className="font-medium text-foreground/80">
                           {diagnosis.description}
                         </p>
-                        <p className="text-neutral-400">
+                        <p className="text-muted-foreground/70">
                           {diagnosis.code} &middot; {formatShortDate(diagnosis.date)}
                         </p>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-xs text-neutral-400 italic">No recent diagnoses</p>
+                  <p className="text-xs text-muted-foreground/70 italic">No recent diagnoses</p>
                 )}
               </section>
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center py-8 text-neutral-400">
+            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground/70">
               <AlertTriangle className="w-6 h-6 mb-2" />
               <p className="text-sm">Patient data unavailable</p>
             </div>

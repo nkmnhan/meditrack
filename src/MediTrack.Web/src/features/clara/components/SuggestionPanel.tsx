@@ -56,14 +56,14 @@ export function SuggestionPanel({
   return (
     <div
       className={clsxMerge(
-        "flex flex-col bg-white rounded-lg border border-neutral-200 shadow-sm",
+        "flex flex-col bg-card rounded-lg border border-border shadow-sm",
         className
       )}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-neutral-200 flex-shrink-0">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-border flex-shrink-0">
         <Sparkles className="w-4 h-4 text-accent-500" />
-        <h2 className="text-sm font-semibold text-neutral-900">Clara&apos;s Suggestions</h2>
+        <h2 className="text-sm font-semibold text-foreground">Clara&apos;s Suggestions</h2>
         {count !== undefined && count > 0 && (
           <span className="inline-flex items-center justify-center rounded-full bg-accent-100 text-accent-700 text-xs font-semibold h-5 w-5 ml-1">
             {count}
@@ -131,12 +131,12 @@ function SuggestionCard({ suggestion, currentAction, onAction }: SuggestionCardP
     ? "bg-success-50"
     : isFlagged
       ? "bg-warning-50"
-      : "bg-white";
+      : "bg-card";
 
   return (
     <div
       className={clsxMerge(
-        "flex rounded-lg border border-neutral-200 overflow-hidden hover:shadow-sm transition-all",
+        "flex rounded-lg border border-border overflow-hidden hover:shadow-sm transition-all",
         cardBackground,
         isDismissed && "opacity-50"
       )}
@@ -160,7 +160,7 @@ function SuggestionCard({ suggestion, currentAction, onAction }: SuggestionCardP
               <span className="ml-1 text-xs font-semibold">(Urgent)</span>
             )}
           </span>
-          <span className="text-xs text-neutral-500 flex-shrink-0 ml-2">
+          <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
             {formatTime(suggestion.triggeredAt)}
           </span>
         </div>
@@ -168,7 +168,7 @@ function SuggestionCard({ suggestion, currentAction, onAction }: SuggestionCardP
         {/* Content */}
         <p
           className={clsxMerge(
-            "text-sm text-neutral-700 leading-relaxed",
+            "text-sm text-foreground/80 leading-relaxed",
             isDismissed && "line-through"
           )}
         >
@@ -177,7 +177,7 @@ function SuggestionCard({ suggestion, currentAction, onAction }: SuggestionCardP
 
         {/* Source */}
         {suggestion.source && (
-          <div className="mt-2 flex items-center gap-1.5 text-xs text-neutral-500">
+          <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
             <FileText className="h-3 w-3 flex-shrink-0" />
             <span>{suggestion.source}</span>
           </div>
@@ -194,7 +194,7 @@ function SuggestionCard({ suggestion, currentAction, onAction }: SuggestionCardP
               "inline-flex items-center justify-center h-8 w-8 rounded-md border transition-colors",
               isAccepted
                 ? "bg-success-100 border-success-300 text-success-700"
-                : "border-neutral-200 text-neutral-400 hover:text-success-600 hover:border-success-300 hover:bg-success-50"
+                : "border-border text-muted-foreground/70 hover:text-success-600 hover:border-success-300 hover:bg-success-50"
             )}
           >
             <Check className="h-4 w-4" />
@@ -209,7 +209,7 @@ function SuggestionCard({ suggestion, currentAction, onAction }: SuggestionCardP
               "inline-flex items-center justify-center h-8 w-8 rounded-md border transition-colors",
               isDismissed
                 ? "bg-error-100 border-error-300 text-error-700"
-                : "border-neutral-200 text-neutral-400 hover:text-error-600 hover:border-error-300 hover:bg-error-50"
+                : "border-border text-muted-foreground/70 hover:text-error-600 hover:border-error-300 hover:bg-error-50"
             )}
           >
             <X className="h-4 w-4" />
@@ -224,7 +224,7 @@ function SuggestionCard({ suggestion, currentAction, onAction }: SuggestionCardP
               "inline-flex items-center justify-center h-8 w-8 rounded-md border transition-colors",
               isFlagged
                 ? "bg-warning-100 border-warning-300 text-warning-700"
-                : "border-neutral-200 text-neutral-400 hover:text-warning-600 hover:border-warning-300 hover:bg-warning-50"
+                : "border-border text-muted-foreground/70 hover:text-warning-600 hover:border-warning-300 hover:bg-warning-50"
             )}
           >
             <Flag className="h-4 w-4" />
@@ -240,10 +240,10 @@ function SuggestionCard({ suggestion, currentAction, onAction }: SuggestionCardP
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center py-8">
-      <div className="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center mb-3">
-        <Lightbulb className="h-6 w-6 text-neutral-400" />
+      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+        <Lightbulb className="h-6 w-6 text-muted-foreground/70" />
       </div>
-      <p className="text-sm text-neutral-500">
+      <p className="text-sm text-muted-foreground">
         AI suggestions will appear here as the conversation progresses
       </p>
     </div>

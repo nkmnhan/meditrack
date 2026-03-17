@@ -41,12 +41,12 @@ export function MetricCard({
     <div
       className={clsxMerge(
         "flex flex-col gap-3",
-        "rounded-lg border border-neutral-200 bg-white p-5 shadow-sm",
+        "rounded-lg border border-border bg-card p-5 shadow-sm",
         className
       )}
     >
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-neutral-500">{title}</span>
+        <span className="text-sm font-medium text-muted-foreground">{title}</span>
         <div
           className={clsxMerge(
             "flex h-9 w-9 items-center justify-center rounded-lg",
@@ -59,7 +59,7 @@ export function MetricCard({
 
       <div className="flex items-end justify-between gap-3">
         <div className="flex flex-col gap-1">
-          <span className="text-2xl font-bold text-neutral-900">{value}</span>
+          <span className="text-2xl font-bold text-foreground">{value}</span>
           {hasTrend && (
             <div className="flex items-center gap-1">
               {isPositive ? (
@@ -77,7 +77,7 @@ export function MetricCard({
                 {trend}%
               </span>
               {trendLabel && (
-                <span className="text-xs text-neutral-500">{trendLabel}</span>
+                <span className="text-xs text-muted-foreground">{trendLabel}</span>
               )}
             </div>
           )}

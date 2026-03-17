@@ -78,15 +78,15 @@ export function PieChartCard({
       )}
     >
       <div className="mb-4">
-        <h3 className="text-sm font-semibold text-neutral-900">{title}</h3>
+        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
         {description && (
-          <p className="mt-0.5 text-xs text-neutral-500">{description}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
         )}
       </div>
 
       {filteredData.length === 0 ? (
         <div className="flex items-center justify-center" style={{ height }}>
-          <p className="text-sm text-neutral-400">No data available</p>
+          <p className="text-sm text-muted-foreground/70">No data available</p>
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={height}>

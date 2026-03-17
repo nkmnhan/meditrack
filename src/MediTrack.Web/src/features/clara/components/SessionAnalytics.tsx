@@ -60,14 +60,14 @@ export function SessionAnalytics({ data, className }: SessionAnalyticsProps) {
       {cards.map((card) => (
         <div
           key={card.label}
-          className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white px-4 py-3"
+          className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3"
         >
           <card.icon className={clsxMerge("h-5 w-5 flex-shrink-0", card.iconColor)} />
           <div className="min-w-0">
-            <p className="text-lg font-semibold text-neutral-900 leading-tight">
+            <p className="text-lg font-semibold text-foreground leading-tight">
               {card.value}
             </p>
-            <p className="text-xs text-neutral-500">{card.label}</p>
+            <p className="text-xs text-muted-foreground">{card.label}</p>
           </div>
         </div>
       ))}

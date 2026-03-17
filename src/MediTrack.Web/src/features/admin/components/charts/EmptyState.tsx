@@ -17,16 +17,16 @@ export function EmptyState({
   return (
     <div
       className={clsxMerge(
-        "flex flex-col items-center justify-center rounded-lg border border-neutral-200 bg-white",
+        "flex flex-col items-center justify-center rounded-lg border border-border bg-card",
         compact ? "px-4 py-6" : "px-6 py-10",
         className
       )}
     >
-      <Inbox className={clsxMerge("text-neutral-300", compact ? "h-6 w-6" : "h-8 w-8")} />
-      <p className={clsxMerge("mt-2 font-medium text-neutral-500", compact ? "text-xs" : "text-sm")}>
+      <Inbox className={clsxMerge("text-muted-foreground/50", compact ? "h-6 w-6" : "h-8 w-8")} />
+      <p className={clsxMerge("mt-2 font-medium text-muted-foreground", compact ? "text-xs" : "text-sm")}>
         {title}
       </p>
-      <p className={clsxMerge("mt-0.5 text-center text-neutral-400", compact ? "text-[11px]" : "text-xs")}>
+      <p className={clsxMerge("mt-0.5 text-center text-muted-foreground/70", compact ? "text-[11px]" : "text-xs")}>
         {message}
       </p>
     </div>

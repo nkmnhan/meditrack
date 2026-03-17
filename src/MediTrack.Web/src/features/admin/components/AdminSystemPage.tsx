@@ -38,10 +38,10 @@ const SERVICE_ICON_MAP: Record<string, { icon: typeof Sparkles; iconBg: string; 
   "Patient API": { icon: Users, iconBg: "bg-primary-50", iconColor: "text-primary-700" },
   "Appointment API": { icon: Clock, iconBg: "bg-secondary-50", iconColor: "text-secondary-700" },
   "Medical Records API": { icon: FileText, iconBg: "bg-info-50", iconColor: "text-info-600" },
-  "Notification Worker": { icon: Bell, iconBg: "bg-neutral-50", iconColor: "text-neutral-600" },
+  "Notification Worker": { icon: Bell, iconBg: "bg-muted", iconColor: "text-muted-foreground" },
 };
 
-const DEFAULT_ICON = { icon: Server, iconBg: "bg-neutral-50", iconColor: "text-neutral-600" };
+const DEFAULT_ICON = { icon: Server, iconBg: "bg-muted", iconColor: "text-muted-foreground" };
 
 type ServiceStatus = "Healthy" | "Degraded" | "Unhealthy";
 
@@ -331,8 +331,8 @@ export function AdminSystemPage() {
             <Activity className="h-5 w-5 text-primary-700" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-neutral-900 sm:text-2xl">System Health</h1>
-            <p className="text-sm text-neutral-500">Real-time service status and infrastructure metrics</p>
+            <h1 className="text-xl font-bold text-foreground sm:text-2xl">System Health</h1>
+            <p className="text-sm text-muted-foreground">Real-time service status and infrastructure metrics</p>
           </div>
         </div>
         <AutoRefreshIndicator
@@ -344,7 +344,7 @@ export function AdminSystemPage() {
 
       {/* Status banner */}
       {isHealthLoading ? (
-        <div className="h-14 animate-pulse rounded-lg bg-neutral-100" />
+        <div className="h-14 animate-pulse rounded-lg bg-muted" />
       ) : isHealthError ? (
         <ErrorState
           title="Failed to check system health"
@@ -377,31 +377,31 @@ export function AdminSystemPage() {
         />
       ) : (
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <div className="rounded-lg border border-neutral-200 bg-white p-5 text-center shadow-sm">
+          <div className="rounded-lg border border-border bg-card p-5 text-center shadow-sm">
             <p className={clsxMerge("text-3xl font-bold", errorRate > 1 ? "text-error-700" : "text-success-700")}>
               {errorRate}%
             </p>
-            <p className="mt-0.5 text-sm text-neutral-700">Error Rate</p>
-            <p className="mt-0.5 text-xs text-neutral-500">Last 5 minutes</p>
+            <p className="mt-0.5 text-sm text-foreground/80">Error Rate</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Last 5 minutes</p>
           </div>
-          <div className="rounded-lg border border-neutral-200 bg-white p-5 text-center shadow-sm">
+          <div className="rounded-lg border border-border bg-card p-5 text-center shadow-sm">
             <p className={clsxMerge("text-3xl font-bold", latencyP95 > 300 ? "text-warning-700" : "text-success-700")}>
               {latencyP95}ms
             </p>
-            <p className="mt-0.5 text-sm text-neutral-700">p95 Latency</p>
-            <p className="mt-0.5 text-xs text-neutral-500">API gateway</p>
+            <p className="mt-0.5 text-sm text-foreground/80">p95 Latency</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">API gateway</p>
           </div>
-          <div className="rounded-lg border border-neutral-200 bg-white p-5 text-center shadow-sm">
+          <div className="rounded-lg border border-border bg-card p-5 text-center shadow-sm">
             <p className="text-3xl font-bold text-primary-700">{requestsPerSec}</p>
-            <p className="mt-0.5 text-sm text-neutral-700">Requests/sec</p>
-            <p className="mt-0.5 text-xs text-neutral-500">All services</p>
+            <p className="mt-0.5 text-sm text-foreground/80">Requests/sec</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">All services</p>
           </div>
-          <div className="rounded-lg border border-neutral-200 bg-white p-5 text-center shadow-sm">
+          <div className="rounded-lg border border-border bg-card p-5 text-center shadow-sm">
             <p className={clsxMerge("text-3xl font-bold", dbConnectionRatio > 0.8 ? "text-warning-700" : "text-primary-700")}>
               {dbConnections}/{dbMaxConnections}
             </p>
-            <p className="mt-0.5 text-sm text-neutral-700">DB Connections</p>
-            <p className="mt-0.5 text-xs text-neutral-500">Active / max</p>
+            <p className="mt-0.5 text-sm text-foreground/80">DB Connections</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Active / max</p>
           </div>
         </div>
       )}
@@ -410,16 +410,16 @@ export function AdminSystemPage() {
       {isHealthLoading ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="animate-pulse rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
+            <div key={index} className="animate-pulse rounded-lg border border-border bg-card p-5 shadow-sm">
               <div className="flex items-start gap-3">
                 <div className="h-10 w-10 rounded-lg bg-neutral-200" />
                 <div className="flex-1 space-y-2">
                   <div className="h-4 w-32 rounded bg-neutral-200" />
-                  <div className="h-3 w-48 rounded bg-neutral-100" />
+                  <div className="h-3 w-48 rounded bg-muted" />
                 </div>
               </div>
-              <div className="mt-4 border-t border-neutral-200 pt-3">
-                <div className="h-3 w-40 rounded bg-neutral-100" />
+              <div className="mt-4 border-t border-border pt-3">
+                <div className="h-3 w-40 rounded bg-muted" />
               </div>
             </div>
           ))}
@@ -427,15 +427,15 @@ export function AdminSystemPage() {
       ) : !isHealthError && services.length > 0 ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {/* FHIR R4 Endpoint Card */}
-          <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
+          <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-secondary-50">
                   <HeartPulse className="h-5 w-5 text-secondary-700" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-neutral-900">FHIR R4 Endpoint</p>
-                  <p className="mt-0.5 text-xs text-neutral-500">HL7 FHIR R4 interoperability layer</p>
+                  <p className="text-sm font-semibold text-foreground">FHIR R4 Endpoint</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">HL7 FHIR R4 interoperability layer</p>
                 </div>
               </div>
               <span className={clsxMerge(
@@ -449,13 +449,13 @@ export function AdminSystemPage() {
                 {SERVICE_STATUS_STYLES[FHIR_DEMO.status].label}
               </span>
             </div>
-            <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-neutral-200 pt-3">
+            <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-border pt-3">
               <div>
-                <p className="text-xs text-neutral-500">Response</p>
+                <p className="text-xs text-muted-foreground">Response</p>
                 <p className={clsxMerge("mt-0.5 text-sm font-semibold", responseTimeColor(FHIR_DEMO.responseMs))}>{FHIR_DEMO.responseMs}ms</p>
               </div>
               <div>
-                <p className="text-xs text-neutral-500">Conformance</p>
+                <p className="text-xs text-muted-foreground">Conformance</p>
                 <p className={clsxMerge(
                   "mt-0.5 text-sm font-semibold",
                   FHIR_DEMO.conformanceCheck === "Passed" ? "text-success-700" : "text-error-700"
@@ -464,13 +464,13 @@ export function AdminSystemPage() {
                 </p>
               </div>
             </div>
-            <div className="mt-3 border-t border-neutral-100 pt-3">
-              <p className="mb-1.5 text-xs font-medium text-neutral-500">Resource Types</p>
+            <div className="mt-3 border-t border-border pt-3">
+              <p className="mb-1.5 text-xs font-medium text-muted-foreground">Resource Types</p>
               <div className="flex flex-wrap gap-x-4 gap-y-1.5">
                 {FHIR_RESOURCE_STATUSES.map((resource) => (
                   <div key={resource.name} className="flex items-center gap-1.5">
                     <span className={clsxMerge("h-2 w-2 rounded-full", dependencyStatusDot(resource.status))} />
-                    <span className="text-xs text-neutral-600">{resource.name}</span>
+                    <span className="text-xs text-muted-foreground">{resource.name}</span>
                   </div>
                 ))}
               </div>
@@ -484,15 +484,15 @@ export function AdminSystemPage() {
             const statusStyle = SERVICE_STATUS_STYLES[statusKey] ?? SERVICE_STATUS_STYLES.Unhealthy;
 
             return (
-              <div key={service.name} className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
+              <div key={service.name} className="rounded-lg border border-border bg-card p-5 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3">
                     <div className={clsxMerge("flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg", iconInfo.iconBg)}>
                       <ServiceIcon className={clsxMerge("h-5 w-5", iconInfo.iconColor)} />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-neutral-900">{service.name}</p>
-                      <p className="mt-0.5 text-xs text-neutral-500">{service.description}</p>
+                      <p className="text-sm font-semibold text-foreground">{service.name}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{service.description}</p>
                     </div>
                   </div>
                   <span className={clsxMerge("inline-flex flex-shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium", statusStyle.badge)}>
@@ -503,16 +503,16 @@ export function AdminSystemPage() {
                     {statusStyle.label}
                   </span>
                 </div>
-                <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-neutral-200 pt-3">
+                <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-border pt-3">
                   <div>
-                    <p className="text-xs text-neutral-500">Response</p>
+                    <p className="text-xs text-muted-foreground">Response</p>
                     <p className={clsxMerge("mt-0.5 text-sm font-semibold", responseTimeColor(service.responseMs))}>{service.responseMs}ms</p>
                   </div>
                   {service.dependencies?.map((dependency) => (
                     <div key={dependency.name} className="flex items-center gap-1.5">
                       <span className={clsxMerge("h-2 w-2 rounded-full", dependencyStatusDot(dependency.status))} />
-                      <span className="text-xs text-neutral-600">{dependency.name}</span>
-                      <span className="text-xs text-neutral-400">{dependency.durationMs}ms</span>
+                      <span className="text-xs text-muted-foreground">{dependency.name}</span>
+                      <span className="text-xs text-muted-foreground/70">{dependency.durationMs}ms</span>
                     </div>
                   ))}
                 </div>
@@ -524,8 +524,8 @@ export function AdminSystemPage() {
 
       {/* Time-series Charts */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-base font-semibold text-neutral-900">Performance Trends</h2>
-        <div className="flex gap-1 rounded-lg border border-neutral-200 bg-white p-0.5 shadow-sm">
+        <h2 className="text-base font-semibold text-foreground">Performance Trends</h2>
+        <div className="flex gap-1 rounded-lg border border-border bg-card p-0.5 shadow-sm">
           {RANGE_OPTIONS.map((option) => (
             <button
               key={option.value}
@@ -534,7 +534,7 @@ export function AdminSystemPage() {
                 "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
                 timeRange === option.value
                   ? "bg-primary-700 text-white"
-                  : "text-neutral-600 hover:bg-neutral-50"
+                  : "text-muted-foreground hover:bg-muted"
               )}
             >
               {option.label}
@@ -612,9 +612,9 @@ export function AdminSystemPage() {
                 <p className={clsxMerge("text-2xl font-bold", uptimeColor(CURRENT_UPTIME_PERCENT))}>
                   {CURRENT_UPTIME_PERCENT}%
                 </p>
-                <span className="text-sm text-neutral-600">current uptime</span>
+                <span className="text-sm text-muted-foreground">current uptime</span>
               </div>
-              <p className="mt-0.5 text-xs text-neutral-500">
+              <p className="mt-0.5 text-xs text-muted-foreground">
                 SLA Target: {SLA_TARGET_PERCENT}% — {" "}
                 <span className={clsxMerge(
                   "font-semibold",
@@ -648,7 +648,7 @@ export function AdminSystemPage() {
               style={{ left: `${SLA_TARGET_PERCENT}%` }}
             />
           </div>
-          <div className="mt-1 flex justify-between text-[10px] text-neutral-500">
+          <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
             <span>0%</span>
             <span className="text-error-600 font-medium">{SLA_TARGET_PERCENT}% target</span>
             <span>100%</span>
@@ -666,47 +666,47 @@ export function AdminSystemPage() {
       ) : isInfraError ? null : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {/* RabbitMQ Panel */}
-          <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-neutral-900">RabbitMQ</h3>
+          <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-foreground">RabbitMQ</h3>
             <div className="mt-3 space-y-3">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-500">Queue Depth</span>
-                <span className={clsxMerge("font-medium", (infraMetrics?.rabbitMQ.totalMessages ?? 0) > 1000 ? "text-warning-700" : "text-neutral-900")}>
+                <span className="text-muted-foreground">Queue Depth</span>
+                <span className={clsxMerge("font-medium", (infraMetrics?.rabbitMQ.totalMessages ?? 0) > 1000 ? "text-warning-700" : "text-foreground")}>
                   {infraMetrics?.rabbitMQ.totalMessages ?? "—"}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-500">Publish Rate</span>
-                <span className="font-medium text-neutral-900">{infraMetrics?.rabbitMQ.messagePublishRate ?? "—"} msg/s</span>
+                <span className="text-muted-foreground">Publish Rate</span>
+                <span className="font-medium text-foreground">{infraMetrics?.rabbitMQ.messagePublishRate ?? "—"} msg/s</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-500">Deliver Rate</span>
-                <span className="font-medium text-neutral-900">{infraMetrics?.rabbitMQ.messageDeliverRate ?? "—"} msg/s</span>
+                <span className="text-muted-foreground">Deliver Rate</span>
+                <span className="font-medium text-foreground">{infraMetrics?.rabbitMQ.messageDeliverRate ?? "—"} msg/s</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-500">Connections</span>
-                <span className="font-medium text-neutral-900">{infraMetrics?.rabbitMQ.connections ?? "—"}</span>
+                <span className="text-muted-foreground">Connections</span>
+                <span className="font-medium text-foreground">{infraMetrics?.rabbitMQ.connections ?? "—"}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-500">Channels</span>
-                <span className="font-medium text-neutral-900">{infraMetrics?.rabbitMQ.channels ?? "—"}</span>
+                <span className="text-muted-foreground">Channels</span>
+                <span className="font-medium text-foreground">{infraMetrics?.rabbitMQ.channels ?? "—"}</span>
               </div>
             </div>
           </div>
 
           {/* PostgreSQL Panel */}
-          <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-neutral-900">PostgreSQL</h3>
+          <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-foreground">PostgreSQL</h3>
             <div className="mt-3 space-y-3">
               <div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-neutral-500">Connection Pool</span>
-                  <span className="font-medium text-neutral-900">
+                  <span className="text-muted-foreground">Connection Pool</span>
+                  <span className="font-medium text-foreground">
                     {infraMetrics ? `${infraMetrics.database.activeConnections}/${infraMetrics.database.maxConnections}` : "—"}
                   </span>
                 </div>
                 {infraMetrics && (
-                  <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-neutral-100">
+                  <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-muted">
                     <div
                       className={clsxMerge(
                         "h-full rounded-full transition-all",
@@ -718,29 +718,29 @@ export function AdminSystemPage() {
                 )}
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-500">Total DB Size</span>
-                <span className="font-medium text-neutral-900">{infraMetrics?.database.databaseSizeFormatted ?? "—"}</span>
+                <span className="text-muted-foreground">Total DB Size</span>
+                <span className="font-medium text-foreground">{infraMetrics?.database.databaseSizeFormatted ?? "—"}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-500">Commits</span>
-                <span className="font-medium text-neutral-900">{infraMetrics?.database.transactionsCommitted.toLocaleString() ?? "—"}</span>
+                <span className="text-muted-foreground">Commits</span>
+                <span className="font-medium text-foreground">{infraMetrics?.database.transactionsCommitted.toLocaleString() ?? "—"}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-500">Rollbacks</span>
-                <span className={clsxMerge("font-medium", (infraMetrics?.database.transactionsRolledBack ?? 0) > 0 ? "text-warning-700" : "text-neutral-900")}>
+                <span className="text-muted-foreground">Rollbacks</span>
+                <span className={clsxMerge("font-medium", (infraMetrics?.database.transactionsRolledBack ?? 0) > 0 ? "text-warning-700" : "text-foreground")}>
                   {infraMetrics?.database.transactionsRolledBack.toLocaleString() ?? "—"}
                 </span>
               </div>
             </div>
             {/* Database sizes */}
             {infraMetrics && infraMetrics.database.databases.length > 0 && (
-              <div className="mt-3 border-t border-neutral-200 pt-3">
-                <p className="text-xs font-medium text-neutral-500">Databases</p>
+              <div className="mt-3 border-t border-border pt-3">
+                <p className="text-xs font-medium text-muted-foreground">Databases</p>
                 <div className="mt-1.5 space-y-1">
                   {infraMetrics.database.databases.map((database) => (
                     <div key={database.name} className="flex items-center justify-between text-xs">
-                      <span className="truncate text-neutral-600">{database.name}</span>
-                      <span className="flex-shrink-0 text-neutral-900">{database.sizeFormatted}</span>
+                      <span className="truncate text-muted-foreground">{database.name}</span>
+                      <span className="flex-shrink-0 text-foreground">{database.sizeFormatted}</span>
                     </div>
                   ))}
                 </div>
@@ -749,14 +749,14 @@ export function AdminSystemPage() {
           </div>
 
           {/* Queues Panel */}
-          <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-neutral-900">Message Queues</h3>
+          <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-foreground">Message Queues</h3>
             {infraMetrics && infraMetrics.rabbitMQ.queues.length > 0 ? (
               <div className="mt-3 space-y-2">
                 {infraMetrics.rabbitMQ.queues.map((queue) => (
-                  <div key={queue.name} className="rounded-md border border-neutral-100 p-2.5">
-                    <p className="truncate text-xs font-medium text-neutral-900">{queue.name}</p>
-                    <div className="mt-1 flex gap-3 text-[10px] text-neutral-500">
+                  <div key={queue.name} className="rounded-md border border-border p-2.5">
+                    <p className="truncate text-xs font-medium text-foreground">{queue.name}</p>
+                    <div className="mt-1 flex gap-3 text-[10px] text-muted-foreground">
                       <span>{queue.messages} msgs</span>
                       <span>{queue.consumers} consumers</span>
                     </div>
@@ -764,17 +764,17 @@ export function AdminSystemPage() {
                 ))}
               </div>
             ) : (
-              <p className="mt-3 text-sm text-neutral-400">No queues found</p>
+              <p className="mt-3 text-sm text-muted-foreground/70">No queues found</p>
             )}
           </div>
         </div>
       )}
 
       {/* Derived Alerts */}
-      <div className="rounded-lg border border-neutral-200 bg-white shadow-sm">
-        <div className="flex items-center gap-2 border-b border-neutral-200 px-6 pb-3 pt-5">
-          <Bell className="h-5 w-5 text-neutral-700" />
-          <h2 className="font-semibold text-neutral-900">Active Alerts</h2>
+      <div className="rounded-lg border border-border bg-card shadow-sm">
+        <div className="flex items-center gap-2 border-b border-border px-6 pb-3 pt-5">
+          <Bell className="h-5 w-5 text-foreground/80" />
+          <h2 className="font-semibold text-foreground">Active Alerts</h2>
           {alerts.filter((alert) => alert.type === "warning").length > 0 && (
             <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-warning-50 text-xs font-semibold text-warning-700">
               {alerts.filter((alert) => alert.type === "warning").length}
@@ -790,8 +790,8 @@ export function AdminSystemPage() {
                 <div className={clsxMerge("mt-0.5 w-1 flex-shrink-0 rounded-full", alertStyle.bar)} />
                 <AlertIcon className={clsxMerge("mt-0.5 h-4 w-4 flex-shrink-0", alertStyle.iconColor)} />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-neutral-900">{alert.title}</p>
-                  <p className="mt-0.5 text-sm text-neutral-600">{alert.description}</p>
+                  <p className="text-sm font-medium text-foreground">{alert.title}</p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">{alert.description}</p>
                 </div>
               </div>
             );

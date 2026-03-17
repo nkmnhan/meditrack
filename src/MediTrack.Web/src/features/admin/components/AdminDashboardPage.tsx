@@ -62,7 +62,7 @@ function SystemStatusBanner({ status }: { readonly status: string }) {
     Healthy: { icon: CheckCircle, label: "All Systems Operational", bg: "bg-success-50", border: "border-success-200", text: "text-success-700", iconColor: "text-success-600" },
     Degraded: { icon: AlertTriangle, label: "Some Systems Degraded", bg: "bg-warning-50", border: "border-warning-200", text: "text-warning-700", iconColor: "text-warning-600" },
     Unhealthy: { icon: XCircle, label: "System Issues Detected", bg: "bg-error-50", border: "border-error-200", text: "text-error-700", iconColor: "text-error-600" },
-  }[status] ?? { icon: Activity, label: "Status Unknown", bg: "bg-neutral-50", border: "border-neutral-200", text: "text-neutral-700", iconColor: "text-neutral-500" };
+  }[status] ?? { icon: Activity, label: "Status Unknown", bg: "bg-muted", border: "border-border", text: "text-foreground/80", iconColor: "text-muted-foreground" };
 
   const StatusIcon = config.icon;
 
@@ -278,8 +278,8 @@ export function AdminDashboardPage() {
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-neutral-900 sm:text-2xl">Dashboard</h1>
-          <p className="mt-1 text-sm text-neutral-500">
+          <h1 className="text-xl font-bold text-foreground sm:text-2xl">Dashboard</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             System overview and key metrics
           </p>
         </div>
@@ -393,19 +393,19 @@ export function AdminDashboardPage() {
       {/* Row 2c: FHIR Sync + Clara AI Accuracy + Live Activity */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
         {/* FHIR Sync Success Rate */}
-        <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
-          <h3 className="text-sm font-semibold text-neutral-900">FHIR Sync</h3>
+        <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+          <h3 className="text-sm font-semibold text-foreground">FHIR Sync</h3>
           <div className="mt-4 flex items-center gap-5">
             <div className="relative flex-shrink-0">
               <DonutChart percentage={98.5} />
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-sm font-bold text-neutral-900">98.5%</span>
+                <span className="text-sm font-bold text-foreground">98.5%</span>
               </div>
             </div>
             <div className="flex-1 space-y-2">
               {FHIR_RESOURCE_BREAKDOWN.map((resource) => (
                 <div key={resource.label} className="flex items-center justify-between text-sm">
-                  <span className="text-neutral-500">{resource.label}</span>
+                  <span className="text-muted-foreground">{resource.label}</span>
                   <span className={clsxMerge(
                     "font-medium",
                     resource.rate >= 99 ? "text-success-600" : "text-secondary-700"
@@ -416,36 +416,36 @@ export function AdminDashboardPage() {
               ))}
             </div>
           </div>
-          <p className="mt-3 text-xs text-neutral-500">
+          <p className="mt-3 text-xs text-muted-foreground">
             Sync success rate across all FHIR resource types (30d)
           </p>
         </div>
 
         {/* Clara AI Acceptance Rate */}
-        <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
-          <h3 className="text-sm font-semibold text-neutral-900">Clara Acceptance Rate</h3>
+        <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+          <h3 className="text-sm font-semibold text-foreground">Clara Acceptance Rate</h3>
           <div className="mt-4 flex items-end justify-between gap-3">
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold text-neutral-900">76.3%</span>
+                <span className="text-2xl font-bold text-foreground">76.3%</span>
                 <TrendingUp className="h-4 w-4 text-success-600" />
               </div>
               <div className="flex items-center gap-1">
                 <span className="text-xs font-medium text-success-600">+4.1%</span>
-                <span className="text-xs text-neutral-500">vs prev week</span>
+                <span className="text-xs text-muted-foreground">vs prev week</span>
               </div>
             </div>
             <MiniSparkline data={CLARA_ACCEPTANCE_TREND} color={SUCCESS_500} />
           </div>
-          <p className="mt-3 text-xs text-neutral-500">
+          <p className="mt-3 text-xs text-muted-foreground">
             76.3% of suggestions accepted by providers
           </p>
         </div>
 
         {/* Live Activity Feed */}
-        <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
+        <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-semibold text-neutral-900">Live Activity</h3>
+            <h3 className="text-sm font-semibold text-foreground">Live Activity</h3>
             <span className="relative flex h-2.5 w-2.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success-400 opacity-75" />
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-success-500" />
@@ -458,8 +458,8 @@ export function AdminDashboardPage() {
                 <div key={entry.id} className="flex items-start gap-2.5">
                   <EntryIcon className={clsxMerge("mt-0.5 h-4 w-4 flex-shrink-0", entry.iconClassName)} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-neutral-700 truncate">{entry.text}</p>
-                    <span className="text-xs text-neutral-400">{entry.timeAgo}</span>
+                    <p className="text-sm text-foreground/80 truncate">{entry.text}</p>
+                    <span className="text-xs text-muted-foreground/70">{entry.timeAgo}</span>
                   </div>
                 </div>
               );
@@ -574,71 +574,71 @@ export function AdminDashboardPage() {
         </div>
       ) : isInfraError ? null : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-neutral-900">RabbitMQ</h3>
+          <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-foreground">RabbitMQ</h3>
             <div className="mt-3 space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-500">Queue Depth</span>
-                <span className="font-medium text-neutral-900">
+                <span className="text-muted-foreground">Queue Depth</span>
+                <span className="font-medium text-foreground">
                   {infraMetrics?.rabbitMQ.totalMessages ?? "—"}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-500">Publish Rate</span>
-                <span className="font-medium text-neutral-900">
+                <span className="text-muted-foreground">Publish Rate</span>
+                <span className="font-medium text-foreground">
                   {infraMetrics?.rabbitMQ.messagePublishRate ?? "—"} msg/s
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-500">Connections</span>
-                <span className="font-medium text-neutral-900">
+                <span className="text-muted-foreground">Connections</span>
+                <span className="font-medium text-foreground">
                   {infraMetrics?.rabbitMQ.connections ?? "—"}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-neutral-900">PostgreSQL</h3>
+          <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-foreground">PostgreSQL</h3>
             <div className="mt-3 space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-500">Connections</span>
-                <span className="font-medium text-neutral-900">
+                <span className="text-muted-foreground">Connections</span>
+                <span className="font-medium text-foreground">
                   {infraMetrics ? `${infraMetrics.database.activeConnections}/${infraMetrics.database.maxConnections}` : "—"}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-500">Total DB Size</span>
-                <span className="font-medium text-neutral-900">
+                <span className="text-muted-foreground">Total DB Size</span>
+                <span className="font-medium text-foreground">
                   {infraMetrics?.database.databaseSizeFormatted ?? "—"}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-500">Transactions</span>
-                <span className="font-medium text-neutral-900">
+                <span className="text-muted-foreground">Transactions</span>
+                <span className="font-medium text-foreground">
                   {infraMetrics?.database.transactionsCommitted.toLocaleString() ?? "—"}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-neutral-900">API Performance</h3>
+          <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-foreground">API Performance</h3>
             <div className="mt-3 space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-500">Requests/s</span>
-                <span className="font-medium text-neutral-900">
+                <span className="text-muted-foreground">Requests/s</span>
+                <span className="font-medium text-foreground">
                   {infraMetrics?.prometheus.requestsPerSecond ?? "—"}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-500">p95 Latency</span>
-                <span className="font-medium text-neutral-900">
+                <span className="text-muted-foreground">p95 Latency</span>
+                <span className="font-medium text-foreground">
                   {infraMetrics ? `${infraMetrics.prometheus.latencyP95Ms}ms` : "—"}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-500">Error Rate</span>
+                <span className="text-muted-foreground">Error Rate</span>
                 <span className={clsxMerge(
                   "font-medium",
                   infraMetrics && infraMetrics.prometheus.errorRate > 1 ? "text-error-600" : "text-success-600"
