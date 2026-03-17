@@ -42,22 +42,22 @@ export function AppointmentEvent({ calendarEvent }: AppointmentEventProps) {
       {/* Patient name */}
       <div className="flex items-start gap-2">
         <User className="mt-0.5 h-4 w-4 shrink-0 text-primary-600" />
-        <p className="text-sm font-semibold text-neutral-900">
+        <p className="text-sm font-semibold text-foreground">
           {calendarEvent.title}
         </p>
       </div>
 
-      <div className="space-y-1.5 text-xs text-neutral-600">
+      <div className="space-y-1.5 text-xs text-muted-foreground">
         {/* Time */}
         <div className="flex items-center gap-2">
-          <Clock className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
+          <Clock className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
           <span>{startTime} – {endTime}</span>
         </div>
 
         {/* Provider */}
         {details.Provider && (
           <div className="flex items-center gap-2">
-            <Stethoscope className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
+            <Stethoscope className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
             <span>{details.Provider}</span>
           </div>
         )}
@@ -65,7 +65,7 @@ export function AppointmentEvent({ calendarEvent }: AppointmentEventProps) {
         {/* Type */}
         {details.Type && (
           <div className="flex items-center gap-2">
-            <Activity className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
+            <Activity className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
             <span>{details.Type}</span>
           </div>
         )}
@@ -81,9 +81,9 @@ export function AppointmentEvent({ calendarEvent }: AppointmentEventProps) {
                 status === "Confirmed" && "bg-accent-700",
                 status === "CheckedIn" && "bg-info-700",
                 status === "InProgress" && "bg-warning-500",
-                status === "Cancelled" && "bg-neutral-400",
+                status === "Cancelled" && "bg-muted-foreground/70",
                 status === "NoShow" && "bg-error-500",
-                status === "Rescheduled" && "bg-neutral-500"
+                status === "Rescheduled" && "bg-muted-foreground"
               )}
             />
             <span>{statusLabel}</span>
@@ -93,13 +93,13 @@ export function AppointmentEvent({ calendarEvent }: AppointmentEventProps) {
         {/* Location */}
         {details.Location && (
           <div className="flex items-center gap-2">
-            <MapPin className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
+            <MapPin className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
             <span>{details.Location}</span>
           </div>
         )}
       </div>
 
-      <p className="pt-1 text-[10px] text-neutral-400">
+      <p className="pt-1 text-[10px] text-muted-foreground/70">
         Click for full details
       </p>
     </div>

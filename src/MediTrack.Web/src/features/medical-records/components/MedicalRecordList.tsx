@@ -50,8 +50,8 @@ function Pagination({
   endIndex,
 }: PaginationProps) {
   return (
-    <div className="mt-6 flex items-center justify-between border-t border-neutral-200 pt-4">
-      <p className="text-sm text-neutral-500">
+    <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
+      <p className="text-sm text-muted-foreground">
         Showing {startIndex + 1}&ndash;{endIndex} of {totalItems}
       </p>
       <div className="flex gap-2">
@@ -60,8 +60,8 @@ function Pagination({
           onClick={onPrevious}
           disabled={currentPage === 1}
           className={clsxMerge(
-            "inline-flex h-9 items-center gap-1 rounded-md border border-neutral-200 px-3 text-sm font-medium text-neutral-700",
-            "transition-colors hover:bg-neutral-50",
+            "inline-flex h-9 items-center gap-1 rounded-md border border-border px-3 text-sm font-medium text-foreground/80",
+            "transition-colors hover:bg-muted",
             "disabled:cursor-not-allowed disabled:opacity-40"
           )}
           aria-label="Previous page"
@@ -73,8 +73,8 @@ function Pagination({
           onClick={onNext}
           disabled={currentPage === totalPages}
           className={clsxMerge(
-            "inline-flex h-9 items-center gap-1 rounded-md border border-neutral-200 px-3 text-sm font-medium text-neutral-700",
-            "transition-colors hover:bg-neutral-50",
+            "inline-flex h-9 items-center gap-1 rounded-md border border-border px-3 text-sm font-medium text-foreground/80",
+            "transition-colors hover:bg-muted",
             "disabled:cursor-not-allowed disabled:opacity-40"
           )}
           aria-label="Next page"
@@ -97,7 +97,7 @@ function StatusIcon({ status }: { readonly status: RecordStatus }) {
     case RecordStatus.Resolved:
       return <CheckCircle className="h-5 w-5 flex-shrink-0 text-success-600" />;
     case RecordStatus.Archived:
-      return <Archive className="h-5 w-5 flex-shrink-0 text-neutral-500" />;
+      return <Archive className="h-5 w-5 flex-shrink-0 text-muted-foreground" />;
   }
 }
 
@@ -110,7 +110,7 @@ function highlightText(text: string, query: string): React.ReactNode {
   const parts = text.split(regex);
   return parts.map((part, partIndex) =>
     regex.test(part) ? (
-      <strong key={partIndex} className="font-bold text-neutral-900 bg-warning-100">
+      <strong key={partIndex} className="font-bold text-foreground bg-warning-100">
         {part}
       </strong>
     ) : (
@@ -133,8 +133,8 @@ function MedicalRecordCard({ record, searchHighlight = "" }: MedicalRecordCardPr
     <Link
       to={`/medical-records/${record.id}`}
       className={clsxMerge(
-        "block rounded-lg border border-neutral-200 border-l-4 bg-white p-5",
-        SEVERITY_LEFT_BORDER[record.severity] ?? "border-l-neutral-300",
+        "block rounded-lg border border-border border-l-4 bg-card p-5",
+        SEVERITY_LEFT_BORDER[record.severity] ?? "border-l-border",
         "transition-all hover:-translate-y-0.5 hover:shadow-md"
       )}
     >
@@ -143,11 +143,11 @@ function MedicalRecordCard({ record, searchHighlight = "" }: MedicalRecordCardPr
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <StatusIcon status={record.status} />
-            <span className="text-base font-semibold text-neutral-900">
+            <span className="text-base font-semibold text-foreground">
               {highlightText(record.chiefComplaint, searchHighlight)}
             </span>
             {record.diagnosisCode && (
-              <span className="inline-flex items-center rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-mono text-xs text-neutral-500">
+              <span className="inline-flex items-center rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground">
                 {highlightText(record.diagnosisCode, searchHighlight)}
               </span>
             )}
@@ -158,17 +158,17 @@ function MedicalRecordCard({ record, searchHighlight = "" }: MedicalRecordCardPr
             )}
           </div>
           {record.diagnosisDescription && searchHighlight.trim() && (
-            <p className="mt-1 text-sm text-neutral-600">
+            <p className="mt-1 text-sm text-muted-foreground">
               {highlightText(record.diagnosisDescription, searchHighlight)}
             </p>
           )}
           <div className="mt-2 space-y-1.5">
-            <div className="flex items-center gap-2 text-sm text-neutral-500">
-              <Stethoscope className="h-4 w-4 flex-shrink-0 text-neutral-500" />
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Stethoscope className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
               <span>{record.recordedByDoctorName}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-neutral-500">
-              <Calendar className="h-4 w-4 flex-shrink-0 text-neutral-500" />
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Calendar className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
               <span>
                 {new Date(record.recordedAt).toLocaleDateString("en-US", {
                   month: "short",
@@ -184,7 +184,7 @@ function MedicalRecordCard({ record, searchHighlight = "" }: MedicalRecordCardPr
         <div className="flex flex-shrink-0 items-center gap-2">
           <StatusBadge status={record.status} />
           <SeverityBadge severity={record.severity} />
-          <ChevronRight className="h-5 w-5 text-neutral-300" />
+          <ChevronRight className="h-5 w-5 text-muted-foreground/50" />
         </div>
       </div>
     </Link>
@@ -207,7 +207,7 @@ export function MedicalRecordList({ records, isLoading, searchHighlight }: Medic
       <div className="flex h-64 items-center justify-center">
         <div className="text-center">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary-700 border-r-transparent" />
-          <p className="mt-4 text-neutral-600">Loading medical records...</p>
+          <p className="mt-4 text-muted-foreground">Loading medical records...</p>
         </div>
       </div>
     );
@@ -216,8 +216,8 @@ export function MedicalRecordList({ records, isLoading, searchHighlight }: Medic
   if (records.length === 0) {
     return (
       <div className="flex h-64 flex-col items-center justify-center text-center">
-        <FileText className="h-12 w-12 text-neutral-400" />
-        <p className="mt-4 text-neutral-600">No medical records found</p>
+        <FileText className="h-12 w-12 text-muted-foreground/70" />
+        <p className="mt-4 text-muted-foreground">No medical records found</p>
       </div>
     );
   }

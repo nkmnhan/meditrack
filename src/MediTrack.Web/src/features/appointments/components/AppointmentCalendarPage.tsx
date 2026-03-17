@@ -209,8 +209,8 @@ export function AppointmentCalendarPage() {
     return (
       <div className="flex min-h-[400px] flex-col items-center justify-center gap-3">
         <AlertCircle className="h-10 w-10 text-error-500" />
-        <p className="text-lg font-medium text-neutral-900">Failed to load appointments</p>
-        <p className="text-sm text-neutral-500">Please check your connection and try again.</p>
+        <p className="text-lg font-medium text-foreground">Failed to load appointments</p>
+        <p className="text-sm text-muted-foreground">Please check your connection and try again.</p>
       </div>
     );
   }
@@ -235,12 +235,12 @@ export function AppointmentCalendarPage() {
       />
 
       {/* Enhancement 1: Color Legend for Appointment Types */}
-      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-neutral-200 bg-white px-4 py-2 md:gap-5">
-        <span className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Types:</span>
+      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card px-4 py-2 md:gap-5">
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Types:</span>
         {APPOINTMENT_TYPE_LEGEND.map((entry) => (
           <div key={entry.type} className="flex items-center gap-1.5">
             <span className={clsxMerge("h-2.5 w-2.5 shrink-0 rounded-full", entry.dotColor)} />
-            <span className="text-xs text-neutral-700">{entry.label}</span>
+            <span className="text-xs text-foreground/80">{entry.label}</span>
           </div>
         ))}
       </div>
@@ -266,9 +266,9 @@ export function AppointmentCalendarPage() {
       {calendar ? (
         <AppointmentCalendar calendar={calendar} />
       ) : (
-        <div className="flex min-h-[400px] flex-col items-center justify-center gap-3 rounded-lg border border-neutral-200 bg-white">
-          <CalendarDays className="h-10 w-10 text-neutral-400" />
-          <p className="text-neutral-500">Calendar is loading...</p>
+        <div className="flex min-h-[400px] flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card">
+          <CalendarDays className="h-10 w-10 text-muted-foreground/70" />
+          <p className="text-muted-foreground">Calendar is loading...</p>
         </div>
       )}
 

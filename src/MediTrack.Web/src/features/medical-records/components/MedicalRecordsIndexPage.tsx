@@ -292,8 +292,8 @@ export function MedicalRecordsIndexPage() {
 
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900">Medical Records</h1>
-          <p className="mt-1 text-sm text-neutral-500">
+          <h1 className="text-2xl font-bold text-foreground">Medical Records</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Search for a patient to view their medical records
           </p>
         </div>
@@ -307,8 +307,8 @@ export function MedicalRecordsIndexPage() {
                 disabled={filteredRecords.length === 0}
                 title={`Export ${filteredRecords.length} record${filteredRecords.length === 1 ? "" : "s"}`}
                 className={clsxMerge(
-                  "inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700",
-                  "transition-colors hover:bg-neutral-50",
+                  "inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-medium text-foreground/80",
+                  "transition-colors hover:bg-muted",
                   "disabled:cursor-not-allowed disabled:opacity-40"
                 )}
               >
@@ -327,11 +327,11 @@ export function MedicalRecordsIndexPage() {
                     }}
                     role="presentation"
                   />
-                  <div className="absolute right-0 z-20 mt-1 w-48 rounded-lg border border-neutral-200 bg-white py-1 shadow-lg">
+                  <div className="absolute right-0 z-20 mt-1 w-48 rounded-lg border border-border bg-card py-1 shadow-lg">
                     <button
                       type="button"
                       onClick={() => handleExportClick("csv")}
-                      className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50"
+                      className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-foreground/80 hover:bg-muted"
                     >
                       <FileSpreadsheet className="h-4 w-4 text-success-600" />
                       Export as CSV
@@ -339,7 +339,7 @@ export function MedicalRecordsIndexPage() {
                     <button
                       type="button"
                       onClick={() => handleExportClick("pdf")}
-                      className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50"
+                      className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-foreground/80 hover:bg-muted"
                     >
                       <FileText className="h-4 w-4 text-error-600" />
                       Export as PDF
@@ -362,7 +362,7 @@ export function MedicalRecordsIndexPage() {
       {/* Patient search */}
       <div className="relative w-full sm:max-w-md">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
           <input
             type="text"
             role="combobox"
@@ -384,7 +384,7 @@ export function MedicalRecordsIndexPage() {
             onKeyDown={handleKeyDown}
             placeholder="Search patients by name..."
             className={clsxMerge(
-              "w-full h-10 rounded-lg border border-neutral-200 pl-9 pr-9 text-sm",
+              "w-full h-10 rounded-lg border border-border pl-9 pr-9 text-sm",
               "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500",
               "transition-colors"
             )}
@@ -394,7 +394,7 @@ export function MedicalRecordsIndexPage() {
               type="button"
               onClick={handleClearSelection}
               aria-label="Clear patient search"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 hover:text-muted-foreground"
             >
               <X className="h-4 w-4" />
             </button>
@@ -403,16 +403,16 @@ export function MedicalRecordsIndexPage() {
 
         {/* Patient search dropdown */}
         {isDropdownVisible && (
-          <div className="absolute z-10 mt-1 w-full rounded-lg border border-neutral-200 bg-white shadow-lg">
+          <div className="absolute z-10 mt-1 w-full rounded-lg border border-border bg-card shadow-lg">
             {isSearchingPatients && (
-              <div role="status" className="flex items-center gap-2 px-4 py-3 text-sm text-neutral-500">
+              <div role="status" className="flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Searching...
               </div>
             )}
 
             {!isSearchingPatients && patientResults.length === 0 && (
-              <div role="status" className="px-4 py-3 text-sm text-neutral-500">
+              <div role="status" className="px-4 py-3 text-sm text-muted-foreground">
                 No patients found
               </div>
             )}
@@ -436,15 +436,15 @@ export function MedicalRecordsIndexPage() {
                     }}
                     className={clsxMerge(
                       "flex cursor-pointer items-center gap-3 px-4 py-2 text-sm",
-                      "hover:bg-neutral-50",
-                      index === highlightedIndex && "bg-neutral-100"
+                      "hover:bg-muted",
+                      index === highlightedIndex && "bg-muted"
                     )}
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-neutral-900 truncate">
+                      <p className="font-medium text-foreground truncate">
                         {patient.fullName}
                       </p>
-                      <p className="text-neutral-500 truncate">
+                      <p className="text-muted-foreground truncate">
                         MRN: {patient.medicalRecordNumber}
                       </p>
                     </div>
@@ -468,10 +468,10 @@ export function MedicalRecordsIndexPage() {
 
       {/* Records filter bar (only shown once patient is selected and has records) */}
       {selectedPatient && records.length > 0 && (
-        <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm space-y-4">
+        <div className="rounded-lg border border-border bg-card p-4 shadow-sm space-y-4">
           {/* Full-text search */}
           <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
             <input
               type="text"
               value={fullTextSearchTerm}
@@ -479,7 +479,7 @@ export function MedicalRecordsIndexPage() {
               placeholder="Search by diagnosis, ICD code, chief complaint..."
               aria-label="Search records by diagnosis, ICD code, or chief complaint"
               className={clsxMerge(
-                "w-full h-10 rounded-lg border border-neutral-200 pl-9 pr-9 text-sm",
+                "w-full h-10 rounded-lg border border-border pl-9 pr-9 text-sm",
                 "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500",
                 "transition-colors"
               )}
@@ -489,7 +489,7 @@ export function MedicalRecordsIndexPage() {
                 type="button"
                 onClick={() => setFullTextSearchTerm("")}
                 aria-label="Clear record search"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 hover:text-muted-foreground"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -503,14 +503,14 @@ export function MedicalRecordsIndexPage() {
               <select
                 value={statusFilter}
                 onChange={(event) => setStatusFilter(event.target.value as RecordStatus | "all")}
-                className="h-10 pl-3 pr-8 rounded-md border border-neutral-200 text-sm text-neutral-700 appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
+                className="h-10 pl-3 pr-8 rounded-md border border-border text-sm text-foreground/80 appearance-none bg-card focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
               >
                 <option value="all">All Statuses</option>
                 {Object.entries(STATUS_LABELS).map(([value, label]) => (
                   <option key={value} value={value}>{label}</option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             </div>
 
             {/* Severity filter */}
@@ -518,14 +518,14 @@ export function MedicalRecordsIndexPage() {
               <select
                 value={severityFilter}
                 onChange={(event) => setSeverityFilter(event.target.value as DiagnosisSeverity | "all")}
-                className="h-10 pl-3 pr-8 rounded-md border border-neutral-200 text-sm text-neutral-700 appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
+                className="h-10 pl-3 pr-8 rounded-md border border-border text-sm text-foreground/80 appearance-none bg-card focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
               >
                 <option value="all">All Severities</option>
                 {Object.entries(SEVERITY_LABELS).map(([value, label]) => (
                   <option key={value} value={value}>{label}</option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             </div>
 
             {/* ICD-10 filter */}
@@ -562,16 +562,16 @@ export function MedicalRecordsIndexPage() {
                     aria-expanded={isIcd10DropdownOpen}
                     role="combobox"
                     aria-autocomplete="list"
-                    className="h-10 w-full sm:w-52 pl-3 pr-8 rounded-md border border-neutral-200 text-sm text-neutral-700 bg-white focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
+                    className="h-10 w-full sm:w-52 pl-3 pr-8 rounded-md border border-border text-sm text-foreground/80 bg-card focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
                   />
-                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
                   {isIcd10DropdownOpen && filteredIcd10Codes.length > 0 && (
                     <ul
                       id={icd10ListboxId}
                       role="listbox"
                       aria-label="ICD-10 code suggestions"
-                      className="absolute z-20 mt-1 max-h-60 w-full sm:w-80 overflow-y-auto rounded-lg border border-neutral-200 bg-white py-1 shadow-lg"
+                      className="absolute z-20 mt-1 max-h-60 w-full sm:w-80 overflow-y-auto rounded-lg border border-border bg-card py-1 shadow-lg"
                     >
                       {filteredIcd10Codes.map((entry) => (
                         <li
@@ -582,12 +582,12 @@ export function MedicalRecordsIndexPage() {
                             event.preventDefault();
                             handleIcd10Select(entry);
                           }}
-                          className="flex cursor-pointer items-center gap-2 px-4 py-2 text-sm hover:bg-neutral-50"
+                          className="flex cursor-pointer items-center gap-2 px-4 py-2 text-sm hover:bg-muted"
                         >
-                          <span className="font-mono text-xs font-medium text-neutral-900">
+                          <span className="font-mono text-xs font-medium text-foreground">
                             {entry.code}
                           </span>
-                          <span className="text-neutral-600 truncate">
+                          <span className="text-muted-foreground truncate">
                             {entry.description}
                           </span>
                         </li>
@@ -598,31 +598,31 @@ export function MedicalRecordsIndexPage() {
               )}
             </div>
 
-            <p className="self-center sm:ml-auto text-sm text-neutral-500">
+            <p className="self-center sm:ml-auto text-sm text-muted-foreground">
               {filteredRecords.length} {filteredRecords.length === 1 ? "record" : "records"}
             </p>
           </div>
 
           {/* Date range filter */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <CalendarDays className="hidden sm:block h-4 w-4 flex-shrink-0 text-neutral-400" />
+            <CalendarDays className="hidden sm:block h-4 w-4 flex-shrink-0 text-muted-foreground/70" />
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <label className="flex items-center gap-2 text-sm text-neutral-600">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span className="w-10 shrink-0">From</span>
                 <input
                   type="date"
                   value={fromDate}
                   onChange={(event) => setFromDate(event.target.value)}
-                  className="h-9 rounded-md border border-neutral-200 px-2 text-sm text-neutral-700 bg-white focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
+                  className="h-9 rounded-md border border-border px-2 text-sm text-foreground/80 bg-card focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
                 />
               </label>
-              <label className="flex items-center gap-2 text-sm text-neutral-600">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span className="w-10 shrink-0">To</span>
                 <input
                   type="date"
                   value={toDate}
                   onChange={(event) => setToDate(event.target.value)}
-                  className="h-9 rounded-md border border-neutral-200 px-2 text-sm text-neutral-700 bg-white focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
+                  className="h-9 rounded-md border border-border px-2 text-sm text-foreground/80 bg-card focus:outline-none focus:ring-2 focus:ring-primary-700 transition-shadow"
                 />
               </label>
             </div>
@@ -636,7 +636,7 @@ export function MedicalRecordsIndexPage() {
                     "h-8 rounded-md border px-3 text-xs font-medium transition-colors",
                     preset.days === null && !fromDate && !toDate
                       ? "border-primary-300 bg-primary-50 text-primary-700"
-                      : "border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50"
+                      : "border-border bg-card text-muted-foreground hover:bg-muted"
                   )}
                 >
                   {preset.label}
@@ -651,12 +651,12 @@ export function MedicalRecordsIndexPage() {
               {activeFilters.map((filter) => (
                 <span
                   key={filter.label}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground/80"
                 >
                   {filter.label}
                   <button
                     onClick={filter.onClear}
-                    className="rounded-full p-0.5 hover:bg-neutral-200 transition-colors"
+                    className="rounded-full p-0.5 hover:bg-muted transition-colors"
                     aria-label={`Remove filter: ${filter.label}`}
                   >
                     <X className="h-3 w-3" />
@@ -676,10 +676,10 @@ export function MedicalRecordsIndexPage() {
           searchHighlight={fullTextSearchTerm}
         />
       ) : (
-        <div className="flex flex-col items-center justify-center min-h-[400px] rounded-lg border border-neutral-200 bg-white p-6">
-          <FileX className="h-12 w-12 text-neutral-300" />
-          <h2 className="mt-4 text-lg font-semibold text-neutral-700">Search for a Patient</h2>
-          <p className="mt-2 text-sm text-neutral-500 text-center max-w-md">
+        <div className="flex flex-col items-center justify-center min-h-[400px] rounded-lg border border-border bg-card p-6">
+          <FileX className="h-12 w-12 text-muted-foreground/50" />
+          <h2 className="mt-4 text-lg font-semibold text-foreground/80">Search for a Patient</h2>
+          <p className="mt-2 text-sm text-muted-foreground text-center max-w-md">
             Type a patient's name above to search and view their medical records.
           </p>
         </div>

@@ -88,9 +88,9 @@ const STATUS_CONFIG: Record<AppointmentStatus, { badge: string }> = {
   CheckedIn:   { badge: "bg-info-50 text-info-700" },
   InProgress:  { badge: "bg-warning-50 text-warning-700" },
   Completed:   { badge: "bg-success-50 text-success-700" },
-  Cancelled:   { badge: "bg-neutral-100 text-neutral-500" },
+  Cancelled:   { badge: "bg-muted text-muted-foreground" },
   NoShow:      { badge: "bg-error-50 text-error-700" },
-  Rescheduled: { badge: "bg-neutral-100 text-neutral-600" },
+  Rescheduled: { badge: "bg-muted text-muted-foreground" },
 };
 
 /* ── Sub-components ── */
@@ -105,10 +105,10 @@ function DetailCard({
   readonly children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-      <div className="mb-4 flex items-center gap-2 border-b border-neutral-200 pb-3">
+    <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+      <div className="mb-4 flex items-center gap-2 border-b border-border pb-3">
         <Icon className="h-5 w-5 text-primary-700" />
-        <h3 className="font-semibold text-neutral-900">{title}</h3>
+        <h3 className="font-semibold text-foreground">{title}</h3>
       </div>
       {children}
     </div>
@@ -118,8 +118,8 @@ function DetailCard({
 function InfoField({ label, value }: { readonly label: string; readonly value: string }) {
   return (
     <div>
-      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-neutral-500">{label}</p>
-      <p className="text-sm font-medium text-neutral-900">{value || "\u2014"}</p>
+      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-sm font-medium text-foreground">{value || "\u2014"}</p>
     </div>
   );
 }
@@ -138,7 +138,7 @@ function PatientSummaryCard({
   const ToggleIcon = isExpanded ? ChevronUp : ChevronDown;
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white shadow-sm">
+    <div className="rounded-lg border border-border bg-card shadow-sm">
       <button
         type="button"
         onClick={onToggle}
@@ -146,26 +146,26 @@ function PatientSummaryCard({
       >
         <div className="flex items-center gap-2">
           <ClipboardList className="h-5 w-5 text-primary-700" />
-          <h3 className="font-semibold text-neutral-900">Patient Summary</h3>
-          <span className="text-xs text-neutral-500">{patientName}</span>
+          <h3 className="font-semibold text-foreground">Patient Summary</h3>
+          <span className="text-xs text-muted-foreground">{patientName}</span>
         </div>
-        <ToggleIcon className="h-5 w-5 text-neutral-400" />
+        <ToggleIcon className="h-5 w-5 text-muted-foreground/70" />
       </button>
 
       {isExpanded && (
-        <div className="border-t border-neutral-200 p-6 pt-4">
+        <div className="border-t border-border p-6 pt-4">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {/* Active Medications */}
             <div>
               <div className="mb-2 flex items-center gap-1.5">
                 <Pill className="h-4 w-4 text-primary-700" />
-                <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">Active Medications</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Active Medications</p>
               </div>
               <ul className="space-y-1.5">
                 {DEMO_MEDICATIONS.map((medication) => (
-                  <li key={medication.name} className="text-sm text-neutral-700">
+                  <li key={medication.name} className="text-sm text-foreground/80">
                     <span className="font-medium">{medication.name}</span>
-                    <span className="text-neutral-500"> &mdash; {medication.frequency}</span>
+                    <span className="text-muted-foreground"> &mdash; {medication.frequency}</span>
                   </li>
                 ))}
               </ul>
@@ -175,13 +175,13 @@ function PatientSummaryCard({
             <div>
               <div className="mb-2 flex items-center gap-1.5">
                 <ShieldAlert className="h-4 w-4 text-error-600" />
-                <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">Allergies</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Allergies</p>
               </div>
               <ul className="space-y-1.5">
                 {DEMO_ALLERGIES.map((allergy) => (
                   <li key={allergy.allergen} className="text-sm">
                     <span className="font-medium text-error-700">{allergy.allergen}</span>
-                    <span className="text-neutral-500"> &mdash; {allergy.severity} ({allergy.reaction})</span>
+                    <span className="text-muted-foreground"> &mdash; {allergy.severity} ({allergy.reaction})</span>
                   </li>
                 ))}
               </ul>
@@ -191,12 +191,12 @@ function PatientSummaryCard({
             <div>
               <div className="mb-2 flex items-center gap-1.5">
                 <Stethoscope className="h-4 w-4 text-primary-700" />
-                <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">Recent Diagnoses</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Recent Diagnoses</p>
               </div>
               <ul className="space-y-1.5">
                 {DEMO_DIAGNOSES.map((diagnosis) => (
-                  <li key={diagnosis.code} className="text-sm text-neutral-700">
-                    <span className="font-mono text-xs text-neutral-500">{diagnosis.code}</span>{" "}
+                  <li key={diagnosis.code} className="text-sm text-foreground/80">
+                    <span className="font-mono text-xs text-muted-foreground">{diagnosis.code}</span>{" "}
                     <span className="font-medium">{diagnosis.description}</span>
                   </li>
                 ))}
@@ -207,25 +207,25 @@ function PatientSummaryCard({
             <div>
               <div className="mb-2 flex items-center gap-1.5">
                 <Activity className="h-4 w-4 text-success-600" />
-                <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Last Vitals ({DEMO_LAST_VITALS.recordedDate})
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <p className="text-sm text-neutral-700">
-                  <span className="text-neutral-500">BP:</span> {DEMO_LAST_VITALS.bloodPressure}
+                <p className="text-sm text-foreground/80">
+                  <span className="text-muted-foreground">BP:</span> {DEMO_LAST_VITALS.bloodPressure}
                 </p>
-                <p className="text-sm text-neutral-700">
-                  <span className="text-neutral-500">HR:</span> {DEMO_LAST_VITALS.heartRate}
+                <p className="text-sm text-foreground/80">
+                  <span className="text-muted-foreground">HR:</span> {DEMO_LAST_VITALS.heartRate}
                 </p>
-                <p className="text-sm text-neutral-700">
-                  <span className="text-neutral-500">Temp:</span> {DEMO_LAST_VITALS.temperature}
+                <p className="text-sm text-foreground/80">
+                  <span className="text-muted-foreground">Temp:</span> {DEMO_LAST_VITALS.temperature}
                 </p>
-                <p className="text-sm text-neutral-700">
-                  <span className="text-neutral-500">SpO2:</span> {DEMO_LAST_VITALS.spO2}
+                <p className="text-sm text-foreground/80">
+                  <span className="text-muted-foreground">SpO2:</span> {DEMO_LAST_VITALS.spO2}
                 </p>
-                <p className="text-sm text-neutral-700">
-                  <span className="text-neutral-500">Weight:</span> {DEMO_LAST_VITALS.weight}
+                <p className="text-sm text-foreground/80">
+                  <span className="text-muted-foreground">Weight:</span> {DEMO_LAST_VITALS.weight}
                 </p>
               </div>
             </div>
@@ -271,7 +271,7 @@ function VitalsEntryCard({
     <DetailCard icon={Heart} title="Quick Vitals Entry">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         <div>
-          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-500">
+          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
             BP Systolic
           </label>
           <input
@@ -279,11 +279,11 @@ function VitalsEntryCard({
             placeholder="120"
             value={vitals.bloodPressureSystolic}
             onChange={(event) => onVitalsChange("bloodPressureSystolic", event.target.value)}
-            className="h-10 w-full rounded-md border border-neutral-200 px-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="h-10 w-full rounded-md border border-border px-3 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-500">
+          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
             BP Diastolic
           </label>
           <input
@@ -291,11 +291,11 @@ function VitalsEntryCard({
             placeholder="80"
             value={vitals.bloodPressureDiastolic}
             onChange={(event) => onVitalsChange("bloodPressureDiastolic", event.target.value)}
-            className="h-10 w-full rounded-md border border-neutral-200 px-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="h-10 w-full rounded-md border border-border px-3 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-500">
+          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Heart Rate
           </label>
           <div className="relative">
@@ -304,12 +304,12 @@ function VitalsEntryCard({
               placeholder="72"
               value={vitals.heartRate}
               onChange={(event) => onVitalsChange("heartRate", event.target.value)}
-              className="h-10 w-full rounded-md border border-neutral-200 px-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="h-10 w-full rounded-md border border-border px-3 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
             />
           </div>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-500">
+          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Temp (°F)
           </label>
           <div className="relative">
@@ -319,12 +319,12 @@ function VitalsEntryCard({
               placeholder="98.6"
               value={vitals.temperature}
               onChange={(event) => onVitalsChange("temperature", event.target.value)}
-              className="h-10 w-full rounded-md border border-neutral-200 px-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="h-10 w-full rounded-md border border-border px-3 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
             />
           </div>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-500">
+          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
             SpO2 (%)
           </label>
           <input
@@ -332,11 +332,11 @@ function VitalsEntryCard({
             placeholder="98"
             value={vitals.spO2}
             onChange={(event) => onVitalsChange("spO2", event.target.value)}
-            className="h-10 w-full rounded-md border border-neutral-200 px-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="h-10 w-full rounded-md border border-border px-3 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-500">
+          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Weight (lbs)
           </label>
           <input
@@ -344,13 +344,13 @@ function VitalsEntryCard({
             placeholder="170"
             value={vitals.weight}
             onChange={(event) => onVitalsChange("weight", event.target.value)}
-            className="h-10 w-full rounded-md border border-neutral-200 px-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="h-10 w-full rounded-md border border-border px-3 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           />
         </div>
       </div>
       <div className="mt-2 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         <div>
-          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-500">
+          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Height (in)
           </label>
           <input
@@ -358,7 +358,7 @@ function VitalsEntryCard({
             placeholder="68"
             value={vitals.height}
             onChange={(event) => onVitalsChange("height", event.target.value)}
-            className="h-10 w-full rounded-md border border-neutral-200 px-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="h-10 w-full rounded-md border border-border px-3 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           />
         </div>
       </div>
@@ -425,7 +425,7 @@ function VisitOutcomeCard({
       )}
       <div className="space-y-4">
         <div>
-          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-500">
+          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Primary Diagnosis
           </label>
           <input
@@ -433,11 +433,11 @@ function VisitOutcomeCard({
             placeholder="Enter primary diagnosis..."
             value={outcome.primaryDiagnosis}
             onChange={(event) => onOutcomeChange("primaryDiagnosis", event.target.value)}
-            className="h-10 w-full rounded-md border border-neutral-200 px-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="h-10 w-full rounded-md border border-border px-3 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-500">
+          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Follow-up Plan
           </label>
           <textarea
@@ -445,17 +445,17 @@ function VisitOutcomeCard({
             value={outcome.followUpPlan}
             onChange={(event) => onOutcomeChange("followUpPlan", event.target.value)}
             rows={3}
-            className="w-full rounded-md border border-neutral-200 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-500">
+          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Disposition
           </label>
           <select
             value={outcome.disposition}
             onChange={(event) => onOutcomeChange("disposition", event.target.value)}
-            className="h-10 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="h-10 w-full rounded-md border border-border bg-card px-3 text-sm text-foreground focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           >
             {DISPOSITION_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -498,8 +498,8 @@ function TelehealthStatusIndicator({ connectionStatus }: { readonly connectionSt
     },
     not_started: {
       label: "Not Started",
-      dotClass: "bg-neutral-400",
-      textClass: "text-neutral-500",
+      dotClass: "bg-muted-foreground/70",
+      textClass: "text-muted-foreground",
     },
   };
 
@@ -540,26 +540,26 @@ function ClaraFab({
     <>
       {/* Panel */}
       {isOpen && (
-        <div className="fixed bottom-24 right-4 z-50 w-[calc(100vw-2rem)] max-w-sm rounded-xl border border-neutral-200 bg-white shadow-xl sm:right-6">
-          <div className="border-b border-neutral-200 p-4">
+        <div className="fixed bottom-24 right-4 z-50 w-[calc(100vw-2rem)] max-w-sm rounded-xl border border-border bg-card shadow-xl sm:right-6">
+          <div className="border-b border-border p-4">
             <div className="flex items-center gap-2">
               <Brain className="h-5 w-5 text-accent-600" />
-              <h4 className="font-semibold text-neutral-900">Clara AI Assistant</h4>
+              <h4 className="font-semibold text-foreground">Clara AI Assistant</h4>
             </div>
           </div>
           <div className="p-4 space-y-4">
-            <div className="rounded-lg bg-neutral-50 p-3">
-              <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 mb-1">Patient Context</p>
-              <p className="text-sm text-neutral-700">{patientName} &mdash; {appointmentType}</p>
+            <div className="rounded-lg bg-muted p-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-1">Patient Context</p>
+              <p className="text-sm text-foreground/80">{patientName} &mdash; {appointmentType}</p>
             </div>
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 mb-2">Suggested Prompts</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">Suggested Prompts</p>
               <div className="space-y-2">
                 {suggestedPrompts.map((prompt) => (
                   <button
                     key={prompt}
                     type="button"
-                    className="w-full text-left rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-700 transition-colors hover:bg-neutral-50"
+                    className="w-full text-left rounded-lg border border-border px-3 py-2 text-sm text-foreground/80 transition-colors hover:bg-muted"
                   >
                     {prompt}
                   </button>
@@ -675,8 +675,8 @@ export function AppointmentDetailPage() {
   if (error || !appointment) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <AlertCircle className="mb-3 h-12 w-12 text-neutral-300" />
-        <p className="text-lg font-semibold text-neutral-700">Appointment not found</p>
+        <AlertCircle className="mb-3 h-12 w-12 text-muted-foreground/50" />
+        <p className="text-lg font-semibold text-foreground/80">Appointment not found</p>
         <Link to="/appointments" className="mt-2 text-sm text-primary-700 hover:underline">
           &larr; Back to Appointments
         </Link>
@@ -730,8 +730,8 @@ export function AppointmentDetailPage() {
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-xl font-bold text-neutral-900">{appointment.patientName}</h1>
-              <span className="inline-flex items-center gap-1 rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-mono text-xs text-neutral-500">
+              <h1 className="text-xl font-bold text-foreground">{appointment.patientName}</h1>
+              <span className="inline-flex items-center gap-1 rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground">
                 <Hash className="h-3 w-3" />
                 {appointment.patientId.slice(0, 8).toUpperCase()}
               </span>
@@ -739,7 +739,7 @@ export function AppointmentDetailPage() {
                 {appointment.status}
               </span>
             </div>
-            <p className="mt-0.5 text-sm text-neutral-500">
+            <p className="mt-0.5 text-sm text-muted-foreground">
               {appointment.type} &middot; {appointment.providerName}
             </p>
           </div>
@@ -747,7 +747,7 @@ export function AppointmentDetailPage() {
         <div className="flex flex-col gap-2 sm:flex-row">
           <Link
             to={`/patients/${appointment.patientId}`}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-neutral-200 px-4 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border px-4 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted"
           >
             <User className="h-4 w-4" /> View Patient
           </Link>
@@ -813,7 +813,7 @@ export function AppointmentDetailPage() {
             <InfoField label="Location" value={appointment.location || "Not specified"} />
             {appointment.telehealthLink && (
               <div className="space-y-2">
-                <p className="mb-1 text-xs font-medium uppercase tracking-wide text-neutral-500">Telehealth</p>
+                <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Telehealth</p>
                 <TelehealthStatusIndicator connectionStatus={telehealthStatus} />
                 <a
                   href={appointment.telehealthLink}
@@ -833,7 +833,7 @@ export function AppointmentDetailPage() {
         </DetailCard>
 
         <DetailCard icon={Hash} title="Reason for Visit">
-          <p className="text-sm text-neutral-700">{appointment.reason || "No reason specified"}</p>
+          <p className="text-sm text-foreground/80">{appointment.reason || "No reason specified"}</p>
         </DetailCard>
 
         {(appointment.patientNotes || appointment.internalNotes) && (
@@ -841,14 +841,14 @@ export function AppointmentDetailPage() {
             <div className="space-y-3">
               {appointment.patientNotes && (
                 <div>
-                  <p className="mb-1 text-xs font-medium uppercase tracking-wide text-neutral-500">Patient Notes</p>
-                  <p className="text-sm text-neutral-700">{appointment.patientNotes}</p>
+                  <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Patient Notes</p>
+                  <p className="text-sm text-foreground/80">{appointment.patientNotes}</p>
                 </div>
               )}
               {appointment.internalNotes && (
                 <div>
-                  <p className="mb-1 text-xs font-medium uppercase tracking-wide text-neutral-500">Internal Notes</p>
-                  <p className="text-sm text-neutral-700">{appointment.internalNotes}</p>
+                  <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Internal Notes</p>
+                  <p className="text-sm text-foreground/80">{appointment.internalNotes}</p>
                 </div>
               )}
             </div>
@@ -873,7 +873,7 @@ export function AppointmentDetailPage() {
 
         {isCompleted && (
           <DetailCard icon={FileText} title="Meeting Record">
-            <p className="mb-3 text-sm text-neutral-700">
+            <p className="mb-3 text-sm text-foreground/80">
               A medical record was generated from this appointment.
             </p>
             <Link

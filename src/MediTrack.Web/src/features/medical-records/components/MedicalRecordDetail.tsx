@@ -212,11 +212,11 @@ function Sparkline({ readings, isWarning }: { readonly readings: number[]; reado
 const VITAL_CONFIG: Record<string, { icon: React.ElementType; color: string }> = {
   "Blood Pressure": { icon: Heart, color: "text-warning-500" },
   "Heart Rate": { icon: HeartPulse, color: "text-success-500" },
-  "Temperature": { icon: Thermometer, color: "text-neutral-700" },
+  "Temperature": { icon: Thermometer, color: "text-foreground/80" },
   "Respiratory Rate": { icon: Wind, color: "text-success-500" },
   "O2 Saturation": { icon: Wind, color: "text-success-500" },
-  "Weight": { icon: Scale, color: "text-neutral-700" },
-  "Height": { icon: Ruler, color: "text-neutral-700" },
+  "Weight": { icon: Scale, color: "text-foreground/80" },
+  "Height": { icon: Ruler, color: "text-foreground/80" },
   "BMI": { icon: Calculator, color: "text-success-500" },
 };
 
@@ -256,7 +256,7 @@ const NOTE_TYPE_COLORS: Record<string, string> = {
   "Plan": "bg-info-100 text-info-700",
   "Procedure Note": "bg-warning-100 text-warning-700",
   "Consultation Note": "bg-primary-100 text-primary-700",
-  "Discharge Summary": "bg-neutral-100 text-neutral-700",
+  "Discharge Summary": "bg-muted text-foreground/80",
 };
 
 /* ── Print styles ── */
@@ -292,11 +292,11 @@ function SectionCard({
   readonly children: React.ReactNode;
 }) {
   return (
-    <div className="print-expand rounded-lg border border-neutral-200 bg-white shadow-sm">
-      <div className="flex items-center justify-between border-b border-neutral-200 px-6 pb-3 pt-5">
+    <div className="print-expand rounded-lg border border-border bg-card shadow-sm">
+      <div className="flex items-center justify-between border-b border-border px-6 pb-3 pt-5">
         <div className="flex items-center gap-2">
           <Icon className={clsxMerge("h-5 w-5", iconColor)} />
-          <h2 className="font-semibold text-neutral-900">{title}</h2>
+          <h2 className="font-semibold text-foreground">{title}</h2>
         </div>
         {right}
       </div>
@@ -308,8 +308,8 @@ function SectionCard({
 function Field({ label, children }: { readonly label: string; readonly children: React.ReactNode }) {
   return (
     <div>
-      <p className="mb-1 text-xs uppercase tracking-wide text-neutral-500">{label}</p>
-      <div className="text-sm font-medium leading-relaxed text-neutral-900">{children}</div>
+      <p className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+      <div className="text-sm font-medium leading-relaxed text-foreground">{children}</div>
     </div>
   );
 }
@@ -330,19 +330,19 @@ function VitalCard({ label, value, unit, warning, warningText, vitalKey }: Vital
   const trendData = VITAL_TREND_DATA[vitalKey];
 
   return (
-    <div className="rounded-lg bg-neutral-50 p-4">
+    <div className="rounded-lg bg-muted p-4">
       <VitalIcon className={clsxMerge("mb-2 h-4 w-4", colorClass)} />
       <div className="flex items-center gap-1.5">
         <p className={clsxMerge("text-2xl font-bold", colorClass)}>{value}</p>
         {trendData && trendData.trend !== "stable" && (
           trendData.trend === "up" ? (
-            <TrendingUp className={clsxMerge("h-4 w-4", warning ? "text-warning-500" : "text-neutral-500")} />
+            <TrendingUp className={clsxMerge("h-4 w-4", warning ? "text-warning-500" : "text-muted-foreground")} />
           ) : (
-            <TrendingDown className={clsxMerge("h-4 w-4", warning ? "text-warning-500" : "text-neutral-500")} />
+            <TrendingDown className={clsxMerge("h-4 w-4", warning ? "text-warning-500" : "text-muted-foreground")} />
           )
         )}
       </div>
-      <p className="mt-0.5 text-xs text-neutral-500">
+      <p className="mt-0.5 text-xs text-muted-foreground">
         {label}
         {unit ? ` (${unit})` : ""}
       </p>
@@ -400,16 +400,16 @@ function ClaraQuickActions({ recordId }: { readonly recordId: string }) {
       {isOpen && (
         <div
           className={clsxMerge(
-            "mb-3 w-72 rounded-lg border border-neutral-200 bg-white shadow-xl",
+            "mb-3 w-72 rounded-lg border border-border bg-card shadow-xl",
             "animate-in fade-in slide-in-from-bottom-2 duration-200"
           )}
         >
-          <div className="border-b border-neutral-200 px-4 py-3">
+          <div className="border-b border-border px-4 py-3">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-accent-600" />
-              <p className="text-sm font-semibold text-neutral-900">Clara AI</p>
+              <p className="text-sm font-semibold text-foreground">Clara AI</p>
             </div>
-            <p className="mt-0.5 text-xs text-neutral-500">Quick actions for this record</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Quick actions for this record</p>
           </div>
           <div className="p-2">
             {quickActions.map((action) => {
@@ -423,8 +423,8 @@ function ClaraQuickActions({ recordId }: { readonly recordId: string }) {
                   }}
                   className={clsxMerge(
                     "flex w-full items-center gap-3 rounded-md px-3 py-2.5",
-                    "text-left text-sm text-neutral-700",
-                    "transition-colors hover:bg-neutral-50"
+                    "text-left text-sm text-foreground/80",
+                    "transition-colors hover:bg-muted"
                   )}
                 >
                   <ActionIcon className="h-4 w-4 flex-shrink-0 text-accent-600" />
@@ -771,20 +771,20 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
               onClick={() => navigate(-1)}
               className={clsxMerge(
                 "flex h-10 w-10 items-center justify-center",
-                "rounded-lg border border-neutral-200",
-                "transition-colors hover:bg-neutral-50",
+                "rounded-lg border border-border",
+                "transition-colors hover:bg-muted",
                 "print-hide"
               )}
             >
-              <ArrowLeft className="h-5 w-5 text-neutral-700" />
+              <ArrowLeft className="h-5 w-5 text-foreground/80" />
             </button>
-            <h1 className="text-2xl font-bold text-neutral-900">{record.chiefComplaint}</h1>
+            <h1 className="text-2xl font-bold text-foreground">{record.chiefComplaint}</h1>
           </div>
           <div className="flex flex-wrap items-center gap-2 pl-[52px]">
             <StatusBadge status={record.status} size="md" />
             <SeverityBadge severity={record.severity} size="md" />
           </div>
-          <p className="mt-2 pl-[52px] text-sm text-neutral-500">
+          <p className="mt-2 pl-[52px] text-sm text-muted-foreground">
             {record.recordedByDoctorName} — Created {formattedDate}
           </p>
         </div>
@@ -795,25 +795,25 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
             onClick={handlePrint}
             className={clsxMerge(
               "flex h-10 w-10 items-center justify-center",
-              "rounded-lg border border-neutral-200 bg-white",
-              "transition-colors hover:bg-neutral-50",
+              "rounded-lg border border-border bg-card",
+              "transition-colors hover:bg-muted",
               "print-hide"
             )}
             title="Print record"
           >
-            <Printer className="h-4 w-4 text-neutral-700" />
+            <Printer className="h-4 w-4 text-foreground/80" />
           </button>
           <button
             onClick={handleExportPdf}
             className={clsxMerge(
               "flex h-10 w-10 items-center justify-center",
-              "rounded-lg border border-neutral-200 bg-white",
-              "transition-colors hover:bg-neutral-50",
+              "rounded-lg border border-border bg-card",
+              "transition-colors hover:bg-muted",
               "print-hide"
             )}
             title="Export as PDF"
           >
-            <FileDown className="h-4 w-4 text-neutral-700" />
+            <FileDown className="h-4 w-4 text-foreground/80" />
           </button>
 
           {/* Actions dropdown */}
@@ -823,8 +823,8 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
                 onClick={() => setShowActions(!showActions)}
                 className={clsxMerge(
                   "flex h-10 w-10 items-center justify-center",
-                  "rounded-lg border border-neutral-200 bg-white",
-                  "transition-colors hover:bg-neutral-50"
+                  "rounded-lg border border-border bg-card",
+                  "transition-colors hover:bg-muted"
                 )}
               >
                 <MoreVertical className="h-4 w-4" />
@@ -834,13 +834,13 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
                 <div
                   className={clsxMerge(
                     "absolute right-0 z-10 mt-2 w-48",
-                    "rounded-lg border border-neutral-200 bg-white shadow-lg"
+                    "rounded-lg border border-border bg-card shadow-lg"
                   )}
                 >
                   {/* Edit Record */}
                   <button
                     onClick={handleStartEdit}
-                    className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-neutral-50"
+                    className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-muted"
                   >
                     <Pencil className="h-4 w-4 text-primary-600" />
                     Edit Record
@@ -850,7 +850,7 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
                     <button
                       onClick={handleResolve}
                       disabled={isResolving}
-                      className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-neutral-50 disabled:opacity-50"
+                      className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-muted disabled:opacity-50"
                     >
                       {isResolving ? (
                         <Loader2 className="h-4 w-4 animate-spin text-success-600" />
@@ -865,7 +865,7 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
                     <button
                       onClick={handleMarkFollowUp}
                       disabled={isMarkingFollowUp}
-                      className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-neutral-50 disabled:opacity-50"
+                      className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-muted disabled:opacity-50"
                     >
                       {isMarkingFollowUp ? (
                         <Loader2 className="h-4 w-4 animate-spin text-warning-600" />
@@ -879,12 +879,12 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
                   <button
                     onClick={handleArchive}
                     disabled={isArchiving}
-                    className="flex w-full items-center gap-2 border-t border-neutral-200 px-4 py-2 text-left text-sm hover:bg-neutral-50 disabled:opacity-50"
+                    className="flex w-full items-center gap-2 border-t border-border px-4 py-2 text-left text-sm hover:bg-muted disabled:opacity-50"
                   >
                     {isArchiving ? (
-                      <Loader2 className="h-4 w-4 animate-spin text-neutral-600" />
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                     ) : (
-                      <Archive className="h-4 w-4 text-neutral-600" />
+                      <Archive className="h-4 w-4 text-muted-foreground" />
                     )}
                     Archive Record
                   </button>
@@ -963,18 +963,18 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
               <div>
                 <label
                   htmlFor="edit-chief-complaint"
-                  className="mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-500"
+                  className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground"
                 >
                   Chief Complaint
                 </label>
-                <p className="text-sm font-medium text-neutral-900">{record.chiefComplaint}</p>
-                <p className="mt-1 text-xs text-neutral-400">Chief complaint cannot be changed after creation</p>
+                <p className="text-sm font-medium text-foreground">{record.chiefComplaint}</p>
+                <p className="mt-1 text-xs text-muted-foreground/70">Chief complaint cannot be changed after creation</p>
               </div>
 
               <div>
                 <label
                   htmlFor="edit-diagnosis-description"
-                  className="mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-500"
+                  className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground"
                 >
                   Diagnosis Description
                 </label>
@@ -984,8 +984,8 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
                   value={editDiagnosisDescription}
                   onChange={(event) => setEditDiagnosisDescription(event.target.value)}
                   className={clsxMerge(
-                    "w-full rounded-lg border border-neutral-200 bg-white px-3 py-2",
-                    "text-sm leading-relaxed text-neutral-900",
+                    "w-full rounded-lg border border-border bg-card px-3 py-2",
+                    "text-sm leading-relaxed text-foreground",
                     "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20",
                     "resize-y"
                   )}
@@ -996,7 +996,7 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
                 <div>
                   <label
                     htmlFor="edit-diagnosis-code"
-                    className="mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-500"
+                    className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground"
                   >
                     Diagnosis Code (ICD-10)
                   </label>
@@ -1006,8 +1006,8 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
                     value={editDiagnosisCode}
                     onChange={(event) => setEditDiagnosisCode(event.target.value)}
                     className={clsxMerge(
-                      "w-full rounded-lg border border-neutral-200 bg-white px-3 py-2",
-                      "font-mono text-sm text-neutral-900",
+                      "w-full rounded-lg border border-border bg-card px-3 py-2",
+                      "font-mono text-sm text-foreground",
                       "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
                     )}
                   />
@@ -1016,7 +1016,7 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
                 <div>
                   <label
                     htmlFor="edit-severity"
-                    className="mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-500"
+                    className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground"
                   >
                     Severity
                   </label>
@@ -1025,8 +1025,8 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
                     value={editSeverity}
                     onChange={(event) => setEditSeverity(event.target.value as DiagnosisSeverity)}
                     className={clsxMerge(
-                      "w-full rounded-lg border border-neutral-200 bg-white px-3 py-2",
-                      "text-sm text-neutral-900",
+                      "w-full rounded-lg border border-border bg-card px-3 py-2",
+                      "text-sm text-foreground",
                       "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
                     )}
                   >
@@ -1046,8 +1046,8 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
                   disabled={isSavingEdit}
                   className={clsxMerge(
                     "inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4",
-                    "border border-neutral-200 bg-white text-sm font-medium text-neutral-700",
-                    "transition-colors hover:bg-neutral-50",
+                    "border border-border bg-card text-sm font-medium text-foreground/80",
+                    "transition-colors hover:bg-muted",
                     "disabled:opacity-50"
                   )}
                 >
@@ -1080,7 +1080,7 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
               <Field label="Chief Complaint">{record.chiefComplaint}</Field>
               <Field label="Primary Diagnosis">
                 {record.diagnosisDescription}{" "}
-                <span className="rounded border border-neutral-200 bg-neutral-50 px-2 py-0.5 font-mono text-xs">
+                <span className="rounded border border-border bg-muted px-2 py-0.5 font-mono text-xs">
                   {record.diagnosisCode}
                 </span>
               </Field>
@@ -1094,7 +1094,7 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
             icon={Activity}
             title="Vital Signs"
             right={
-              <span className="hidden text-xs text-neutral-500 sm:block">
+              <span className="hidden text-xs text-muted-foreground sm:block">
                 Recorded {new Date(record.vitalSigns[0].recordedAt).toLocaleString()}
               </span>
             }
@@ -1181,7 +1181,7 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
                     />
                   )}
                 </div>
-                <p className="mt-3 text-xs text-neutral-500">
+                <p className="mt-3 text-xs text-muted-foreground">
                   Recorded by {vitals.recordedByName} on{" "}
                   {new Date(vitals.recordedAt).toLocaleString()}
                 </p>
@@ -1198,26 +1198,26 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
             right={
               <button
                 onClick={handleOpenAddNote}
-                className="inline-flex items-center gap-1 rounded-md border border-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
+                className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted"
               >
                 <Plus className="h-3.5 w-3.5" />
                 Add Note
               </button>
             }
           >
-            <div className="divide-y divide-neutral-200">
+            <div className="divide-y divide-border">
               {record.clinicalNotes.map((note, noteIndex) => (
                 <div key={note.id} className={noteIndex === 0 ? "pb-5" : "py-5"}>
                   <div className="mb-2 flex flex-wrap items-center gap-2">
                     <span
                       className={clsxMerge(
                         "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
-                        NOTE_TYPE_COLORS[note.noteType as ClinicalNoteType] || "bg-neutral-100 text-neutral-700"
+                        NOTE_TYPE_COLORS[note.noteType as ClinicalNoteType] || "bg-muted text-foreground/80"
                       )}
                     >
                       {note.noteType}
                     </span>
-                    <span className="text-xs text-neutral-500">
+                    <span className="text-xs text-muted-foreground">
                       {note.authorName} · {new Date(note.createdAt).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
@@ -1225,7 +1225,7 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
                       })}
                     </span>
                   </div>
-                  <p className="whitespace-pre-line text-sm leading-relaxed text-neutral-700">
+                  <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/80">
                     {note.content}
                   </p>
                 </div>
@@ -1234,11 +1234,11 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
 
             {/* Inline Add Note Form */}
             {isAddingNote && (
-              <div className="mt-4 space-y-4 rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+              <div className="mt-4 space-y-4 rounded-lg border border-border bg-muted p-4">
                 <div>
                   <label
                     htmlFor="note-type-select"
-                    className="mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-500"
+                    className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground"
                   >
                     Note Type
                   </label>
@@ -1247,8 +1247,8 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
                     value={noteType}
                     onChange={(event) => setNoteType(event.target.value as ClinicalNoteType)}
                     className={clsxMerge(
-                      "w-full rounded-lg border border-neutral-200 bg-white px-3 py-2",
-                      "text-sm text-neutral-900",
+                      "w-full rounded-lg border border-border bg-card px-3 py-2",
+                      "text-sm text-foreground",
                       "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
                     )}
                   >
@@ -1263,7 +1263,7 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
                 <div>
                   <label
                     htmlFor="note-content-textarea"
-                    className="mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-500"
+                    className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground"
                   >
                     Content
                   </label>
@@ -1278,9 +1278,9 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
                         : "Enter note content..."
                     }
                     className={clsxMerge(
-                      "w-full rounded-lg border border-neutral-200 bg-white px-3 py-2",
-                      "text-sm leading-relaxed text-neutral-900",
-                      "placeholder:text-neutral-400",
+                      "w-full rounded-lg border border-border bg-card px-3 py-2",
+                      "text-sm leading-relaxed text-foreground",
+                      "placeholder:text-muted-foreground/70",
                       "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20",
                       "resize-y"
                     )}
@@ -1294,8 +1294,8 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
                     disabled={isSavingNote}
                     className={clsxMerge(
                       "inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4",
-                      "border border-neutral-200 bg-white text-sm font-medium text-neutral-700",
-                      "transition-colors hover:bg-neutral-50",
+                      "border border-border bg-card text-sm font-medium text-foreground/80",
+                      "transition-colors hover:bg-muted",
                       "disabled:opacity-50"
                     )}
                   >
@@ -1334,23 +1334,23 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
             <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-neutral-200 text-left">
-                    <th className="pb-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Medication</th>
-                    <th className="pb-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Dosage</th>
-                    <th className="pb-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Frequency</th>
-                    <th className="pb-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Prescribed By</th>
-                    <th className="pb-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Start Date</th>
-                    <th className="pb-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Status</th>
+                  <tr className="border-b border-border text-left">
+                    <th className="pb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Medication</th>
+                    <th className="pb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Dosage</th>
+                    <th className="pb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Frequency</th>
+                    <th className="pb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Prescribed By</th>
+                    <th className="pb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Start Date</th>
+                    <th className="pb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral-100">
+                <tbody className="divide-y divide-border">
                   {record.prescriptions.map((prescription) => (
-                    <tr key={prescription.id} className="transition-colors hover:bg-neutral-50">
-                      <td className="py-3 font-medium text-neutral-900">{prescription.medicationName}</td>
-                      <td className="py-3 text-neutral-700">{prescription.dosage}</td>
-                      <td className="py-3 text-neutral-700">{prescription.frequency}</td>
-                      <td className="py-3 text-neutral-700">{prescription.prescribedByName}</td>
-                      <td className="py-3 text-neutral-500">
+                    <tr key={prescription.id} className="transition-colors hover:bg-muted">
+                      <td className="py-3 font-medium text-foreground">{prescription.medicationName}</td>
+                      <td className="py-3 text-foreground/80">{prescription.dosage}</td>
+                      <td className="py-3 text-foreground/80">{prescription.frequency}</td>
+                      <td className="py-3 text-foreground/80">{prescription.prescribedByName}</td>
+                      <td className="py-3 text-muted-foreground">
                         {new Date(prescription.prescribedAt).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
@@ -1368,15 +1368,15 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
             {/* Mobile cards */}
             <div className="space-y-3 md:hidden">
               {record.prescriptions.map((prescription) => (
-                <div key={prescription.id} className="space-y-1.5 rounded-lg bg-neutral-50 p-4">
+                <div key={prescription.id} className="space-y-1.5 rounded-lg bg-muted p-4">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-neutral-900">{prescription.medicationName}</p>
+                    <p className="text-sm font-medium text-foreground">{prescription.medicationName}</p>
                     <PrescriptionStatusBadge status={prescription.status} />
                   </div>
-                  <p className="text-xs text-neutral-500">
+                  <p className="text-xs text-muted-foreground">
                     {prescription.dosage} · {prescription.frequency}
                   </p>
-                  <p className="text-xs text-neutral-500">
+                  <p className="text-xs text-muted-foreground">
                     {prescription.prescribedByName} ·{" "}
                     {new Date(prescription.prescribedAt).toLocaleDateString("en-US", {
                       month: "short",
@@ -1399,13 +1399,13 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
             right={
               <Link
                 to="/appointments"
-                className="inline-flex items-center gap-1 rounded-md border border-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
+                className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted"
               >
                 Book Appointment &rarr;
               </Link>
             }
           >
-            <p className="text-sm text-neutral-700">
+            <p className="text-sm text-foreground/80">
               This record requires follow-up. Please schedule a follow-up appointment with the patient.
             </p>
           </SectionCard>
@@ -1419,7 +1419,7 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
             right={
               <button
                 onClick={handleOpenUpload}
-                className="inline-flex items-center gap-1 rounded-md border border-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
+                className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted"
               >
                 <Upload className="h-3.5 w-3.5" />
                 Upload
@@ -1435,13 +1435,13 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
                   rel="noopener noreferrer"
                   className={clsxMerge(
                     "flex items-center gap-3 rounded-lg p-3",
-                    "transition-colors hover:bg-neutral-50"
+                    "transition-colors hover:bg-muted"
                   )}
                 >
                   {getAttachmentIcon(attachment.contentType)}
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-neutral-900">{attachment.fileName}</p>
-                    <p className="text-xs text-neutral-500">
+                    <p className="truncate text-sm font-medium text-foreground">{attachment.fileName}</p>
+                    <p className="text-xs text-muted-foreground">
                       {attachment.fileSizeFormatted} · {new Date(attachment.uploadedAt).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
@@ -1451,7 +1451,7 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
                   </div>
                   <button
                     type="button"
-                    className="h-9 w-9 flex-shrink-0 rounded-lg text-neutral-500 transition-colors hover:bg-neutral-100"
+                    className="h-9 w-9 flex-shrink-0 rounded-lg text-muted-foreground transition-colors hover:bg-muted"
                     onClick={(event) => event.stopPropagation()}
                   >
                     <Download className="mx-auto h-4 w-4" />
@@ -1462,7 +1462,7 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
 
             {/* Inline Upload Form */}
             {isUploadingFile && (
-              <div className="mt-4 space-y-4 rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+              <div className="mt-4 space-y-4 rounded-lg border border-border bg-muted p-4">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -1483,36 +1483,36 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
                       "transition-colors",
                       isDragOver
                         ? "border-primary-500 bg-primary-50"
-                        : "border-neutral-300 bg-white hover:border-primary-400 hover:bg-neutral-50"
+                        : "border-border bg-card hover:border-primary-400 hover:bg-muted"
                     )}
                   >
                     <FileUp
                       className={clsxMerge(
                         "h-8 w-8",
-                        isDragOver ? "text-primary-600" : "text-neutral-400"
+                        isDragOver ? "text-primary-600" : "text-muted-foreground/70"
                       )}
                     />
                     <div className="text-center">
-                      <p className="text-sm font-medium text-neutral-700">
+                      <p className="text-sm font-medium text-foreground/80">
                         Drag and drop a file here, or{" "}
                         <span className="text-primary-700">click to browse</span>
                       </p>
-                      <p className="mt-1 text-xs text-neutral-500">
+                      <p className="mt-1 text-xs text-muted-foreground">
                         Supported: PDF, JPEG, PNG, DICOM
                       </p>
-                      <p className="text-xs text-neutral-500">Max 10 MB per file</p>
+                      <p className="text-xs text-muted-foreground">Max 10 MB per file</p>
                     </div>
                   </button>
                 ) : (
                   <div className="space-y-3">
                     {/* Selected file display */}
-                    <div className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-3">
+                    <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
                       {getAttachmentIcon(selectedFile.type)}
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-neutral-900">
+                        <p className="truncate text-sm font-medium text-foreground">
                           {selectedFile.name}
                         </p>
-                        <p className="text-xs text-neutral-500">
+                        <p className="text-xs text-muted-foreground">
                           {formatFileSize(selectedFile.size)}
                         </p>
                       </div>
@@ -1522,7 +1522,7 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
                           onClick={handleRemoveFile}
                           className={clsxMerge(
                             "flex h-8 w-8 items-center justify-center rounded-lg",
-                            "text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700"
+                            "text-muted-foreground transition-colors hover:bg-muted hover:text-foreground/80"
                           )}
                         >
                           <X className="h-4 w-4" />
@@ -1533,11 +1533,11 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
                     {/* Upload progress */}
                     {isUploadInProgress && (
                       <div className="space-y-1.5">
-                        <div className="flex items-center justify-between text-xs text-neutral-500">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
                           <span>Uploading...</span>
                           <span>{uploadProgress}%</span>
                         </div>
-                        <div className="h-2 overflow-hidden rounded-full bg-neutral-200">
+                        <div className="h-2 overflow-hidden rounded-full bg-border">
                           <div
                             className="h-full rounded-full bg-primary-600 transition-all duration-300"
                             style={{ width: `${uploadProgress}%` }}
@@ -1555,8 +1555,8 @@ export function MedicalRecordDetail({ record, patientAllergies = [] }: MedicalRe
                     disabled={isUploadInProgress}
                     className={clsxMerge(
                       "inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4",
-                      "border border-neutral-200 bg-white text-sm font-medium text-neutral-700",
-                      "transition-colors hover:bg-neutral-50",
+                      "border border-border bg-card text-sm font-medium text-foreground/80",
+                      "transition-colors hover:bg-muted",
                       "disabled:opacity-50"
                     )}
                   >

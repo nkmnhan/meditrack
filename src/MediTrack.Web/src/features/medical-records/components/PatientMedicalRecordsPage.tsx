@@ -44,14 +44,14 @@ export function PatientMedicalRecordsPage() {
         <div className="flex items-center gap-3">
           <Link
             to={`/patients/${patientId}`}
-            className="rounded-lg border border-neutral-300 p-2 text-neutral-700 hover:bg-neutral-50 md:hidden"
+            className="rounded-lg border border-border p-2 text-foreground/80 hover:bg-muted md:hidden"
             aria-label="Back to patient"
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-neutral-900">Medical Records</h1>
-            <p className="text-sm text-neutral-600 mt-1">
+            <h1 className="text-2xl font-bold text-foreground">Medical Records</h1>
+            <p className="text-sm text-muted-foreground mt-1">
               {filteredRecords.length} {filteredRecords.length === 1 ? "record" : "records"} found
             </p>
           </div>
@@ -63,10 +63,10 @@ export function PatientMedicalRecordsPage() {
             className={clsxMerge(
               "h-10 px-4 rounded-lg",
               "flex items-center gap-2",
-              "border border-neutral-200 bg-white",
-              "hover:bg-neutral-50",
+              "border border-border bg-card",
+              "hover:bg-muted",
               "transition-colors duration-200",
-              showFilters && "bg-neutral-50"
+              showFilters && "bg-muted"
             )}
           >
             <Filter className="h-4 w-4" />
@@ -83,7 +83,7 @@ export function PatientMedicalRecordsPage() {
                 "bg-primary-700 text-white",
                 "hover:bg-primary-800",
                 "transition-colors duration-200",
-                "disabled:cursor-not-allowed disabled:bg-neutral-300"
+                "disabled:cursor-not-allowed disabled:bg-muted"
               )}
             >
               <Plus className="h-4 w-4" />
@@ -95,11 +95,11 @@ export function PatientMedicalRecordsPage() {
 
       {/* Filters */}
       {showFilters && (
-        <div className="bg-white rounded-lg border border-neutral-200 p-4 space-y-4">
+        <div className="bg-card rounded-lg border border-border p-4 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Status Filter */}
             <div>
-              <label htmlFor="status-filter" className="block text-sm font-medium text-neutral-700 mb-2">
+              <label htmlFor="status-filter" className="block text-sm font-medium text-foreground/80 mb-2">
                 Status
               </label>
               <select
@@ -108,7 +108,7 @@ export function PatientMedicalRecordsPage() {
                 onChange={(e) => setStatusFilter(e.target.value as RecordStatus | "")}
                 className={clsxMerge(
                   "w-full h-10 px-3 rounded-lg",
-                  "border border-neutral-200",
+                  "border border-border",
                   "focus:outline-none focus:ring-2 focus:ring-primary-500"
                 )}
               >
@@ -122,7 +122,7 @@ export function PatientMedicalRecordsPage() {
 
             {/* Severity Filter */}
             <div>
-              <label htmlFor="severity-filter" className="block text-sm font-medium text-neutral-700 mb-2">
+              <label htmlFor="severity-filter" className="block text-sm font-medium text-foreground/80 mb-2">
                 Severity
               </label>
               <select
@@ -131,7 +131,7 @@ export function PatientMedicalRecordsPage() {
                 onChange={(e) => setSeverityFilter(e.target.value as DiagnosisSeverity | "")}
                 className={clsxMerge(
                   "w-full h-10 px-3 rounded-lg",
-                  "border border-neutral-200",
+                  "border border-border",
                   "focus:outline-none focus:ring-2 focus:ring-primary-500"
                 )}
               >

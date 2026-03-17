@@ -159,8 +159,8 @@ type PatientFormData = z.infer<typeof patientFormSchema>;
 
 // --- Sub-components ---
 
-const INPUT_CLASSES = "h-10 w-full rounded-md border px-3 text-sm text-neutral-900 placeholder:text-neutral-400 transition-shadow focus:border-transparent focus:outline-none focus:ring-2 bg-white";
-const INPUT_NORMAL = clsxMerge(INPUT_CLASSES, "border-neutral-200 focus:ring-primary-700");
+const INPUT_CLASSES = "h-10 w-full rounded-md border px-3 text-sm text-foreground placeholder:text-muted-foreground/70 transition-shadow focus:border-transparent focus:outline-none focus:ring-2 bg-card";
+const INPUT_NORMAL = clsxMerge(INPUT_CLASSES, "border-border focus:ring-primary-700");
 const INPUT_ERROR = clsxMerge(INPUT_CLASSES, "border-error-500 focus:ring-error-500");
 
 function FormLabel({
@@ -173,7 +173,7 @@ function FormLabel({
   readonly isRequired?: boolean;
 }) {
   return (
-    <label htmlFor={htmlFor} className="mb-1.5 block text-sm font-medium text-neutral-700">
+    <label htmlFor={htmlFor} className="mb-1.5 block text-sm font-medium text-foreground/80">
       {children}
       {isRequired && <span className="ml-0.5 text-error-500">*</span>}
     </label>
@@ -194,8 +194,8 @@ function SectionHeader({
   return (
     <div className="mb-5 flex items-center gap-2">
       <Icon className={clsxMerge("h-5 w-5", iconColor || "text-primary-700")} />
-      <h3 className="font-semibold text-neutral-900">{title}</h3>
-      {note && <span className="ml-1 text-xs text-neutral-500">({note})</span>}
+      <h3 className="font-semibold text-foreground">{title}</h3>
+      {note && <span className="ml-1 text-xs text-muted-foreground">({note})</span>}
     </div>
   );
 }
@@ -204,7 +204,7 @@ function SelectWrapper({ children }: { readonly children: React.ReactNode }) {
   return (
     <div className="relative">
       {children}
-      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
     </div>
   );
 }
@@ -450,20 +450,20 @@ export function PatientForm() {
 
       {/* Title */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-neutral-900">
+        <h1 className="text-2xl font-bold text-foreground">
           {isEditMode ? "Edit Patient" : "Register New Patient"}
         </h1>
-        <p className="mt-1 text-sm text-neutral-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           {isEditMode ? "Update the patient's information below" : "Fill in the patient's information below"}
         </p>
       </div>
 
       {/* Form Card */}
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="mx-auto max-w-3xl rounded-lg border border-neutral-200 bg-white shadow-sm">
+        <div className="mx-auto max-w-3xl rounded-lg border border-border bg-card shadow-sm">
 
           {/* Section 1 — Personal Information */}
-          <div className="border-b border-neutral-200 p-6">
+          <div className="border-b border-border p-6">
             <SectionHeader icon={User} title="Personal Information" />
 
             {/* Photo upload + Name fields row */}
@@ -475,7 +475,7 @@ export function PatientForm() {
                   onClick={() => photoInputRef.current?.click()}
                   className={clsxMerge(
                     "relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full",
-                    "border-2 border-dashed border-neutral-300 bg-neutral-50",
+                    "border-2 border-dashed border-border bg-muted",
                     "transition-colors hover:border-primary-700 hover:bg-primary-50",
                     "focus:outline-none focus:ring-2 focus:ring-primary-700 focus:ring-offset-2",
                   )}
@@ -488,7 +488,7 @@ export function PatientForm() {
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <Camera className="h-6 w-6 text-neutral-400" />
+                    <Camera className="h-6 w-6 text-muted-foreground/70" />
                   )}
                 </button>
                 <input
@@ -508,7 +508,7 @@ export function PatientForm() {
                     Remove
                   </button>
                 ) : (
-                  <span className="text-xs text-neutral-500">Photo</span>
+                  <span className="text-xs text-muted-foreground">Photo</span>
                 )}
               </div>
 
@@ -558,7 +558,7 @@ export function PatientForm() {
                     autoComplete="bday"
                     className={errors.dateOfBirth ? INPUT_ERROR : INPUT_NORMAL}
                   />
-                  <Calendar className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+                  <Calendar className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 </div>
                 {errors.dateOfBirth && (
                   <p className="mt-1 text-xs text-error-500">{errors.dateOfBirth.message}</p>
@@ -571,10 +571,10 @@ export function PatientForm() {
                     id="gender"
                     {...register("gender")}
                     className={clsxMerge(
-                      "h-10 w-full appearance-none rounded-md border pl-3 pr-8 text-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 bg-white",
+                      "h-10 w-full appearance-none rounded-md border pl-3 pr-8 text-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 bg-card",
                       errors.gender
-                        ? "border-error-500 text-neutral-900 focus:ring-error-500"
-                        : "border-neutral-200 text-neutral-900 focus:ring-primary-700"
+                        ? "border-error-500 text-foreground focus:ring-error-500"
+                        : "border-border text-foreground focus:ring-primary-700"
                     )}
                   >
                     <option value="" disabled>Select gender</option>
@@ -594,8 +594,8 @@ export function PatientForm() {
                     id="bloodType"
                     {...register("bloodType")}
                     className={clsxMerge(
-                      "h-10 w-full appearance-none rounded-md border pl-3 pr-8 text-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 bg-white",
-                      "border-neutral-200 text-neutral-900 focus:ring-primary-700"
+                      "h-10 w-full appearance-none rounded-md border pl-3 pr-8 text-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 bg-card",
+                      "border-border text-foreground focus:ring-primary-700"
                     )}
                   >
                     <option value="">Select blood type</option>
@@ -609,13 +609,13 @@ export function PatientForm() {
           </div>
 
           {/* Section 2 — Contact Information */}
-          <div className="border-b border-neutral-200 p-6">
+          <div className="border-b border-border p-6">
             <SectionHeader icon={Phone} title="Contact Information" />
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
                 <FormLabel htmlFor="phoneNumber" isRequired>Phone Number</FormLabel>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-neutral-500">+1</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">+1</span>
                   <input
                     id="phoneNumber"
                     type="tel"
@@ -695,10 +695,10 @@ export function PatientForm() {
                     {...register("address.state")}
                     autoComplete="address-level1"
                     className={clsxMerge(
-                      "h-10 w-full appearance-none rounded-md border pl-3 pr-8 text-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 bg-white",
+                      "h-10 w-full appearance-none rounded-md border pl-3 pr-8 text-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 bg-card",
                       errors.address?.state
-                        ? "border-error-500 text-neutral-900 focus:ring-error-500"
-                        : "border-neutral-200 text-neutral-900 focus:ring-primary-700"
+                        ? "border-error-500 text-foreground focus:ring-error-500"
+                        : "border-border text-foreground focus:ring-primary-700"
                     )}
                   >
                     <option value="">Select state</option>
@@ -733,7 +733,7 @@ export function PatientForm() {
 
           {/* Section 3 — Emergency Contact */}
           <div className={clsxMerge(
-            "border-b border-neutral-200 p-6",
+            "border-b border-border p-6",
             hasEmergencyContact && "border-l-4 border-l-warning-500"
           )}>
             <SectionHeader
@@ -773,10 +773,10 @@ export function PatientForm() {
                         id="emergencyContact.relationship"
                         {...register("emergencyContact.relationship")}
                         className={clsxMerge(
-                          "h-10 w-full appearance-none rounded-md border pl-3 pr-8 text-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 bg-white",
+                          "h-10 w-full appearance-none rounded-md border pl-3 pr-8 text-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 bg-card",
                           errors.emergencyContact?.relationship
-                            ? "border-error-500 text-neutral-900 focus:ring-error-500"
-                            : "border-neutral-200 text-neutral-900 focus:ring-primary-700"
+                            ? "border-error-500 text-foreground focus:ring-error-500"
+                            : "border-border text-foreground focus:ring-primary-700"
                         )}
                       >
                         <option value="" disabled>Select relationship</option>
@@ -825,7 +825,7 @@ export function PatientForm() {
           </div>
 
           {/* Section 4 — Insurance Information */}
-          <div className="border-b border-neutral-200 p-6">
+          <div className="border-b border-border p-6">
             <SectionHeader
               icon={Shield}
               title="Insurance Information"
@@ -905,7 +905,7 @@ export function PatientForm() {
 
           {/* Section 5 — Allergies & Adverse Reactions */}
           <div className={clsxMerge(
-            "border-b border-neutral-200 p-6",
+            "border-b border-border p-6",
             hasAllergies && "border-l-4 border-l-error-500"
           )}>
             <SectionHeader
@@ -1000,7 +1000,7 @@ export function PatientForm() {
                           }}
                           className={clsxMerge(
                             "appearance-none rounded border-none bg-transparent py-0 pl-1 pr-0.5 text-xs font-semibold",
-                            "cursor-pointer focus:outline-none focus:ring-1 focus:ring-neutral-400",
+                            "cursor-pointer focus:outline-none focus:ring-1 focus:ring-border",
                           )}
                           aria-label={`Severity for ${allergy.name}`}
                         >
@@ -1046,7 +1046,7 @@ export function PatientForm() {
           </div>
 
           {/* Section 6 — Primary Care Provider (P1) */}
-          <div className="border-b border-neutral-200 p-6">
+          <div className="border-b border-border p-6">
             <SectionHeader
               icon={Stethoscope}
               title="Primary Care Provider"
@@ -1063,16 +1063,16 @@ export function PatientForm() {
                     aria-expanded={isProviderPopoverOpen}
                     className={clsxMerge(
                       "flex h-10 w-full items-center justify-between rounded-md border px-3 text-sm",
-                      "bg-white transition-shadow focus:border-transparent focus:outline-none focus:ring-2",
-                      "border-neutral-200 focus:ring-primary-700",
+                      "bg-card transition-shadow focus:border-transparent focus:outline-none focus:ring-2",
+                      "border-border focus:ring-primary-700",
                     )}
                   >
                     {selectedProvider ? (
-                      <span className="text-neutral-900">{selectedProvider}</span>
+                      <span className="text-foreground">{selectedProvider}</span>
                     ) : (
-                      <span className="text-neutral-400">Search providers...</span>
+                      <span className="text-muted-foreground/70">Search providers...</span>
                     )}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 text-neutral-500" />
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 text-muted-foreground" />
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
@@ -1099,8 +1099,8 @@ export function PatientForm() {
                               )}
                             />
                             <div className="flex flex-col">
-                              <span className="text-sm font-medium text-neutral-900">{provider.name}</span>
-                              <span className="text-xs text-neutral-500">{provider.specialty}</span>
+                              <span className="text-sm font-medium text-foreground">{provider.name}</span>
+                              <span className="text-xs text-muted-foreground">{provider.specialty}</span>
                             </div>
                           </CommandItem>
                         ))}
@@ -1133,7 +1133,7 @@ export function PatientForm() {
           </div>
 
           {/* Section 7 — Language & Communication Preferences (P2) */}
-          <div className="border-b border-neutral-200 p-6">
+          <div className="border-b border-border p-6">
             <SectionHeader
               icon={Languages}
               title="Language & Communication Preferences"
@@ -1149,8 +1149,8 @@ export function PatientForm() {
                     value={preferredLanguage}
                     onChange={(event) => setPreferredLanguage(event.target.value)}
                     className={clsxMerge(
-                      "h-10 w-full appearance-none rounded-md border pl-3 pr-8 text-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 bg-white",
-                      "border-neutral-200 text-neutral-900 focus:ring-primary-700"
+                      "h-10 w-full appearance-none rounded-md border pl-3 pr-8 text-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 bg-card",
+                      "border-border text-foreground focus:ring-primary-700"
                     )}
                   >
                     <option value="">Select language</option>
@@ -1169,7 +1169,7 @@ export function PatientForm() {
                     checked={isInterpreterNeeded}
                     onCheckedChange={(checked) => setIsInterpreterNeeded(checked === true)}
                   />
-                  <Label htmlFor="interpreterNeeded" className="text-sm text-neutral-700 cursor-pointer">
+                  <Label htmlFor="interpreterNeeded" className="text-sm text-foreground/80 cursor-pointer">
                     Interpreter needed
                   </Label>
                 </div>
@@ -1190,9 +1190,9 @@ export function PatientForm() {
                         <RadioGroupItem value={option.value} id={`comm-${option.value}`} />
                         <Label
                           htmlFor={`comm-${option.value}`}
-                          className="flex cursor-pointer items-center gap-1.5 text-sm text-neutral-700"
+                          className="flex cursor-pointer items-center gap-1.5 text-sm text-foreground/80"
                         >
-                          <OptionIcon className="h-4 w-4 text-neutral-500" />
+                          <OptionIcon className="h-4 w-4 text-muted-foreground" />
                           {option.label}
                         </Label>
                       </div>
@@ -1204,7 +1204,7 @@ export function PatientForm() {
           </div>
 
           {/* Section 8 — Consent (P2) */}
-          <div className="border-b border-neutral-200 p-6">
+          <div className="border-b border-border p-6">
             <SectionHeader
               icon={FileCheck}
               title="Consent"
@@ -1222,7 +1222,7 @@ export function PatientForm() {
                       if (!checked) setHipaaSignedDate("");
                     }}
                   />
-                  <Label htmlFor="hipaaConsent" className="text-sm text-neutral-700 cursor-pointer">
+                  <Label htmlFor="hipaaConsent" className="text-sm text-foreground/80 cursor-pointer">
                     Patient has signed HIPAA Privacy Notice
                   </Label>
                 </div>
@@ -1238,7 +1238,7 @@ export function PatientForm() {
                         max={new Date().toISOString().split("T")[0]}
                         className={INPUT_NORMAL}
                       />
-                      <Calendar className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+                      <Calendar className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     </div>
                   </div>
                 )}
@@ -1252,7 +1252,7 @@ export function PatientForm() {
                     checked={hasAiConsent}
                     onCheckedChange={(checked) => setHasAiConsent(checked === true)}
                   />
-                  <Label htmlFor="aiConsent" className="text-sm text-neutral-700 cursor-pointer">
+                  <Label htmlFor="aiConsent" className="text-sm text-foreground/80 cursor-pointer">
                     Patient consents to AI-assisted documentation (Clara)
                   </Label>
                 </div>
@@ -1272,10 +1272,10 @@ export function PatientForm() {
           </div>
 
           {/* Form Footer */}
-          <div className="flex flex-col-reverse gap-3 rounded-b-lg border-t border-neutral-200 bg-neutral-50 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col-reverse gap-3 rounded-b-lg border-t border-border bg-muted p-6 sm:flex-row sm:items-center sm:justify-between">
             <Link
               to={isEditMode ? `/patients/${id}` : "/patients"}
-              className="inline-flex h-10 items-center justify-center rounded-lg px-4 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100"
+              className="inline-flex h-10 items-center justify-center rounded-lg px-4 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted"
             >
               Cancel
             </Link>

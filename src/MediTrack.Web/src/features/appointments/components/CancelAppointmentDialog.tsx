@@ -34,19 +34,19 @@ export function CancelAppointmentDialog({
       />
 
       {/* Dialog */}
-      <div className="relative w-full max-w-md rounded-lg border border-neutral-200 bg-white p-6 shadow-xl">
+      <div className="relative w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-xl">
         <div className="mb-4 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-error-50">
             <XCircle className="h-5 w-5 text-error-600" />
           </div>
-          <h3 className="text-lg font-semibold text-neutral-900">Cancel Appointment</h3>
+          <h3 className="text-lg font-semibold text-foreground">Cancel Appointment</h3>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
               htmlFor="cancel-reason"
-              className="block text-sm font-medium text-neutral-700"
+              className="block text-sm font-medium text-foreground/80"
             >
               Reason for cancellation <span className="text-error-600">*</span>
             </label>
@@ -58,7 +58,7 @@ export function CancelAppointmentDialog({
               required
               placeholder="Please provide a reason for cancellation..."
               className={clsxMerge(
-                "mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm",
+                "mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm",
                 "focus:border-primary-500 focus:ring-2 focus:ring-primary-500",
                 "resize-none",
               )}
@@ -70,7 +70,7 @@ export function CancelAppointmentDialog({
               type="button"
               onClick={onCancel}
               disabled={isLoading}
-              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+              className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground/80 hover:bg-muted"
             >
               Go Back
             </button>

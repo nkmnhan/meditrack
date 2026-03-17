@@ -302,7 +302,7 @@ export function NaturalLanguageSearch({ onFiltersChange, activeFilters }: Natura
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Try: 'diabetic female over 60' or 'patients on metformin' or 'blood type O+'"
-          className="h-10 w-full rounded-md border border-neutral-200 bg-white pl-9 pr-20 text-sm text-neutral-900 placeholder:text-neutral-400 transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-accent-500"
+          className="h-10 w-full rounded-md border border-border bg-card pl-9 pr-20 text-sm text-foreground placeholder:text-muted-foreground/70 transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-accent-500"
         />
         <button
           type="submit"
@@ -328,7 +328,7 @@ export function NaturalLanguageSearch({ onFiltersChange, activeFilters }: Natura
               onClick={() => handlePresetClick(preset.id)}
               className={clsxMerge(
                 "inline-flex h-8 items-center gap-1.5 rounded-full px-3",
-                "border border-neutral-200 bg-neutral-50 text-xs font-medium text-neutral-700",
+                "border border-border bg-muted text-xs font-medium text-foreground/80",
                 "transition-colors hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
               )}
             >
@@ -342,7 +342,7 @@ export function NaturalLanguageSearch({ onFiltersChange, activeFilters }: Natura
       {/* Active filter tags */}
       {activeFilters && hasActiveFilters(activeFilters) && (
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <Search className="h-3.5 w-3.5 text-neutral-400" />
+          <Search className="h-3.5 w-3.5 text-muted-foreground/70" />
 
           {activeFilters.gender && (
             <FilterTag
@@ -411,7 +411,7 @@ export function NaturalLanguageSearch({ onFiltersChange, activeFilters }: Natura
           <button
             type="button"
             onClick={handleClearAll}
-            className="ml-1 text-xs font-medium text-neutral-500 transition-colors hover:text-neutral-700"
+            className="ml-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground/80"
           >
             Clear all
           </button>

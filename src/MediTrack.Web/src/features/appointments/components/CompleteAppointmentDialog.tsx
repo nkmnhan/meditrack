@@ -32,22 +32,22 @@ export function CompleteAppointmentDialog({
       />
 
       {/* Dialog */}
-      <div className="relative w-full max-w-md rounded-lg border border-neutral-200 bg-white p-6 shadow-xl">
+      <div className="relative w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-xl">
         <div className="mb-4 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success-50">
             <CheckCheck className="h-5 w-5 text-success-600" />
           </div>
-          <h3 className="text-lg font-semibold text-neutral-900">Complete Appointment</h3>
+          <h3 className="text-lg font-semibold text-foreground">Complete Appointment</h3>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
               htmlFor="completion-notes"
-              className="block text-sm font-medium text-neutral-700"
+              className="block text-sm font-medium text-foreground/80"
             >
               Completion Notes{" "}
-              <span className="text-neutral-500">(optional)</span>
+              <span className="text-muted-foreground">(optional)</span>
             </label>
             <textarea
               id="completion-notes"
@@ -56,7 +56,7 @@ export function CompleteAppointmentDialog({
               rows={3}
               placeholder="Add any completion notes..."
               className={clsxMerge(
-                "mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm",
+                "mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm",
                 "focus:border-primary-500 focus:ring-2 focus:ring-primary-500",
                 "resize-none",
               )}
@@ -68,7 +68,7 @@ export function CompleteAppointmentDialog({
               type="button"
               onClick={onCancel}
               disabled={isLoading}
-              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+              className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground/80 hover:bg-muted"
             >
               Go Back
             </button>

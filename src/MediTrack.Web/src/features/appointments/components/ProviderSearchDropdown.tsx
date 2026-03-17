@@ -102,7 +102,7 @@ export function ProviderSearchDropdown({
   return (
     <div className="relative">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
         <input
           ref={inputRef}
           type="text"
@@ -124,7 +124,7 @@ export function ProviderSearchDropdown({
           onKeyDown={handleKeyDown}
           placeholder="Search provider..."
           className={clsxMerge(
-            "w-full rounded-lg border border-neutral-300 py-2 pl-9 pr-16 text-sm",
+            "w-full rounded-lg border border-border py-2 pl-9 pr-16 text-sm",
             "focus:border-primary-500 focus:ring-2 focus:ring-primary-500",
             "sm:w-64"
           )}
@@ -135,29 +135,29 @@ export function ProviderSearchDropdown({
               type="button"
               onClick={handleClear}
               aria-label="Clear provider selection"
-              className="rounded p-0.5 text-neutral-400 hover:text-neutral-600"
+              className="rounded p-0.5 text-muted-foreground/70 hover:text-muted-foreground"
             >
               <X className="h-4 w-4" />
             </button>
           )}
           <ChevronDown className={clsxMerge(
-            "h-4 w-4 text-neutral-400 transition-transform",
+            "h-4 w-4 text-muted-foreground/70 transition-transform",
             isOpen && "rotate-180"
           )} />
         </div>
       </div>
 
       {isOpen && (
-        <div className="absolute z-10 mt-1 w-full rounded-lg border border-neutral-200 bg-white shadow-lg">
+        <div className="absolute z-10 mt-1 w-full rounded-lg border border-border bg-card shadow-lg">
           {isLoading && (
-            <div role="status" className="flex items-center gap-2 px-4 py-3 text-sm text-neutral-500">
+            <div role="status" className="flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
               Loading providers...
             </div>
           )}
 
           {!isLoading && filteredProviders.length === 0 && (
-            <div role="status" className="px-4 py-3 text-sm text-neutral-500">
+            <div role="status" className="px-4 py-3 text-sm text-muted-foreground">
               No providers found
             </div>
           )}
@@ -181,9 +181,9 @@ export function ProviderSearchDropdown({
                   }}
                   className={clsxMerge(
                     "flex cursor-pointer items-center px-4 py-2 text-sm",
-                    "hover:bg-neutral-50",
+                    "hover:bg-muted",
                     provider.providerId === selectedProviderId && "bg-primary-50 font-medium text-primary-700",
-                    index === highlightedIndex && "bg-neutral-100"
+                    index === highlightedIndex && "bg-muted"
                   )}
                 >
                   {provider.providerName}

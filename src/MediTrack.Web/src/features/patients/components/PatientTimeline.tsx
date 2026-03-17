@@ -216,7 +216,7 @@ function TimelineItem({ event, isLast }: TimelineItemProps) {
           <div className={clsxMerge("h-3 w-3 rounded-full", config.dotColor)} />
         </div>
         {!isLast && (
-          <div className="w-px flex-1 bg-neutral-200" />
+          <div className="w-px flex-1 bg-border" />
         )}
       </div>
 
@@ -226,8 +226,8 @@ function TimelineItem({ event, isLast }: TimelineItemProps) {
           type="button"
           onClick={() => setIsExpanded(previousState => !previousState)}
           className={clsxMerge(
-            "w-full rounded-lg border border-neutral-200 bg-white p-4 text-left shadow-sm",
-            "transition-all hover:border-neutral-300 hover:shadow-md"
+            "w-full rounded-lg border border-border bg-card p-4 text-left shadow-sm",
+            "transition-all hover:border-border hover:shadow-md"
           )}
         >
           {/* Header row */}
@@ -236,7 +236,7 @@ function TimelineItem({ event, isLast }: TimelineItemProps) {
               <Icon className={clsxMerge("mt-0.5 h-5 w-5 flex-shrink-0", config.iconColor)} />
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h4 className="text-sm font-semibold text-neutral-900">
+                  <h4 className="text-sm font-semibold text-foreground">
                     {event.title}
                   </h4>
                   <span
@@ -249,31 +249,31 @@ function TimelineItem({ event, isLast }: TimelineItemProps) {
                     {config.label}
                   </span>
                 </div>
-                <p className="mt-1 text-sm text-neutral-600">{event.description}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{event.description}</p>
               </div>
             </div>
             <div className="flex flex-shrink-0 items-center gap-2">
               <div className="hidden text-right sm:block">
-                <p className="text-xs font-medium text-neutral-700">{formattedDate}</p>
-                <p className="text-xs text-neutral-500">{formattedTime}</p>
+                <p className="text-xs font-medium text-foreground/80">{formattedDate}</p>
+                <p className="text-xs text-muted-foreground">{formattedTime}</p>
               </div>
               {isExpanded ? (
-                <ChevronUp className="h-4 w-4 text-neutral-400" />
+                <ChevronUp className="h-4 w-4 text-muted-foreground/70" />
               ) : (
-                <ChevronDown className="h-4 w-4 text-neutral-400" />
+                <ChevronDown className="h-4 w-4 text-muted-foreground/70" />
               )}
             </div>
           </div>
 
           {/* Mobile date — visible only on small screens */}
-          <p className="mt-2 text-xs text-neutral-500 sm:hidden">
+          <p className="mt-2 text-xs text-muted-foreground sm:hidden">
             {formattedDate} at {formattedTime}
           </p>
 
           {/* Expanded detail */}
           {isExpanded && (
-            <div className="mt-3 border-t border-neutral-100 pt-3">
-              <p className="text-sm leading-relaxed text-neutral-700">
+            <div className="mt-3 border-t border-border pt-3">
+              <p className="text-sm leading-relaxed text-foreground/80">
                 {event.detail}
               </p>
             </div>
@@ -314,8 +314,8 @@ export function PatientTimeline({ patientId, filters }: PatientTimelineProps) {
   if (sortedEvents.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <FileText className="mb-3 h-10 w-10 text-neutral-300" />
-        <p className="text-sm font-medium text-neutral-500">No timeline events yet</p>
+        <FileText className="mb-3 h-10 w-10 text-muted-foreground/50" />
+        <p className="text-sm font-medium text-muted-foreground">No timeline events yet</p>
       </div>
     );
   }

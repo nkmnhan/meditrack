@@ -21,8 +21,8 @@ import type { AppointmentListItem } from "@/features/appointments/types";
 const quickActions = [
   { label: "New Appointment", icon: CalendarPlus, bg: "bg-primary-700 hover:bg-primary-600", text: "text-white", to: "/appointments" },
   { label: "Register Patient", icon: UserPlus, bg: "bg-secondary-700 hover:bg-secondary-600", text: "text-white", to: "/patients/new" },
-  { label: "View Records", icon: FileSearch, bg: "bg-white hover:bg-neutral-50", text: "text-neutral-700", border: true, to: "/medical-records" },
-  { label: "Today's Schedule", icon: CalendarClock, bg: "bg-white hover:bg-neutral-50", text: "text-neutral-700", border: true, to: "/appointments?view=day" },
+  { label: "View Records", icon: FileSearch, bg: "bg-card hover:bg-muted", text: "text-foreground/80", border: true, to: "/medical-records" },
+  { label: "Today's Schedule", icon: CalendarClock, bg: "bg-card hover:bg-muted", text: "text-foreground/80", border: true, to: "/appointments?view=day" },
 ];
 
 const STATUS_COLORS: Record<string, string> = {
@@ -31,9 +31,9 @@ const STATUS_COLORS: Record<string, string> = {
   CheckedIn: "bg-info-50 text-info-700",
   InProgress: "bg-warning-50 text-warning-700",
   Completed: "bg-success-50 text-success-700",
-  Cancelled: "bg-neutral-100 text-neutral-500",
+  Cancelled: "bg-muted text-muted-foreground",
   NoShow: "bg-error-50 text-error-700",
-  Rescheduled: "bg-neutral-100 text-neutral-500",
+  Rescheduled: "bg-muted text-muted-foreground",
 };
 
 const STATUS_DISPLAY: Record<string, string> = {
@@ -80,14 +80,14 @@ function Sparkline({ heights, colorClass }: { readonly heights: number[]; readon
 
 function SkeletonCard() {
   return (
-    <div className="animate-pulse rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
+    <div className="animate-pulse rounded-lg border border-border bg-card p-5 shadow-sm">
       <div className="mb-3 flex items-start justify-between">
-        <div className="h-10 w-10 rounded-lg bg-neutral-200" />
-        <div className="h-4 w-4 rounded bg-neutral-100" />
+        <div className="h-10 w-10 rounded-lg bg-border" />
+        <div className="h-4 w-4 rounded bg-muted" />
       </div>
-      <div className="h-9 w-16 rounded bg-neutral-200" />
-      <div className="mt-3 h-4 w-24 rounded bg-neutral-100" />
-      <div className="mt-2 h-3 w-20 rounded bg-neutral-100" />
+      <div className="h-9 w-16 rounded bg-border" />
+      <div className="mt-3 h-4 w-24 rounded bg-muted" />
+      <div className="mt-2 h-3 w-20 rounded bg-muted" />
     </div>
   );
 }
@@ -219,18 +219,18 @@ export function DashboardPage() {
                 <button
                   key={card.title}
                   onClick={() => route && navigate(route)}
-                  className="cursor-pointer rounded-lg border border-neutral-200 bg-white p-5 text-left shadow-sm transition-shadow duration-200 hover:shadow-md"
+                  className="cursor-pointer rounded-lg border border-border bg-card p-5 text-left shadow-sm transition-shadow duration-200 hover:shadow-md"
                 >
                   <div className="mb-3 flex items-start justify-between">
                     <div className={clsxMerge("flex h-10 w-10 items-center justify-center rounded-lg", card.iconBg)}>
                       <card.icon className={clsxMerge("h-5 w-5", card.iconColor)} />
                     </div>
-                    <ArrowUpRight className="h-4 w-4 text-neutral-300" />
+                    <ArrowUpRight className="h-4 w-4 text-muted-foreground/50" />
                   </div>
-                  <p className="text-3xl font-bold text-neutral-900">{card.value}</p>
+                  <p className="text-3xl font-bold text-foreground">{card.value}</p>
                   {delta && <DeltaIndicator delta={delta} />}
                   <Sparkline heights={dashboard.appointmentCountsByDay} colorClass={card.sparklineColor} />
-                  <p className="mt-1 text-sm text-neutral-500">{card.title}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{card.title}</p>
                   {card.trend && (
                     <p className={clsxMerge("mt-1 text-xs font-medium", card.trendColor)}>{card.trend}</p>
                   )}
@@ -242,48 +242,48 @@ export function DashboardPage() {
     ),
 
     schedule: (
-      <div className="rounded-lg border border-neutral-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-neutral-200 p-5 pb-3">
+      <div className="rounded-lg border border-border bg-card shadow-sm">
+        <div className="flex items-center justify-between border-b border-border p-5 pb-3">
           <div className="flex items-center gap-2">
             <CalendarDays className="h-5 w-5 text-primary-700" />
-            <h2 className="text-lg font-semibold text-neutral-900">Today's Schedule</h2>
+            <h2 className="text-lg font-semibold text-foreground">Today's Schedule</h2>
           </div>
           <Link to="/appointments" className="text-sm font-medium text-primary-700 hover:underline">View All</Link>
         </div>
         {dashboard.isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground/70" />
           </div>
         ) : dashboard.appointments.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12">
-            <CalendarDays className="h-8 w-8 text-neutral-300" />
-            <p className="mt-2 text-sm text-neutral-500">No appointments scheduled for today</p>
+            <CalendarDays className="h-8 w-8 text-muted-foreground/50" />
+            <p className="mt-2 text-sm text-muted-foreground">No appointments scheduled for today</p>
           </div>
         ) : (
-          <div className="divide-y divide-neutral-200">
+          <div className="divide-y divide-border">
             {dashboard.appointments.map((appointment: AppointmentListItem, index: number) => (
               <Link
                 key={appointment.id}
                 to="/appointments"
                 className={clsxMerge(
-                  "flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-neutral-50",
+                  "flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-muted",
                   appointment.status === "InProgress" && "border-l-2 border-l-primary-200"
                 )}
               >
                 <div className="w-20 flex-shrink-0">
-                  <p className="text-sm font-medium text-neutral-900">{formatTime(appointment.scheduledDateTime)}</p>
+                  <p className="text-sm font-medium text-foreground">{formatTime(appointment.scheduledDateTime)}</p>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-neutral-700">{appointment.patientName}</p>
+                  <p className="truncate text-sm font-medium text-foreground/80">{appointment.patientName}</p>
                 </div>
                 {index === 0 && (
                   <span className="inline-flex items-center rounded-full bg-accent-50 px-2 py-0.5 text-xs font-medium text-accent-700">Next up</span>
                 )}
                 <span className="hidden items-center rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-700 sm:inline-flex">{appointment.type}</span>
-                <span className={clsxMerge("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", STATUS_COLORS[appointment.status] ?? "bg-neutral-100 text-neutral-700")}>
+                <span className={clsxMerge("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", STATUS_COLORS[appointment.status] ?? "bg-muted text-foreground/80")}>
                   {STATUS_DISPLAY[appointment.status] ?? appointment.status}
                 </span>
-                <span className="hidden w-14 text-right text-xs text-neutral-500 md:block">
+                <span className="hidden w-14 text-right text-xs text-muted-foreground md:block">
                   <Clock className="mr-0.5 inline h-3 w-3" />{formatDuration(appointment.durationMinutes)}
                 </span>
               </Link>
@@ -294,8 +294,8 @@ export function DashboardPage() {
     ),
 
     "quick-actions": (
-      <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-neutral-900">Quick Actions</h2>
+      <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+        <h2 className="mb-4 text-lg font-semibold text-foreground">Quick Actions</h2>
         <div className="space-y-3">
           {quickActions.map((action) => (
             <Link
@@ -304,7 +304,7 @@ export function DashboardPage() {
               className={clsxMerge(
                 "flex h-11 w-full items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors",
                 action.bg, action.text,
-                action.border && "border border-neutral-200"
+                action.border && "border border-border"
               )}
             >
               <action.icon className="h-4 w-4" /> {action.label}
@@ -321,43 +321,43 @@ export function DashboardPage() {
     ),
 
     "recent-patients": (
-      <div className="rounded-lg border border-neutral-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-neutral-200 p-5 pb-3">
+      <div className="rounded-lg border border-border bg-card shadow-sm">
+        <div className="flex items-center justify-between border-b border-border p-5 pb-3">
           <div className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-neutral-700" />
-            <h2 className="text-lg font-semibold text-neutral-900">Recent Patients</h2>
+            <Users className="h-5 w-5 text-foreground/80" />
+            <h2 className="text-lg font-semibold text-foreground">Recent Patients</h2>
           </div>
           <Link to="/patients" className="text-sm font-medium text-primary-700 hover:underline">View All</Link>
         </div>
         {dashboard.isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground/70" />
           </div>
         ) : dashboard.recentPatients.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12">
-            <Users className="h-8 w-8 text-neutral-300" />
-            <p className="mt-2 text-sm text-neutral-500">No patients found</p>
+            <Users className="h-8 w-8 text-muted-foreground/50" />
+            <p className="mt-2 text-sm text-muted-foreground">No patients found</p>
           </div>
         ) : (
-          <div className="divide-y divide-neutral-200">
+          <div className="divide-y divide-border">
             {dashboard.recentPatients.map((patient) => (
               <Link
                 key={patient.id}
                 to={`/patients/${patient.id}`}
-                className="flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-neutral-50"
+                className="flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-muted"
               >
                 <div className={clsxMerge("flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold", getAvatarColor(patient.fullName))}>
                   {getInitials(patient.fullName)}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-neutral-900">{patient.fullName}</p>
-                  <p className="text-xs text-neutral-500">{patient.medicalRecordNumber}</p>
+                  <p className="truncate text-sm font-medium text-foreground">{patient.fullName}</p>
+                  <p className="text-xs text-muted-foreground">{patient.medicalRecordNumber}</p>
                 </div>
                 <span className={clsxMerge(
                   "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
                   patient.isActive
                     ? "border border-success-500/30 bg-success-50 text-success-700"
-                    : "border border-neutral-200 bg-neutral-100 text-neutral-500"
+                    : "border border-border bg-muted text-muted-foreground"
                 )}>
                   {patient.isActive ? "Active" : "Inactive"}
                 </span>
@@ -369,22 +369,22 @@ export function DashboardPage() {
     ),
 
     "clara-suggestions": (
-      <div className="rounded-lg border border-neutral-200 bg-white shadow-sm">
-        <div className="border-b border-neutral-200 p-5 pb-3">
+      <div className="rounded-lg border border-border bg-card shadow-sm">
+        <div className="border-b border-border p-5 pb-3">
           <div className="flex items-center gap-2">
             <div className="relative">
               <Sparkles className="h-5 w-5 text-accent-500" />
               <Sparkles className="absolute -right-1.5 -top-1 h-3 w-3 text-accent-500" />
             </div>
-            <h2 className="text-lg font-semibold text-neutral-900">Clara's Suggestions</h2>
+            <h2 className="text-lg font-semibold text-foreground">Clara's Suggestions</h2>
           </div>
-          <p className="mt-1 text-xs text-neutral-500">Click a suggestion to ask Clara</p>
+          <p className="mt-1 text-xs text-muted-foreground">Click a suggestion to ask Clara</p>
         </div>
-        <div className="divide-y divide-neutral-100">
+        <div className="divide-y divide-border">
           {visibleSuggestions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8">
               <Check className="h-6 w-6 text-success-500" />
-              <p className="mt-2 text-sm text-neutral-500">All suggestions reviewed</p>
+              <p className="mt-2 text-sm text-muted-foreground">All suggestions reviewed</p>
             </div>
           ) : (
             visibleSuggestions.map((suggestion) => {
@@ -401,26 +401,26 @@ export function DashboardPage() {
                     <div className={clsxMerge("w-1 flex-shrink-0 rounded-full", suggestion.accentColor)} />
                     <div className="min-w-0 flex-1">
                       <div className="mb-0.5 flex items-center gap-2">
-                        <SuggestionIcon className="h-3.5 w-3.5 text-neutral-500" />
-                        <p className="text-xs font-semibold text-neutral-700">{suggestion.category}</p>
+                        <SuggestionIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                        <p className="text-xs font-semibold text-foreground/80">{suggestion.category}</p>
                       </div>
-                      <p className="text-sm leading-relaxed text-neutral-700">{suggestion.label}</p>
+                      <p className="text-sm leading-relaxed text-foreground/80">{suggestion.label}</p>
                     </div>
                   </button>
                   <button
                     onClick={() => handleDismissSuggestion(suggestion.id)}
-                    className="flex h-10 w-10 flex-shrink-0 items-center justify-center self-center text-neutral-300 opacity-0 transition-opacity group-hover:opacity-100"
+                    className="flex h-10 w-10 flex-shrink-0 items-center justify-center self-center text-muted-foreground/50 opacity-0 transition-opacity group-hover:opacity-100"
                     aria-label={`Dismiss ${suggestion.label}`}
                     title="Mark as reviewed"
                   >
-                    <X className="h-4 w-4 hover:text-neutral-500" />
+                    <X className="h-4 w-4 hover:text-muted-foreground" />
                   </button>
                 </div>
               );
             })
           )}
         </div>
-        <div className="border-t border-neutral-200 p-4">
+        <div className="border-t border-border p-4">
           <button
             onClick={() => openPanel()}
             className="flex items-center gap-1 text-sm font-medium text-accent-700 hover:underline"
@@ -524,11 +524,11 @@ export function DashboardPage() {
       {/* Desktop top bar */}
       <div className="mb-8 hidden items-center justify-between md:flex">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900">Good morning, {firstName}</h1>
-          <p className="mt-0.5 text-neutral-500">Here's your overview for today</p>
+          <h1 className="text-2xl font-bold text-foreground">Good morning, {firstName}</h1>
+          <p className="mt-0.5 text-muted-foreground">Here's your overview for today</p>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-neutral-500">{today}</span>
+          <span className="text-sm text-muted-foreground">{today}</span>
           <NotificationCenter />
           <DashboardCustomizer
             widgets={widgets}
@@ -543,8 +543,8 @@ export function DashboardPage() {
       </div>
       <div className="mb-5 flex items-center justify-between md:hidden">
         <div>
-          <h1 className="text-xl font-bold text-neutral-900">Good morning, {firstName}</h1>
-          <p className="mt-0.5 text-sm text-neutral-500">Here's your overview for today</p>
+          <h1 className="text-xl font-bold text-foreground">Good morning, {firstName}</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">Here's your overview for today</p>
         </div>
         <DashboardCustomizer
           widgets={widgets}
@@ -564,7 +564,7 @@ export function DashboardPage() {
 
       {/* Next Patient Banner */}
       {nextAppointment && (
-        <div className="relative mb-6 overflow-hidden rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
+        <div className="relative mb-6 overflow-hidden rounded-lg border border-border bg-card p-5 shadow-sm">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
               <div className={clsxMerge("flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold", getAvatarColor(nextAppointment.patientName))}>
@@ -572,10 +572,10 @@ export function DashboardPage() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <Clock className="h-3.5 w-3.5 text-neutral-500" />
-                  <span className="text-xs text-neutral-500">Up next — {formatTime(nextAppointment.scheduledDateTime)}</span>
+                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Up next — {formatTime(nextAppointment.scheduledDateTime)}</span>
                 </div>
-                <p className="text-lg font-bold text-neutral-900">{nextAppointment.patientName}</p>
+                <p className="text-lg font-bold text-foreground">{nextAppointment.patientName}</p>
                 <span className="mt-0.5 inline-flex items-center rounded-full bg-info-50 px-2.5 py-0.5 text-xs font-medium text-info-700">
                   {nextAppointment.type}
                 </span>

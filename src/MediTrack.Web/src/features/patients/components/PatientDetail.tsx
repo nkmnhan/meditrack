@@ -83,8 +83,8 @@ function getAvatarColor(patientId: string): string {
 function InfoField({ label, value }: { readonly label: string; readonly value: string }) {
   return (
     <div>
-      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-neutral-500">{label}</p>
-      <p className="text-sm font-medium text-neutral-900">{value || "\u2014"}</p>
+      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-sm font-medium text-foreground">{value || "\u2014"}</p>
     </div>
   );
 }
@@ -102,12 +102,12 @@ function DetailCard({
 }) {
   return (
     <div className={clsxMerge(
-      "rounded-lg border border-neutral-200 bg-white p-6 shadow-sm",
+      "rounded-lg border border-border bg-card p-6 shadow-sm",
       accent && `border-l-4 ${accent}`
     )}>
-      <div className="mb-4 flex items-center gap-2 border-b border-neutral-200 pb-3">
+      <div className="mb-4 flex items-center gap-2 border-b border-border pb-3">
         <Icon className="h-5 w-5 text-primary-700" />
-        <h3 className="font-semibold text-neutral-900">{title}</h3>
+        <h3 className="font-semibold text-foreground">{title}</h3>
       </div>
       {children}
     </div>
@@ -127,7 +127,7 @@ const VITAL_CONFIG: Record<string, { icon: React.ElementType; color: string }> =
   "BMI": { icon: Calculator, color: "text-accent-600" },
 };
 
-const DEFAULT_VITAL_CONFIG = { icon: Activity, color: "text-neutral-600" };
+const DEFAULT_VITAL_CONFIG = { icon: Activity, color: "text-muted-foreground" };
 
 interface VitalCardProps {
   readonly label: string;
@@ -143,12 +143,12 @@ function VitalCard({ label, value, unit, warning, vitalKey }: VitalCardProps) {
   const colorClass = warning ? "text-warning-600" : config.color;
 
   return (
-    <div className="rounded-lg bg-neutral-50 p-4">
+    <div className="rounded-lg bg-muted p-4">
       <VitalIcon className={clsxMerge("mb-2 h-4 w-4", colorClass)} />
       <p className={clsxMerge("text-2xl font-bold", colorClass)}>{value}</p>
-      <p className="mt-0.5 text-xs text-neutral-500">
+      <p className="mt-0.5 text-xs text-muted-foreground">
         {label}
-        {unit && <span className="ml-1 text-neutral-400">{unit}</span>}
+        {unit && <span className="ml-1 text-muted-foreground/70">{unit}</span>}
       </p>
     </div>
   );
@@ -168,7 +168,7 @@ function SeverityBadge({ severity }: { readonly severity: string }) {
     <span
       className={clsxMerge(
         "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium",
-        SEVERITY_STYLES[severity] || "bg-neutral-50 text-neutral-700 border-neutral-200"
+        SEVERITY_STYLES[severity] || "bg-muted text-foreground/80 border-border"
       )}
     >
       {severity}
@@ -275,7 +275,7 @@ function UpcomingAppointmentsCard({ patientId }: { readonly patientId: string })
                 key={appointment.id}
                 to={`/appointments/${appointment.id}`}
                 className={clsxMerge(
-                  "flex items-center gap-3 rounded-md border border-neutral-200 bg-neutral-50 p-3",
+                  "flex items-center gap-3 rounded-md border border-border bg-muted p-3",
                   "transition-colors hover:border-primary-300 hover:bg-primary-50"
                 )}
               >
@@ -288,8 +288,8 @@ function UpcomingAppointmentsCard({ patientId }: { readonly patientId: string })
                   </span>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-neutral-900">{appointment.type}</p>
-                  <p className="text-xs text-neutral-500">
+                  <p className="text-sm font-medium text-foreground">{appointment.type}</p>
+                  <p className="text-xs text-muted-foreground">
                     {formattedDate} at {formattedTime} &middot; {appointment.providerName}
                   </p>
                 </div>
@@ -310,7 +310,7 @@ function UpcomingAppointmentsCard({ patientId }: { readonly patientId: string })
           </Link>
         </div>
       ) : (
-        <p className="text-sm italic text-neutral-500">No upcoming appointments</p>
+        <p className="text-sm italic text-muted-foreground">No upcoming appointments</p>
       )}
     </DetailCard>
   );
@@ -348,14 +348,14 @@ function DocumentsCard() {
           return (
             <div
               key={document.id}
-              className="flex items-center gap-3 rounded-md border border-neutral-200 bg-neutral-50 p-3"
+              className="flex items-center gap-3 rounded-md border border-border bg-muted p-3"
             >
-              <DocIcon className="h-5 w-5 flex-shrink-0 text-neutral-500" />
+              <DocIcon className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-neutral-900">
+                <p className="truncate text-sm font-medium text-foreground">
                   {document.filename}
                 </p>
-                <p className="text-xs text-neutral-500">
+                <p className="text-xs text-muted-foreground">
                   {new Date(document.uploadDate).toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric",
@@ -378,11 +378,11 @@ function DocumentsCard() {
             "transition-colors",
             isDragOver
               ? "border-primary-400 bg-primary-50"
-              : "border-neutral-300 bg-neutral-50"
+              : "border-border bg-muted"
           )}
         >
-          <Upload className="h-6 w-6 text-neutral-400" />
-          <p className="text-sm text-neutral-500">
+          <Upload className="h-6 w-6 text-muted-foreground/70" />
+          <p className="text-sm text-muted-foreground">
             Drag files here or{" "}
             <button
               type="button"
@@ -424,15 +424,15 @@ function TimelineFilterBar({
   readonly onDateToChange: (value: string) => void;
 }) {
   return (
-    <div className="mb-4 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+    <div className="mb-4 rounded-lg border border-border bg-card p-4 shadow-sm">
       <div className="flex items-center gap-2 mb-3">
-        <Filter className="h-4 w-4 text-neutral-500" />
-        <p className="text-sm font-medium text-neutral-700">Filters</p>
+        <Filter className="h-4 w-4 text-muted-foreground" />
+        <p className="text-sm font-medium text-foreground/80">Filters</p>
       </div>
       <div className="flex flex-col gap-4 md:flex-row md:items-end">
         {/* Type checkboxes */}
         <div className="flex-1">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-500">
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Event Types
           </p>
           <div className="flex flex-wrap gap-2">
@@ -447,7 +447,7 @@ function TimelineFilterBar({
                     "transition-colors select-none",
                     isEnabled
                       ? `${config.bgColor} ${config.iconColor} border-current`
-                      : "border-neutral-200 bg-neutral-50 text-neutral-400"
+                      : "border-border bg-muted text-muted-foreground/70"
                   )}
                 >
                   <input
@@ -468,7 +468,7 @@ function TimelineFilterBar({
           <div>
             <label
               htmlFor="timeline-date-from"
-              className="mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-500"
+              className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground"
             >
               From
             </label>
@@ -477,13 +477,13 @@ function TimelineFilterBar({
               type="date"
               value={dateFrom}
               onChange={(event) => onDateFromChange(event.target.value)}
-              className="h-9 rounded-md border border-neutral-200 px-2 text-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="h-9 rounded-md border border-border px-2 text-sm text-foreground/80 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
             />
           </div>
           <div>
             <label
               htmlFor="timeline-date-to"
-              className="mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-500"
+              className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground"
             >
               To
             </label>
@@ -492,7 +492,7 @@ function TimelineFilterBar({
               type="date"
               value={dateTo}
               onChange={(event) => onDateToChange(event.target.value)}
-              className="h-9 rounded-md border border-neutral-200 px-2 text-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="h-9 rounded-md border border-border px-2 text-sm text-foreground/80 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
             />
           </div>
         </div>
@@ -602,7 +602,7 @@ function PatientClinicalTab({
             ))}
           </div>
         ) : (
-          <p className="text-sm italic text-neutral-500">No allergies on file</p>
+          <p className="text-sm italic text-muted-foreground">No allergies on file</p>
         )}
       </DetailCard>
 
@@ -613,17 +613,17 @@ function PatientClinicalTab({
             {uniqueActivePrescriptions.map((prescription) => (
               <div
                 key={prescription.id}
-                className="rounded-md border border-neutral-200 bg-neutral-50 p-3"
+                className="rounded-md border border-border bg-muted p-3"
               >
-                <p className="font-medium text-neutral-900">{prescription.medicationName}</p>
-                <p className="mt-1 text-sm text-neutral-600">
+                <p className="font-medium text-foreground">{prescription.medicationName}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
                   {prescription.dosage} &middot; {prescription.frequency}
                 </p>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-sm italic text-neutral-500">No active medications on file</p>
+          <p className="text-sm italic text-muted-foreground">No active medications on file</p>
         )}
       </DetailCard>
 
@@ -634,11 +634,11 @@ function PatientClinicalTab({
             {activeProblems.map((record) => (
               <div
                 key={record.id}
-                className="flex items-start justify-between gap-3 rounded-md border border-neutral-200 bg-neutral-50 p-3"
+                className="flex items-start justify-between gap-3 rounded-md border border-border bg-muted p-3"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-neutral-900">{record.diagnosisDescription}</p>
-                  <p className="mt-0.5 font-mono text-xs text-neutral-500">
+                  <p className="font-medium text-foreground">{record.diagnosisDescription}</p>
+                  <p className="mt-0.5 font-mono text-xs text-muted-foreground">
                     {record.diagnosisCode}
                   </p>
                 </div>
@@ -647,7 +647,7 @@ function PatientClinicalTab({
             ))}
           </div>
         ) : (
-          <p className="text-sm italic text-neutral-500">No active problems on file</p>
+          <p className="text-sm italic text-muted-foreground">No active problems on file</p>
         )}
       </DetailCard>
 
@@ -733,13 +733,13 @@ function PatientClinicalTab({
                 />
               )}
             </div>
-            <p className="mt-3 text-xs text-neutral-500">
+            <p className="mt-3 text-xs text-muted-foreground">
               Recorded by {latestVitals.recordedByName} on{" "}
               {new Date(latestVitals.recordedAt).toLocaleString()}
             </p>
           </div>
         ) : (
-          <p className="text-sm italic text-neutral-500">No vital signs recorded</p>
+          <p className="text-sm italic text-muted-foreground">No vital signs recorded</p>
         )}
       </DetailCard>
     </div>
@@ -871,8 +871,8 @@ export function PatientDetail() {
   if (error || !patient) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <AlertCircle className="mb-3 h-12 w-12 text-neutral-300" />
-        <p className="text-lg font-semibold text-neutral-700">Patient not found</p>
+        <AlertCircle className="mb-3 h-12 w-12 text-muted-foreground/50" />
+        <p className="text-lg font-semibold text-foreground/80">Patient not found</p>
         <Link to="/patients" className="mt-2 text-sm text-primary-700 hover:underline">
           &larr; Back to Patients
         </Link>
@@ -928,32 +928,32 @@ export function PatientDetail() {
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-bold text-neutral-900">{fullName}</h1>
+              <h1 className="text-2xl font-bold text-foreground">{fullName}</h1>
               <span
                 className={clsxMerge(
                   "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
                   patient.isActive
                     ? "border border-success-500/30 bg-success-50 text-success-700"
-                    : "bg-neutral-100 text-neutral-500"
+                    : "bg-muted text-muted-foreground"
                 )}
               >
                 {patient.isActive ? "Active" : "Inactive"}
               </span>
             </div>
-            <p className="mt-0.5 font-mono text-sm text-neutral-500">{patient.medicalRecordNumber}</p>
+            <p className="mt-0.5 font-mono text-sm text-muted-foreground">{patient.medicalRecordNumber}</p>
           </div>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <Link
             to={`/patients/${patient.id}/edit`}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-neutral-200 px-4 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border px-4 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted"
           >
             <Pencil className="h-4 w-4" /> Edit
           </Link>
           <button
             type="button"
             onClick={handleCopySummary}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-neutral-200 px-4 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border px-4 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted"
           >
             {isSummaryCopied ? (
               <Check className="h-4 w-4 text-success-500" />
@@ -1050,18 +1050,18 @@ export function PatientDetail() {
                   )}
                 </div>
               ) : (
-                <p className="text-sm italic text-neutral-500">No emergency contact on file</p>
+                <p className="text-sm italic text-muted-foreground">No emergency contact on file</p>
               )}
             </DetailCard>
 
             <DetailCard icon={Hash} title="Medical Record Number">
               <div className="flex items-center gap-3">
-                <div className="flex-1 rounded-md bg-neutral-50 p-3 font-mono text-lg font-semibold text-neutral-900">
+                <div className="flex-1 rounded-md bg-muted p-3 font-mono text-lg font-semibold text-foreground">
                   {patient.medicalRecordNumber}
                 </div>
                 <button
                   onClick={handleCopyMrn}
-                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md border border-neutral-200 text-neutral-500 transition-colors hover:bg-neutral-50"
+                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted"
                   aria-label="Copy MRN to clipboard"
                 >
                   {isMrnCopied ? <Check className="h-4 w-4 text-success-500" /> : <Copy className="h-4 w-4" />}
@@ -1080,7 +1080,7 @@ export function PatientDetail() {
                   )}
                 </div>
               ) : (
-                <p className="text-sm italic text-neutral-500">No insurance on file</p>
+                <p className="text-sm italic text-muted-foreground">No insurance on file</p>
               )}
             </DetailCard>
 
@@ -1162,24 +1162,24 @@ export function PatientDetail() {
               "inset-x-0 bottom-0 rounded-t-2xl md:rounded-t-none",
               // Desktop: right panel
               "md:inset-y-0 md:right-0 md:left-auto md:w-80",
-              "flex flex-col bg-white shadow-xl",
+              "flex flex-col bg-card shadow-xl",
               "animate-in slide-in-from-bottom md:slide-in-from-right duration-200"
             )}
           >
             {/* Header */}
-            <div className="flex items-center gap-3 border-b border-neutral-200 px-4 py-3">
+            <div className="flex items-center gap-3 border-b border-border px-4 py-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-accent-500 to-accent-700">
                 <Sparkles className="h-4 w-4 text-white" />
               </div>
               <div className="flex-1">
-                <h2 className="text-sm font-semibold text-neutral-900">
+                <h2 className="text-sm font-semibold text-foreground">
                   Ask Clara about {patient.firstName}
                 </h2>
-                <p className="text-xs text-neutral-500">AI Medical Secretary</p>
+                <p className="text-xs text-muted-foreground">AI Medical Secretary</p>
               </div>
               <button
                 onClick={() => setIsClaraContextOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 transition-colors"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground/80 transition-colors"
                 aria-label="Close Clara context panel"
               >
                 <span className="text-lg leading-none">&times;</span>
@@ -1190,23 +1190,23 @@ export function PatientDetail() {
             <div className="flex-1 overflow-y-auto px-4 py-4">
               {/* Recent Clara Sessions (demo) */}
               <div className="mb-5">
-                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-500">
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Recent Clara Sessions
                 </p>
                 <div className="space-y-2">
-                  <div className="rounded-lg border border-neutral-200 bg-accent-50 p-3">
-                    <p className="text-sm font-medium text-neutral-900">
+                  <div className="rounded-lg border border-border bg-accent-50 p-3">
+                    <p className="text-sm font-medium text-foreground">
                       Follow-up Visit Summary
                     </p>
-                    <p className="mt-0.5 text-xs text-neutral-500">
+                    <p className="mt-0.5 text-xs text-muted-foreground">
                       Mar 10, 2026 &middot; Persistent cough, labs ordered
                     </p>
                   </div>
-                  <div className="rounded-lg border border-neutral-200 bg-accent-50 p-3">
-                    <p className="text-sm font-medium text-neutral-900">
+                  <div className="rounded-lg border border-border bg-accent-50 p-3">
+                    <p className="text-sm font-medium text-foreground">
                       Annual Physical Summary
                     </p>
-                    <p className="mt-0.5 text-xs text-neutral-500">
+                    <p className="mt-0.5 text-xs text-muted-foreground">
                       Feb 20, 2026 &middot; New HTN diagnosis, pre-diabetic
                     </p>
                   </div>
@@ -1215,7 +1215,7 @@ export function PatientDetail() {
 
               {/* Suggested prompts */}
               <div>
-                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-500">
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Suggested Prompts
                 </p>
                 <div className="space-y-2">
@@ -1225,8 +1225,8 @@ export function PatientDetail() {
                       type="button"
                       onClick={() => handleClaraPromptClick(prompt)}
                       className={clsxMerge(
-                        "flex w-full items-center gap-2 rounded-lg border border-neutral-200 p-3",
-                        "bg-white text-left text-sm font-medium text-neutral-700",
+                        "flex w-full items-center gap-2 rounded-lg border border-border p-3",
+                        "bg-card text-left text-sm font-medium text-foreground/80",
                         "transition-all hover:border-accent-300 hover:bg-accent-50 hover:text-accent-700"
                       )}
                     >

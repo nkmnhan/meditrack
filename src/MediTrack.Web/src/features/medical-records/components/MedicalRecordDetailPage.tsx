@@ -24,8 +24,8 @@ export function MedicalRecordDetailPage() {
   if (error || !record) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <AlertCircle className="mb-3 h-12 w-12 text-neutral-300" />
-        <p className="text-lg font-semibold text-neutral-700">Record Not Found</p>
+        <AlertCircle className="mb-3 h-12 w-12 text-muted-foreground/50" />
+        <p className="text-lg font-semibold text-foreground/80">Record Not Found</p>
         <Link to="/medical-records" className="mt-2 text-sm text-primary-700 hover:underline">
           &larr; Back to Medical Records
         </Link>
@@ -40,7 +40,7 @@ export function MedicalRecordDetailPage() {
       <div className="flex items-center gap-3 mb-4">
         <Link
           to={`/patients/${record.patientId}/medical-records`}
-          className="rounded-lg border border-neutral-300 p-2 text-neutral-700 hover:bg-neutral-50 md:hidden"
+          className="rounded-lg border border-border p-2 text-foreground/80 hover:bg-muted md:hidden"
           aria-label="Back to medical records"
         >
           <ArrowLeft className="h-5 w-5" />

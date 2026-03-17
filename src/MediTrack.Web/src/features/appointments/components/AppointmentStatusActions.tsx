@@ -138,8 +138,8 @@ export function AppointmentStatusActions({
 
   return (
     <>
-      <div className="border-t border-neutral-200 pt-4">
-        <p className="mb-3 text-xs font-medium text-neutral-500">Actions</p>
+      <div className="border-t border-border pt-4">
+        <p className="mb-3 text-xs font-medium text-muted-foreground">Actions</p>
         <div className="flex flex-wrap gap-2">
           {visibleTransitions.map((targetStatus) => {
             const buttonConfig = ACTION_BUTTONS.find(

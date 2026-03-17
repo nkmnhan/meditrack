@@ -59,7 +59,7 @@ interface FormFieldProps {
 function FormField({ label, error, required, children }: FormFieldProps) {
   return (
     <div>
-      <label className="block text-sm font-medium text-neutral-700">
+      <label className="block text-sm font-medium text-foreground/80">
         {label}
         {required && <span className="text-error-600"> *</span>}
       </label>
@@ -256,7 +256,7 @@ export function AppointmentForm({
 
   const hasConflicts = conflicts?.hasConflict ?? false;
   const inputClassName =
-    "w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500";
+    "w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500";
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 pt-8 md:items-center md:pt-4">
@@ -270,16 +270,16 @@ export function AppointmentForm({
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-lg rounded-lg border border-neutral-200 bg-white shadow-xl">
+      <div className="relative w-full max-w-lg rounded-lg border border-border bg-card shadow-xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
-          <h2 className="text-lg font-semibold text-neutral-900">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <h2 className="text-lg font-semibold text-foreground">
             {isEditMode ? "Edit Appointment" : "New Appointment"}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-2 text-neutral-500 hover:bg-neutral-100"
+            className="rounded-lg p-2 text-muted-foreground hover:bg-muted"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -306,7 +306,7 @@ export function AppointmentForm({
             <div className="relative">
               <FormField label="Patient" error={errors.patientId?.message} required>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
                   <input
                     type="text"
                     value={patientSearchTerm}
@@ -330,15 +330,15 @@ export function AppointmentForm({
 
               {/* Search results dropdown */}
               {isPatientDropdownOpen && patientSearchTerm.length >= 2 && (
-                <div className="absolute z-10 mt-1 w-full rounded-lg border border-neutral-200 bg-white shadow-lg">
+                <div className="absolute z-10 mt-1 w-full rounded-lg border border-border bg-card shadow-lg">
                   {isSearchingPatients && (
-                    <div className="flex items-center gap-2 px-4 py-3 text-sm text-neutral-500">
+                    <div className="flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground">
                       <Loader2 className="h-4 w-4 animate-spin" />
                       Searching...
                     </div>
                   )}
                   {!isSearchingPatients && patientResults?.length === 0 && (
-                    <p className="px-4 py-3 text-sm text-neutral-500">No patients found</p>
+                    <p className="px-4 py-3 text-sm text-muted-foreground">No patients found</p>
                   )}
                   {patientResults?.map((patient) => (
                     <button
@@ -351,10 +351,10 @@ export function AppointmentForm({
                         setPatientSearchTerm(patient.fullName);
                         setIsPatientDropdownOpen(false);
                       }}
-                      className="flex w-full items-center justify-between px-4 py-3 text-left text-sm hover:bg-neutral-50"
+                      className="flex w-full items-center justify-between px-4 py-3 text-left text-sm hover:bg-muted"
                     >
-                      <span className="font-medium text-neutral-900">{patient.fullName}</span>
-                      <span className="text-xs text-neutral-500">{patient.email}</span>
+                      <span className="font-medium text-foreground">{patient.fullName}</span>
+                      <span className="text-xs text-muted-foreground">{patient.email}</span>
                     </button>
                   ))}
                 </div>
@@ -368,7 +368,7 @@ export function AppointmentForm({
                 type="text"
                 value={existingAppointment?.patientName ?? ""}
                 disabled
-                className={clsxMerge(inputClassName, "bg-neutral-100")}
+                className={clsxMerge(inputClassName, "bg-muted")}
               />
             </FormField>
           )}
@@ -478,11 +478,11 @@ export function AppointmentForm({
           </FormField>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-3 border-t border-neutral-200 pt-4">
+          <div className="flex items-center justify-end gap-3 border-t border-border pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+              className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground/80 hover:bg-muted"
             >
               Cancel
             </button>
@@ -493,7 +493,7 @@ export function AppointmentForm({
                 "inline-flex items-center gap-2 rounded-lg px-4 py-2",
                 "text-sm font-medium text-white",
                 "bg-primary-700 hover:bg-primary-800",
-                "disabled:cursor-not-allowed disabled:bg-neutral-300",
+                "disabled:cursor-not-allowed disabled:bg-muted",
               )}
             >
               {isCreating || isUpdating ? (

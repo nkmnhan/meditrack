@@ -186,7 +186,7 @@ function PatientListSkeleton({ viewMode }: { readonly viewMode: ViewMode }) {
     return (
       <div className="space-y-2">
         {Array.from({ length: PAGE_SIZE }).map((_, index) => (
-          <div key={index} className="h-14 animate-pulse rounded-lg bg-neutral-100" />
+          <div key={index} className="h-14 animate-pulse rounded-lg bg-muted" />
         ))}
       </div>
     );
@@ -194,7 +194,7 @@ function PatientListSkeleton({ viewMode }: { readonly viewMode: ViewMode }) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: PAGE_SIZE }).map((_, index) => (
-        <div key={index} className="h-56 animate-pulse rounded-lg bg-neutral-100" />
+        <div key={index} className="h-56 animate-pulse rounded-lg bg-muted" />
       ))}
     </div>
   );
@@ -223,21 +223,21 @@ function PatientCard({ patient, isSelected, onToggleSelect }: PatientCardProps) 
   return (
     <div
       className={clsxMerge(
-        "relative rounded-lg border bg-white p-5 shadow-sm transition-shadow hover:shadow-md",
-        isSelected ? "border-primary-400 ring-2 ring-primary-200" : "border-neutral-200"
+        "relative rounded-lg border bg-card p-5 shadow-sm transition-shadow hover:shadow-md",
+        isSelected ? "border-primary-400 ring-2 ring-primary-200" : "border-border"
       )}
     >
       {/* Selection checkbox — top-right */}
       <button
         type="button"
         onClick={() => onToggleSelect(patient.id)}
-        className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded transition-colors hover:bg-neutral-100"
+        className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded transition-colors hover:bg-muted"
         aria-label={isSelected ? `Deselect ${patient.fullName}` : `Select ${patient.fullName}`}
       >
         {isSelected ? (
           <CheckSquare className="h-4 w-4 text-primary-700" />
         ) : (
-          <Square className="h-4 w-4 text-neutral-400" />
+          <Square className="h-4 w-4 text-muted-foreground/70" />
         )}
       </button>
 
@@ -247,7 +247,7 @@ function PatientCard({ patient, isSelected, onToggleSelect }: PatientCardProps) 
           {initials.toUpperCase()}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-neutral-900">{patient.fullName}</p>
+          <p className="truncate text-sm font-semibold text-foreground">{patient.fullName}</p>
           <PatientBadges patient={patient} />
         </div>
         <span
@@ -255,7 +255,7 @@ function PatientCard({ patient, isSelected, onToggleSelect }: PatientCardProps) 
             "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
             patient.isActive
               ? "border border-success-500/30 bg-success-50 text-success-700"
-              : "bg-neutral-100 text-neutral-500"
+              : "bg-muted text-muted-foreground"
           )}
         >
           {patient.isActive ? "Active" : "Inactive"}
@@ -264,34 +264,34 @@ function PatientCard({ patient, isSelected, onToggleSelect }: PatientCardProps) 
 
       {/* Info rows */}
       <div className="space-y-2">
-        <div className="flex items-center gap-2 text-sm text-neutral-700">
-          <Hash className="h-4 w-4 flex-shrink-0 text-neutral-500" />
+        <div className="flex items-center gap-2 text-sm text-foreground/80">
+          <Hash className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
           <span className="font-mono">{patient.medicalRecordNumber}</span>
         </div>
-        <div className="flex items-center gap-2 text-sm text-neutral-700">
-          <Calendar className="h-4 w-4 flex-shrink-0 text-neutral-500" />
-          <span>{formattedDOB} <span className="text-neutral-500">({patient.age} years)</span></span>
+        <div className="flex items-center gap-2 text-sm text-foreground/80">
+          <Calendar className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+          <span>{formattedDOB} <span className="text-muted-foreground">({patient.age} years)</span></span>
         </div>
-        <div className="flex items-center gap-2 text-sm text-neutral-700">
-          <Phone className="h-4 w-4 flex-shrink-0 text-neutral-500" />
+        <div className="flex items-center gap-2 text-sm text-foreground/80">
+          <Phone className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
           <span>{patient.phoneNumber}</span>
         </div>
-        <div className="flex items-center gap-2 text-sm text-neutral-700">
-          <Mail className="h-4 w-4 flex-shrink-0 text-neutral-500" />
+        <div className="flex items-center gap-2 text-sm text-foreground/80">
+          <Mail className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
           <span className="truncate">{patient.email}</span>
         </div>
 
         {/* Last Visit */}
         {lastVisitFormatted && (
-          <div className="flex items-center gap-2 text-sm text-neutral-500">
-            <Clock className="h-4 w-4 flex-shrink-0 text-neutral-400" />
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Clock className="h-4 w-4 flex-shrink-0 text-muted-foreground/70" />
             <span>Last Visit: {lastVisitFormatted}</span>
           </div>
         )}
       </div>
 
       {/* Footer */}
-      <div className="mt-4 flex justify-end border-t border-neutral-200 pt-3">
+      <div className="mt-4 flex justify-end border-t border-border pt-3">
         <Link to={`/patients/${patient.id}`} className="text-sm font-medium text-primary-700 hover:underline">
           View Details &rarr;
         </Link>
@@ -311,44 +311,44 @@ function PatientRow({ patient, isSelected, onToggleSelect }: PatientCardProps) {
   return (
     <div
       className={clsxMerge(
-        "flex items-center gap-3 rounded-lg border bg-white px-4 py-3 transition-shadow hover:shadow-sm",
-        isSelected ? "border-primary-400 ring-2 ring-primary-200" : "border-neutral-200"
+        "flex items-center gap-3 rounded-lg border bg-card px-4 py-3 transition-shadow hover:shadow-sm",
+        isSelected ? "border-primary-400 ring-2 ring-primary-200" : "border-border"
       )}
     >
       {/* Checkbox */}
       <button
         type="button"
         onClick={() => onToggleSelect(patient.id)}
-        className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded transition-colors hover:bg-neutral-100"
+        className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded transition-colors hover:bg-muted"
         aria-label={isSelected ? `Deselect ${patient.fullName}` : `Select ${patient.fullName}`}
       >
         {isSelected ? (
           <CheckSquare className="h-4 w-4 text-primary-700" />
         ) : (
-          <Square className="h-4 w-4 text-neutral-400" />
+          <Square className="h-4 w-4 text-muted-foreground/70" />
         )}
       </button>
 
       {/* Name + badges */}
       <div className="min-w-0 flex-1 sm:w-40 sm:flex-none">
-        <Link to={`/patients/${patient.id}`} className="truncate text-sm font-semibold text-neutral-900 hover:text-primary-700 hover:underline">
+        <Link to={`/patients/${patient.id}`} className="truncate text-sm font-semibold text-foreground hover:text-primary-700 hover:underline">
           {patient.fullName}
         </Link>
         <PatientBadges patient={patient} />
       </div>
 
       {/* MRN */}
-      <span className="hidden text-sm font-mono text-neutral-700 md:block md:w-28">
+      <span className="hidden text-sm font-mono text-foreground/80 md:block md:w-28">
         {patient.medicalRecordNumber}
       </span>
 
       {/* DOB */}
-      <span className="hidden text-sm text-neutral-700 lg:block lg:w-36">
+      <span className="hidden text-sm text-foreground/80 lg:block lg:w-36">
         {formattedDOB}
       </span>
 
       {/* Phone */}
-      <span className="hidden text-sm text-neutral-700 md:block md:w-32">
+      <span className="hidden text-sm text-foreground/80 md:block md:w-32">
         {patient.phoneNumber}
       </span>
 
@@ -358,14 +358,14 @@ function PatientRow({ patient, isSelected, onToggleSelect }: PatientCardProps) {
           "hidden items-center rounded-full px-2 py-0.5 text-xs font-medium sm:inline-flex",
           patient.isActive
             ? "border border-success-500/30 bg-success-50 text-success-700"
-            : "bg-neutral-100 text-neutral-500"
+            : "bg-muted text-muted-foreground"
         )}
       >
         {patient.isActive ? "Active" : "Inactive"}
       </span>
 
       {/* Last Visit */}
-      <span className="hidden text-sm text-neutral-500 lg:block lg:w-32">
+      <span className="hidden text-sm text-muted-foreground lg:block lg:w-32">
         {lastVisitFormatted}
       </span>
 
@@ -391,9 +391,9 @@ function BulkActionBar({ selectedCount, onClearSelection }: BulkActionBarProps) 
   if (selectedCount === 0) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-neutral-200 bg-white px-4 py-3 shadow-lg sm:bottom-4 sm:left-1/2 sm:right-auto sm:max-w-lg sm:-translate-x-1/2 sm:rounded-lg sm:border sm:px-6">
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card px-4 py-3 shadow-lg sm:bottom-4 sm:left-1/2 sm:right-auto sm:max-w-lg sm:-translate-x-1/2 sm:rounded-lg sm:border sm:px-6">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-medium text-neutral-900">
+        <span className="text-sm font-medium text-foreground">
           {selectedCount} selected
         </span>
         <div className="flex items-center gap-2">
@@ -401,8 +401,8 @@ function BulkActionBar({ selectedCount, onClearSelection }: BulkActionBarProps) 
             type="button"
             className={clsxMerge(
               "inline-flex h-9 items-center gap-1.5 rounded-md px-3",
-              "border border-neutral-200 bg-white text-sm font-medium text-neutral-700",
-              "transition-colors hover:bg-neutral-50"
+              "border border-border bg-card text-sm font-medium text-foreground/80",
+              "transition-colors hover:bg-muted"
             )}
             aria-label="Export selected patients"
           >
@@ -413,8 +413,8 @@ function BulkActionBar({ selectedCount, onClearSelection }: BulkActionBarProps) 
             type="button"
             className={clsxMerge(
               "inline-flex h-9 items-center gap-1.5 rounded-md px-3",
-              "border border-neutral-200 bg-white text-sm font-medium text-neutral-700",
-              "transition-colors hover:bg-neutral-50"
+              "border border-border bg-card text-sm font-medium text-foreground/80",
+              "transition-colors hover:bg-muted"
             )}
             aria-label="Send message to selected patients"
           >
@@ -424,7 +424,7 @@ function BulkActionBar({ selectedCount, onClearSelection }: BulkActionBarProps) 
           <button
             type="button"
             onClick={onClearSelection}
-            className="text-sm font-medium text-neutral-500 transition-colors hover:text-neutral-700"
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground/80"
           >
             Clear
           </button>
@@ -443,7 +443,7 @@ interface ViewModeToggleProps {
 
 function ViewModeToggle({ viewMode, onViewModeChange }: ViewModeToggleProps) {
   return (
-    <div className="inline-flex rounded-md border border-neutral-200">
+    <div className="inline-flex rounded-md border border-border">
       <button
         type="button"
         onClick={() => onViewModeChange("grid")}
@@ -451,7 +451,7 @@ function ViewModeToggle({ viewMode, onViewModeChange }: ViewModeToggleProps) {
           "inline-flex h-9 w-9 items-center justify-center rounded-l-md transition-colors",
           viewMode === "grid"
             ? "bg-primary-700 text-white"
-            : "bg-white text-neutral-500 hover:bg-neutral-50"
+            : "bg-card text-muted-foreground hover:bg-muted"
         )}
         aria-label="Grid view"
       >
@@ -461,10 +461,10 @@ function ViewModeToggle({ viewMode, onViewModeChange }: ViewModeToggleProps) {
         type="button"
         onClick={() => onViewModeChange("list")}
         className={clsxMerge(
-          "inline-flex h-9 w-9 items-center justify-center rounded-r-md border-l border-neutral-200 transition-colors",
+          "inline-flex h-9 w-9 items-center justify-center rounded-r-md border-l border-border transition-colors",
           viewMode === "list"
             ? "bg-primary-700 text-white"
-            : "bg-white text-neutral-500 hover:bg-neutral-50"
+            : "bg-card text-muted-foreground hover:bg-muted"
         )}
         aria-label="List view"
       >
@@ -496,8 +496,8 @@ function Pagination({
   endIndex,
 }: PaginationProps) {
   return (
-    <div className="mt-6 flex items-center justify-between border-t border-neutral-200 pt-4">
-      <p className="text-sm text-neutral-500">
+    <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
+      <p className="text-sm text-muted-foreground">
         Showing {startIndex + 1}&ndash;{endIndex} of {totalItems}
       </p>
       <div className="flex gap-2">
@@ -506,8 +506,8 @@ function Pagination({
           onClick={onPrevious}
           disabled={currentPage === 1}
           className={clsxMerge(
-            "inline-flex h-10 items-center gap-1 rounded-md border border-neutral-200 px-3 text-sm font-medium text-neutral-700",
-            "transition-colors hover:bg-neutral-50",
+            "inline-flex h-10 items-center gap-1 rounded-md border border-border px-3 text-sm font-medium text-foreground/80",
+            "transition-colors hover:bg-muted",
             "disabled:cursor-not-allowed disabled:opacity-40"
           )}
           aria-label="Previous page"
@@ -519,8 +519,8 @@ function Pagination({
           onClick={onNext}
           disabled={currentPage === totalPages}
           className={clsxMerge(
-            "inline-flex h-10 items-center gap-1 rounded-md border border-neutral-200 px-3 text-sm font-medium text-neutral-700",
-            "transition-colors hover:bg-neutral-50",
+            "inline-flex h-10 items-center gap-1 rounded-md border border-border px-3 text-sm font-medium text-foreground/80",
+            "transition-colors hover:bg-muted",
             "disabled:cursor-not-allowed disabled:opacity-40"
           )}
           aria-label="Next page"
@@ -541,17 +541,17 @@ interface ListHeaderProps {
 
 function ListHeader({ isAllSelected, onToggleSelectAll }: ListHeaderProps) {
   return (
-    <div className="mb-2 flex items-center gap-3 rounded-lg bg-neutral-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">
+    <div className="mb-2 flex items-center gap-3 rounded-lg bg-muted px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
       <button
         type="button"
         onClick={onToggleSelectAll}
-        className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded transition-colors hover:bg-neutral-200"
+        className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded transition-colors hover:bg-muted"
         aria-label={isAllSelected ? "Deselect all" : "Select all"}
       >
         {isAllSelected ? (
           <CheckSquare className="h-4 w-4 text-primary-700" />
         ) : (
-          <Square className="h-4 w-4 text-neutral-400" />
+          <Square className="h-4 w-4 text-muted-foreground/70" />
         )}
       </button>
       <span className="flex-1 sm:w-40 sm:flex-none">Name</span>
@@ -733,7 +733,7 @@ export function PatientList() {
 
       {/* Header */}
       <div className="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-        <h1 className="text-2xl font-bold text-neutral-900">Patients</h1>
+        <h1 className="text-2xl font-bold text-foreground">Patients</h1>
         <div className="flex items-center gap-3">
           <ViewModeToggle viewMode={viewMode} onViewModeChange={handleViewModeChange} />
           <Link
@@ -767,7 +767,7 @@ export function PatientList() {
           }}
           className="relative flex-1"
         >
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="search"
             value={searchTerm}
@@ -776,7 +776,7 @@ export function PatientList() {
               if (!event.target.value.trim()) handleClearSearch();
             }}
             placeholder="Search by name, email, phone..."
-            className="h-10 w-full rounded-md border border-neutral-200 bg-white pl-9 pr-3 text-sm text-neutral-900 placeholder:text-neutral-500 transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700"
+            className="h-10 w-full rounded-md border border-border bg-card pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-700"
           />
         </form>
         <div className="relative">
@@ -787,13 +787,13 @@ export function PatientList() {
               setStatusFilter(event.target.value as "all" | "active" | "inactive");
               setCurrentPage(1);
             }}
-            className="h-10 appearance-none rounded-md border border-neutral-200 bg-white pl-3 pr-8 text-sm text-neutral-700 transition-shadow focus:outline-none focus:ring-2 focus:ring-primary-700"
+            className="h-10 appearance-none rounded-md border border-border bg-card pl-3 pr-8 text-sm text-foreground/80 transition-shadow focus:outline-none focus:ring-2 focus:ring-primary-700"
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
-          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         </div>
 
         {/* Select all (grid view only — list view has its own header) */}
@@ -801,19 +801,19 @@ export function PatientList() {
           <button
             type="button"
             onClick={handleToggleSelectAll}
-            className="inline-flex h-10 items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
+            className="inline-flex h-10 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted"
             aria-label={isAllVisibleSelected ? "Deselect all" : "Select all"}
           >
             {isAllVisibleSelected ? (
               <CheckSquare className="h-4 w-4 text-primary-700" />
             ) : (
-              <Square className="h-4 w-4 text-neutral-400" />
+              <Square className="h-4 w-4 text-muted-foreground/70" />
             )}
             <span className="hidden sm:inline">Select All</span>
           </button>
         )}
 
-        <p className="self-center whitespace-nowrap text-sm text-neutral-500" aria-live="polite">
+        <p className="self-center whitespace-nowrap text-sm text-muted-foreground" aria-live="polite">
           Showing {totalItems} patients
         </p>
       </div>
@@ -841,9 +841,9 @@ export function PatientList() {
         <>
           {filteredPatients.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <UserX className="mb-3 h-12 w-12 text-neutral-300" />
-              <p className="text-lg font-semibold text-neutral-700">No patients found</p>
-              <p className="mt-1 text-sm text-neutral-500">
+              <UserX className="mb-3 h-12 w-12 text-muted-foreground/50" />
+              <p className="text-lg font-semibold text-foreground/80">No patients found</p>
+              <p className="mt-1 text-sm text-muted-foreground">
                 {isSearchActive
                   ? "Try adjusting your search or filters"
                   : "No patients yet. Add your first patient to get started."}

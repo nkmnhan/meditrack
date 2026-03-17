@@ -50,10 +50,10 @@ function InfoRow({ icon: Icon, label, value }: InfoRowProps) {
   if (!value) return null;
   return (
     <div className="flex items-start gap-3">
-      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500" />
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
       <div>
-        <p className="text-xs font-medium text-neutral-500">{label}</p>
-        <p className="text-sm text-neutral-900">{value}</p>
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        <p className="text-sm text-foreground">{value}</p>
       </div>
     </div>
   );
@@ -107,7 +107,7 @@ export function AppointmentDetailPanel({
       {/* Panel — full screen on mobile, side panel on desktop */}
       <div
         className={clsxMerge(
-          "fixed z-50 bg-white shadow-xl",
+          "fixed z-50 bg-card shadow-xl",
           // Mobile: full screen modal
           "inset-0",
           // Desktop: right side panel
@@ -119,12 +119,12 @@ export function AppointmentDetailPanel({
         aria-label="Appointment details"
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
-          <h2 className="text-lg font-semibold text-neutral-900">Appointment Details</h2>
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <h2 className="text-lg font-semibold text-foreground">Appointment Details</h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-2 text-neutral-500 hover:bg-neutral-100"
+            className="rounded-lg p-2 text-muted-foreground hover:bg-muted"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -151,7 +151,7 @@ export function AppointmentDetailPanel({
               {/* Status */}
               <div className="flex items-center justify-between">
                 <StatusBadge status={appointment.status} />
-                <span className="text-sm text-neutral-500">
+                <span className="text-sm text-muted-foreground">
                   {TYPE_LABELS[appointment.type]}
                 </span>
               </div>
@@ -159,7 +159,7 @@ export function AppointmentDetailPanel({
               {/* Key info */}
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <User className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500" />
+                  <User className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                   <Link
                     to={`/patients/${appointment.patientId}`}
                     className="inline-flex items-center gap-1 text-sm text-primary-700 hover:text-primary-800 hover:underline transition-colors"
@@ -167,7 +167,7 @@ export function AppointmentDetailPanel({
                     {appointment.patientName}
                     <ExternalLink className="h-3 w-3" />
                   </Link>
-                  <p className="text-xs font-medium text-neutral-500">Patient</p>
+                  <p className="text-xs font-medium text-muted-foreground">Patient</p>
                 </div>
                 <InfoRow
                   icon={Stethoscope}
@@ -198,28 +198,28 @@ export function AppointmentDetailPanel({
 
               {/* Reason */}
               <div>
-                <p className="text-xs font-medium text-neutral-500">Reason for Visit</p>
-                <p className="mt-1 text-sm text-neutral-900">{appointment.reason}</p>
+                <p className="text-xs font-medium text-muted-foreground">Reason for Visit</p>
+                <p className="mt-1 text-sm text-foreground">{appointment.reason}</p>
               </div>
 
               {/* Notes */}
               {appointment.patientNotes && (
                 <div>
                   <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-neutral-500" />
-                    <p className="text-xs font-medium text-neutral-500">Patient Notes</p>
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <p className="text-xs font-medium text-muted-foreground">Patient Notes</p>
                   </div>
-                  <p className="mt-1 text-sm text-neutral-700">{appointment.patientNotes}</p>
+                  <p className="mt-1 text-sm text-foreground/80">{appointment.patientNotes}</p>
                 </div>
               )}
 
               {isStaff && appointment.internalNotes && (
                 <div>
                   <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-neutral-500" />
-                    <p className="text-xs font-medium text-neutral-500">Internal Notes</p>
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <p className="text-xs font-medium text-muted-foreground">Internal Notes</p>
                   </div>
-                  <p className="mt-1 text-sm text-neutral-700">{appointment.internalNotes}</p>
+                  <p className="mt-1 text-sm text-foreground/80">{appointment.internalNotes}</p>
                 </div>
               )}
 

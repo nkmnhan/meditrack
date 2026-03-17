@@ -61,10 +61,10 @@ export function DashboardCustomizer({
         onClick={() => setIsOpen((previous) => !previous)}
         className={clsxMerge(
           "flex h-9 w-9 items-center justify-center rounded-lg",
-          "border border-neutral-200 bg-white",
-          "text-neutral-500 transition-colors",
-          "hover:bg-neutral-50 hover:text-neutral-700",
-          isOpen && "bg-neutral-50 text-primary-700 border-primary-200"
+          "border border-border bg-card",
+          "text-muted-foreground transition-colors",
+          "hover:bg-muted hover:text-foreground/80",
+          isOpen && "bg-muted text-primary-700 border-primary-200"
         )}
         aria-label="Customize dashboard layout"
         aria-expanded={isOpen}
@@ -84,21 +84,21 @@ export function DashboardCustomizer({
             ref={panelRef}
             className={clsxMerge(
               "absolute right-0 top-full z-50 mt-2",
-              "w-72 rounded-lg border border-neutral-200 bg-white shadow-lg",
+              "w-72 rounded-lg border border-border bg-card shadow-lg",
               "overflow-hidden"
             )}
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <div>
-                <h3 className="text-sm font-semibold text-neutral-900">Customize Dashboard</h3>
-                <p className="text-xs text-neutral-500">
+                <h3 className="text-sm font-semibold text-foreground">Customize Dashboard</h3>
+                <p className="text-xs text-muted-foreground">
                   {visibleCount} of {widgets.length} widgets visible
                 </p>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-xs font-medium text-neutral-500 hover:text-neutral-700"
+                className="text-xs font-medium text-muted-foreground hover:text-foreground/80"
               >
                 Done
               </button>
@@ -120,11 +120,11 @@ export function DashboardCustomizer({
                     "transition-colors",
                     draggedIndex === index && "opacity-40",
                     dragOverIndex === index && draggedIndex !== index && "bg-primary-50",
-                    draggedIndex === null && "hover:bg-neutral-50"
+                    draggedIndex === null && "hover:bg-muted"
                   )}
                 >
                   <div
-                    className="flex h-8 w-8 flex-shrink-0 cursor-grab items-center justify-center rounded text-neutral-400 hover:text-neutral-600 active:cursor-grabbing"
+                    className="flex h-8 w-8 flex-shrink-0 cursor-grab items-center justify-center rounded text-muted-foreground/70 hover:text-muted-foreground active:cursor-grabbing"
                     aria-label={`Drag to reorder ${widget.label}`}
                   >
                     <GripVertical className="h-4 w-4" />
@@ -134,14 +134,14 @@ export function DashboardCustomizer({
                     {widget.isVisible ? (
                       <Eye className="h-3.5 w-3.5 flex-shrink-0 text-primary-700" />
                     ) : (
-                      <EyeOff className="h-3.5 w-3.5 flex-shrink-0 text-neutral-400" />
+                      <EyeOff className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground/70" />
                     )}
                     <span
                       className={clsxMerge(
                         "truncate text-sm",
                         widget.isVisible
-                          ? "font-medium text-neutral-900"
-                          : "text-neutral-400"
+                          ? "font-medium text-foreground"
+                          : "text-muted-foreground/70"
                       )}
                     >
                       {widget.label}
@@ -159,14 +159,14 @@ export function DashboardCustomizer({
             </div>
 
             {/* Footer */}
-            <div className="border-t border-neutral-200 px-4 py-3">
+            <div className="border-t border-border px-4 py-3">
               <button
                 onClick={onReset}
                 className={clsxMerge(
                   "flex h-8 w-full items-center justify-center gap-2 rounded-md",
-                  "border border-neutral-200 bg-white",
-                  "text-xs font-medium text-neutral-600",
-                  "transition-colors hover:bg-neutral-50 hover:text-neutral-800"
+                  "border border-border bg-card",
+                  "text-xs font-medium text-muted-foreground",
+                  "transition-colors hover:bg-muted hover:text-foreground"
                 )}
               >
                 <RotateCcw className="h-3.5 w-3.5" />
