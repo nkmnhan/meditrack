@@ -5,6 +5,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
+### Changed
+- Semantic token migration: all 90+ component files migrated from hardcoded colors to semantic tokens (2026-03-17)
+  - `bg-white` → `bg-card`, `text-neutral-*` → `text-foreground`/`text-muted-foreground`, `border-neutral-*` → `border-border`
+  - ~4,600 class replacements across web + design system (dual-update rule enforced)
+  - Deleted ~80 lines of `.dark` CSS override hacks — themes now work purely via CSS variables
+  - Dark mode works on ALL pages: landing, clara, admin, appointments, patients, medical records
+- Theme derivation engine: `themeDerivation.ts` — 5 brand colors → 25+ CSS variables automatically (2026-03-17)
+  - Coolors.co URL parser, auto-role assignment by luminance/saturation
+  - Runtime theme injection via `applyTheme()`
+- Updated `.claude/rules/frontend.md` — semantic tokens mandatory, hardcoded neutrals banned (2026-03-17)
+- Developer + AI theming guide: `docs/theming-guide.md` — new palette = 30 min, zero component changes (2026-03-17)
+
 ### Added
 - Clara.UnitTests: 106 unit tests covering validators, domain, services, and security (2026-03-17)
   - Validators: StartSessionRequest, KnowledgeSearchRequest
