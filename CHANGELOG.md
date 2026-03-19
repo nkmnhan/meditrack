@@ -5,6 +5,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
+### Added
+- SOLID theme switcher system with centralized config (2026-03-19)
+  - `color-themes.ts` — single source of truth. New tenant theme = add one object
+  - `themeDerivation.ts` — engine: 5 hex → 25+ CSS variables (pre-computed, cached)
+  - `use-color-theme.ts` — runtime `<style>` injection, localStorage persistence
+  - `ThemeSwitcher.tsx` — popover panel (sidebar on desktop, bottom nav on mobile)
+  - 10 curated themes: 5 dark (Northern Lights, Luminous Flow, Dreamscapes, Emerald Forest, Velvet Night) + 5 light (Mimi Pink, Baby Blue Summer, Health Summit, French Riviera, Ethereal Escapes)
+  - Light/dark mode per palette (mutually exclusive selection)
+- Theme workflow section in CLAUDE.md with shorthand aliases and file map (2026-03-19)
+- `scout` and `frontend-theme-design` personal skills in `~/.claude/skills/` (2026-03-19)
+
 ### Changed
 - Semantic token migration: all 90+ component files migrated from hardcoded colors to semantic tokens (2026-03-17)
   - `bg-white` → `bg-card`, `text-neutral-*` → `text-foreground`/`text-muted-foreground`, `border-neutral-*` → `border-border`
@@ -17,7 +28,22 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 - Updated `.claude/rules/frontend.md` — semantic tokens mandatory, hardcoded neutrals banned (2026-03-17)
 - Developer + AI theming guide: `docs/theming-guide.md` — new palette = 30 min, zero component changes (2026-03-17)
 
+### Changed
+- Theme derivation engine refactored: pre-computed ParsedColor, WCAG luminance for isDark(), muted-foreground AA clamp (2026-03-19)
+- Removed dead `applyTheme()` from themeDerivation.ts — superseded by use-color-theme hook (2026-03-19)
+- AdminUsersPage: row background tint → `border-l-2 border-l-warning-400` indicator (works in all themes) (2026-03-19)
+- Login page: removed decorative circles and 3D card wrapper (ugly in dark themes) (2026-03-20)
+- AppShell: hardcoded `dark:bg-[hsl()]` → semantic tokens (2026-03-19)
+
 ### Fixed
+- 15 theming review issues fixed (3 critical, 7 important, 5 low) (2026-03-19)
+  - C-1: healing palette added to Web tailwind.config.ts
+  - C-2: all banned text-neutral-* replaced with semantic tokens
+  - C-3: bg-white/20 → bg-accent-foreground/20 in ClaraPanel
+  - I-1–I-7: --radius in deriveTheme, WCAG clamp, OnboardingTour reactive overlay, themeDerivation sync, typing-dot + 12 animation keyframes synced to Web, FeatureGuidePanel opacity sync
+  - L-1–L-5: WCAG luminance, parseCoolorsUrl error, SSR guard, hardcoded rgba removed
+- ClaraPanel input: added bg-input text-foreground (invisible text on custom themes) (2026-03-19)
+- Theme switcher: fix skip guard bug preventing palette switching (2026-03-19)
 - Dark mode contrast: calendar event cards, Clara chat bubbles, admin badges now use `dark:` variant pairs (2026-03-18)
   - Appointment events: `bg-primary-100` → `dark:bg-primary-900/30 dark:text-primary-200` (8 status styles)
   - Landing decorative circles: reduced opacity to 7% in dark mode (no more bright blobs)
