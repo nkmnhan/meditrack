@@ -337,11 +337,11 @@ export function AdminAuditPage() {
                     )}
                     <div className="mt-1 flex flex-wrap items-center gap-2">
                       <span className="text-xs text-muted-foreground">{entry.username}</span>
-                      <span className="text-neutral-200">&middot;</span>
+                      <span className="text-muted-foreground/40">&middot;</span>
                       <span className="text-xs text-muted-foreground">{entry.userRole}</span>
                       {isArchived && (
                         <>
-                          <span className="text-neutral-200">&middot;</span>
+                          <span className="text-muted-foreground/40">&middot;</span>
                           <span className="inline-flex items-center gap-1 text-xs text-muted-foreground/70">
                             <Archive className="h-3 w-3" />
                             Archived {formatTimestamp((entry as ArchivedAuditLogDto).archivedAt)}

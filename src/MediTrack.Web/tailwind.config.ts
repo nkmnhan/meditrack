@@ -200,6 +200,17 @@ const tailwindConfig: Config = {
           urgent: "#ea580c",      // orange-600 — needs priority
           routine: "#3b82f6",     // blue-500 — standard scheduling
         },
+
+        // Healing — Warm teal brand accents (synced from design)
+        healing: {
+          50:  "#eef7f8",
+          100: "#d5ecee",
+          200: "#BFDDDE",
+          300: "#83C8D1",
+          400: "#228693",
+          500: "#075061",
+          600: "#042434",
+        },
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
@@ -234,6 +245,46 @@ const tailwindConfig: Config = {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-6px)" },
         },
+        "typing-bounce": {
+          "0%, 80%, 100%": { transform: "translateY(0)" },
+          "40%": { transform: "translateY(-6px)" },
+        },
+        "transcript-in": {
+          from: { opacity: "0", transform: "translateY(8px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        waveform: {
+          "0%, 100%": { height: "20%" },
+          "50%": { height: "80%" },
+        },
+        "suggestion-in": {
+          from: { opacity: "0", transform: "translateX(12px)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
+        "fade-in-up": {
+          from: { opacity: "0", transform: "translateY(8px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        blink: {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0" },
+        },
+        "count-up-fade": {
+          from: { opacity: "0", transform: "translateY(4px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "slide-down": {
+          from: { opacity: "0", transform: "translateY(-10px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "slide-in-left": {
+          from: { opacity: "0", transform: "translateX(-12px)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
+        "gentle-float": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-3px)" },
+        },
         nudge: {
           "0%, 86%": { transform: "translateY(0) rotate(0deg)" },
           "88%": { transform: "translateY(-3px) rotate(-6deg)" },
@@ -243,13 +294,34 @@ const tailwindConfig: Config = {
           "96%": { transform: "translateY(-1px) rotate(0deg)" },
           "100%": { transform: "translateY(0) rotate(0deg)" },
         },
+        "border-spin": {
+          "0%": { transform: "translate(-50%, -50%) rotate(0deg)" },
+          "100%": { transform: "translate(-50%, -50%) rotate(360deg)" },
+        },
+        "border-flow": {
+          "0%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+          "100%": { backgroundPosition: "0% 50%" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         shimmer: "shimmer 3s infinite",
         float: "float 3s ease-in-out infinite",
+        "typing-bounce": "typing-bounce 1.4s ease-in-out infinite",
+        "transcript-in": "transcript-in 0.3s ease-out",
+        waveform: "waveform 1.2s ease-in-out infinite",
+        "suggestion-in": "suggestion-in 0.4s ease-out",
+        "fade-in-up": "fade-in-up 0.3s ease-out",
+        blink: "blink 0.8s step-end infinite",
+        "count-up-fade": "count-up-fade 0.4s ease-out",
+        "slide-down": "slide-down 0.3s ease-out",
+        "slide-in-left": "slide-in-left 0.3s ease-out",
+        "gentle-float": "gentle-float 3s ease-in-out infinite",
         nudge: "nudge 5s ease-in-out infinite",
+        "border-spin": "border-spin 3s linear infinite",
+        "border-flow": "border-flow 3s ease infinite",
       },
     },
   },

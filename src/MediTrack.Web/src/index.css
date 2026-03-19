@@ -173,6 +173,18 @@
   }
 }
 
+/* ── Clara Session animations (synced from design) ──────────── */
+.typing-dot {
+  @apply w-2 h-2 rounded-full bg-muted-foreground;
+  will-change: transform, opacity;
+  animation: typing-bounce 1.2s ease-in-out infinite;
+}
+
+@keyframes typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+
 /* shimmer and float animations are defined in tailwind.config.ts (animate-shimmer, animate-float) */
 
 @keyframes page-fade-in {

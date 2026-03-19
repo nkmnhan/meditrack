@@ -193,7 +193,7 @@ export function ClaraPanel() {
               "text-white transition-opacity hover:opacity-90"
             )}
           >
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/20">
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-accent-foreground/20">
               <Mic className="h-4 w-4" />
             </div>
             <div className="flex-1 text-left">
@@ -295,7 +295,7 @@ export function ClaraPanel() {
               onChange={(event) => setInputValue(event.target.value)}
               placeholder="Ask Clara anything..."
               className={clsxMerge(
-                "h-10 flex-1 rounded-lg border border-border px-3 text-sm",
+                "h-10 flex-1 rounded-lg border border-border bg-input text-foreground px-3 text-sm",
                 "placeholder:text-muted-foreground",
                 "focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-500"
               )}

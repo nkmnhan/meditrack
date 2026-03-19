@@ -103,7 +103,7 @@ function DonutChart({
         fill="none"
         stroke="currentColor"
         strokeWidth={strokeWidth}
-        className="text-neutral-100"
+        className="text-muted"
       />
       <circle
         cx={center}

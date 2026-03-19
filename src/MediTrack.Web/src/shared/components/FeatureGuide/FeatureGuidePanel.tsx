@@ -116,7 +116,7 @@ export function FeatureGuidePanel({
       <div className="border-t border-border px-4 py-3">
         <button
           onClick={onDismiss}
-          className="text-xs font-medium text-muted-foreground/70 transition-colors hover:text-muted-foreground"
+          className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
           Don't show again
         </button>

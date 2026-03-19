@@ -93,10 +93,16 @@ function adjustSaturation(hex: string, factor: number, lightnessDelta = 0): stri
   return `${h} ${newS}% ${newL}%`;
 }
 
-/** Determine if a color is "dark" (lightness < 50) */
+/** Determine if a color is "dark" (relative luminance below WCAG threshold ~46%) */
 function isDark(hex: string): boolean {
-  const [, , l] = rgbToHsl(...hexToRgb(hex));
-  return l < 50;
+  const [r, g, b] = hexToRgb(hex);
+  // Use relative luminance (WCAG 2.1) instead of HSL lightness for accuracy
+  const toLinear = (c: number) => {
+    const srgb = c / 255;
+    return srgb <= 0.03928 ? srgb / 12.92 : Math.pow((srgb + 0.055) / 1.055, 2.4);
+  };
+  const luminance = 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+  return luminance < 0.179; // ~46% HSL lightness equivalent
 }
 
 /** Get a contrast foreground (white or dark) for a given background */
@@ -133,7 +139,16 @@ export function deriveTheme(input: PaletteInput): DerivedTheme {
     '--popover': adjustLightness(input.background, lift * 1.5),
     '--popover-foreground': hexToHslString(input.foreground),
     '--muted': adjustSaturation(input.background, 0.6, lift * 2),
-    '--muted-foreground': adjustSaturation(input.foreground, 0.7, isBackgroundDark ? -34 : 20),
+    '--muted-foreground': (() => {
+      const [r, g, b] = hexToRgb(input.foreground);
+      const [h, s, l] = rgbToHsl(r, g, b);
+      const newS = Math.max(0, Math.min(100, s * 0.7));
+      // Clamp to ensure WCAG AA compliance (~4.5:1 against card surface)
+      const newL = isBackgroundDark
+        ? Math.max(58, l - 34)   // never drop below 58% on dark backgrounds
+        : Math.min(52, l + 20);  // never rise above 52% on light backgrounds
+      return `${h} ${newS}% ${newL}%`;
+    })(),
 
     // ── Brand colors ──
     '--primary': hexToHslString(input.primary),
@@ -170,6 +185,9 @@ export function deriveTheme(input: PaletteInput): DerivedTheme {
     '--chart-tooltip-shadow': isBackgroundDark
       ? '228 80% 5% / 0.5'
       : '0 0% 0% / 0.1',
+
+    // ── Geometry (not derived from colors, but needed for applied themes) ──
+    '--radius': '0.5rem',
   };
 }
 
@@ -184,7 +202,7 @@ export function deriveTheme(input: PaletteInput): DerivedTheme {
  */
 export function parseCoolorsUrl(url: string): string[] {
   const match = url.match(/coolors\.co\/(?:palette\/)?([a-f0-9]{6}(?:-[a-f0-9]{6})*)/i);
-  if (!match) return [];
+  if (!match) throw new Error(`Invalid Coolors URL: ${url}`);
   return match[1].split('-').map(hex => `#${hex}`);
 }
 
@@ -237,6 +255,7 @@ export function themeFromCoolorsUrl(url: string): DerivedTheme {
  * Injects a <style> block with the variable definitions.
  */
 export function applyTheme(themeName: string, theme: DerivedTheme): void {
+  if (typeof document === 'undefined') return; // SSR-safe guard
   const className = `theme-${themeName}`;
   const cssVars = Object.entries(theme)
     .map(([key, value]) => `  ${key}: ${value};`)
