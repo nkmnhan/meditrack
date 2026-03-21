@@ -49,6 +49,7 @@ Built with microservices architecture, MCP (Model Context Protocol), HIPAA-compl
 - **Role-Based Access Control** — Duende IdentityServer with OAuth 2.0, OIDC, MFA-ready, and granular RBAC (Doctor, Admin, Nurse, Patient roles)
 - **Event-Driven Architecture** — RabbitMQ-based integration events with outbox pattern for reliable messaging
 - **Observability** — OpenTelemetry tracing, Jaeger, Prometheus metrics, audit logging
+- **10 Curated Color Themes** — Perceptual color scale engine generates 100+ CSS variables from 5 brand colors. Dark palettes (Northern Lights, Velvet Night, Emerald Forest, Luminous Flow, Dreamscapes) + light palettes (Mimi Pink, Baby Blue Summer, Health Summit, French Riviera, Ethereal Escapes). Every badge, chart, and status indicator auto-adapts.
 
 ---
 
@@ -75,14 +76,14 @@ Built with microservices architecture, MCP (Model Context Protocol), HIPAA-compl
 ![Clara AI Live Session — Real-time transcript and clinical suggestions](docs/images/clara-live-session.png)
 
 ### Clara AI — Review AI-Generated Draft
-> Review the AI-generated medical record draft (97% note quality). Edit key patient statements, view Clara's suggestions, and save as the official medical record with confidence scores.
+> Review the AI-generated medical record draft (82% note quality). Edit key patient statements, view Clara's suggestions with accept/reject/flag actions, and save as the official medical record.
 
 ![Clara AI Review Draft — AI-generated SOAP note with confidence scores](docs/images/clara-review-draft.png)
 
-### Clara AI — Landing Page
-> Clara listens to your consults and writes the notes. Save 2+ hours daily on clinical documentation.
+### Landing Page
+> Full marketing landing page with hero section, interactive Clara demo, feature grid, tech stack showcase, testimonials, and waitlist capture.
 
-![Clara AI Landing Page — Real-time clinical transcription and SOAP note generation](docs/images/clara-landing-page.png)
+![MediTrack Landing Page — Clara AI hero, interactive demo, features](docs/images/clara-landing-page.png)
 
 ### Admin Dashboard
 > System-wide analytics: 3,247 patients, FHIR sync health, Clara acceptance rate (76.3%), appointment volume by status, live activity feed, and API performance.
@@ -93,6 +94,26 @@ Built with microservices architecture, MCP (Model Context Protocol), HIPAA-compl
 > AI suggestion acceptance funnel, department comparison, peak usage heatmaps, and Clara session metrics across all providers.
 
 ![Reports and Analytics — AI acceptance funnel, department comparison, usage heatmaps](docs/images/reports-analytics.png)
+
+### Theme Showcase
+> 10 curated color themes with perceptual color scales. Every component — badges, charts, status indicators, sidebar — adapts automatically. Switch themes from the sidebar palette icon.
+
+**Dark Themes**
+
+| Default (Deep Ocean) | Northern Lights | Velvet Night | Emerald Forest |
+|:---:|:---:|:---:|:---:|
+| ![Deep Ocean](docs/images/theme-deep-ocean-dark.png) | ![Northern Lights](docs/images/theme-northern-lights.png) | ![Velvet Night](docs/images/theme-velvet-night.png) | ![Emerald Forest](docs/images/theme-emerald-forest.png) |
+
+**Light Themes**
+
+| Default (Light) | Mimi Pink | French Riviera |
+|:---:|:---:|:---:|
+| ![Default Light](docs/images/theme-default-light.png) | ![Mimi Pink](docs/images/theme-mimi-pink.png) | ![French Riviera](docs/images/theme-french-riviera.png) |
+
+**Theme Switcher**
+> Click the palette icon in the sidebar to pick from 10 palettes + light/dark/system modes.
+
+![Theme Switcher — 10 curated palettes with live preview](docs/images/theme-switcher.png)
 
 ---
 
@@ -167,7 +188,7 @@ Doctor's phone (mic) ──► SignalR ──► Speech-to-Text (diarization)
 | React 19 + Vite | UI framework + build | MIT |
 | TypeScript | Type safety | Apache 2.0 |
 | Redux Toolkit + RTK Query | State + server cache | MIT |
-| Tailwind CSS + shadcn/ui | Styling + components | MIT |
+| Tailwind CSS + shadcn/ui | Styling + components + 10 themes | MIT |
 | React Router v7 | Routing | MIT |
 | React Hook Form + Zod | Forms + validation | MIT |
 | oidc-client-ts | OIDC authentication | Apache 2.0 |
@@ -283,6 +304,7 @@ dotnet test                       # Run tests
 | 5. Patient Management UI | Done | React feature, business rules, dev seeding |
 | 6a. PostgreSQL + pgvector | Done | Migrated from SQL Server, pgvector ready for embeddings |
 | 6a-ui. UI Migration & Polish | Done | Design system migration, 62-item audit, UX engagement plan |
+| 6a-theme. Theming System | Done | 10 curated themes, perceptual color scales (100+ CSS vars), hue harmonization, theme switcher |
 | **6b. Clara.API** | **In Progress** | Core service: SignalR hub + Deepgram + RAG + clinical skills |
 | 6c. Doctor Dashboard UI | In Progress | Live transcript, suggestion cards, audio recording |
 | 7. Remaining Frontend | Planned | Appointment UI, Records viewer, SignalR notifications |
@@ -301,6 +323,7 @@ dotnet test                       # Run tests
 | [Business Logic & Rules](docs/business-logic.md) | Domain rules, workflows, and use cases |
 | [EMR Compliance Status](docs/emr-compliance-status.md) | ONC/USCDI v3 scorecard and gap tracking |
 | [HIPAA Compliance](docs/hipaa-compliance-checklist.md) | PHI handling requirements and checklist |
+| [Theming Guide](docs/theming-guide.md) | Add themes in 5 minutes — perceptual color scales, hue harmonization |
 | [Observability](docs/observability.md) | OpenTelemetry, tracing, and monitoring |
 | [Deployment](docs/deployment.md) | Deployment guide |
 | [Test Data Seeding](docs/SEEDING.md) | Bogus library data generation |
