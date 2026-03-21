@@ -38,11 +38,11 @@ const SESSION_TYPES = ["Consultation", "Follow-up", "Review"] as const;
 
 /** Avatar color palette — deterministic from patient ID */
 const AVATAR_COLORS = [
-  "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
-  "bg-secondary-100 dark:bg-secondary-900/30 text-secondary-700 dark:text-secondary-300",
-  "bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300",
-  "bg-success-50 dark:bg-success-900/30 text-success-700 dark:text-success-300",
-  "bg-warning-50 dark:bg-warning-900/30 text-warning-700 dark:text-warning-300",
+  "bg-primary-100 text-primary-700",
+  "bg-secondary-100 text-secondary-700",
+  "bg-accent-100 text-accent-700",
+  "bg-success-50 text-success-700",
+  "bg-warning-50 text-warning-700",
 ];
 
 /* ── Session Templates ──────────────────────────────────── */
@@ -175,8 +175,8 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
       <div className="text-center pt-6 md:pt-10 pb-6 max-w-2xl mx-auto">
         {/* Clara avatar with animated rings */}
         <div className="relative mx-auto w-[72px] h-[72px]">
-          <span className="absolute inset-0 -m-3 rounded-full border-2 border-accent-100 dark:border-accent-500 animate-ping opacity-10 dark:opacity-[0.07]" style={{ animationDuration: "3s", animationDelay: "0.5s" }} />
-          <span className="absolute inset-0 -m-1 rounded-full border-2 border-accent-200 dark:border-accent-500 animate-ping opacity-20 dark:opacity-10" style={{ animationDuration: "2.5s" }} />
+          <span className="absolute inset-0 -m-3 rounded-full border-2 border-accent-100 animate-ping opacity-10 dark:opacity-[0.07]" style={{ animationDuration: "3s", animationDelay: "0.5s" }} />
+          <span className="absolute inset-0 -m-1 rounded-full border-2 border-accent-200 animate-ping opacity-20 dark:opacity-10" style={{ animationDuration: "2.5s" }} />
           <div className="relative w-full h-full rounded-full bg-gradient-to-br from-accent-500 to-primary-700 flex items-center justify-center shadow-lg">
             <Sparkles className="h-10 w-10 text-white" />
           </div>
@@ -215,7 +215,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
       <div className="mx-0 md:max-w-lg md:mx-auto mt-8 bg-card rounded-xl md:rounded-2xl shadow-md border border-accent-200/50 p-6">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-foreground">Start New Session</h2>
-          <div className="relative h-8 w-8 rounded-full bg-accent-50 dark:bg-accent-900/30 flex items-center justify-center">
+          <div className="relative h-8 w-8 rounded-full bg-accent-50 flex items-center justify-center">
             <Mic className="h-4 w-4 text-accent-500" />
             <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-success-500 ring-2 ring-card" />
           </div>
@@ -307,7 +307,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
 
         {/* ── Patient Context Preview ─────────────────────── */}
         {selectedPatient && (
-          <div className="mt-4 rounded-lg border border-primary-200 dark:border-primary-700 bg-primary-50/50 dark:bg-primary-900/20 p-4">
+          <div className="mt-4 rounded-lg border border-primary-200 bg-primary-50/50 p-4">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <div
@@ -364,7 +364,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
             </div>
 
             {selectedPatient.isCritical && (
-              <div className="flex items-center gap-1.5 mt-2 px-2 py-1 rounded bg-error-50 dark:bg-error-900/30 border border-error-200 dark:border-error-700">
+              <div className="flex items-center gap-1.5 mt-2 px-2 py-1 rounded bg-error-50 border border-error-200">
                 <AlertTriangle className="h-3.5 w-3.5 text-error-600 flex-shrink-0" />
                 <span className="text-xs font-medium text-error-700">Critical patient — review alerts before session</span>
               </div>
@@ -443,7 +443,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
                     className={clsxMerge(
                       "w-full px-3 py-2.5 text-left transition-colors",
                       "hover:bg-accent-50 dark:hover:bg-accent-900/20",
-                      selectedTemplate?.id === template.id && "bg-accent-50 dark:bg-accent-900/20"
+                      selectedTemplate?.id === template.id && "bg-accent-50"
                     )}
                   >
                     <div className="flex items-center justify-between">
@@ -459,7 +459,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
 
           {/* Selected template card */}
           {selectedTemplate && !isTemplateDropdownOpen && (
-            <div className="mt-2 flex items-center gap-3 rounded-lg border border-accent-100 dark:border-accent-800 bg-accent-50/50 dark:bg-accent-900/20 px-3 py-2">
+            <div className="mt-2 flex items-center gap-3 rounded-lg border border-accent-100 bg-accent-50/50 px-3 py-2">
               <LayoutTemplate className="h-4 w-4 text-accent-600 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-foreground">{selectedTemplate.name}</p>
@@ -472,7 +472,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
 
         {/* Error Message */}
         {error && (
-          <div className="flex items-center gap-2 p-3 mt-4 rounded-lg bg-error-50 dark:bg-error-900/30 text-error-700 dark:text-error-300 text-sm">
+          <div className="flex items-center gap-2 p-3 mt-4 rounded-lg bg-error-50 text-error-700 text-sm">
             <AlertCircle className="h-4 w-4 flex-shrink-0" />
             <span>Failed to start session. Please try again.</span>
           </div>
@@ -576,7 +576,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300 rounded-full px-2 py-0.5">
+                      <span className="text-xs bg-accent-100 text-accent-700 rounded-full px-2 py-0.5">
                         {session.suggestionCount} suggestions
                       </span>
                       <ChevronRight className="h-4 w-4 text-muted-foreground/70 group-hover:text-accent-500 transition-colors" />
@@ -606,7 +606,7 @@ export function SessionStartScreen({ className }: SessionStartScreenProps) {
               key={card.title}
               className="bg-card rounded-xl border border-border p-5 text-center hover:shadow-md hover:border-accent-200 transition-all duration-200 group"
             >
-              <div className="bg-accent-50 dark:bg-accent-900/20 rounded-xl p-2.5 mx-auto w-fit">
+              <div className="bg-accent-50 rounded-xl p-2.5 mx-auto w-fit">
                 <card.icon className="h-8 w-8 text-accent-500" />
               </div>
               <p className="text-sm font-semibold text-foreground mt-3">{card.title}</p>

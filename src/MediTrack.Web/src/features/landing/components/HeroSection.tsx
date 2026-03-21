@@ -18,9 +18,9 @@ export function HeroSection() {
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
           {/* Left — Copy */}
           <div className="text-center lg:text-left">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-accent-200 dark:border-accent-700 bg-accent-50 dark:bg-accent-900/30 px-3 py-1">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-accent-200 bg-accent-50 px-3 py-1">
               <Sparkles className="h-3.5 w-3.5 text-accent-500" />
-              <span className="text-xs font-semibold text-accent-700 dark:text-accent-300">AI-Powered Clinical Platform</span>
+              <span className="text-xs font-semibold text-accent-700">AI-Powered Clinical Platform</span>
             </div>
 
             <h1 className="text-4xl font-bold leading-tight tracking-tight text-foreground sm:text-5xl lg:text-6xl">
@@ -38,9 +38,9 @@ export function HeroSection() {
               <strong className="text-foreground">focus on care, not clicks</strong>.
             </p>
 
-            <div className="mt-3 inline-flex items-center gap-2 rounded-lg bg-success-50 dark:bg-success-900/30 px-3 py-1.5">
+            <div className="mt-3 inline-flex items-center gap-2 rounded-lg bg-success-50 px-3 py-1.5">
               <Activity className="h-4 w-4 text-success-600" />
-              <span className="text-sm font-semibold text-success-700 dark:text-success-300">Save 2+ hours daily on clinical documentation</span>
+              <span className="text-sm font-semibold text-success-700">Save 2+ hours daily on clinical documentation</span>
             </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
@@ -104,9 +104,9 @@ function HeroStats() {
   const records = recordsNum >= 1000 ? `${(recordsNum / 1000).toFixed(1)}k` : recordsRaw;
 
   const stats = [
-    { icon: CalendarDays, label: "Appointments", value: appointments, color: "text-primary-700 dark:text-primary-300", bg: "bg-primary-50 dark:bg-primary-900/20" },
-    { icon: Users, label: "Patients", value: patients, color: "text-secondary-700 dark:text-secondary-300", bg: "bg-secondary-50 dark:bg-secondary-900/20" },
-    { icon: FileText, label: "Records", value: records, color: "text-warning-600 dark:text-warning-300", bg: "bg-warning-50 dark:bg-warning-900/20" },
+    { icon: CalendarDays, label: "Appointments", value: appointments, color: "text-primary-700", bg: "bg-primary-50" },
+    { icon: Users, label: "Patients", value: patients, color: "text-secondary-700", bg: "bg-secondary-50" },
+    { icon: FileText, label: "Records", value: records, color: "text-warning-600", bg: "bg-warning-50" },
   ];
 
   return (
@@ -157,7 +157,7 @@ function DashboardMockup() {
               <span className="w-16 text-xs font-mono font-medium text-muted-foreground">{appointment.time}</span>
               <div className="h-4 w-px bg-border" />
               <span className="text-xs font-medium text-foreground/80">{appointment.name}</span>
-              <span className="ml-auto rounded-full bg-primary-100 dark:bg-primary-900/30 px-2 py-0.5 text-[10px] font-medium text-primary-700 dark:text-primary-300">
+              <span className="ml-auto rounded-full bg-primary-100 px-2 py-0.5 text-[10px] font-medium text-primary-700">
                 {appointment.type}
               </span>
             </div>
@@ -179,7 +179,7 @@ function DashboardMockup() {
             <Mic className="h-3 w-3 text-accent-500" />
             <span className="text-[10px] text-muted-foreground">Transcribing...</span>
           </div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-accent-100 dark:bg-accent-800/30">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-accent-100">
             <div className="h-full w-3/4 rounded-full bg-accent-500" />
           </div>
         </div>

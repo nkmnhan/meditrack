@@ -106,9 +106,9 @@ export function ClaraMiniDemo() {
     >
       <div ref={ref} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-accent-200 dark:border-accent-700 bg-accent-50 dark:bg-accent-900/30 px-3 py-1">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-accent-200 bg-accent-50 px-3 py-1">
             <Sparkles className="h-3.5 w-3.5 text-accent-500" />
-            <span className="text-xs font-semibold text-accent-700 dark:text-accent-300">Interactive Demo</span>
+            <span className="text-xs font-semibold text-accent-700">Interactive Demo</span>
           </div>
           <h2 className="text-3xl font-bold text-foreground sm:text-4xl">
             See Clara in action
@@ -163,13 +163,13 @@ export function ClaraMiniDemo() {
                     key={`${activePromptIndex}-${messageIndex}`}
                     className={clsxMerge(
                       "rounded-lg p-3 transition-all duration-300",
-                      isDoctor ? "bg-primary-50 dark:bg-primary-900/30" : "bg-secondary-50 dark:bg-secondary-900/30",
+                      isDoctor ? "bg-primary-50" : "bg-secondary-50",
                       isMessageVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
                     )}
                   >
                     <p className={clsxMerge(
                       "text-xs font-semibold",
-                      isDoctor ? "text-primary-700 dark:text-primary-300" : "text-secondary-700 dark:text-secondary-300"
+                      isDoctor ? "text-primary-700" : "text-secondary-700"
                     )}>
                       {isDoctor ? "Dr. Smith" : "Patient"}
                     </p>
@@ -198,11 +198,11 @@ export function ClaraMiniDemo() {
                 ? "border-accent-200 opacity-100 translate-y-0"
                 : "border-border opacity-0 translate-y-4"
             )}>
-              <div className="flex items-center gap-2 border-b border-accent-100 dark:border-accent-800 bg-accent-50 dark:bg-accent-900/30 px-5 py-3 rounded-t-xl">
+              <div className="flex items-center gap-2 border-b border-accent-100 bg-accent-50 px-5 py-3 rounded-t-xl">
                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-accent-500 to-primary-700">
                   <Sparkles className="h-3 w-3 text-white" />
                 </div>
-                <span className="text-sm font-semibold text-accent-700 dark:text-accent-300">Clara Suggestion</span>
+                <span className="text-sm font-semibold text-accent-700">Clara Suggestion</span>
               </div>
               <div className="p-5">
                 <p className="text-sm leading-relaxed text-foreground/80">{activePrompt.suggestion}</p>
@@ -216,10 +216,10 @@ export function ClaraMiniDemo() {
                 ? "border-success-200 opacity-100 translate-y-0"
                 : "border-border opacity-0 translate-y-4"
             )}>
-              <div className="flex items-center justify-between border-b border-success-100 dark:border-success-800 bg-success-50 dark:bg-success-900/30 px-5 py-3 rounded-t-xl">
+              <div className="flex items-center justify-between border-b border-success-100 bg-success-50 px-5 py-3 rounded-t-xl">
                 <div className="flex items-center gap-2">
                   <Send className="h-4 w-4 text-success-600" />
-                  <span className="text-sm font-semibold text-success-700 dark:text-success-300">Auto-Generated SOAP Note</span>
+                  <span className="text-sm font-semibold text-success-700">Auto-Generated SOAP Note</span>
                 </div>
               </div>
               <div className="p-5">

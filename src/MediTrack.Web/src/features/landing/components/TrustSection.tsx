@@ -41,7 +41,7 @@ export function TrustSection() {
                 "transition-all duration-200 hover:border-accent-200 hover:shadow-md"
               )}
             >
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-success-50 dark:bg-success-900/20">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-success-50">
                 <card.icon className="h-6 w-6 text-success-600" />
               </div>
               <h3 className="text-base font-semibold text-foreground">{card.title}</h3>

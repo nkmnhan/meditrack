@@ -74,7 +74,7 @@ export function FeatureGuidePanel({
                 <div
                   className={clsxMerge(
                     "flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg",
-                    isCompleted ? "bg-success-50 dark:bg-success-900/30" : step.iconBg
+                    isCompleted ? "bg-success-50" : step.iconBg
                   )}
                 >
                   {isCompleted ? (

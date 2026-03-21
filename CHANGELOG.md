@@ -15,8 +15,28 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
   - Light/dark mode per palette (mutually exclusive selection)
 - Theme workflow section in CLAUDE.md with shorthand aliases and file map (2026-03-19)
 - `scout` and `frontend-theme-design` personal skills in `~/.claude/skills/` (2026-03-19)
+- Clara.UnitTests: 106 unit tests covering validators, domain, services, and security (2026-03-17)
+  - Validators: StartSessionRequest, KnowledgeSearchRequest
+  - Domain: PatientContext.ToPromptSection
+  - Services: SuggestionService (BuildPrompt, ParseLlmResponse), KnowledgeSeederService (ChunkText, ExtractCategory), SkillLoaderService, DeepgramService, PatientContextService, BatchTriggerService
+  - Security: SessionHub input validation, ConfigValidator
+  - Shared: MockHttpMessageHandler test infrastructure
+- Competitive analysis & improvement specs — feature gaps, Clara enhancements, UI/UX roadmap (2026-03-15)
+- TDD infrastructure — Clara.UnitTests + MedicalRecords.UnitTests projects, NSubstitute + Testcontainers packages (2026-03-15)
+- Superpowers plugin integration — workflow section in CLAUDE.md, output directories, .gitignore entries (2026-03-15)
+- Claude Code configuration restructure — split 854-line CLAUDE.md into modular rules + domain glossaries (2026-03-14)
+- `.claude/rules/` with path-specific rules: backend, frontend, security, dependencies, mcp-ai
+- Per-service CLAUDE.md domain glossaries: Appointment, Patient, MedicalRecords, Clara, Identity
+- Per-feature frontend CLAUDE.md: appointments, patients, medical-records, clara
+- `.claude/settings.json` with team permissions (allow/deny)
+- REVIEW.md for code review standards
 
 ### Changed
+- Login page: removed decorative circles and 3D card wrapper (ugly in dark themes) (2026-03-20)
+- Theme derivation engine refactored: pre-computed ParsedColor, WCAG luminance for isDark(), muted-foreground AA clamp (2026-03-19)
+- Removed dead `applyTheme()` from themeDerivation.ts — superseded by use-color-theme hook (2026-03-19)
+- AdminUsersPage: row background tint → `border-l-2 border-l-warning-400` indicator (works in all themes) (2026-03-19)
+- AppShell: hardcoded `dark:bg-[hsl()]` → semantic tokens (2026-03-19)
 - Semantic token migration: all 90+ component files migrated from hardcoded colors to semantic tokens (2026-03-17)
   - `bg-white` → `bg-card`, `text-neutral-*` → `text-foreground`/`text-muted-foreground`, `border-neutral-*` → `border-border`
   - ~4,600 class replacements across web + design system (dual-update rule enforced)
@@ -27,13 +47,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
   - Runtime theme injection via `applyTheme()`
 - Updated `.claude/rules/frontend.md` — semantic tokens mandatory, hardcoded neutrals banned (2026-03-17)
 - Developer + AI theming guide: `docs/theming-guide.md` — new palette = 30 min, zero component changes (2026-03-17)
-
-### Changed
-- Theme derivation engine refactored: pre-computed ParsedColor, WCAG luminance for isDark(), muted-foreground AA clamp (2026-03-19)
-- Removed dead `applyTheme()` from themeDerivation.ts — superseded by use-color-theme hook (2026-03-19)
-- AdminUsersPage: row background tint → `border-l-2 border-l-warning-400` indicator (works in all themes) (2026-03-19)
-- Login page: removed decorative circles and 3D card wrapper (ugly in dark themes) (2026-03-20)
-- AppShell: hardcoded `dark:bg-[hsl()]` → semantic tokens (2026-03-19)
 
 ### Fixed
 - 15 theming review issues fixed (3 critical, 7 important, 5 low) (2026-03-19)
@@ -51,14 +64,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
   - Admin pages: audit badges, user role badges, system status indicators all dark-mode-aware
   - 19 files across web + design (dual-update enforced)
 
-### Added
-- Clara.UnitTests: 106 unit tests covering validators, domain, services, and security (2026-03-17)
-  - Validators: StartSessionRequest, KnowledgeSearchRequest
-  - Domain: PatientContext.ToPromptSection
-  - Services: SuggestionService (BuildPrompt, ParseLlmResponse), KnowledgeSeederService (ChunkText, ExtractCategory), SkillLoaderService, DeepgramService, PatientContextService, BatchTriggerService
-  - Security: SessionHub input validation, ConfigValidator
-  - Shared: MockHttpMessageHandler test infrastructure
-
 ### Security
 - SessionHub: session ownership validation on all methods — OWASP A01:2025 IDOR prevention (2026-03-17)
 - PHI removed from all log statements — HIPAA compliance (2026-03-17)
@@ -67,17 +72,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 - SignalR input validation: speaker whitelist, text length limit, audio size limit (2026-03-17)
 - Startup config validation: reject placeholder API keys in production (2026-03-17)
 - All OWASP references updated to Top 10:2025 (2026-03-17)
-
-### Added
-- Competitive analysis & improvement specs — feature gaps, Clara enhancements, UI/UX roadmap (2026-03-15)
-- TDD infrastructure — Clara.UnitTests + MedicalRecords.UnitTests projects, NSubstitute + Testcontainers packages (2026-03-15)
-- Superpowers plugin integration — workflow section in CLAUDE.md, output directories, .gitignore entries (2026-03-15)
-- Claude Code configuration restructure — split 854-line CLAUDE.md into modular rules + domain glossaries (2026-03-14)
-- `.claude/rules/` with path-specific rules: backend, frontend, security, dependencies, mcp-ai
-- Per-service CLAUDE.md domain glossaries: Appointment, Patient, MedicalRecords, Clara, Identity
-- Per-feature frontend CLAUDE.md: appointments, patients, medical-records, clara
-- `.claude/settings.json` with team permissions (allow/deny)
-- REVIEW.md for code review standards
 
 ## [0.6.0] — 2026-03-01 — UI Migration Complete
 

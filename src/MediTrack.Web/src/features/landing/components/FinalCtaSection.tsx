@@ -20,7 +20,7 @@ export function FinalCtaSection({ onSignIn }: FinalCtaSectionProps) {
           transition: "opacity 500ms ease-out, transform 500ms ease-out",
         }}
       >
-        <div className="rounded-2xl border border-accent-200 dark:border-accent-700 bg-gradient-to-br from-accent-50 dark:from-accent-900/20 to-card p-8 shadow-sm md:p-12">
+        <div className="rounded-2xl border border-accent-200 bg-gradient-to-br from-accent-50 dark:from-accent-900/20 to-card p-8 shadow-sm md:p-12">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-accent-500 to-primary-700">
             <Sparkles className="h-7 w-7 text-white" />
           </div>
