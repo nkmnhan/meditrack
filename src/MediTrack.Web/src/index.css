@@ -48,6 +48,104 @@
     --chart-text: 215 16% 47%;
     --chart-tooltip-border: 214 32% 91%;
     --chart-tooltip-shadow: 0 0% 0% / 0.1;
+
+    /* ── Color Scales (perceptual — shade 50=subtle bg, 700=text) ── */
+
+    /* Primary (Medical Blue) */
+    --primary-50: 213.8 100% 96.9%;
+    --primary-100: 214.3 94.6% 92.7%;
+    --primary-200: 213.3 96.9% 87.3%;
+    --primary-300: 211.7 96.4% 78.4%;
+    --primary-400: 213.1 93.9% 67.8%;
+    --primary-500: 217.2 91.2% 59.8%;
+    --primary-600: 221.2 83.2% 53.3%;
+    --primary-700: 224.3 76.3% 48%;
+    --primary-800: 225.9 70.7% 40.2%;
+    --primary-900: 224.4 64.3% 32.9%;
+    --primary-950: 226.2 57% 21%;
+
+    /* Secondary (Healthcare Teal) */
+    --secondary-50: 166.2 76.5% 96.7%;
+    --secondary-100: 167.2 85.5% 89.2%;
+    --secondary-200: 168.4 83.8% 78.2%;
+    --secondary-300: 170.6 76.9% 64.3%;
+    --secondary-400: 172.5 66% 50.4%;
+    --secondary-500: 173.4 80.4% 40%;
+    --secondary-600: 174.7 83.9% 31.6%;
+    --secondary-700: 175.3 77.4% 26.1%;
+    --secondary-800: 176.1 69.4% 21.8%;
+    --secondary-900: 175.9 60.8% 19%;
+    --secondary-950: 178.6 84.3% 10%;
+
+    /* Accent (Violet) */
+    --accent-50: 270 100% 98%;
+    --accent-100: 268.7 100% 95.5%;
+    --accent-200: 268.6 100% 91.8%;
+    --accent-300: 269.2 97.4% 85.1%;
+    --accent-400: 270 95.2% 75.3%;
+    --accent-500: 270.7 91% 65.1%;
+    --accent-600: 271.5 81.3% 55.9%;
+    --accent-700: 262.1 83.3% 57.8%;
+    --accent-800: 272.9 67.2% 39.4%;
+    --accent-900: 273.6 65.6% 32%;
+    --accent-950: 273.5 86.9% 21%;
+
+    /* Success */
+    --success-50: 138.5 76.5% 96.7%;
+    --success-100: 140.6 84.2% 92.5%;
+    --success-200: 141 78.9% 85.1%;
+    --success-300: 141.7 76.6% 73.1%;
+    --success-400: 141.9 69.2% 58%;
+    --success-500: 142.1 70.6% 45.3%;
+    --success-600: 142.1 76.2% 36.3%;
+    --success-700: 142.4 71.8% 29.2%;
+    --success-800: 142.8 64.2% 24.1%;
+    --success-900: 143.8 61.2% 20.2%;
+
+    /* Warning */
+    --warning-50: 48 100% 96.1%;
+    --warning-100: 48 96.5% 88.8%;
+    --warning-200: 48 96.6% 76.7%;
+    --warning-300: 45.9 96.7% 64.5%;
+    --warning-400: 43.3 96.4% 56.3%;
+    --warning-500: 37.7 92.1% 50.2%;
+    --warning-600: 32.1 94.6% 43.7%;
+    --warning-700: 26 90.5% 37.1%;
+    --warning-800: 22.7 82.5% 31.4%;
+    --warning-900: 21.7 77.8% 26.5%;
+
+    /* Error */
+    --error-50: 0 85.7% 97.3%;
+    --error-100: 0 93.3% 94.1%;
+    --error-200: 0 96.3% 89.4%;
+    --error-300: 0 93.5% 81.8%;
+    --error-400: 0 90.6% 70.8%;
+    --error-500: 0 84.2% 60.2%;
+    --error-600: 0 72.2% 50.6%;
+    --error-700: 0 73.7% 41.8%;
+    --error-800: 0 70% 35.3%;
+    --error-900: 0 62.8% 30.6%;
+
+    /* Info */
+    --info-50: 204 100% 97.1%;
+    --info-100: 204 93.8% 93.7%;
+    --info-200: 200.6 94.4% 86.1%;
+    --info-300: 199.4 95.5% 73.9%;
+    --info-400: 198.4 93.2% 59.6%;
+    --info-500: 198.6 88.7% 48.4%;
+    --info-600: 200.4 98% 39.4%;
+    --info-700: 201.3 96.3% 32.2%;
+    --info-800: 201 90% 27.5%;
+    --info-900: 202 80.3% 23.9%;
+
+    /* Healing (Brand Teal) */
+    --healing-50: 186 41.7% 95.3%;
+    --healing-100: 184.8 42.4% 88.4%;
+    --healing-200: 181.9 32% 81%;
+    --healing-300: 186.9 45.9% 66.7%;
+    --healing-400: 186.9 62.4% 35.5%;
+    --healing-500: 191.3 86.5% 20.4%;
+    --healing-600: 200 85.7% 11%;
   }
 
   /*
@@ -122,6 +220,104 @@
     --chart-text: 222 25% 62%;
     --chart-tooltip-border: 225 38% 30%;
     --chart-tooltip-shadow: 228 80% 5% / 0.5;
+
+    /* ── Color Scales (perceptual dark — 50=dark subtle, 700=bright text) ── */
+
+    /* Primary */
+    --primary-50: 224 25.5% 13%;
+    --primary-100: 224 29.7% 17%;
+    --primary-200: 224 34% 24%;
+    --primary-300: 224 55.3% 65%;
+    --primary-400: 224 68% 58%;
+    --primary-500: 224 80.8% 55%;
+    --primary-600: 224 76.5% 48%;
+    --primary-700: 224 72.3% 70%;
+    --primary-800: 224 59.5% 30%;
+    --primary-900: 224 42.5% 11%;
+    --primary-950: 224 29.7% 7%;
+
+    /* Secondary */
+    --secondary-50: 174 21.6% 13%;
+    --secondary-100: 174 25.2% 17%;
+    --secondary-200: 174 28.8% 24%;
+    --secondary-300: 174 46.8% 65%;
+    --secondary-400: 174 57.6% 58%;
+    --secondary-500: 174 68.4% 55%;
+    --secondary-600: 174 64.8% 48%;
+    --secondary-700: 174 61.2% 70%;
+    --secondary-800: 174 50.4% 30%;
+    --secondary-900: 174 36% 11%;
+    --secondary-950: 174 25.2% 7%;
+
+    /* Accent */
+    --accent-50: 270 22.8% 13%;
+    --accent-100: 270 26.6% 17%;
+    --accent-200: 270 30.4% 24%;
+    --accent-300: 270 49.4% 65%;
+    --accent-400: 270 60.8% 58%;
+    --accent-500: 270 72.2% 55%;
+    --accent-600: 270 68.4% 48%;
+    --accent-700: 270 64.6% 70%;
+    --accent-800: 270 53.2% 30%;
+    --accent-900: 270 38% 11%;
+    --accent-950: 270 26.6% 7%;
+
+    /* Success */
+    --success-50: 142 22.8% 13%;
+    --success-100: 142 26.6% 17%;
+    --success-200: 142 30.4% 24%;
+    --success-300: 142 49.4% 65%;
+    --success-400: 142 60.8% 58%;
+    --success-500: 142 72.2% 55%;
+    --success-600: 142 68.4% 48%;
+    --success-700: 142 64.6% 70%;
+    --success-800: 142 53.2% 30%;
+    --success-900: 142 38% 11%;
+
+    /* Warning */
+    --warning-50: 38 27.6% 13%;
+    --warning-100: 38 32.2% 17%;
+    --warning-200: 38 36.8% 24%;
+    --warning-300: 38 59.8% 65%;
+    --warning-400: 38 73.6% 58%;
+    --warning-500: 38 87.4% 55%;
+    --warning-600: 38 82.8% 48%;
+    --warning-700: 38 78.2% 70%;
+    --warning-800: 38 64.4% 30%;
+    --warning-900: 38 46% 11%;
+
+    /* Error */
+    --error-50: 0 25.2% 13%;
+    --error-100: 0 29.4% 17%;
+    --error-200: 0 33.6% 24%;
+    --error-300: 0 54.6% 65%;
+    --error-400: 0 67.2% 58%;
+    --error-500: 0 79.8% 55%;
+    --error-600: 0 75.6% 48%;
+    --error-700: 0 71.4% 70%;
+    --error-800: 0 58.8% 30%;
+    --error-900: 0 42% 11%;
+
+    /* Info */
+    --info-50: 199 26.7% 13%;
+    --info-100: 199 31.2% 17%;
+    --info-200: 199 35.6% 24%;
+    --info-300: 199 57.9% 65%;
+    --info-400: 199 71.2% 58%;
+    --info-500: 199 84.6% 55%;
+    --info-600: 199 80.1% 48%;
+    --info-700: 199 75.6% 70%;
+    --info-800: 199 62.3% 30%;
+    --info-900: 199 44.5% 11%;
+
+    /* Healing */
+    --healing-50: 180 21.6% 13%;
+    --healing-100: 180 25.2% 17%;
+    --healing-200: 180 28.8% 24%;
+    --healing-300: 180 46.8% 65%;
+    --healing-400: 180 57.6% 58%;
+    --healing-500: 180 68.4% 55%;
+    --healing-600: 180 64.8% 48%;
   }
 }
 
@@ -133,34 +329,30 @@
     @apply bg-background text-foreground font-sans;
     transition: background-color 200ms ease, color 200ms ease;
   }
+
+  /* Global thin scrollbar — adapts to theme via CSS vars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 9999px;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.4);
+  }
 }
 
-/*
- * ── Dark mode overrides (shadows + healing brand tokens) ─────────────
- * Neutral overrides removed — components now use semantic tokens.
- * Only shadow theming and healing brand colors remain.
- */
+/* ── Dark mode overrides (shadows only — color scales now use CSS vars) ── */
 @layer utilities {
-  /* Healing palette → bright blue pill style in dark (like reference) */
-  .dark .bg-healing-50 {
-    background-color: hsl(225 48% 22%);
-  }
-  .dark .bg-healing-100 {
-    background-color: hsl(224 70% 28%);
-  }
-  .dark .hover\:bg-healing-50:hover {
-    background-color: hsl(225 48% 22%);
-  }
-  /* Healing text → bright teal/cyan accent in dark mode */
-  .dark .text-healing-500 {
-    color: hsl(174 72% 56%);
-  }
-  .dark .text-healing-400 {
-    color: hsl(174 72% 60%);
-  }
-  .dark .bg-healing-400 {
-    background-color: hsl(174 72% 52%);
-  }
   /* Soft navy shadows — cards float above the deep ocean background */
   .dark .shadow-sm {
     box-shadow: 0 2px 8px 0 hsl(228 80% 4% / 0.5);

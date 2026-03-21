@@ -296,24 +296,22 @@ function SidebarContent({ onNavigate }: { readonly onNavigate?: () => void }) {
       </nav>
 
       {/* User Profile Footer */}
-      <div className="border-t border-border p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary-700 text-sm font-semibold text-white">
-            {userInitials}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-foreground">{userName}</p>
-            <p className="text-xs text-muted-foreground">{userRole}</p>
-          </div>
-          <SidebarThemeButton />
-          <button
-            onClick={handleSignOut}
-            className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label="Sign out"
-          >
-            <LogOut className="h-4 w-4" />
-          </button>
+      <div className="flex items-center gap-3 border-t border-border p-4">
+        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary-700 text-sm font-semibold text-white">
+          {userInitials}
         </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-foreground">{userName}</p>
+          <p className="text-xs text-muted-foreground">{userRole}</p>
+        </div>
+        <SidebarThemeButton />
+        <button
+          onClick={handleSignOut}
+          className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          aria-label="Sign out"
+        >
+          <LogOut className="h-4 w-4" />
+        </button>
       </div>
     </div>
   );

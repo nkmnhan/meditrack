@@ -268,15 +268,13 @@ export function ClaraPanel() {
                 >
                   <div
                     className={clsxMerge(
-                      "max-w-[85%] rounded-lg px-3 py-2 text-sm",
+                      "max-w-[85%] whitespace-pre-wrap break-words rounded-lg px-3 py-2 text-sm",
                       message.role === "user"
                         ? "bg-primary-50 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200"
                         : "bg-accent-50 dark:bg-accent-900/20 text-foreground dark:text-foreground"
                     )}
                   >
-                    <div className="whitespace-pre-wrap break-words">
-                      {formatMessageContent(message.content)}
-                    </div>
+                    {formatMessageContent(message.content)}
                   </div>
                 </div>
               ))}

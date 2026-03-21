@@ -160,9 +160,7 @@ export function NotificationCenter() {
                   !notification.isRead && "bg-muted/50"
                 )}
               >
-                <div className={clsxMerge("mt-0.5 flex-shrink-0", config.iconColor)}>
-                  <CategoryIcon className="h-4 w-4" />
-                </div>
+                <CategoryIcon className={clsxMerge("mt-0.5 h-4 w-4 flex-shrink-0", config.iconColor)} />
                 <div className="min-w-0 flex-1">
                   <p className={clsxMerge(
                     "text-sm leading-snug",
@@ -173,9 +171,7 @@ export function NotificationCenter() {
                   <p className="mt-1 text-xs text-muted-foreground/70">{notification.timeAgo}</p>
                 </div>
                 {!notification.isRead && (
-                  <div className="mt-1.5 flex-shrink-0">
-                    <span className="block h-2 w-2 rounded-full bg-primary-700" />
-                  </div>
+                  <span className="mt-1.5 block h-2 w-2 flex-shrink-0 rounded-full bg-primary-700" />
                 )}
               </button>
             );

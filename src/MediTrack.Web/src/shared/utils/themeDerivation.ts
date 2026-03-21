@@ -1,15 +1,23 @@
 /**
  * Theme Derivation Engine
  *
- * Takes 5 brand colors and derives 25+ semantic CSS variables.
- * This is the bridge between "designer picks colors" and "developer ships theme."
+ * Takes 5 brand colors and derives 100+ semantic CSS variables — core layout,
+ * brand scales (primary/secondary/accent 50-950), harmonized semantic scales
+ * (success/warning/error/info 50-900), and healing brand scale (50-600).
+ *
+ * All color scales use **perceptual mapping**: shade numbers have consistent
+ * SEMANTIC meaning regardless of light/dark mode:
+ *   - 50  = subtle background (light tint in light mode, dark muted in dark mode)
+ *   - 200 = border / separator
+ *   - 500 = solid / base
+ *   - 700 = prominent text (dark in light mode, bright in dark mode)
+ *
+ * This eliminates the need for `dark:` prefix overrides in components.
+ * `bg-success-50 text-success-700` just works in any theme.
  *
  * Usage:
  *   const theme = deriveTheme({ background: '#03045E', foreground: '#CAF0F8', ... });
- *   // Returns 25+ CSS variables as { '--background': '239 94% 19%', ... }
- *
- * Or from a Coolors URL:
- *   const theme = themeFromCoolorsUrl('https://coolors.co/palette/03045e-0077b6-00b4d8-90e0ef-caf0f8');
+ *   // Returns 100+ CSS variables as { '--background': '239 94% 19%', ... }
  */
 
 // ── Types ────────────────────────────────────────────────────────
@@ -29,6 +37,8 @@ export interface PaletteInput {
   readonly destructive?: string;
   readonly success?: string;
   readonly warning?: string;
+  readonly error?: string;
+  readonly info?: string;
 }
 
 export interface DerivedTheme {
@@ -141,13 +151,115 @@ function deriveDimmedForeground(fg: ParsedColor, isBackgroundDark: boolean): str
   return `${fg.h} ${newS}% ${newL}%`;
 }
 
+// ── Color Scale Generation ──────────────────────────────────────
+
+/**
+ * Perceptual lightness curves.
+ *
+ * Shade numbers have consistent SEMANTIC meaning regardless of light/dark:
+ *   50  = subtle background (lightest in light mode, darkest muted in dark mode)
+ *   100 = elevated surface
+ *   200 = border / separator
+ *   300 = secondary text (readable in both modes)
+ *   400 = placeholder / hover state
+ *   500 = solid / base color
+ *   600 = hovered solid
+ *   700 = prominent text (darkest in light, brightest in dark)
+ *   800 = deep accent
+ *   900 = deepest surface
+ *   950 = ink / maximum depth
+ *
+ * In dark mode, the lightness values "flip" so components like
+ * `bg-success-50 text-success-700` work without `dark:` overrides.
+ */
+const LIGHTNESS: Record<'light' | 'dark', Record<number, number>> = {
+  light: { 50: 97, 100: 94, 200: 87, 300: 76, 400: 62, 500: 50, 600: 43, 700: 35, 800: 27, 900: 20, 950: 12 },
+  dark:  { 50: 13, 100: 17, 200: 24, 300: 65, 400: 58, 500: 55, 600: 48, 700: 70, 800: 30, 900: 11, 950: 7 },
+};
+
+/** Saturation curves — peaks at mid-tones, lower at extremes for natural feel */
+const SAT_FACTOR: Record<'light' | 'dark', Record<number, number>> = {
+  light: { 50: 0.25, 100: 0.30, 200: 0.40, 300: 0.55, 400: 0.75, 500: 0.90, 600: 0.95, 700: 1.00, 800: 0.90, 900: 0.80, 950: 0.65 },
+  dark:  { 50: 0.30, 100: 0.35, 200: 0.40, 300: 0.65, 400: 0.80, 500: 0.95, 600: 0.90, 700: 0.85, 800: 0.70, 900: 0.50, 950: 0.35 },
+};
+
+/** Format a single HSL value for CSS */
+function hslStr(h: number, s: number, l: number): string {
+  return `${Math.round(h * 10) / 10} ${Math.round(Math.max(0, Math.min(100, s)) * 10) / 10}% ${l}%`;
+}
+
+/**
+ * Generate a full color scale from a hue + saturation.
+ *
+ * @param prefix - CSS variable prefix (e.g., 'primary' produces '--primary-50')
+ * @param hue - Base hue (0-360)
+ * @param sat - Base saturation (0-100)
+ * @param mode - 'light' or 'dark' — controls the perceptual lightness/saturation curves
+ * @param steps - Which shade steps to generate (default: 50-950)
+ */
+function deriveColorScale(
+  prefix: string,
+  hue: number,
+  sat: number,
+  mode: 'light' | 'dark',
+  steps: readonly number[],
+): Record<string, string> {
+  const lCurve = LIGHTNESS[mode];
+  const sFactor = SAT_FACTOR[mode];
+  const result: Record<string, string> = {};
+
+  for (const step of steps) {
+    const adjustedSat = sat * (sFactor[step] ?? 0.5);
+    const adjustedLightness = lCurve[step] ?? 50;
+    result[`--${prefix}-${step}`] = hslStr(hue, adjustedSat, adjustedLightness);
+  }
+
+  return result;
+}
+
+/**
+ * Harmonize a hue toward a target to create visual cohesion.
+ *
+ * Shifts `baseHue` toward `targetHue` by the shortest angular path.
+ * The result is recognizably the original color but with a subtle "family" feel.
+ *
+ * @param baseHue - Canonical semantic hue (e.g., 142 for green/success)
+ * @param targetHue - Theme's primary hue to blend toward
+ * @param amount - 0 = no shift, 1 = fully match target (typically 0.08–0.15)
+ */
+function harmonizeHue(baseHue: number, targetHue: number, amount: number): number {
+  let diff = targetHue - baseHue;
+  if (diff > 180) diff -= 360;
+  if (diff < -180) diff += 360;
+  return Math.round(((baseHue + diff * amount + 360) % 360) * 10) / 10;
+}
+
+/** Standard shade steps */
+const STEPS_11 = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
+const STEPS_10 = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900] as const;
+const STEPS_HEALING = [50, 100, 200, 300, 400, 500, 600] as const;
+
+/** Canonical hues for semantic colors (recognizable worldwide) */
+const SEMANTIC_HUES = {
+  success: { hue: 142, sat: 76, harmonize: 0.12 },
+  warning: { hue: 38,  sat: 92, harmonize: 0.10 },
+  error:   { hue: 0,   sat: 84, harmonize: 0.08 },
+  info:    { hue: 199, sat: 89, harmonize: 0.15 },
+} as const;
+
 // ── Derivation Engine ────────────────────────────────────────────
 
 /**
  * Derive a complete theme from 5 brand colors.
  *
+ * Returns 100+ CSS variables:
+ *   - 25 core semantic vars (background, card, primary, sidebar, chart, etc.)
+ *   - 11 shades each for primary, secondary, accent (50-950)
+ *   - 10 shades each for success, warning, error, info (50-900)
+ *   - 7 shades for healing (50-600)
+ *
  * Pre-computes HSL for each input color once, then references the cached
- * values throughout — eliminates ~30 redundant hex→RGB→HSL conversions.
+ * values throughout — eliminates redundant hex-RGB-HSL conversions.
  */
 export function deriveTheme(input: PaletteInput): DerivedTheme {
   // Pre-compute all input colors once
@@ -158,8 +270,45 @@ export function deriveTheme(input: PaletteInput): DerivedTheme {
   const acc = parseHex(input.accent);
 
   const isBackgroundDark = isDark(input.background);
+  const mode = isBackgroundDark ? 'dark' : 'light';
   const lift = isBackgroundDark ? 4 : -4;
   const dimmedFg = deriveDimmedForeground(fg, isBackgroundDark);
+
+  // ── Brand color scales ──
+  const primaryScale = deriveColorScale('primary', pri.h, pri.s, mode, STEPS_11);
+  const secondaryScale = deriveColorScale('secondary', sec.h, sec.s, mode, STEPS_11);
+  const accentScale = deriveColorScale('accent', acc.h, acc.s, mode, STEPS_11);
+
+  // ── Semantic color scales (harmonized with primary hue) ──
+  const semanticOverrides: Record<string, string | undefined> = {
+    success: input.success,
+    warning: input.warning,
+    error: input.error,
+    info: input.info,
+  };
+
+  const semanticScales: Record<string, string> = {};
+  for (const [name, config] of Object.entries(SEMANTIC_HUES)) {
+    const overrideHex = semanticOverrides[name];
+    let hue: number;
+    let sat: number;
+
+    if (overrideHex) {
+      const parsed = parseHex(overrideHex);
+      hue = parsed.h;
+      sat = parsed.s;
+    } else {
+      hue = harmonizeHue(config.hue, pri.h, config.harmonize);
+      sat = config.sat;
+    }
+
+    const scale = deriveColorScale(name, hue, sat, mode, STEPS_10);
+    Object.assign(semanticScales, scale);
+  }
+
+  // ── Healing brand scale (secondary biased toward teal 180deg) ──
+  const healingHue = harmonizeHue(180, sec.h, 0.3);
+  const healingScale = deriveColorScale('healing', healingHue, 72, mode, STEPS_HEALING);
 
   return {
     // ── Layout ──
@@ -174,7 +323,7 @@ export function deriveTheme(input: PaletteInput): DerivedTheme {
     '--muted': adjustSaturation(input.background, 0.6, lift * 2),
     '--muted-foreground': dimmedFg,
 
-    // ── Brand colors ──
+    // ── Brand colors (DEFAULT + foreground) ──
     '--primary': pri.hsl,
     '--primary-foreground': contrastForeground(input.primary),
     '--secondary': sec.hsl,
@@ -210,9 +359,20 @@ export function deriveTheme(input: PaletteInput): DerivedTheme {
       ? '228 80% 5% / 0.5'
       : '0 0% 0% / 0.1',
 
-    // ── Geometry (not derived from colors, but needed for applied themes) ──
+    // ── Geometry ──
     '--radius': '0.5rem',
-  };
+
+    // ── Brand Color Scales (50-950) ──
+    ...primaryScale,
+    ...secondaryScale,
+    ...accentScale,
+
+    // ── Semantic Color Scales (50-900, harmonized) ──
+    ...semanticScales,
+
+    // ── Healing Brand Scale (50-600) ──
+    ...healingScale,
+  } as DerivedTheme;
 }
 
 // ── Coolors.co Integration ───────────────────────────────────────
@@ -232,7 +392,7 @@ export function parseCoolorsUrl(url: string): string[] {
 
 /**
  * Auto-assign palette roles by sorting colors by luminance.
- * Darkest → background, lightest → foreground, middle 3 by saturation.
+ * Darkest -> background, lightest -> foreground, middle 3 by saturation.
  */
 export function autoAssignRoles(hexColors: string[]): PaletteInput {
   const sorted = [...hexColors].sort((a, b) => {
@@ -259,7 +419,7 @@ export function autoAssignRoles(hexColors: string[]): PaletteInput {
 }
 
 /**
- * One-step: Coolors URL → complete theme.
+ * One-step: Coolors URL -> complete theme.
  *
  * @example
  * const theme = themeFromCoolorsUrl('https://coolors.co/palette/03045e-0077b6-00b4d8-90e0ef-caf0f8');
@@ -270,4 +430,3 @@ export function themeFromCoolorsUrl(url: string): DerivedTheme {
   const roles = autoAssignRoles(colors);
   return deriveTheme(roles);
 }
-
