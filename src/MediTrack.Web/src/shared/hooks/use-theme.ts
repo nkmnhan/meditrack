@@ -31,6 +31,10 @@ try {
   // SSR or localStorage unavailable — fall back to "system"
 }
 
+// Apply immediately at module load so the correct theme is visible
+// before any React component mounts (prevents light flash on F5).
+applyTheme(currentPreference);
+
 /** Apply .dark class to <html> and persist preference. */
 function applyTheme(preference: Theme) {
   currentPreference = preference;
@@ -54,6 +58,11 @@ function applyTheme(preference: Theme) {
   } catch {
     // Quota exceeded or unavailable — non-critical
   }
+
+  // Set cookie for cross-origin theme sharing (Identity.API reads this)
+  try {
+    document.cookie = `meditrack-theme-mode=${preference};path=/;SameSite=Lax;max-age=31536000`;
+  } catch { /* non-critical */ }
 }
 
 // ── External store for cross-component sync ───────────────────────

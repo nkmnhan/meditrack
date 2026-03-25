@@ -22,6 +22,7 @@ public class Index : PageModel
     private readonly IEventService _events;
     private readonly IAuthenticationSchemeProvider _schemeProvider;
     private readonly IIdentityProviderStore _identityProviderStore;
+    private readonly IClientStore _clientStore;
 
     public LoginViewModel View { get; set; } = default!;
 
@@ -34,7 +35,8 @@ public class Index : PageModel
         IIdentityProviderStore identityProviderStore,
         IEventService events,
         UserManager<ApplicationUser> userManager,
-        SignInManager<ApplicationUser> signInManager)
+        SignInManager<ApplicationUser> signInManager,
+        IClientStore clientStore)
     {
         _interaction = interaction;
         _schemeProvider = schemeProvider;
@@ -42,6 +44,7 @@ public class Index : PageModel
         _events = events;
         _userManager = userManager;
         _signInManager = signInManager;
+        _clientStore = clientStore;
     }
 
     public async Task<IActionResult> OnGet(string? returnUrl)
@@ -110,7 +113,10 @@ public class Index : PageModel
 
                 if (string.IsNullOrEmpty(Input.ReturnUrl))
                 {
-                    return Redirect("~/");
+                    // Read default redirect from Duende client config (single source of truth)
+                    var client = await _clientStore.FindClientByIdAsync("meditrack-web");
+                    var defaultRedirect = client?.PostLogoutRedirectUris?.FirstOrDefault() ?? "/";
+                    return Redirect(defaultRedirect);
                 }
 
                 throw new ArgumentException("Invalid return URL");

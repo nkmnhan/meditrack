@@ -46,6 +46,10 @@ try {
   }
 } catch { /* localStorage unavailable */ }
 
+// Apply immediately at module load so the correct color palette is visible
+// before any React component mounts (prevents theme flash on F5).
+applyColorTheme(currentThemeId);
+
 /**
  * Apply color theme by injecting a <style> block with derived CSS variables.
  * The injected <style> appears after the stylesheet in <head>, so it always
@@ -91,6 +95,11 @@ function applyColorTheme(themeId: ColorThemeId) {
   document.head.appendChild(style);
 
   try { localStorage.setItem(STORAGE_KEY, themeId); } catch { /* non-critical */ }
+
+  // Set cookie for cross-origin theme sharing (Identity.API reads this)
+  try {
+    document.cookie = `meditrack-color-theme=${themeId};path=/;SameSite=Lax;max-age=31536000`;
+  } catch { /* non-critical */ }
 }
 
 // ── External store for cross-component sync ─────────────────────

@@ -1,9 +1,9 @@
 @page
 @model MediTrack.Identity.Pages.Account.Logout.LoggedOut
 
-<div class="logout-page">
-    <div class="login-card logout-card">
-        <div class="login-header">
+<div class="card-page">
+    <div class="card">
+        <div class="card-header">
             <h1>Logged Out</h1>
             <p>You have been successfully signed out.</p>
         </div>
@@ -22,28 +22,11 @@
         }
 
         <p class="redirect-notice">
-            Redirecting in <span id="logout-countdown">5</span> second(s)&hellip;
+            Redirecting in <span id="logout-countdown" data-redirect="@Model.View.AutoRedirectTarget">5</span> second(s)&hellip;
         </p>
     </div>
 </div>
 
 @section scripts {
-    <script>
-        (function () {
-            var remaining = 5;
-            var countdownEl = document.getElementById("logout-countdown");
-            var redirectTarget = "@Model.View.AutoRedirectTarget";
-
-            var timer = setInterval(function () {
-                remaining -= 1;
-                if (countdownEl) {
-                    countdownEl.textContent = remaining;
-                }
-                if (remaining <= 0) {
-                    clearInterval(timer);
-                    window.location.href = redirectTarget;
-                }
-            }, 1000);
-        }());
-    </script>
+    <script src="~/js/logout-countdown.js"></script>
 }

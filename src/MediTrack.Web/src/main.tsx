@@ -8,6 +8,11 @@ import { AuthProvider } from "./shared/auth";
 import App from "./App";
 import "./index.css";
 
+// Eager theme initialization — applies saved theme before first render
+// so pages outside <Layout> (e.g. Landing) don't flash light on F5.
+import "./shared/hooks/use-theme";
+import "./shared/hooks/use-color-theme";
+
 const rootElement = document.getElementById("root");
 
 if (!rootElement) {

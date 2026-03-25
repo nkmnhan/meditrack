@@ -147,11 +147,12 @@ using (IServiceScope scope = app.Services.CreateScope())
 }
 
 app.MapDefaultEndpoints();
-// Identity API serves Razor Pages (login/register UI) — needs a CSP that allows:
-// - 'unsafe-inline' for script-src: LoggedOut page countdown timer, ASP.NET validation scripts
-// - frame-ancestors with web client origin: oidc-client-ts frames Identity for silent renew, checksession, signout
+// Identity API serves Razor Pages (login/register UI) — CSP:
+// - No 'unsafe-inline' — all scripts in wwwroot/js/, all styles in wwwroot/css/ (OWASP A02:2025)
+// - Google Fonts allowed for Inter typeface (style-src + font-src)
+// - frame-ancestors: oidc-client-ts frames Identity for silent renew, checksession, signout
 string webClientUrl = builder.Configuration["WebClientUrl"] ?? "https://localhost:3000";
-string identityCsp = $"default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; frame-ancestors 'self' {webClientUrl}";
+string identityCsp = $"default-src 'self'; style-src 'self' https://fonts.googleapis.com; script-src 'self'; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com; frame-ancestors 'self' {webClientUrl}";
 app.UseSecurityHeaders(identityCsp);
 app.UseRateLimiter();
 app.UseCors(CorsExtensions.PolicyName);

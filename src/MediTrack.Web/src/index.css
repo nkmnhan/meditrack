@@ -4,49 +4,40 @@
 
 @layer base {
   :root {
-    /* Layout */
-    --background: 210 40% 98%;
+    --background: 180 25% 97%;
     --foreground: 222 47% 11%;
-
-    /* Cards / Popovers */
-    --card: 0 0% 100%;
+    --card: 180 15% 99%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-
-    /* Brand — maps to project token values */
     --primary: 224 76% 48%;
     --primary-foreground: 0 0% 100%;
     --secondary: 175 84% 32%;
     --secondary-foreground: 0 0% 100%;
+    --muted: 180 20% 96%;
+    --muted-foreground: 215 16% 47%;
     --accent: 270 91% 65%;
     --accent-foreground: 0 0% 100%;
-
-    /* Utility */
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215 16% 47%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
+    --border: 185 20% 90%;
+    --input: 185 20% 90%;
     --ring: 224 76% 48%;
     --radius: 0.5rem;
-
-    /* Sidebar */
-    --sidebar-background: 0 0% 98%;
+    --sidebar-background: 192 20% 96%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent: 181 25% 92%;
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Chart — surface-aware colors for Recharts tooltip/grid */
-    --chart-surface: 0 0% 100%;
-    --chart-grid: 214 32% 91%;
+    /* Chart */
+    --chart-surface: 180 15% 99%;
+    --chart-grid: 185 20% 90%;
     --chart-text: 215 16% 47%;
-    --chart-tooltip-border: 214 32% 91%;
+    --chart-tooltip-border: 185 20% 90%;
     --chart-tooltip-shadow: 0 0% 0% / 0.1;
 
     /* ── Color Scales (perceptual — shade 50=subtle bg, 700=text) ── */
@@ -152,50 +143,25 @@
    * ════════════════════════════════════════════════════════════════
    *  DEEP OCEAN — Dark Mode
    * ════════════════════════════════════════════════════════════════
-   *
-   *  Design direction:
-   *    • Rich, saturated deep navy — like the Healthish dashboard
-   *    • NOT dark gray — true blue with high saturation
-   *    • Cards are a lighter navy, creating depth like ocean layers
-   *    • Teal/cyan accents glow beautifully against navy
-   *    • Feels like a calm ocean at night, not a dark cave
-   *
-   *  Key colors (extracted from reference):
-   *    Page bg:  ~#0B1437  (hsl 228 65% 13%)
-   *    Cards:    ~#111C44  (hsl 228 60% 17%)
-   *    Sidebar:  ~#081028  (hsl 228 68% 9%)
-   *    Borders:  ~#1B2B5E  (hsl 227 55% 24%)
-   *    Text:     ~#E2E8F0  (off-white with cool tint)
-   *    Muted:    ~#8B9DC3  (soft blue-gray)
-   *
-   *  WCAG 2.1 AA: 4.5:1 text, 3:1 UI — non-negotiable
+   *  Rich saturated navy — see web/src/index.css for full rationale.
    * ════════════════════════════════════════════════════════════════
    */
   .dark {
-    /* ── Layout ────────────────────────────────────────────────── */
-    /* Deep saturated navy — like the Healthish reference #0B1A3B */
     --background: 225 66% 14%;
     --foreground: 0 0% 96%;
 
-    /* ── Cards / Popovers — clearly lighter navy ───────────────── */
-    /* Big contrast jump from bg — cards must "float" visibly */
-    /* Reference cards are ~#132145, ours target similar feel */
     --card: 225 52% 18%;
     --card-foreground: 0 0% 96%;
     --popover: 225 48% 22%;
     --popover-foreground: 0 0% 96%;
 
-    /* ── Brand — vivid on deep navy ────────────────────────────── */
     --primary: 224 85% 58%;
     --primary-foreground: 0 0% 100%;
-    /* Teal/cyan — the reference's signature accent color */
     --secondary: 174 72% 52%;
     --secondary-foreground: 0 0% 100%;
-    /* Violet — Clara AI glow */
     --accent: 270 76% 72%;
     --accent-foreground: 0 0% 100%;
 
-    /* ── Utility ───────────────────────────────────────────────── */
     --muted: 225 48% 22%;
     --muted-foreground: 222 25% 62%;
     --destructive: 0 72% 63%;
@@ -204,7 +170,6 @@
     --input: 225 45% 24%;
     --ring: 224 85% 58%;
 
-    /* ── Sidebar — deepest navy, clearly distinct from content ─── */
     --sidebar-background: 228 70% 10%;
     --sidebar-foreground: 220 30% 78%;
     --sidebar-primary: 224 85% 58%;
@@ -214,7 +179,6 @@
     --sidebar-border: 225 45% 20%;
     --sidebar-ring: 224 85% 58%;
 
-    /* ── Chart ─────────────────────────────────────────────────── */
     --chart-surface: 225 52% 18%;
     --chart-grid: 225 40% 26%;
     --chart-text: 222 25% 62%;
@@ -365,7 +329,9 @@
   }
 }
 
-/* ── Clara Session animations (synced from design) ──────────── */
+/* ── Clara Session animations ─────────────────────── */
+
+/* Typing indicator dots */
 .typing-dot {
   @apply w-2 h-2 rounded-full bg-muted-foreground;
   will-change: transform, opacity;
@@ -377,21 +343,74 @@
   30% { transform: translateY(-6px); opacity: 1; }
 }
 
-/* shimmer and float animations are defined in tailwind.config.ts (animate-shimmer, animate-float) */
-
-@keyframes page-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Transcript entry fade-in + slide-up */
+@keyframes transcript-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-transcript-in {
+  animation: transcript-in 400ms ease-out both;
 }
 
+/* Audio waveform bars — uses scaleY for GPU compositing instead of height */
+@keyframes waveform {
+  0%, 100% { transform: scaleY(0.2); }
+  50% { transform: scaleY(1); }
+}
+.waveform-bar {
+  height: 20px;
+  transform-origin: bottom;
+  will-change: transform;
+  animation: waveform 1s ease-in-out infinite;
+}
+.waveform-bar:nth-child(1) { animation-duration: 0.8s; }
+.waveform-bar:nth-child(2) { animation-duration: 1.1s; }
+.waveform-bar:nth-child(3) { animation-duration: 0.7s; }
+.waveform-bar:nth-child(4) { animation-duration: 1.3s; }
+.waveform-bar:nth-child(5) { animation-duration: 0.9s; }
+
+/* Suggestion card stagger fade-in from right */
+@keyframes suggestion-in {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.animate-suggestion-in {
+  animation: suggestion-in 400ms ease-out both;
+}
+
+/* Blink for recording indicator */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ── Page transitions ── */
+@keyframes page-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .animate-page-in {
   animation: page-fade-in 300ms ease-out;
+}
+
+/* ── Animated gradient border (demo role cards) ── */
+@property --border-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.animate-border-gradient {
+  --border-angle: 0deg;
+  background:
+    linear-gradient(to right, hsl(var(--card)), hsl(var(--card))) padding-box,
+    conic-gradient(from var(--border-angle), transparent 40%, hsl(var(--accent)) 55%, hsl(var(--primary)) 65%, hsl(var(--secondary)) 75%, transparent 90%) border-box;
+  border: 2px solid transparent;
+  animation: border-rotate 3s linear infinite;
+}
+
+@keyframes border-rotate {
+  to { --border-angle: 360deg; }
 }
 
 @media (prefers-reduced-motion: reduce) {

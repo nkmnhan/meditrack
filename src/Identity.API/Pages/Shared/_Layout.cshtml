@@ -1,9 +1,35 @@
+@{
+    // Read theme cookies set by the Web app's ThemeSwitcher
+    var themeMode = Context.Request.Cookies["meditrack-theme-mode"] ?? "";
+    var colorTheme = Context.Request.Cookies["meditrack-color-theme"] ?? "default";
+
+    // Determine dark mode: explicit "dark" cookie, or "system" (let JS fallback handle)
+    var isDark = themeMode == "dark";
+    var htmlClass = isDark ? "dark" : "";
+
+    // Named palette class (e.g., "theme-northern-lights")
+    if (colorTheme != "default" && colorTheme != "")
+    {
+        // Sanitize: only allow alphanumeric + hyphens (OWASP A05 injection prevention)
+        if (System.Text.RegularExpressions.Regex.IsMatch(colorTheme, @"^[a-z0-9-]+$"))
+        {
+            htmlClass += (htmlClass.Length > 0 ? " " : "") + $"theme-{colorTheme}";
+        }
+    }
+}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="@htmlClass">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
     <title>MediTrack - Identity</title>
+    <script src="~/js/theme-fallback.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="~/css/theme-vars.css" />
+    <link rel="stylesheet" href="~/css/all-themes.css" />
     <link rel="stylesheet" href="~/css/site.css" />
 </head>
 <body>
