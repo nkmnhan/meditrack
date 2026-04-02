@@ -42,6 +42,7 @@ namespace MediTrack.Migrations
                     started_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     ended_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     status = table.Column<string>(type: "text", nullable: false),
+                    session_type = table.Column<string>(type: "text", nullable: false, defaultValue: "Consultation"),
                     audio_recorded = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
                     speaker_map = table.Column<Dictionary<string, string>>(type: "jsonb", nullable: true)
                 },
@@ -85,7 +86,10 @@ namespace MediTrack.Migrations
                     type = table.Column<string>(type: "text", nullable: false),
                     source = table.Column<string>(type: "text", nullable: false),
                     urgency = table.Column<string>(type: "text", nullable: true),
-                    confidence = table.Column<float>(type: "real", nullable: true)
+                    confidence = table.Column<float>(type: "real", nullable: true),
+                    source_transcript_line_ids = table.Column<List<Guid>>(type: "jsonb", nullable: false),
+                    accepted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    dismissed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -143,6 +147,16 @@ namespace MediTrack.Migrations
                 .Annotation("Npgsql:IndexOperators", new[] { "vector_cosine_ops" })
                 .Annotation("Npgsql:StorageParameter:ef_construction", 64)
                 .Annotation("Npgsql:StorageParameter:m", 16);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_sessions_doctor_id",
+                table: "sessions",
+                column: "doctor_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_sessions_started_at",
+                table: "sessions",
+                column: "started_at");
 
             migrationBuilder.CreateIndex(
                 name: "IX_suggestions_session_id",

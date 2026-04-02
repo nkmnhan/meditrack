@@ -180,6 +180,10 @@ namespace MediTrack.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<DateTimeOffset?>("AcceptedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("accepted_at");
+
                     b.Property<float?>("Confidence")
                         .HasColumnType("real")
                         .HasColumnName("confidence");
@@ -189,6 +193,10 @@ namespace MediTrack.Migrations
                         .HasColumnType("text")
                         .HasColumnName("content");
 
+                    b.Property<DateTimeOffset?>("DismissedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("dismissed_at");
+
                     b.Property<Guid>("SessionId")
                         .HasColumnType("uuid")
                         .HasColumnName("session_id");
@@ -197,6 +205,11 @@ namespace MediTrack.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("source");
+
+                    b.PrimitiveCollection<List<Guid>>("SourceTranscriptLineIds")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("source_transcript_line_ids");
 
                     b.Property<DateTimeOffset>("TriggeredAt")
                         .HasColumnType("timestamp with time zone")
