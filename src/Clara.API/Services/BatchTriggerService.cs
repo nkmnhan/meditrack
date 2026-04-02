@@ -38,20 +38,21 @@ public sealed class BatchTriggerService : IBatchTriggerService
     {
         var state = _sessionStates.GetOrAdd(sessionId, _ => CreateNewState(sessionId));
 
-        // Check for urgent keywords — bypass batch timer for immediate response
-        if (ContainsUrgentKeyword(line.Text))
-        {
-            _logger.LogWarning(
-                "Urgent keyword detected in session {SessionId}: triggering immediate suggestions",
-                sessionId);
-            state.ResetTimer();
-            await TriggerBatchSuggestionAsync(sessionId, "urgent_keyword");
-            return;
-        }
-
-        // Only count patient utterances for auto-batch
+        // Only count patient utterances for auto-batch and urgent keyword detection
         if (line.Speaker == SpeakerRole.Patient)
         {
+            // Check for urgent keywords — bypass batch timer for immediate response
+            if (ContainsUrgentKeyword(line.Text))
+            {
+                _logger.LogWarning(
+                    "Urgent keyword detected in session {SessionId}: triggering immediate suggestions",
+                    sessionId);
+                Interlocked.Exchange(ref state.PatientUtteranceCount, 0);
+                state.ResetTimer();
+                await TriggerBatchSuggestionAsync(sessionId, "urgent_keyword");
+                return;
+            }
+
             var count = Interlocked.Increment(ref state.PatientUtteranceCount);
 
             if (count >= _options.PatientUtteranceThreshold)
@@ -78,8 +79,7 @@ public sealed class BatchTriggerService : IBatchTriggerService
 
     private bool ContainsUrgentKeyword(string text)
     {
-        var lowerText = text.ToLowerInvariant();
-        return _options.UrgentKeywords.Any(keyword => lowerText.Contains(keyword, StringComparison.OrdinalIgnoreCase));
+        return _options.UrgentKeywords.Any(keyword => text.Contains(keyword, StringComparison.OrdinalIgnoreCase));
     }
 
     private SessionBatchState CreateNewState(string sessionId)

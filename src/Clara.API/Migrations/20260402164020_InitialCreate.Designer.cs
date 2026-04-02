@@ -14,7 +14,7 @@ using Pgvector;
 namespace MediTrack.Migrations
 {
     [DbContext(typeof(ClaraDbContext))]
-    [Migration("20260402163541_InitialCreate")]
+    [Migration("20260402164020_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

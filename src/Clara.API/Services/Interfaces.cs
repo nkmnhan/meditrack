@@ -1,3 +1,4 @@
+using Clara.API.Application.Models;
 using Clara.API.Domain;
 
 namespace Clara.API.Services;
@@ -5,6 +6,8 @@ namespace Clara.API.Services;
 public interface ISuggestionService
 {
     Task<List<Suggestion>> GenerateSuggestionsAsync(Guid sessionId, string source, CancellationToken cancellationToken = default);
+    Task<SuggestionResponse> AcceptSuggestionAsync(Guid sessionId, Guid suggestionId, string doctorId, CancellationToken cancellationToken = default);
+    Task<SuggestionResponse> DismissSuggestionAsync(Guid sessionId, Guid suggestionId, string doctorId, CancellationToken cancellationToken = default);
 }
 
 public interface IKnowledgeService
@@ -26,8 +29,8 @@ public interface IBatchTriggerService : IDisposable
 
 public interface ISessionService
 {
-    Task<Clara.API.Application.Models.SessionResponse> StartSessionAsync(string doctorId, Clara.API.Application.Models.StartSessionRequest request, CancellationToken cancellationToken = default);
-    Task<List<Clara.API.Application.Models.SessionSummaryResponse>> GetSessionsAsync(string doctorId, int limit = 10, CancellationToken cancellationToken = default);
-    Task<Clara.API.Application.Models.SessionResponse?> GetSessionAsync(Guid sessionId, string doctorId, CancellationToken cancellationToken = default);
-    Task<Clara.API.Application.Models.SessionResponse> EndSessionAsync(Guid sessionId, string doctorId, CancellationToken cancellationToken = default);
+    Task<SessionResponse> StartSessionAsync(string doctorId, StartSessionRequest request, CancellationToken cancellationToken = default);
+    Task<List<SessionSummaryResponse>> GetSessionsAsync(string doctorId, int limit = 10, CancellationToken cancellationToken = default);
+    Task<SessionResponse?> GetSessionAsync(Guid sessionId, string doctorId, CancellationToken cancellationToken = default);
+    Task<SessionResponse> EndSessionAsync(Guid sessionId, string doctorId, CancellationToken cancellationToken = default);
 }

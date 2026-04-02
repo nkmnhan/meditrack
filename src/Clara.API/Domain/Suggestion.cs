@@ -55,6 +55,33 @@ public sealed class Suggestion
     /// </summary>
     public DateTimeOffset? DismissedAt { get; set; }
 
+    /// <summary>
+    /// Whether this suggestion has already been acted upon (accepted or dismissed).
+    /// </summary>
+    public bool IsActedUpon => AcceptedAt.HasValue || DismissedAt.HasValue;
+
+    /// <summary>
+    /// Accepts this suggestion. Throws if already acted upon.
+    /// </summary>
+    public void Accept()
+    {
+        if (IsActedUpon)
+            throw new InvalidOperationException("Suggestion has already been acted upon");
+
+        AcceptedAt = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>
+    /// Dismisses this suggestion. Throws if already acted upon.
+    /// </summary>
+    public void Dismiss()
+    {
+        if (IsActedUpon)
+            throw new InvalidOperationException("Suggestion has already been acted upon");
+
+        DismissedAt = DateTimeOffset.UtcNow;
+    }
+
     // Navigation property
     public Session? Session { get; set; }
 }

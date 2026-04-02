@@ -175,6 +175,79 @@ public sealed partial class SuggestionService : ISuggestionService
         }
     }
 
+    /// <summary>
+    /// Accepts a suggestion. Enforces idempotency — throws if already acted upon.
+    /// </summary>
+    public async Task<Application.Models.SuggestionResponse> AcceptSuggestionAsync(
+        Guid sessionId,
+        Guid suggestionId,
+        string doctorId,
+        CancellationToken cancellationToken = default)
+    {
+        var suggestion = await GetValidatedSuggestionAsync(sessionId, suggestionId, doctorId, cancellationToken);
+        suggestion.Accept();
+        await _db.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Suggestion {SuggestionId} accepted in session {SessionId}", suggestionId, sessionId);
+
+        return MapToResponse(suggestion);
+    }
+
+    /// <summary>
+    /// Dismisses a suggestion. Enforces idempotency — throws if already acted upon.
+    /// </summary>
+    public async Task<Application.Models.SuggestionResponse> DismissSuggestionAsync(
+        Guid sessionId,
+        Guid suggestionId,
+        string doctorId,
+        CancellationToken cancellationToken = default)
+    {
+        var suggestion = await GetValidatedSuggestionAsync(sessionId, suggestionId, doctorId, cancellationToken);
+        suggestion.Dismiss();
+        await _db.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Suggestion {SuggestionId} dismissed in session {SessionId}", suggestionId, sessionId);
+
+        return MapToResponse(suggestion);
+    }
+
+    private async Task<Suggestion> GetValidatedSuggestionAsync(
+        Guid sessionId,
+        Guid suggestionId,
+        string doctorId,
+        CancellationToken cancellationToken)
+    {
+        // Validate session ownership
+        var isOwner = await _db.Sessions
+            .AnyAsync(s => s.Id == sessionId && s.DoctorId == doctorId, cancellationToken);
+
+        if (!isOwner)
+            throw new UnauthorizedAccessException("Session not found or access denied");
+
+        var suggestion = await _db.Suggestions
+            .FirstOrDefaultAsync(s => s.Id == suggestionId && s.SessionId == sessionId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Suggestion {suggestionId} not found in session {sessionId}");
+
+        return suggestion;
+    }
+
+    private static Application.Models.SuggestionResponse MapToResponse(Suggestion suggestion)
+    {
+        return new Application.Models.SuggestionResponse
+        {
+            Id = suggestion.Id,
+            Content = suggestion.Content,
+            TriggeredAt = suggestion.TriggeredAt,
+            Type = suggestion.Type,
+            Source = suggestion.Source,
+            Urgency = suggestion.Urgency,
+            Confidence = suggestion.Confidence,
+            SourceTranscriptLineIds = suggestion.SourceTranscriptLineIds,
+            AcceptedAt = suggestion.AcceptedAt,
+            DismissedAt = suggestion.DismissedAt
+        };
+    }
+
     private async Task<string> GatherKnowledgeContextAsync(
         string conversationText,
         CancellationToken cancellationToken)

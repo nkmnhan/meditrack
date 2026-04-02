@@ -24,6 +24,8 @@ public sealed class SessionHub : Hub
     private readonly DeepgramService _deepgram;
     private readonly SpeakerDetectionService _speakerDetection;
     private readonly IBatchTriggerService _batchTrigger;
+    private readonly ISessionService _sessionService;
+    private readonly ISuggestionService _suggestionService;
     private readonly ILogger<SessionHub> _logger;
 
     public SessionHub(
@@ -31,12 +33,16 @@ public sealed class SessionHub : Hub
         DeepgramService deepgram,
         SpeakerDetectionService speakerDetection,
         IBatchTriggerService batchTrigger,
+        ISessionService sessionService,
+        ISuggestionService suggestionService,
         ILogger<SessionHub> logger)
     {
         _db = db;
         _deepgram = deepgram;
         _speakerDetection = speakerDetection;
         _batchTrigger = batchTrigger;
+        _sessionService = sessionService;
+        _suggestionService = suggestionService;
         _logger = logger;
     }
 
@@ -87,54 +93,12 @@ public sealed class SessionHub : Hub
         await Clients.Caller.SendAsync(SignalREvents.SessionJoined, sessionId);
 
         // Hydrate the caller with current session state so useSession() receives non-null data
-        var session = await _db.Sessions
-            .Include(s => s.TranscriptLines.OrderBy(t => t.Timestamp))
-            .Include(s => s.Suggestions.OrderByDescending(s => s.TriggeredAt))
-            .FirstOrDefaultAsync(s => s.Id == sessionGuid && s.DoctorId == doctorId);
+        var sessionResponse = await _sessionService.GetSessionAsync(sessionGuid, doctorId);
 
-        if (session is null)
+        if (sessionResponse is not null)
         {
-            return;
+            await Clients.Caller.SendAsync(SignalREvents.SessionUpdated, sessionResponse);
         }
-
-        var sessionResponse = new SessionResponse
-        {
-            Id = session.Id,
-            DoctorId = session.DoctorId,
-            PatientId = session.PatientId,
-            StartedAt = session.StartedAt,
-            EndedAt = session.EndedAt,
-            Status = session.Status,
-            AudioRecorded = session.AudioRecorded,
-            SessionType = session.SessionType,
-            TranscriptLines = session.TranscriptLines
-                .Select(transcriptLine => new TranscriptLineResponse
-                {
-                    Id = transcriptLine.Id,
-                    Speaker = transcriptLine.Speaker,
-                    Text = transcriptLine.Text,
-                    Timestamp = transcriptLine.Timestamp,
-                    Confidence = transcriptLine.Confidence
-                })
-                .ToList(),
-            Suggestions = session.Suggestions
-                .Select(suggestion => new SuggestionResponse
-                {
-                    Id = suggestion.Id,
-                    Content = suggestion.Content,
-                    TriggeredAt = suggestion.TriggeredAt,
-                    Type = suggestion.Type,
-                    Source = suggestion.Source,
-                    Urgency = suggestion.Urgency,
-                    Confidence = suggestion.Confidence,
-                    SourceTranscriptLineIds = suggestion.SourceTranscriptLineIds,
-                    AcceptedAt = suggestion.AcceptedAt,
-                    DismissedAt = suggestion.DismissedAt
-                })
-                .ToList()
-        };
-
-        await Clients.Caller.SendAsync(SignalREvents.SessionUpdated, sessionResponse);
     }
 
     /// <summary>
@@ -142,11 +106,15 @@ public sealed class SessionHub : Hub
     /// </summary>
     public async Task LeaveSession(string sessionId)
     {
-        if (!Guid.TryParse(sessionId, out _))
+        var doctorId = GetDoctorId();
+
+        if (!Guid.TryParse(sessionId, out var sessionGuid))
         {
             _logger.LogWarning("Invalid session ID format in LeaveSession");
             return;
         }
+
+        await ValidateSessionOwnershipAsync(sessionGuid, doctorId);
 
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, sessionId);
         ConnectionSessions.TryRemove(Context.ConnectionId, out _);
@@ -289,9 +257,9 @@ public sealed class SessionHub : Hub
     }
 
     /// <summary>
-    /// Called when a suggestion is generated. Broadcasts to session group.
+    /// Broadcasts a suggestion to session group. Server-side only — not client-callable.
     /// </summary>
-    public async Task BroadcastSuggestion(string sessionId, SuggestionResponse suggestion)
+    private async Task BroadcastSuggestion(string sessionId, SuggestionResponse suggestion)
     {
         await Clients.Group(sessionId).SendAsync(SignalREvents.SuggestionAdded, suggestion);
 
@@ -315,7 +283,7 @@ public sealed class SessionHub : Hub
     }
 
     /// <summary>
-    /// Doctor accepts a suggestion. Records acceptance for quality tracking.
+    /// Doctor accepts a suggestion. Delegates to SuggestionService for idempotency enforcement.
     /// </summary>
     public async Task AcceptSuggestion(string sessionId, string suggestionId)
     {
@@ -327,33 +295,32 @@ public sealed class SessionHub : Hub
             return;
         }
 
-        await ValidateSessionOwnershipAsync(sessionGuid, doctorId);
+        try
+        {
+            var response = await _suggestionService.AcceptSuggestionAsync(sessionGuid, suggestionGuid, doctorId);
 
-        var suggestion = await _db.Suggestions
-            .FirstOrDefaultAsync(s => s.Id == suggestionGuid && s.SessionId == sessionGuid);
-
-        if (suggestion is null)
+            await Clients.Group(sessionId).SendAsync(SignalREvents.SuggestionAccepted, new
+            {
+                suggestionId = response.Id,
+                acceptedAt = response.AcceptedAt
+            });
+        }
+        catch (KeyNotFoundException)
         {
             await Clients.Caller.SendAsync(SignalREvents.SessionError, "Suggestion not found");
-            return;
         }
-
-        suggestion.AcceptedAt = DateTimeOffset.UtcNow;
-        await _db.SaveChangesAsync();
-
-        await Clients.Group(sessionId).SendAsync(SignalREvents.SuggestionAccepted, new
+        catch (UnauthorizedAccessException)
         {
-            suggestionId = suggestion.Id,
-            acceptedAt = suggestion.AcceptedAt
-        });
-
-        _logger.LogInformation(
-            "Suggestion {SuggestionId} accepted in session {SessionId}",
-            suggestionId, sessionId);
+            await Clients.Caller.SendAsync(SignalREvents.SessionError, "Session not found or access denied");
+        }
+        catch (InvalidOperationException exception)
+        {
+            await Clients.Caller.SendAsync(SignalREvents.SessionError, exception.Message);
+        }
     }
 
     /// <summary>
-    /// Doctor dismisses a suggestion. Records dismissal for quality tracking.
+    /// Doctor dismisses a suggestion. Delegates to SuggestionService for idempotency enforcement.
     /// </summary>
     public async Task DismissSuggestion(string sessionId, string suggestionId)
     {
@@ -365,29 +332,28 @@ public sealed class SessionHub : Hub
             return;
         }
 
-        await ValidateSessionOwnershipAsync(sessionGuid, doctorId);
+        try
+        {
+            var response = await _suggestionService.DismissSuggestionAsync(sessionGuid, suggestionGuid, doctorId);
 
-        var suggestion = await _db.Suggestions
-            .FirstOrDefaultAsync(s => s.Id == suggestionGuid && s.SessionId == sessionGuid);
-
-        if (suggestion is null)
+            await Clients.Group(sessionId).SendAsync(SignalREvents.SuggestionDismissed, new
+            {
+                suggestionId = response.Id,
+                dismissedAt = response.DismissedAt
+            });
+        }
+        catch (KeyNotFoundException)
         {
             await Clients.Caller.SendAsync(SignalREvents.SessionError, "Suggestion not found");
-            return;
         }
-
-        suggestion.DismissedAt = DateTimeOffset.UtcNow;
-        await _db.SaveChangesAsync();
-
-        await Clients.Group(sessionId).SendAsync(SignalREvents.SuggestionDismissed, new
+        catch (UnauthorizedAccessException)
         {
-            suggestionId = suggestion.Id,
-            dismissedAt = suggestion.DismissedAt
-        });
-
-        _logger.LogInformation(
-            "Suggestion {SuggestionId} dismissed in session {SessionId}",
-            suggestionId, sessionId);
+            await Clients.Caller.SendAsync(SignalREvents.SessionError, "Session not found or access denied");
+        }
+        catch (InvalidOperationException exception)
+        {
+            await Clients.Caller.SendAsync(SignalREvents.SessionError, exception.Message);
+        }
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
