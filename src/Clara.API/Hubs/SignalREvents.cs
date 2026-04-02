@@ -14,4 +14,14 @@ public static class SignalREvents
     public const string SttError = "SttError";
     public const string SessionError = "SessionError";
     public const string TranscriptError = "TranscriptError";
+
+    // Agent streaming events (progressive disclosure of AI reasoning)
+    public const string AgentThinking = "AgentThinking";
+    public const string AgentToolStarted = "AgentToolStarted";
+    public const string AgentToolCompleted = "AgentToolCompleted";
+    public const string AgentTextChunk = "AgentTextChunk";
+
+    // Suggestion action events (tracking doctor responses)
+    public const string SuggestionAccepted = "SuggestionAccepted";
+    public const string SuggestionDismissed = "SuggestionDismissed";
 }

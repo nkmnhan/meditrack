@@ -59,7 +59,7 @@ public static class SessionApi
     }
 
     private static async Task<IResult> GetSessions(
-        [FromServices] SessionService sessionService,
+        [FromServices] ISessionService sessionService,
         ClaimsPrincipal user,
         CancellationToken cancellationToken)
     {
@@ -72,7 +72,7 @@ public static class SessionApi
 
     private static async Task<IResult> StartSession(
         [FromBody] StartSessionRequest request,
-        [FromServices] SessionService sessionService,
+        [FromServices] ISessionService sessionService,
         [FromServices] IValidator<StartSessionRequest> validator,
         ClaimsPrincipal user,
         CancellationToken cancellationToken)
@@ -93,7 +93,7 @@ public static class SessionApi
 
     private static async Task<IResult> GetSession(
         Guid id,
-        [FromServices] SessionService sessionService,
+        [FromServices] ISessionService sessionService,
         ClaimsPrincipal user,
         CancellationToken cancellationToken)
     {
@@ -109,7 +109,7 @@ public static class SessionApi
 
     private static async Task<IResult> EndSession(
         Guid id,
-        [FromServices] SessionService sessionService,
+        [FromServices] ISessionService sessionService,
         ClaimsPrincipal user,
         CancellationToken cancellationToken)
     {
@@ -133,8 +133,8 @@ public static class SessionApi
 
     private static async Task<IResult> RequestSuggestion(
         Guid id,
-        [FromServices] SuggestionService suggestionService,
-        [FromServices] SessionService sessionService,
+        [FromServices] ISuggestionService suggestionService,
+        [FromServices] ISessionService sessionService,
         [FromServices] IHubContext<SessionHub> hubContext,
         ClaimsPrincipal user,
         CancellationToken cancellationToken)

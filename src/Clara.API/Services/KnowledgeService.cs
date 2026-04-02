@@ -10,7 +10,7 @@ namespace Clara.API.Services;
 /// <summary>
 /// RAG search service for querying the knowledge base using vector similarity.
 /// </summary>
-public sealed class KnowledgeService
+public sealed class KnowledgeService : IKnowledgeService
 {
     private readonly ClaraDbContext _db;
     private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator;

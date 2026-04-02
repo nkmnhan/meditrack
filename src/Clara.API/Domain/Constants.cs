@@ -43,3 +43,56 @@ public static class SuggestionUrgency
 
     public static readonly string[] All = [Low, Medium, High];
 }
+
+/// <summary>
+/// Session status constants.
+/// </summary>
+public static class SessionStatus
+{
+    public const string Active = "active";
+    public const string Paused = "paused";
+    public const string Completed = "completed";
+    public const string Cancelled = "cancelled";
+}
+
+/// <summary>
+/// Session status enum with state machine validation.
+/// </summary>
+public enum SessionStatusEnum
+{
+    Active,
+    Paused,
+    Completed,
+    Cancelled
+}
+
+/// <summary>
+/// Suggestion type enum.
+/// </summary>
+public enum SuggestionTypeEnum
+{
+    Clinical,
+    Medication,
+    FollowUp,
+    Differential
+}
+
+/// <summary>
+/// Suggestion urgency enum.
+/// </summary>
+public enum SuggestionUrgencyEnum
+{
+    Low,
+    Medium,
+    High
+}
+
+/// <summary>
+/// Suggestion source enum.
+/// </summary>
+public enum SuggestionSourceEnum
+{
+    Batch,
+    OnDemand,
+    DevForce
+}

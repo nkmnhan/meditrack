@@ -6,6 +6,24 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [Unreleased]
 
 ### Added
+- Clara agentic AI improvements — research-driven enhancements (2026-04-02)
+  - P0: Urgent keyword bypass in BatchTriggerService (chest pain, seizure, etc. → immediate suggestions)
+  - P0: Disconnect cleanup — batch trigger timers cleaned up when SignalR disconnects
+  - P0: Config-driven thresholds — `BatchTriggerOptions` via `IOptions<>` (utterance count, timeout, keywords)
+  - P1: Tiered model routing — keyed `IChatClient` (batch → GPT-4o-mini, on-demand → GPT-4o)
+  - P1: Evidence linking — `SourceTranscriptLineIds` on suggestions traces claims to source transcript
+  - P1: Streaming agent event types (`AgentEvent` hierarchy: Thinking, ToolStarted, ToolCompleted, TextChunk)
+  - P2: Service interfaces — `ISuggestionService`, `IKnowledgeService`, `IPatientContextService`, `IBatchTriggerService`, `ISessionService`
+  - P2: Rich domain model — `Session.Complete()`, `Pause()`, `Resume()`, `Cancel()` with state machine validation
+  - P2: Domain enums — `SessionStatusEnum`, `SuggestionTypeEnum`, `SuggestionUrgencyEnum`, `SuggestionSourceEnum`
+  - P2: Suggestion tracking — `AcceptedAt`/`DismissedAt` fields + `AcceptSuggestion`/`DismissSuggestion` hub methods
+  - P2: Enhanced system prompt — grounding rules, confidence calibration, reasoning field, hallucination prevention
+  - `SessionStatus` moved from `SessionService.cs` to `Domain/Constants.cs` (domain concept)
+  - New SignalR events: `AgentThinking`, `AgentToolStarted`, `AgentToolCompleted`, `AgentTextChunk`, `SuggestionAccepted`, `SuggestionDismissed`
+- Clara agentic AI research & plan — `docs/clara-agentic-ai-plan.md` (2026-04-02)
+  - Competitive analysis: Canvas Hyperscribe, Nuance DAX, Abridge, Suki, Nabla, Amazon HealthScribe
+  - Architecture patterns: ReAct, Plan-and-Execute, Reflection/Critique, Multi-Agent, Corrective RAG
+  - Multi-agent extensibility design for future patient companion agent
 - Perceptual color scale system — 100+ CSS variables per theme (2026-03-21)
   - `deriveColorScale()` generates brand scales (50-950) and semantic scales (50-900) from palette
   - `harmonizeHue()` shifts success/warning/error/info toward primary hue for visual cohesion

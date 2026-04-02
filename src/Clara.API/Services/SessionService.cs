@@ -8,15 +8,15 @@ namespace Clara.API.Services;
 /// <summary>
 /// Manages clinical session lifecycle: start, get, end.
 /// </summary>
-public sealed class SessionService
+public sealed class SessionService : ISessionService
 {
     private readonly ClaraDbContext _db;
-    private readonly BatchTriggerService _batchTriggerService;
+    private readonly IBatchTriggerService _batchTriggerService;
     private readonly ILogger<SessionService> _logger;
 
     public SessionService(
         ClaraDbContext db,
-        BatchTriggerService batchTriggerService,
+        IBatchTriggerService batchTriggerService,
         ILogger<SessionService> logger)
     {
         _db = db;
@@ -115,13 +115,12 @@ public sealed class SessionService
                 cancellationToken)
             ?? throw new KeyNotFoundException($"Session {sessionId} not found");
 
-        if (session.Status == SessionStatus.Completed)
+        if (session.Status is SessionStatus.Completed or SessionStatus.Cancelled)
         {
             throw new InvalidOperationException($"Session {sessionId} is already ended");
         }
 
-        session.EndedAt = DateTimeOffset.UtcNow;
-        session.Status = SessionStatus.Completed;
+        session.Complete();
         await _db.SaveChangesAsync(cancellationToken);
 
         // Clean up batch trigger timer to prevent Timer leak
@@ -165,20 +164,12 @@ public sealed class SessionService
                     Type = s.Type,
                     Source = s.Source,
                     Urgency = s.Urgency,
-                    Confidence = s.Confidence
+                    Confidence = s.Confidence,
+                    SourceTranscriptLineIds = s.SourceTranscriptLineIds,
+                    AcceptedAt = s.AcceptedAt,
+                    DismissedAt = s.DismissedAt
                 })
                 .ToList()
         };
     }
-}
-
-/// <summary>
-/// Session status constants.
-/// </summary>
-public static class SessionStatus
-{
-    public const string Active = "active";
-    public const string Paused = "paused";
-    public const string Completed = "completed";
-    public const string Cancelled = "cancelled";
 }

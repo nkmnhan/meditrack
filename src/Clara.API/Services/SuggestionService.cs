@@ -5,6 +5,7 @@ using Clara.API.Data;
 using Clara.API.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Clara.API.Services;
 
@@ -12,12 +13,12 @@ namespace Clara.API.Services;
 /// Generates AI suggestions using LLM with RAG context and patient information.
 /// Uses IChatClient (Microsoft.Extensions.AI) for LLM-agnostic integration.
 /// </summary>
-public sealed partial class SuggestionService
+public sealed partial class SuggestionService : ISuggestionService
 {
-    private readonly IChatClient _chatClient;
+    private readonly IServiceProvider _serviceProvider;
     private readonly ClaraDbContext _db;
-    private readonly KnowledgeService _knowledgeService;
-    private readonly PatientContextService _patientContextService;
+    private readonly IKnowledgeService _knowledgeService;
+    private readonly IPatientContextService _patientContextService;
     private readonly SkillLoaderService _skillLoaderService;
     private readonly ILogger<SuggestionService> _logger;
     private readonly string _systemPrompt;
@@ -38,14 +39,14 @@ public sealed partial class SuggestionService
     }
 
     public SuggestionService(
-        IChatClient chatClient,
+        IServiceProvider serviceProvider,
         ClaraDbContext db,
-        KnowledgeService knowledgeService,
-        PatientContextService patientContextService,
+        IKnowledgeService knowledgeService,
+        IPatientContextService patientContextService,
         SkillLoaderService skillLoaderService,
         ILogger<SuggestionService> logger)
     {
-        _chatClient = chatClient;
+        _serviceProvider = serviceProvider;
         _db = db;
         _knowledgeService = knowledgeService;
         _patientContextService = patientContextService;
@@ -114,8 +115,12 @@ public sealed partial class SuggestionService
             // Build the prompt
             var prompt = BuildPrompt(conversationText, knowledgeContext, patientContext, matchingSkill);
 
+            // Resolve the appropriate keyed IChatClient based on suggestion source
+            var chatClientKey = source == SuggestionSources.OnDemand ? "ondemand" : "batch";
+            var chatClient = _serviceProvider.GetRequiredKeyedService<IChatClient>(chatClientKey);
+
             // Call LLM
-            var llmResponse = await CallLlmAsync(prompt, cancellationToken);
+            var llmResponse = await CallLlmAsync(chatClient, prompt, cancellationToken);
 
             if (llmResponse == null || llmResponse.Suggestions.Count == 0)
             {
@@ -125,6 +130,7 @@ public sealed partial class SuggestionService
 
             // Save suggestions to DB
             var suggestions = new List<Suggestion>();
+            var sourceLineIds = recentLines.Select(line => line.Id).ToList();
 
             foreach (var suggestionOutput in llmResponse.Suggestions)
             {
@@ -137,7 +143,8 @@ public sealed partial class SuggestionService
                     Source = source,
                     Urgency = suggestionOutput.Urgency,
                     Confidence = suggestionOutput.Confidence,
-                    TriggeredAt = DateTimeOffset.UtcNow
+                    TriggeredAt = DateTimeOffset.UtcNow,
+                    SourceTranscriptLineIds = sourceLineIds
                 };
 
                 _db.Suggestions.Add(suggestion);
@@ -237,6 +244,7 @@ public sealed partial class SuggestionService
     }
 
     private async Task<SuggestionLlmResponse?> CallLlmAsync(
+        IChatClient chatClient,
         string userPrompt,
         CancellationToken cancellationToken)
     {
@@ -257,7 +265,7 @@ public sealed partial class SuggestionService
                 ResponseFormat = ChatResponseFormat.Json,
             };
 
-            var response = await _chatClient.GetResponseAsync(
+            var response = await chatClient.GetResponseAsync(
                 messages,
                 chatOptions,
                 cancellationToken);

@@ -1,4 +1,5 @@
 using Clara.API.Apis;
+using Clara.API.Application.Models;
 using Clara.API.Data;
 using Clara.API.Extensions;
 using Clara.API.Health;
@@ -38,16 +39,20 @@ builder.Services.AddRateLimitingPolicies();
 // FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
+// Batch trigger options (AI:Batching config section)
+builder.Services.Configure<BatchTriggerOptions>(
+    builder.Configuration.GetSection(BatchTriggerOptions.SectionName));
+
 // Session management services
-builder.Services.AddSingleton<BatchTriggerService>();
-builder.Services.AddScoped<SessionService>();
+builder.Services.AddSingleton<IBatchTriggerService, BatchTriggerService>();
+builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<DeepgramService>();
 builder.Services.AddScoped<SpeakerDetectionService>();
 
 // AI suggestion services
-builder.Services.AddScoped<KnowledgeService>();
-builder.Services.AddScoped<PatientContextService>();
-builder.Services.AddScoped<SuggestionService>();
+builder.Services.AddScoped<IKnowledgeService, KnowledgeService>();
+builder.Services.AddScoped<IPatientContextService, PatientContextService>();
+builder.Services.AddScoped<ISuggestionService, SuggestionService>();
 
 // Analytics service (admin reports)
 builder.Services.AddScoped<AnalyticsService>();

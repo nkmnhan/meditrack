@@ -1,8 +1,10 @@
 using System.Collections.Concurrent;
 using System.Threading;
+using Clara.API.Application.Models;
 using Clara.API.Domain;
 using Clara.API.Hubs;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Options;
 
 namespace Clara.API.Services;
 
@@ -11,19 +13,22 @@ namespace Clara.API.Services;
 /// Triggers after 5 patient utterances OR 60 seconds, whichever comes first.
 /// Singleton service — maintains state across hub invocations.
 /// </summary>
-public sealed class BatchTriggerService : IDisposable
+public sealed class BatchTriggerService : IBatchTriggerService
 {
     private readonly ConcurrentDictionary<string, SessionBatchState> _sessionStates = new();
     private readonly ILogger<BatchTriggerService> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly BatchTriggerOptions _options;
     private bool _disposed;
 
     public BatchTriggerService(
         ILogger<BatchTriggerService> logger,
-        IServiceScopeFactory scopeFactory)
+        IServiceScopeFactory scopeFactory,
+        IOptions<BatchTriggerOptions> options)
     {
         _logger = logger;
         _scopeFactory = scopeFactory;
+        _options = options.Value;
     }
 
     /// <summary>
@@ -33,12 +38,23 @@ public sealed class BatchTriggerService : IDisposable
     {
         var state = _sessionStates.GetOrAdd(sessionId, _ => CreateNewState(sessionId));
 
+        // Check for urgent keywords — bypass batch timer for immediate response
+        if (ContainsUrgentKeyword(line.Text))
+        {
+            _logger.LogWarning(
+                "Urgent keyword detected in session {SessionId}: triggering immediate suggestions",
+                sessionId);
+            state.ResetTimer();
+            await TriggerBatchSuggestionAsync(sessionId, "urgent_keyword");
+            return;
+        }
+
         // Only count patient utterances for auto-batch
         if (line.Speaker == SpeakerRole.Patient)
         {
             var count = Interlocked.Increment(ref state.PatientUtteranceCount);
 
-            if (count >= 5)
+            if (count >= _options.PatientUtteranceThreshold)
             {
                 // Reset counter and timer BEFORE triggering to prevent concurrent double-trigger
                 Interlocked.Exchange(ref state.PatientUtteranceCount, 0);
@@ -60,9 +76,16 @@ public sealed class BatchTriggerService : IDisposable
         }
     }
 
+    private bool ContainsUrgentKeyword(string text)
+    {
+        var lowerText = text.ToLowerInvariant();
+        return _options.UrgentKeywords.Any(keyword => lowerText.Contains(keyword, StringComparison.OrdinalIgnoreCase));
+    }
+
     private SessionBatchState CreateNewState(string sessionId)
     {
-        var state = new SessionBatchState(sessionId, OnTimerElapsed);
+        var timeout = TimeSpan.FromSeconds(_options.TimeoutSeconds);
+        var state = new SessionBatchState(sessionId, OnTimerElapsed, timeout);
         _logger.LogDebug("Created batch trigger state for session {SessionId}", sessionId);
         return state;
     }
@@ -95,7 +118,7 @@ public sealed class BatchTriggerService : IDisposable
         try
         {
             using var scope = _scopeFactory.CreateScope();
-            var suggestionService = scope.ServiceProvider.GetRequiredService<SuggestionService>();
+            var suggestionService = scope.ServiceProvider.GetRequiredService<ISuggestionService>();
             var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<SessionHub>>();
 
             if (!Guid.TryParse(sessionId, out var sessionGuid))
@@ -122,7 +145,10 @@ public sealed class BatchTriggerService : IDisposable
                         urgency = suggestion.Urgency,
                         confidence = suggestion.Confidence,
                         source = suggestion.Source,
-                        triggeredAt = suggestion.TriggeredAt
+                        triggeredAt = suggestion.TriggeredAt,
+                        sourceTranscriptLineIds = suggestion.SourceTranscriptLineIds,
+                        acceptedAt = suggestion.AcceptedAt,
+                        dismissedAt = suggestion.DismissedAt
                     });
             }
 
@@ -158,15 +184,17 @@ public sealed class BatchTriggerService : IDisposable
     {
         private readonly string _sessionId;
         private readonly Action<string> _onTimerElapsed;
+        private readonly TimeSpan _timeout;
         private Timer? _timer;
         private bool _disposed;
 
         public int PatientUtteranceCount;
 
-        public SessionBatchState(string sessionId, Action<string> onTimerElapsed)
+        public SessionBatchState(string sessionId, Action<string> onTimerElapsed, TimeSpan timeout)
         {
             _sessionId = sessionId;
             _onTimerElapsed = onTimerElapsed;
+            _timeout = timeout;
             ResetTimer();
         }
 
@@ -176,7 +204,7 @@ public sealed class BatchTriggerService : IDisposable
             _timer = new Timer(
                 _ => _onTimerElapsed(_sessionId),
                 null,
-                TimeSpan.FromSeconds(60),
+                _timeout,
                 Timeout.InfiniteTimeSpan);
         }
 

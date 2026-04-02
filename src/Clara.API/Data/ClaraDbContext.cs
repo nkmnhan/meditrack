@@ -160,6 +160,16 @@ public sealed class ClaraDbContext : DbContext
             entity.Property(suggestion => suggestion.Confidence)
                 .HasColumnName("confidence");
 
+            entity.Property(suggestion => suggestion.SourceTranscriptLineIds)
+                .HasColumnName("source_transcript_line_ids")
+                .HasColumnType("jsonb");
+
+            entity.Property(suggestion => suggestion.AcceptedAt)
+                .HasColumnName("accepted_at");
+
+            entity.Property(suggestion => suggestion.DismissedAt)
+                .HasColumnName("dismissed_at");
+
             entity.HasIndex(suggestion => suggestion.SessionId);
             entity.HasIndex(suggestion => suggestion.TriggeredAt);
         });

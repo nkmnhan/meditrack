@@ -1,8 +1,10 @@
+using Clara.API.Application.Models;
 using Clara.API.Domain;
 using Clara.API.Services;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using Xunit;
 
@@ -16,7 +18,8 @@ public sealed class BatchTriggerServiceTests : IDisposable
     public BatchTriggerServiceTests()
     {
         _scopeFactory = Substitute.For<IServiceScopeFactory>();
-        _service = new BatchTriggerService(NullLogger<BatchTriggerService>.Instance, _scopeFactory);
+        var options = Options.Create(new BatchTriggerOptions());
+        _service = new BatchTriggerService(NullLogger<BatchTriggerService>.Instance, _scopeFactory, options);
     }
 
     [Fact]

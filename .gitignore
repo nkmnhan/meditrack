@@ -153,3 +153,11 @@ dev-certs/mkcert.exe
 # MCP local overrides (personal credentials — use .mcp.local.json)
 # .mcp.json is tracked (team-shared, secrets via env vars)
 src/Identity.API/keys/
+
+# Test results
+TestResults/
+**/TestResults/
+tests/e2e/test-results/
+tests/e2e/playwright-report/
+tests/e2e/playwright/.auth/
+.playwright-mcp/

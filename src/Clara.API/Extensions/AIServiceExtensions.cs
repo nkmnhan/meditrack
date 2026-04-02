@@ -21,16 +21,25 @@ public static class AIServiceExtensions
     {
         var openAiApiKey = configuration["AI:OpenAI:ApiKey"] 
             ?? throw new InvalidOperationException("AI:OpenAI:ApiKey is not configured");
-        var chatModel = configuration["AI:OpenAI:ChatModel"] ?? "gpt-4o-mini";
+        var batchModel = configuration["AI:OpenAI:BatchModel"] ?? "gpt-4o-mini";
+        var onDemandModel = configuration["AI:OpenAI:OnDemandModel"] ?? "gpt-4o";
         var embeddingModel = configuration["AI:OpenAI:EmbeddingModel"] ?? "text-embedding-3-small";
 
         // Create OpenAI client (shared for both chat and embeddings)
         var openAiClient = new OpenAIClient(new ApiKeyCredential(openAiApiKey));
 
-        // Register IChatClient (LLM abstraction)
-        // IChatClient wraps the OpenAI chat client for LLM-agnostic API surface
+        // Register keyed IChatClient instances for tiered model routing
+        // Batch: GPT-4o-mini (90% of calls — cost-optimized)
+        services.AddKeyedSingleton<IChatClient>("batch", (sp, key) =>
+            openAiClient.GetChatClient(batchModel).AsIChatClient());
+
+        // On-demand/urgent: GPT-4o (10% of calls — accuracy-optimized)
+        services.AddKeyedSingleton<IChatClient>("ondemand", (sp, key) =>
+            openAiClient.GetChatClient(onDemandModel).AsIChatClient());
+
+        // Default (non-keyed) for backward compatibility
         services.AddSingleton<IChatClient>(sp =>
-            openAiClient.GetChatClient(chatModel).AsIChatClient());
+            openAiClient.GetChatClient(batchModel).AsIChatClient());
 
         // Register IEmbeddingGenerator (embedding abstraction)
         // IEmbeddingGenerator<string, Embedding<float>> wraps the OpenAI embedding client

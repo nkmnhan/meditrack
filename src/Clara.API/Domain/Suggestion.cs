@@ -38,7 +38,23 @@ public sealed class Suggestion
     /// Confidence score (0.0 to 1.0) from the LLM.
     /// </summary>
     public float? Confidence { get; set; }
-    
+
+    /// <summary>
+    /// IDs of transcript lines that triggered this suggestion (evidence linking).
+    /// Enables doctors to see which conversation triggered each suggestion.
+    /// </summary>
+    public List<Guid> SourceTranscriptLineIds { get; set; } = [];
+
+    /// <summary>
+    /// When the suggestion was accepted by the doctor. Null if not yet acted upon.
+    /// </summary>
+    public DateTimeOffset? AcceptedAt { get; set; }
+
+    /// <summary>
+    /// When the suggestion was dismissed by the doctor. Null if not dismissed.
+    /// </summary>
+    public DateTimeOffset? DismissedAt { get; set; }
+
     // Navigation property
     public Session? Session { get; set; }
 }

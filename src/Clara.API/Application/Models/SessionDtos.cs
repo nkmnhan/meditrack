@@ -76,4 +76,7 @@ public sealed record SuggestionResponse
     public required string Source { get; init; }
     public string? Urgency { get; init; }
     public float? Confidence { get; init; }
+    public IReadOnlyList<Guid> SourceTranscriptLineIds { get; init; } = [];
+    public DateTimeOffset? AcceptedAt { get; init; }
+    public DateTimeOffset? DismissedAt { get; init; }
 }

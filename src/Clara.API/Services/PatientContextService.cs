@@ -6,7 +6,7 @@ namespace Clara.API.Services;
 /// Fetches patient context from Patient.API for context-aware AI suggestions.
 /// PHI access is audit-logged via the EventBus.
 /// </summary>
-public sealed class PatientContextService
+public sealed class PatientContextService : IPatientContextService
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<PatientContextService> _logger;
