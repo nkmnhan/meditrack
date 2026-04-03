@@ -176,6 +176,9 @@ public sealed class ClaraDbContext : DbContext
                 .HasColumnName("source_transcript_line_ids")
                 .HasColumnType("jsonb");
 
+            entity.Property(suggestion => suggestion.Reasoning)
+                .HasColumnName("reasoning");
+
             entity.Property(suggestion => suggestion.AcceptedAt)
                 .HasColumnName("accepted_at");
 

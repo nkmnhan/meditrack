@@ -79,4 +79,5 @@ public sealed record SuggestionResponse
     public IReadOnlyList<Guid> SourceTranscriptLineIds { get; init; } = [];
     public DateTimeOffset? AcceptedAt { get; init; }
     public DateTimeOffset? DismissedAt { get; init; }
+    public string? Reasoning { get; init; }
 }

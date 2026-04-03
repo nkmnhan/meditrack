@@ -205,4 +205,26 @@ public sealed class SuggestionServiceParseTests
 
         result!.Suggestions[0].Type.Should().Be("clinical");
     }
+
+    [Fact]
+    public void ParseLlmResponse_WithReasoning_PreservesReasoningField()
+    {
+        var json = """{"suggestions": [{"content": "Check BP", "type": "clinical", "urgency": "medium", "confidence": 0.85, "reasoning": "Patient mentioned dizziness"}]}""";
+
+        var result = SuggestionService.ParseLlmResponse(json, NullLogger<SuggestionService>.Instance);
+
+        result.Should().NotBeNull();
+        result!.Suggestions[0].Reasoning.Should().Be("Patient mentioned dizziness");
+    }
+
+    [Fact]
+    public void ParseLlmResponse_WithoutReasoning_DefaultsToNull()
+    {
+        var json = """{"suggestions": [{"content": "Check BP", "type": "clinical", "urgency": "medium", "confidence": 0.85}]}""";
+
+        var result = SuggestionService.ParseLlmResponse(json, NullLogger<SuggestionService>.Instance);
+
+        result.Should().NotBeNull();
+        result!.Suggestions[0].Reasoning.Should().BeNull();
+    }
 }

@@ -143,6 +143,7 @@ public sealed partial class SuggestionService : ISuggestionService
                     Source = source,
                     Urgency = EnumConversions.ParseSuggestionUrgency(suggestionOutput.Urgency),
                     Confidence = suggestionOutput.Confidence,
+                    Reasoning = suggestionOutput.Reasoning,
                     TriggeredAt = DateTimeOffset.UtcNow,
                     SourceTranscriptLineIds = sourceLineIds
                 };
@@ -242,6 +243,7 @@ public sealed partial class SuggestionService : ISuggestionService
             Source = suggestion.Source.ToValue(),
             Urgency = suggestion.Urgency?.ToValue(),
             Confidence = suggestion.Confidence,
+            Reasoning = suggestion.Reasoning,
             SourceTranscriptLineIds = suggestion.SourceTranscriptLineIds,
             AcceptedAt = suggestion.AcceptedAt,
             DismissedAt = suggestion.DismissedAt
@@ -464,4 +466,5 @@ internal sealed class SuggestionItem
     public string Type { get; set; } = "clinical";
     public string Urgency { get; set; } = "medium";
     public float Confidence { get; set; } = 0.5f;
+    public string? Reasoning { get; set; }
 }

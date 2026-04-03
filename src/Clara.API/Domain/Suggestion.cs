@@ -43,6 +43,11 @@ public sealed class Suggestion
     public float? Confidence { get; set; }
 
     /// <summary>
+    /// LLM's reasoning for why this suggestion is relevant.
+    /// </summary>
+    public string? Reasoning { get; set; }
+
+    /// <summary>
     /// IDs of transcript lines that triggered this suggestion (evidence linking).
     /// Enables doctors to see which conversation triggered each suggestion.
     /// </summary>
