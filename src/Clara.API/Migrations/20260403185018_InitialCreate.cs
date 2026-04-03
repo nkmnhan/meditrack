@@ -17,6 +17,26 @@ namespace MediTrack.Migrations
                 .Annotation("Npgsql:PostgresExtension:vector", ",,");
 
             migrationBuilder.CreateTable(
+                name: "agent_memories",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    agent_id = table.Column<string>(type: "text", nullable: false),
+                    session_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    patient_id = table.Column<string>(type: "text", nullable: true),
+                    content = table.Column<string>(type: "text", nullable: false),
+                    memory_type = table.Column<string>(type: "text", nullable: false),
+                    embedding = table.Column<Vector>(type: "vector(1536)", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    last_accessed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    access_count = table.Column<int>(type: "integer", nullable: false, defaultValue: 0)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_agent_memories", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "documents",
                 columns: table => new
                 {
@@ -87,6 +107,7 @@ namespace MediTrack.Migrations
                     source = table.Column<string>(type: "text", nullable: false),
                     urgency = table.Column<string>(type: "text", nullable: true),
                     confidence = table.Column<float>(type: "real", nullable: true),
+                    reasoning = table.Column<string>(type: "text", nullable: true),
                     source_transcript_line_ids = table.Column<List<Guid>>(type: "jsonb", nullable: false),
                     accepted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     dismissed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
@@ -123,6 +144,30 @@ namespace MediTrack.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_agent_memories_agent_id",
+                table: "agent_memories",
+                column: "agent_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_agent_memories_created_at",
+                table: "agent_memories",
+                column: "created_at");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_agent_memories_embedding",
+                table: "agent_memories",
+                column: "embedding")
+                .Annotation("Npgsql:IndexMethod", "hnsw")
+                .Annotation("Npgsql:IndexOperators", new[] { "vector_cosine_ops" })
+                .Annotation("Npgsql:StorageParameter:ef_construction", 64)
+                .Annotation("Npgsql:StorageParameter:m", 16);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_agent_memories_patient_id",
+                table: "agent_memories",
+                column: "patient_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_knowledge_chunks_category",
@@ -182,6 +227,9 @@ namespace MediTrack.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "agent_memories");
+
             migrationBuilder.DropTable(
                 name: "knowledge_chunks");
 
