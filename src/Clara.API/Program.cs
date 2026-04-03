@@ -60,7 +60,15 @@ builder.Services.AddScoped<IKnowledgeService, KnowledgeService>();
 builder.Services.AddScoped<ICorrectiveRagService, CorrectiveRagService>();
 builder.Services.AddScoped<IPatientContextService, PatientContextService>();
 builder.Services.AddScoped<ISuggestionCriticService, SuggestionCriticService>();
-builder.Services.AddScoped<IAgentService, ClaraDoctorAgent>();
+
+// Agent registry — keyed so callers can resolve by agent ID
+builder.Services.AddKeyedScoped<IAgentService, ClaraDoctorAgent>("clara-doctor");
+builder.Services.AddKeyedScoped<IAgentService, PatientCompanionAgent>("patient-companion");
+
+// Default agent resolved by SuggestionService (unkeyed) — doctor agent for clinical sessions
+builder.Services.AddScoped<IAgentService>(sp =>
+    sp.GetRequiredKeyedService<IAgentService>("clara-doctor"));
+
 builder.Services.AddScoped<ISuggestionService, SuggestionService>();
 
 // Analytics service (admin reports)
