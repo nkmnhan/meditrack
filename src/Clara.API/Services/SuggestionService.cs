@@ -10,14 +10,15 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Clara.API.Services;
 
 /// <summary>
-/// Generates AI suggestions using LLM with RAG context and patient information.
+/// Generates AI suggestions using a ReAct agent loop.
+/// The LLM decides which tools to call (search_knowledge, get_patient_context)
+/// rather than always running both regardless of relevance.
 /// Uses IChatClient (Microsoft.Extensions.AI) for LLM-agnostic integration.
 /// </summary>
 public sealed partial class SuggestionService : ISuggestionService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ClaraDbContext _db;
-    private readonly IKnowledgeService _knowledgeService;
     private readonly IPatientContextService _patientContextService;
     private readonly SkillLoaderService _skillLoaderService;
     private readonly ILogger<SuggestionService> _logger;
@@ -41,14 +42,12 @@ public sealed partial class SuggestionService : ISuggestionService
     public SuggestionService(
         IServiceProvider serviceProvider,
         ClaraDbContext db,
-        IKnowledgeService knowledgeService,
         IPatientContextService patientContextService,
         SkillLoaderService skillLoaderService,
         ILogger<SuggestionService> logger)
     {
         _serviceProvider = serviceProvider;
         _db = db;
-        _knowledgeService = knowledgeService;
         _patientContextService = patientContextService;
         _skillLoaderService = skillLoaderService;
         _logger = logger;
@@ -56,7 +55,8 @@ public sealed partial class SuggestionService : ISuggestionService
     }
 
     /// <summary>
-    /// Generates AI suggestions for a session.
+    /// Generates AI suggestions for a session using a ReAct agent loop.
+    /// The LLM decides which tools to invoke based on the conversation content.
     /// </summary>
     /// <param name="sessionId">The session to generate suggestions for.</param>
     /// <param name="source">Trigger source: Batch (auto) or OnDemand (user-requested).</param>
@@ -98,29 +98,61 @@ public sealed partial class SuggestionService : ISuggestionService
             var conversationText = string.Join("\n", recentLines.Select(line =>
                 $"[{line.Speaker}]: {line.Text}"));
 
-            // Gather context in parallel
-            var knowledgeTask = GatherKnowledgeContextAsync(conversationText, cancellationToken);
-            var patientTask = session.PatientId != null
-                ? _patientContextService.GetPatientContextAsync(session.PatientId, cancellationToken)
-                : Task.FromResult<PatientContext?>(null);
-
-            await Task.WhenAll(knowledgeTask, patientTask);
-
-            var knowledgeContext = await knowledgeTask;
-            var patientContext = await patientTask;
-
             // Detect matching clinical skill
             var matchingSkill = _skillLoaderService.FindMatchingSkill(conversationText);
 
-            // Build the prompt
-            var prompt = BuildPrompt(conversationText, knowledgeContext, patientContext, matchingSkill);
+            // Build agent prompt — tools provide context on demand
+            var prompt = BuildAgentPrompt(conversationText, session.PatientId, matchingSkill);
 
-            // Resolve the appropriate keyed IChatClient based on suggestion source
+            // Create agent tools scoped to this request
+            var agentTools = new AgentTools(
+                _serviceProvider.GetRequiredService<ICorrectiveRagService>(),
+                _patientContextService,
+                _serviceProvider.GetRequiredService<ILogger<AgentTools>>());
+
+            // Resolve keyed chat client and wrap with function invocation
             var chatClientKey = source == SuggestionSourceEnum.OnDemand ? "ondemand" : "batch";
-            var chatClient = _serviceProvider.GetRequiredKeyedService<IChatClient>(chatClientKey);
+            var innerClient = _serviceProvider.GetRequiredKeyedService<IChatClient>(chatClientKey);
+            var agentClient = new ChatClientBuilder(innerClient)
+                .UseFunctionInvocation()
+                .Build();
 
-            // Call LLM
-            var llmResponse = await CallLlmAsync(chatClient, prompt, cancellationToken);
+            // ReAct loop — LLM decides which tools to call, M.E.AI handles the loop
+            var messages = new List<ChatMessage>
+            {
+                new(ChatRole.System, _systemPrompt),
+                new(ChatRole.User, prompt)
+            };
+
+            var chatOptions = new ChatOptions
+            {
+                Tools = agentTools.CreateAITools(),
+                Temperature = 0.3f,
+                MaxOutputTokens = 500,
+                ResponseFormat = ChatResponseFormat.Json,
+            };
+
+            var response = await agentClient.GetResponseAsync(messages, chatOptions, cancellationToken);
+            var responseText = response.Text;
+
+            stopwatch.Stop();
+
+            if (string.IsNullOrWhiteSpace(responseText))
+            {
+                _logger.LogWarning("Empty response from agent loop for session {SessionId}", sessionId);
+                return [];
+            }
+
+            if (response.Usage != null)
+            {
+                _logger.LogInformation(
+                    "Agent loop: input={InputTokens}, output={OutputTokens}, latency={LatencyMs}ms",
+                    response.Usage.InputTokenCount,
+                    response.Usage.OutputTokenCount,
+                    stopwatch.ElapsedMilliseconds);
+            }
+
+            var llmResponse = ParseLlmResponse(responseText, _logger);
 
             if (llmResponse == null || llmResponse.Suggestions.Count == 0)
             {
@@ -153,8 +185,6 @@ public sealed partial class SuggestionService : ISuggestionService
             }
 
             await _db.SaveChangesAsync(cancellationToken);
-
-            stopwatch.Stop();
 
             _logger.LogInformation(
                 "Generated {SuggestionCount} suggestions for session {SessionId} ({Source}) in {ElapsedMs}ms. Skill: {Skill}",
@@ -250,38 +280,13 @@ public sealed partial class SuggestionService : ISuggestionService
         };
     }
 
-    private async Task<string> GatherKnowledgeContextAsync(
+    /// <summary>
+    /// Builds the agent prompt. Tools provide knowledge and patient context on demand —
+    /// the LLM decides what to fetch based on the conversation content.
+    /// </summary>
+    internal static string BuildAgentPrompt(
         string conversationText,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var results = await _knowledgeService.SearchForContextAsync(
-                conversationText,
-                topK: 3,
-                cancellationToken);
-
-            if (results.Count == 0)
-            {
-                return "";
-            }
-
-            var contextParts = results.Select(result =>
-                $"[Source: {result.DocumentName}]\n{result.Content}");
-
-            return $"## Relevant Medical Guidelines\n\n{string.Join("\n\n", contextParts)}";
-        }
-        catch (Exception exception)
-        {
-            _logger.LogWarning(exception, "Failed to gather knowledge context, continuing without it");
-            return "";
-        }
-    }
-
-    internal static string BuildPrompt(
-        string conversationText,
-        string knowledgeContext,
-        PatientContext? patientContext,
+        string? patientId,
         ClinicalSkill? matchingSkill)
     {
         var parts = new List<string>
@@ -291,90 +296,22 @@ public sealed partial class SuggestionService : ISuggestionService
             "</TRANSCRIPT>"
         };
 
-        if (!string.IsNullOrWhiteSpace(knowledgeContext))
+        if (!string.IsNullOrWhiteSpace(patientId))
         {
-            parts.Add(knowledgeContext);
+            parts.Add($"\nPatient ID for context lookup: {patientId}");
+            parts.Add("Use the get_patient_context tool if the conversation references patient history, medications, or allergies.");
         }
 
-        if (patientContext != null)
-        {
-            var patientSection = patientContext.ToPromptSection();
-            if (!string.IsNullOrWhiteSpace(patientSection))
-            {
-                parts.Add("<PATIENT_CONTEXT>");
-                parts.Add(patientSection);
-                parts.Add("</PATIENT_CONTEXT>");
-            }
-        }
+        parts.Add("\nUse the search_knowledge tool if you need clinical guidelines to support your suggestions.");
 
         if (matchingSkill != null)
         {
-            parts.Add($"## Active Clinical Skill: {matchingSkill.Name}");
+            parts.Add($"\n## Active Clinical Skill: {matchingSkill.Name}");
             parts.Add(matchingSkill.Content);
         }
 
         parts.Add("\nBased on the above, provide your clinical suggestions:");
-
         return string.Join("\n\n", parts);
-    }
-
-    private async Task<SuggestionLlmResponse?> CallLlmAsync(
-        IChatClient chatClient,
-        string userPrompt,
-        CancellationToken cancellationToken)
-    {
-        var stopwatch = Stopwatch.StartNew();
-
-        try
-        {
-            var messages = new List<ChatMessage>
-            {
-                new(ChatRole.System, _systemPrompt),
-                new(ChatRole.User, userPrompt)
-            };
-
-            var chatOptions = new ChatOptions
-            {
-                Temperature = 0.3f,
-                MaxOutputTokens = 300,
-                ResponseFormat = ChatResponseFormat.Json,
-            };
-
-            var response = await chatClient.GetResponseAsync(
-                messages,
-                chatOptions,
-                cancellationToken);
-
-            stopwatch.Stop();
-
-            // Extract text content from response
-            var responseText = response.Text;
-
-            if (string.IsNullOrWhiteSpace(responseText))
-            {
-                _logger.LogWarning("Empty response from LLM");
-                return null;
-            }
-
-            // Log token usage for cost tracking
-            if (response.Usage != null)
-            {
-                _logger.LogInformation(
-                    "LLM call completed: input tokens {InputTokens}, output tokens {OutputTokens}, latency {LatencyMs}ms",
-                    response.Usage.InputTokenCount,
-                    response.Usage.OutputTokenCount,
-                    stopwatch.ElapsedMilliseconds);
-            }
-
-            // Parse JSON response
-            var result = ParseLlmResponse(responseText, _logger);
-            return result;
-        }
-        catch (Exception exception)
-        {
-            _logger.LogError(exception, "LLM call failed after {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
-            return null;
-        }
     }
 
     internal static SuggestionLlmResponse? ParseLlmResponse(string responseText, ILogger logger)

@@ -6,6 +6,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [Unreleased]
 
 ### Added
+- ReAct agent loop for Clara suggestion generation (2026-04-03) — P1.3
+  - `AgentTools.cs` — two AI-callable tools: `search_knowledge` (CorrectiveRAG) and `get_patient_context`
+  - `SuggestionService.GenerateSuggestionsAsync` replaced hardcoded pipeline with `FunctionInvokingChatClient` ReAct loop
+  - LLM now decides which tools to call based on conversation content (no longer always-RAG + always-patient-context)
+  - `BuildAgentPrompt` replaces old 4-param `BuildPrompt` — instructs LLM on available tools, inlines clinical skill
+  - `IKnowledgeService` removed from `SuggestionService` constructor (now accessed via `AgentTools` → `CorrectiveRagService`)
+  - Token budget increased to 500 (was 300) to accommodate tool-call round-trips
+  - 8 new unit tests in `AgentToolsTests.cs` (tool output format, empty results, tool registration)
+  - 8 updated tests in `SuggestionServiceBuildPromptTests.cs` for new `BuildAgentPrompt` contract
 - PHI audit trail for Clara AI context access (2026-04-03) — HIPAA P2.5
   - `PatientContextService` now injects `IPHIAuditService` and publishes an audit event on every patient context access
   - Success path: logs accessed fields (`age,gender,allergies,medications,conditions,recentVisit`) with `action: AIContextAccess`
