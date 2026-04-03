@@ -1,17 +1,77 @@
 using Clara.API.Domain;
 using Clara.API.Services;
 using FluentAssertions;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
 using Xunit;
 
 namespace Clara.UnitTests.Services;
 
-/// <summary>
-/// Tests for the agent prompt builder. BuildAgentPrompt moved from SuggestionService
-/// to ClaraDoctorAgent in the Task 8 agent abstraction refactor — test class renamed
-/// but behavior is identical.
-/// </summary>
-public sealed class SuggestionServiceBuildPromptTests
+public sealed class ClaraDoctorAgentTests
 {
+    private readonly ICorrectiveRagService _ragService;
+    private readonly IPatientContextService _patientContextService;
+    private readonly SkillLoaderService _skillLoaderService;
+    private readonly IServiceProvider _serviceProvider;
+    private readonly ClaraDoctorAgent _agent;
+
+    public ClaraDoctorAgentTests()
+    {
+        _ragService = Substitute.For<ICorrectiveRagService>();
+        _patientContextService = Substitute.For<IPatientContextService>();
+        _skillLoaderService = new SkillLoaderService(
+            NullLogger<SkillLoaderService>.Instance,
+            new ConfigurationBuilder().Build());
+        _serviceProvider = Substitute.For<IServiceProvider>();
+
+        // Use a hand-written stub for the internal ISuggestionCriticService interface —
+        // NSubstitute cannot proxy internal types without strong-naming the assembly.
+        _agent = new ClaraDoctorAgent(
+            _serviceProvider,
+            _ragService,
+            _patientContextService,
+            new PassThroughCriticService(),
+            _skillLoaderService,
+            NullLogger<ClaraDoctorAgent>.Instance);
+    }
+
+    [Fact]
+    public void AgentId_ReturnsClaraDoctorId()
+    {
+        _agent.AgentId.Should().Be("clara-doctor");
+    }
+
+    [Fact]
+    public void DisplayName_ReturnsExpectedName()
+    {
+        _agent.DisplayName.Should().Be("Clara — Clinical Assistant");
+    }
+
+    [Fact]
+    public void Tools_ContainsTwoTools()
+    {
+        var tools = _agent.Tools;
+
+        tools.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void Tools_ContainsSearchKnowledgeTool()
+    {
+        var tools = _agent.Tools;
+
+        tools.Should().ContainSingle(tool => tool.Name == "search_knowledge");
+    }
+
+    [Fact]
+    public void Tools_ContainsGetPatientContextTool()
+    {
+        var tools = _agent.Tools;
+
+        tools.Should().ContainSingle(tool => tool.Name == "get_patient_context");
+    }
+
     [Fact]
     public void BuildAgentPrompt_WithConversationOnly_ShouldContainConversationHeader()
     {
@@ -35,7 +95,6 @@ public sealed class SuggestionServiceBuildPromptTests
             patientId: null,
             matchingSkill: null);
 
-        // No patientId — the tool instruction must not appear
         result.Should().NotContain("get_patient_context");
         result.Should().NotContain("## Active Clinical Skill");
     }
@@ -76,7 +135,6 @@ public sealed class SuggestionServiceBuildPromptTests
             patientId: null,
             matchingSkill: null);
 
-        // The agent should always be instructed about the knowledge search tool
         result.Should().Contain("search_knowledge");
     }
 
@@ -131,7 +189,20 @@ public sealed class SuggestionServiceBuildPromptTests
             patientId: null,
             matchingSkill: null);
 
-        // Without a patientId there is nothing to look up — tool hint must be absent
         result.Should().NotContain("get_patient_context");
+    }
+
+    /// <summary>
+    /// Minimal stub that passes suggestions through unchanged.
+    /// Used in place of NSubstitute because ISuggestionCriticService is internal
+    /// and Castle DynamicProxy cannot proxy internal types without a strong-named assembly.
+    /// </summary>
+    private sealed class PassThroughCriticService : ISuggestionCriticService
+    {
+        public Task<List<SuggestionItem>> CritiqueAsync(
+            List<SuggestionItem> suggestions,
+            string transcript,
+            CancellationToken cancellationToken = default)
+            => Task.FromResult(suggestions);
     }
 }

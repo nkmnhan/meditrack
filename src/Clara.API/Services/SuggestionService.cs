@@ -5,25 +5,21 @@ using Clara.API.Application.Models;
 using Clara.API.Data;
 using Clara.API.Domain;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.AI;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Clara.API.Services;
 
 /// <summary>
-/// Generates AI suggestions using a ReAct agent loop.
-/// The LLM decides which tools to call (search_knowledge, get_patient_context)
-/// rather than always running both regardless of relevance.
-/// Uses IChatClient (Microsoft.Extensions.AI) for LLM-agnostic integration.
+/// Thin orchestrator for AI-driven suggestion generation.
+/// Responsibilities: load session transcript, build agent context, delegate to IAgentService,
+/// persist returned suggestions, and handle accept/dismiss lifecycle.
+/// All AI reasoning logic lives in the agent (ClaraDoctorAgent).
 /// </summary>
 public sealed partial class SuggestionService : ISuggestionService
 {
-    private readonly IServiceProvider _serviceProvider;
     private readonly ClaraDbContext _db;
-    private readonly IPatientContextService _patientContextService;
+    private readonly IAgentService _agent;
     private readonly SkillLoaderService _skillLoaderService;
     private readonly ILogger<SuggestionService> _logger;
-    private readonly string _systemPrompt;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -41,28 +37,21 @@ public sealed partial class SuggestionService : ISuggestionService
     }
 
     public SuggestionService(
-        IServiceProvider serviceProvider,
         ClaraDbContext db,
-        IPatientContextService patientContextService,
+        IAgentService agent,
         SkillLoaderService skillLoaderService,
         ILogger<SuggestionService> logger)
     {
-        _serviceProvider = serviceProvider;
         _db = db;
-        _patientContextService = patientContextService;
+        _agent = agent;
         _skillLoaderService = skillLoaderService;
         _logger = logger;
-        _systemPrompt = LoadSystemPrompt();
     }
 
     /// <summary>
-    /// Generates AI suggestions for a session using a ReAct agent loop.
-    /// The LLM decides which tools to invoke based on the conversation content.
+    /// Generates AI suggestions for a session by delegating to the agent.
+    /// Handles data loading and DB persistence; agent handles all AI reasoning.
     /// </summary>
-    /// <param name="sessionId">The session to generate suggestions for.</param>
-    /// <param name="source">Trigger source: Batch (auto) or OnDemand (user-requested).</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>List of generated suggestions.</returns>
     public async Task<List<Suggestion>> GenerateSuggestionsAsync(
         Guid sessionId,
         SuggestionSourceEnum source,
@@ -103,98 +92,37 @@ public sealed partial class SuggestionService : ISuggestionService
             // Detect matching clinical skill
             var matchingSkill = _skillLoaderService.FindMatchingSkill(conversationText);
 
-            // Build agent prompt — tools provide context on demand
-            var prompt = BuildAgentPrompt(conversationText, session.PatientId, matchingSkill);
-
-            // Create agent tools scoped to this request
-            var agentTools = new AgentTools(
-                _serviceProvider.GetRequiredService<ICorrectiveRagService>(),
-                _patientContextService,
-                _serviceProvider.GetRequiredService<ILogger<AgentTools>>());
-
-            // Wire agent event callback so tool calls emit progressive UI events
-            agentTools.SetEventCallback(onAgentEvent);
-
-            if (onAgentEvent != null)
-                await onAgentEvent(new AgentEvent.Thinking(1));
-
-            // Resolve keyed chat client and wrap with function invocation
-            var chatClientKey = source == SuggestionSourceEnum.OnDemand ? "ondemand" : "batch";
-            var innerClient = _serviceProvider.GetRequiredKeyedService<IChatClient>(chatClientKey);
-            var agentClient = new ChatClientBuilder(innerClient)
-                .UseFunctionInvocation()
-                .Build();
-
-            // ReAct loop — LLM decides which tools to call, M.E.AI handles the loop
-            var messages = new List<ChatMessage>
+            // Delegate reasoning to the agent
+            var agentContext = new AgentContext
             {
-                new(ChatRole.System, _systemPrompt),
-                new(ChatRole.User, prompt)
+                SessionId = sessionId,
+                ConversationText = conversationText,
+                PatientId = session.PatientId,
+                Source = source,
+                MatchingSkill = matchingSkill
             };
 
-            var chatOptions = new ChatOptions
-            {
-                Tools = agentTools.CreateAITools(),
-                Temperature = 0.3f,
-                MaxOutputTokens = 500,
-                ResponseFormat = ChatResponseFormat.Json,
-            };
+            var verifiedItems = await _agent.ProcessAsync(agentContext, onAgentEvent, cancellationToken);
 
-            var response = await agentClient.GetResponseAsync(messages, chatOptions, cancellationToken);
-            var responseText = response.Text;
-
-            stopwatch.Stop();
-
-            if (string.IsNullOrWhiteSpace(responseText))
-            {
-                _logger.LogWarning("Empty response from agent loop for session {SessionId}", sessionId);
+            if (verifiedItems.Count == 0)
                 return [];
-            }
-
-            if (response.Usage != null)
-            {
-                _logger.LogInformation(
-                    "Agent loop: input={InputTokens}, output={OutputTokens}, latency={LatencyMs}ms",
-                    response.Usage.InputTokenCount,
-                    response.Usage.OutputTokenCount,
-                    stopwatch.ElapsedMilliseconds);
-            }
-
-            var llmResponse = ParseLlmResponse(responseText, _logger);
-
-            if (llmResponse == null || llmResponse.Suggestions.Count == 0)
-            {
-                _logger.LogDebug("No suggestions generated for session {SessionId}", sessionId);
-                return [];
-            }
-
-            // Reflection/critique — verify suggestions against transcript to catch hallucinations
-            var criticService = _serviceProvider.GetRequiredService<ISuggestionCriticService>();
-            var verifiedSuggestions = await criticService.CritiqueAsync(
-                llmResponse.Suggestions, conversationText, cancellationToken);
-
-            if (verifiedSuggestions.Count == 0)
-            {
-                _logger.LogDebug("Critic removed all suggestions for session {SessionId}", sessionId);
-                return [];
-            }
 
             // Save verified suggestions to DB
             var suggestions = new List<Suggestion>();
             var sourceLineIds = recentLines.Select(line => line.Id).ToList();
 
-            foreach (var suggestionOutput in verifiedSuggestions)
+            foreach (var suggestionItem in verifiedItems)
             {
                 var suggestion = new Suggestion
                 {
                     Id = Guid.NewGuid(),
                     SessionId = sessionId,
-                    Content = suggestionOutput.Content,
-                    Type = EnumConversions.ParseSuggestionType(suggestionOutput.Type),
+                    Content = suggestionItem.Content,
+                    Type = EnumConversions.ParseSuggestionType(suggestionItem.Type),
                     Source = source,
-                    Urgency = EnumConversions.ParseSuggestionUrgency(suggestionOutput.Urgency),
-                    Confidence = suggestionOutput.Confidence,
-                    Reasoning = suggestionOutput.Reasoning,
+                    Urgency = EnumConversions.ParseSuggestionUrgency(suggestionItem.Urgency),
+                    Confidence = suggestionItem.Confidence,
+                    Reasoning = suggestionItem.Reasoning,
                     TriggeredAt = DateTimeOffset.UtcNow,
                     SourceTranscriptLineIds = sourceLineIds
                 };
@@ -205,6 +133,7 @@ public sealed partial class SuggestionService : ISuggestionService
 
             await _db.SaveChangesAsync(cancellationToken);
 
+            stopwatch.Stop();
             _logger.LogInformation(
                 "Generated {SuggestionCount} suggestions for session {SessionId} ({Source}) in {ElapsedMs}ms. Skill: {Skill}",
                 suggestions.Count,
@@ -212,9 +141,6 @@ public sealed partial class SuggestionService : ISuggestionService
                 source,
                 stopwatch.ElapsedMilliseconds,
                 matchingSkill?.Id ?? "none");
-
-            if (onAgentEvent != null)
-                await onAgentEvent(new AgentEvent.Completed(suggestions.Count, stopwatch.ElapsedMilliseconds));
 
             return suggestions;
         }
@@ -307,39 +233,11 @@ public sealed partial class SuggestionService : ISuggestionService
     }
 
     /// <summary>
-    /// Builds the agent prompt. Tools provide knowledge and patient context on demand —
-    /// the LLM decides what to fetch based on the conversation content.
+    /// Parses the LLM JSON response into a structured suggestion list.
+    /// Kept on SuggestionService as a static utility shared by all agent implementations
+    /// (e.g. ClaraDoctorAgent, future patient-facing agents).
+    /// Validates and sanitizes all fields before returning.
     /// </summary>
-    internal static string BuildAgentPrompt(
-        string conversationText,
-        string? patientId,
-        ClinicalSkill? matchingSkill)
-    {
-        var parts = new List<string>
-        {
-            "## Current Conversation\n<TRANSCRIPT>",
-            conversationText,
-            "</TRANSCRIPT>"
-        };
-
-        if (!string.IsNullOrWhiteSpace(patientId))
-        {
-            parts.Add($"\nPatient ID for context lookup: {patientId}");
-            parts.Add("Use the get_patient_context tool if the conversation references patient history, medications, or allergies.");
-        }
-
-        parts.Add("\nUse the search_knowledge tool if you need clinical guidelines to support your suggestions.");
-
-        if (matchingSkill != null)
-        {
-            parts.Add($"\n## Active Clinical Skill: {matchingSkill.Name}");
-            parts.Add(matchingSkill.Content);
-        }
-
-        parts.Add("\nBased on the above, provide your clinical suggestions:");
-        return string.Join("\n\n", parts);
-    }
-
     internal static SuggestionLlmResponse? ParseLlmResponse(string responseText, ILogger logger)
     {
         try
@@ -397,19 +295,6 @@ public sealed partial class SuggestionService : ISuggestionService
             return null;
         }
     }
-
-    private static string LoadSystemPrompt()
-    {
-        var promptPath = Path.Combine(AppContext.BaseDirectory, "Prompts", "system.txt");
-
-        if (!File.Exists(promptPath))
-        {
-            throw new FileNotFoundException(
-                $"System prompt file not found at {promptPath}. Ensure Prompts/system.txt is included in the build output.");
-        }
-
-        return File.ReadAllText(promptPath);
-    }
 }
 
 /// <summary>
@@ -421,9 +306,10 @@ internal sealed class SuggestionLlmResponse
 }
 
 /// <summary>
-/// A single suggestion item from LLM.
+/// A single suggestion item from LLM. Public so IAgentService implementations
+/// can return verified items to SuggestionService without an extra DTO.
 /// </summary>
-internal sealed class SuggestionItem
+public sealed class SuggestionItem
 {
     public required string Content { get; set; }
     public string Type { get; set; } = "clinical";
