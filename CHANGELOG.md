@@ -6,6 +6,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [Unreleased]
 
 ### Added
+- PHI audit trail for Clara AI context access (2026-04-03) — HIPAA P2.5
+  - `PatientContextService` now injects `IPHIAuditService` and publishes an audit event on every patient context access
+  - Success path: logs accessed fields (`age,gender,allergies,medications,conditions,recentVisit`) with `action: AIContextAccess`
+  - Failure paths (HTTP error, `HttpRequestException`): logs `success: false` with the error detail
+  - Null/empty `patientId` (early-return guard): no audit event published
+  - Audit call is best-effort — wrapped in try/catch so failures never interrupt clinical workflows
+  - `PHIAuditService` and `RabbitMQ EventBus` registered in `Clara.API/Program.cs`
+  - 3 new unit tests in `PHIAuditTests.cs` covering success, HTTP failure, and null patientId paths
 - Clara agentic AI improvements — research-driven enhancements (2026-04-02)
   - P0: Urgent keyword bypass in BatchTriggerService (chest pain, seizure, etc. → immediate suggestions)
   - P0: Disconnect cleanup — batch trigger timers cleaned up when SignalR disconnects

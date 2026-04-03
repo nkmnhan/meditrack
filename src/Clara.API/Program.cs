@@ -5,9 +5,11 @@ using Clara.API.Extensions;
 using Clara.API.Health;
 using Clara.API.Hubs;
 using Clara.API.Services;
+using MediTrack.EventBusRabbitMQ;
 using FluentValidation;
 using MediTrack.ServiceDefaults;
 using MediTrack.ServiceDefaults.Extensions;
+using MediTrack.Shared.Services;
 using Microsoft.EntityFrameworkCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -42,6 +44,10 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 // Batch trigger options (AI:Batching config section)
 builder.Services.Configure<BatchTriggerOptions>(
     builder.Configuration.GetSection(BatchTriggerOptions.SectionName));
+
+// PHI audit event bus (HIPAA mandatory — every AI-PHI interaction must be audit-logged)
+builder.Services.AddRabbitMQEventBus(builder.Configuration);
+builder.Services.AddScoped<IPHIAuditService, PHIAuditService>();
 
 // Session management services
 builder.Services.AddSingleton<IBatchTriggerService, BatchTriggerService>();

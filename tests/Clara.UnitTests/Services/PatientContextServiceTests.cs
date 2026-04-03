@@ -2,6 +2,7 @@ using System.Net;
 using Clara.API.Services;
 using Clara.UnitTests.TestInfrastructure;
 using FluentAssertions;
+using MediTrack.Shared.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Xunit;
@@ -19,7 +20,10 @@ public sealed class PatientContextServiceTests
         var httpClient = new HttpClient(_httpHandler) { BaseAddress = new Uri("http://localhost:5002") };
         var httpClientFactory = Substitute.For<IHttpClientFactory>();
         httpClientFactory.CreateClient("PatientApi").Returns(httpClient);
-        _service = new PatientContextService(httpClientFactory, NullLogger<PatientContextService>.Instance);
+        _service = new PatientContextService(
+            httpClientFactory,
+            Substitute.For<IPHIAuditService>(),
+            NullLogger<PatientContextService>.Instance);
     }
 
     [Fact]
