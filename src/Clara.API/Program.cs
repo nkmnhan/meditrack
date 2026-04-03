@@ -70,6 +70,7 @@ builder.Services.AddScoped<IAgentService>(sp =>
     sp.GetRequiredKeyedService<IAgentService>("clara-doctor"));
 
 builder.Services.AddScoped<ISuggestionService, SuggestionService>();
+builder.Services.AddScoped<IAgentMemoryService, AgentMemoryService>();
 
 // Analytics service (admin reports)
 builder.Services.AddScoped<AnalyticsService>();

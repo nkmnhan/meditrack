@@ -6,6 +6,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [Unreleased]
 
 ### Added
+- Cross-session agent memory (2026-04-03) — P3.3
+  - `AgentMemory` domain entity — episodic/semantic observations with pgvector embedding for cosine similarity search
+  - `IAgentMemoryService` / `AgentMemoryService` — store, recall-by-patient (recency), recall-by-similarity (HNSW cosine)
+  - Embedding failure is non-fatal — memories are stored without a vector and fall back to recency recall
+  - Access metadata (`LastAccessedAt`, `AccessCount`) updated on every recall as an importance signal
+  - `ClaraDbContext.AgentMemories` DbSet + `agent_memories` table with HNSW index (`vector_cosine_ops`, m=16, ef_construction=64)
+  - `ClaraDbContext` made provider-aware — pgvector/jsonb columns ignored for InMemory provider (unit test compatibility)
+  - 10 unit tests in `AgentMemoryServiceTests.cs` (CRUD, filter by agent/patient, limit, access metadata, embedding failure, fallback)
+  - Registered as `IAgentMemoryService` → `AddScoped` in `Program.cs`
 - Reflection/Critique loop for suggestion hallucination detection (2026-04-03) — P2.4
   - `SuggestionCriticService` — second LLM call verifies each suggestion against the transcript
   - `ISuggestionCriticService` (internal) — interface in `Interfaces.cs`, keyed to `"batch"` chat client (GPT-4o-mini)

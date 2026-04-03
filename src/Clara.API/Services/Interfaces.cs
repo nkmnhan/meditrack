@@ -3,6 +3,42 @@ using Clara.API.Domain;
 
 namespace Clara.API.Services;
 
+public interface IAgentMemoryService
+{
+    /// <summary>
+    /// Stores an observation in persistent memory, generating a vector embedding for future
+    /// semantic recall. Embedding failure is non-fatal — the record is stored without a vector.
+    /// </summary>
+    Task<AgentMemory> StoreMemoryAsync(
+        string agentId,
+        Guid sessionId,
+        string? patientId,
+        string content,
+        string memoryType,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns the most recently accessed memories for a patient, ordered by recency.
+    /// Updates access metadata (LastAccessedAt, AccessCount) for every recalled record.
+    /// </summary>
+    Task<List<AgentMemory>> RecallMemoriesForPatientAsync(
+        string agentId,
+        string patientId,
+        int limit = 5,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns semantically similar memories using cosine distance on pgvector embeddings.
+    /// When embedding generation fails, falls back to <see cref="RecallMemoriesForPatientAsync"/>.
+    /// </summary>
+    Task<List<AgentMemory>> RecallSimilarMemoriesAsync(
+        string agentId,
+        string query,
+        string? patientId = null,
+        int limit = 5,
+        CancellationToken cancellationToken = default);
+}
+
 public interface ISuggestionService
 {
     Task<List<Suggestion>> GenerateSuggestionsAsync(

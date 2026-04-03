@@ -19,22 +19,30 @@ public sealed class ClaraDbContext : DbContext
     public DbSet<Suggestion> Suggestions => Set<Suggestion>();
     public DbSet<KnowledgeChunk> KnowledgeChunks => Set<KnowledgeChunk>();
     public DbSet<Document> Documents => Set<Document>();
+    public DbSet<AgentMemory> AgentMemories => Set<AgentMemory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // Enable pgvector extension
-        modelBuilder.HasPostgresExtension("vector");
+        // pgvector extension and HNSW indexes are PostgreSQL-specific.
+        // Skip them when using the InMemory provider (unit tests).
+        var isPostgres = Database.ProviderName == "Npgsql.EntityFrameworkCore.PostgreSQL";
 
-        ConfigureSession(modelBuilder);
+        if (isPostgres)
+        {
+            modelBuilder.HasPostgresExtension("vector");
+        }
+
+        ConfigureSession(modelBuilder, isPostgres);
         ConfigureTranscriptLine(modelBuilder);
-        ConfigureSuggestion(modelBuilder);
-        ConfigureKnowledgeChunk(modelBuilder);
+        ConfigureSuggestion(modelBuilder, isPostgres);
+        ConfigureKnowledgeChunk(modelBuilder, isPostgres);
         ConfigureDocument(modelBuilder);
+        ConfigureAgentMemory(modelBuilder, isPostgres);
     }
 
-    private static void ConfigureSession(ModelBuilder modelBuilder)
+    private static void ConfigureSession(ModelBuilder modelBuilder, bool isPostgres)
     {
         modelBuilder.Entity<Session>(entity =>
         {
@@ -73,9 +81,18 @@ public sealed class ClaraDbContext : DbContext
                 .HasColumnName("session_type")
                 .HasDefaultValue("Consultation");
 
-            entity.Property(session => session.SpeakerMap)
-                .HasColumnName("speaker_map")
-                .HasColumnType("jsonb");
+            // Dictionary<string, string> stored as jsonb in PostgreSQL.
+            // InMemory provider cannot map complex CLR types without a value converter — ignore the column.
+            if (isPostgres)
+            {
+                entity.Property(session => session.SpeakerMap)
+                    .HasColumnName("speaker_map")
+                    .HasColumnType("jsonb");
+            }
+            else
+            {
+                entity.Ignore(session => session.SpeakerMap);
+            }
 
             // Indexes for analytics queries
             entity.HasIndex(session => session.StartedAt);
@@ -127,7 +144,7 @@ public sealed class ClaraDbContext : DbContext
         });
     }
 
-    private static void ConfigureSuggestion(ModelBuilder modelBuilder)
+    private static void ConfigureSuggestion(ModelBuilder modelBuilder, bool isPostgres)
     {
         modelBuilder.Entity<Suggestion>(entity =>
         {
@@ -172,9 +189,18 @@ public sealed class ClaraDbContext : DbContext
             entity.Property(suggestion => suggestion.Confidence)
                 .HasColumnName("confidence");
 
-            entity.Property(suggestion => suggestion.SourceTranscriptLineIds)
-                .HasColumnName("source_transcript_line_ids")
-                .HasColumnType("jsonb");
+            // List<Guid> stored as jsonb in PostgreSQL.
+            // InMemory provider cannot map generic collections without a value converter — ignore the column.
+            if (isPostgres)
+            {
+                entity.Property(suggestion => suggestion.SourceTranscriptLineIds)
+                    .HasColumnName("source_transcript_line_ids")
+                    .HasColumnType("jsonb");
+            }
+            else
+            {
+                entity.Ignore(suggestion => suggestion.SourceTranscriptLineIds);
+            }
 
             entity.Property(suggestion => suggestion.Reasoning)
                 .HasColumnName("reasoning");
@@ -190,7 +216,7 @@ public sealed class ClaraDbContext : DbContext
         });
     }
 
-    private static void ConfigureKnowledgeChunk(ModelBuilder modelBuilder)
+    private static void ConfigureKnowledgeChunk(ModelBuilder modelBuilder, bool isPostgres)
     {
         modelBuilder.Entity<KnowledgeChunk>(entity =>
         {
@@ -208,9 +234,24 @@ public sealed class ClaraDbContext : DbContext
                 .HasColumnName("content")
                 .IsRequired();
 
-            entity.Property(chunk => chunk.Embedding)
-                .HasColumnName("embedding")
-                .HasColumnType("vector(1536)");
+            if (isPostgres)
+            {
+                entity.Property(chunk => chunk.Embedding)
+                    .HasColumnName("embedding")
+                    .HasColumnType("vector(1536)");
+
+                // HNSW index for vector similarity search
+                entity.HasIndex(chunk => chunk.Embedding)
+                    .HasMethod("hnsw")
+                    .HasOperators("vector_cosine_ops")
+                    .HasStorageParameter("m", 16)
+                    .HasStorageParameter("ef_construction", 64);
+            }
+            else
+            {
+                // InMemory provider: Vector type is not supported — exclude the column
+                entity.Ignore(chunk => chunk.Embedding);
+            }
 
             entity.Property(chunk => chunk.Category)
                 .HasColumnName("category");
@@ -224,13 +265,6 @@ public sealed class ClaraDbContext : DbContext
 
             entity.Property(chunk => chunk.DocumentId)
                 .HasColumnName("document_id");
-
-            // HNSW index for vector similarity search
-            entity.HasIndex(chunk => chunk.Embedding)
-                .HasMethod("hnsw")
-                .HasOperators("vector_cosine_ops")
-                .HasStorageParameter("m", 16)
-                .HasStorageParameter("ef_construction", 64);
 
             entity.HasIndex(chunk => chunk.DocumentName);
             entity.HasIndex(chunk => chunk.Category);
@@ -269,6 +303,69 @@ public sealed class ClaraDbContext : DbContext
                 .WithOne(chunk => chunk.Document)
                 .HasForeignKey(chunk => chunk.DocumentId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+    }
+
+    private static void ConfigureAgentMemory(ModelBuilder modelBuilder, bool isPostgres)
+    {
+        modelBuilder.Entity<AgentMemory>(entity =>
+        {
+            entity.ToTable("agent_memories");
+
+            entity.HasKey(memory => memory.Id);
+            entity.Property(memory => memory.Id)
+                .HasColumnName("id");
+
+            entity.Property(memory => memory.AgentId)
+                .HasColumnName("agent_id")
+                .IsRequired();
+
+            entity.Property(memory => memory.SessionId)
+                .HasColumnName("session_id");
+
+            entity.Property(memory => memory.PatientId)
+                .HasColumnName("patient_id");
+
+            entity.Property(memory => memory.Content)
+                .HasColumnName("content")
+                .IsRequired();
+
+            entity.Property(memory => memory.MemoryType)
+                .HasColumnName("memory_type")
+                .IsRequired();
+
+            if (isPostgres)
+            {
+                entity.Property(memory => memory.Embedding)
+                    .HasColumnName("embedding")
+                    .HasColumnType("vector(1536)");
+
+                // HNSW index for approximate nearest-neighbour cosine search
+                entity.HasIndex(memory => memory.Embedding)
+                    .HasMethod("hnsw")
+                    .HasOperators("vector_cosine_ops")
+                    .HasStorageParameter("m", 16)
+                    .HasStorageParameter("ef_construction", 64);
+            }
+            else
+            {
+                // InMemory provider: Vector type is not supported — exclude the column
+                entity.Ignore(memory => memory.Embedding);
+            }
+
+            entity.Property(memory => memory.CreatedAt)
+                .HasColumnName("created_at");
+
+            entity.Property(memory => memory.LastAccessedAt)
+                .HasColumnName("last_accessed_at");
+
+            entity.Property(memory => memory.AccessCount)
+                .HasColumnName("access_count")
+                .HasDefaultValue(0);
+
+            entity.HasIndex(memory => memory.AgentId);
+            entity.HasIndex(memory => memory.PatientId);
+            entity.HasIndex(memory => memory.CreatedAt);
         });
     }
 }
