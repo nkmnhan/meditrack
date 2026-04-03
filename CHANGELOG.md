@@ -6,6 +6,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [Unreleased]
 
 ### Added
+- Reflection/Critique loop for suggestion hallucination detection (2026-04-03) — P2.4
+  - `SuggestionCriticService` — second LLM call verifies each suggestion against the transcript
+  - `ISuggestionCriticService` (internal) — interface in `Interfaces.cs`, keyed to `"batch"` chat client (GPT-4o-mini)
+  - `Prompts/critic.txt` — critic prompt: rules for supported/unsupported/revised judgments
+  - `SuggestionService.GenerateSuggestionsAsync` — integrates critic after `ParseLlmResponse`, before DB save
+  - Unsupported suggestions removed; supported with improved phrasing are revised in-place
+  - Graceful degradation: any critic failure returns original suggestions unchanged (never blocks generation)
+  - 4 unit tests in `SuggestionCriticServiceTests.cs` (all-supported, removed, revised, LLM-failure paths)
 - ReAct agent loop for Clara suggestion generation (2026-04-03) — P1.3
   - `AgentTools.cs` — two AI-callable tools: `search_knowledge` (CorrectiveRAG) and `get_patient_context`
   - `SuggestionService.GenerateSuggestionsAsync` replaced hardcoded pipeline with `FunctionInvokingChatClient` ReAct loop

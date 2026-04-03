@@ -43,3 +43,11 @@ public interface ISessionService
     Task<SessionResponse?> GetSessionAsync(Guid sessionId, string doctorId, CancellationToken cancellationToken = default);
     Task<SessionResponse> EndSessionAsync(Guid sessionId, string doctorId, CancellationToken cancellationToken = default);
 }
+
+internal interface ISuggestionCriticService
+{
+    Task<List<SuggestionItem>> CritiqueAsync(
+        List<SuggestionItem> suggestions,
+        string transcript,
+        CancellationToken cancellationToken = default);
+}

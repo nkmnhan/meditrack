@@ -160,11 +160,22 @@ public sealed partial class SuggestionService : ISuggestionService
                 return [];
             }
 
-            // Save suggestions to DB
+            // Reflection/critique — verify suggestions against transcript to catch hallucinations
+            var criticService = _serviceProvider.GetRequiredService<ISuggestionCriticService>();
+            var verifiedSuggestions = await criticService.CritiqueAsync(
+                llmResponse.Suggestions, conversationText, cancellationToken);
+
+            if (verifiedSuggestions.Count == 0)
+            {
+                _logger.LogDebug("Critic removed all suggestions for session {SessionId}", sessionId);
+                return [];
+            }
+
+            // Save verified suggestions to DB
             var suggestions = new List<Suggestion>();
             var sourceLineIds = recentLines.Select(line => line.Id).ToList();
 
-            foreach (var suggestionOutput in llmResponse.Suggestions)
+            foreach (var suggestionOutput in verifiedSuggestions)
             {
                 var suggestion = new Suggestion
                 {

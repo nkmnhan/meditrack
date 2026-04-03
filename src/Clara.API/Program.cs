@@ -59,6 +59,7 @@ builder.Services.AddScoped<SpeakerDetectionService>();
 builder.Services.AddScoped<IKnowledgeService, KnowledgeService>();
 builder.Services.AddScoped<ICorrectiveRagService, CorrectiveRagService>();
 builder.Services.AddScoped<IPatientContextService, PatientContextService>();
+builder.Services.AddScoped<ISuggestionCriticService, SuggestionCriticService>();
 builder.Services.AddScoped<ISuggestionService, SuggestionService>();
 
 // Analytics service (admin reports)
