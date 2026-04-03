@@ -21,6 +21,15 @@ public interface IPatientContextService
     Task<PatientContext?> GetPatientContextAsync(string patientId, CancellationToken cancellationToken = default);
 }
 
+public interface ICorrectiveRagService
+{
+    Task<List<KnowledgeSearchResult>> SearchWithGradingAsync(
+        string query,
+        int topK = 3,
+        float minScore = 0.7f,
+        CancellationToken cancellationToken = default);
+}
+
 public interface IBatchTriggerService : IDisposable
 {
     Task OnTranscriptLineAddedAsync(string sessionId, TranscriptLine line);

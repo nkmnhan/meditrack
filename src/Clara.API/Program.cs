@@ -57,6 +57,7 @@ builder.Services.AddScoped<SpeakerDetectionService>();
 
 // AI suggestion services
 builder.Services.AddScoped<IKnowledgeService, KnowledgeService>();
+builder.Services.AddScoped<ICorrectiveRagService, CorrectiveRagService>();
 builder.Services.AddScoped<IPatientContextService, PatientContextService>();
 builder.Services.AddScoped<ISuggestionService, SuggestionService>();
 
