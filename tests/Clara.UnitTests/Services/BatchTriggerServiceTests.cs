@@ -76,7 +76,7 @@ public sealed class BatchTriggerServiceTests : IDisposable
     public async Task OnTranscriptLineAddedAsync_WithUrgentKeyword_FromPatient_ShouldTriggerImmediately()
     {
         var sessionId = Guid.NewGuid().ToString();
-        _suggestionService.GenerateSuggestionsAsync(Arg.Any<Guid>(), Arg.Any<SuggestionSourceEnum>(), Arg.Any<CancellationToken>())
+        _suggestionService.GenerateSuggestionsAsync(Arg.Any<Guid>(), Arg.Any<SuggestionSourceEnum>(), Arg.Any<Func<AgentEvent, Task>?>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         var urgentLine = CreateTranscriptLine(SpeakerRole.Patient, "I have severe chest pain");
@@ -101,7 +101,7 @@ public sealed class BatchTriggerServiceTests : IDisposable
     public async Task OnTranscriptLineAddedAsync_WithUrgentKeyword_CaseInsensitive_ShouldTrigger()
     {
         var sessionId = Guid.NewGuid().ToString();
-        _suggestionService.GenerateSuggestionsAsync(Arg.Any<Guid>(), Arg.Any<SuggestionSourceEnum>(), Arg.Any<CancellationToken>())
+        _suggestionService.GenerateSuggestionsAsync(Arg.Any<Guid>(), Arg.Any<SuggestionSourceEnum>(), Arg.Any<Func<AgentEvent, Task>?>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         var urgentLine = CreateTranscriptLine(SpeakerRole.Patient, "I CAN'T BREATHE");
@@ -121,7 +121,7 @@ public sealed class BatchTriggerServiceTests : IDisposable
             NullLogger<BatchTriggerService>.Instance, _scopeFactory, customOptions);
 
         var sessionId = Guid.NewGuid().ToString();
-        _suggestionService.GenerateSuggestionsAsync(Arg.Any<Guid>(), Arg.Any<SuggestionSourceEnum>(), Arg.Any<CancellationToken>())
+        _suggestionService.GenerateSuggestionsAsync(Arg.Any<Guid>(), Arg.Any<SuggestionSourceEnum>(), Arg.Any<Func<AgentEvent, Task>?>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         var patientLine = CreateTranscriptLine(SpeakerRole.Patient, "I feel tired");

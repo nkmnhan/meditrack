@@ -4,6 +4,7 @@ using Clara.API.Application.Models;
 using Clara.API.Domain;
 using Clara.API.Hubs;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace Clara.API.Services;
@@ -127,9 +128,30 @@ public sealed class BatchTriggerService : IBatchTriggerService
                 return;
             }
 
+            async Task BroadcastAgentEvent(AgentEvent agentEvent)
+            {
+                var eventName = agentEvent switch
+                {
+                    AgentEvent.Thinking => SignalREvents.AgentThinking,
+                    AgentEvent.ToolStarted => SignalREvents.AgentToolStarted,
+                    AgentEvent.ToolCompleted => SignalREvents.AgentToolCompleted,
+                    AgentEvent.TextChunk => SignalREvents.AgentTextChunk,
+                    AgentEvent.Completed => SignalREvents.AgentCompleted,
+                    AgentEvent.Failed => SignalREvents.AgentFailed,
+                    _ => null
+                };
+
+                if (eventName != null)
+                {
+                    await hubContext.Clients.Group(sessionId)
+                        .SendAsync(eventName, agentEvent, CancellationToken.None);
+                }
+            }
+
             var suggestions = await suggestionService.GenerateSuggestionsAsync(
                 sessionGuid,
                 source: SuggestionSourceEnum.Batch,
+                onAgentEvent: BroadcastAgentEvent,
                 CancellationToken.None);
 
             // Broadcast suggestions to connected clients

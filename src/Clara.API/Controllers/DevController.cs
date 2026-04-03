@@ -151,7 +151,7 @@ public class DevController : ControllerBase
         var suggestions = await _suggestionService.GenerateSuggestionsAsync(
             sessionId,
             source: SuggestionSourceEnum.DevForce,
-            cancellationToken);
+            cancellationToken: cancellationToken);
 
         // Broadcast via SignalR
         foreach (var suggestion in suggestions)

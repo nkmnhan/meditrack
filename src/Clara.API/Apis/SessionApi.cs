@@ -149,15 +149,38 @@ public static class SessionApi
             return Results.NotFound(new { message = $"Session {id} not found" });
         }
 
+        var sessionGroupId = id.ToString();
+
+        async Task BroadcastAgentEvent(AgentEvent agentEvent)
+        {
+            var eventName = agentEvent switch
+            {
+                AgentEvent.Thinking => SignalREvents.AgentThinking,
+                AgentEvent.ToolStarted => SignalREvents.AgentToolStarted,
+                AgentEvent.ToolCompleted => SignalREvents.AgentToolCompleted,
+                AgentEvent.TextChunk => SignalREvents.AgentTextChunk,
+                AgentEvent.Completed => SignalREvents.AgentCompleted,
+                AgentEvent.Failed => SignalREvents.AgentFailed,
+                _ => null
+            };
+
+            if (eventName != null)
+            {
+                await hubContext.Clients.Group(sessionGroupId)
+                    .SendAsync(eventName, agentEvent, CancellationToken.None);
+            }
+        }
+
         var suggestions = await suggestionService.GenerateSuggestionsAsync(
             id,
             source: SuggestionSourceEnum.OnDemand,
+            onAgentEvent: BroadcastAgentEvent,
             cancellationToken);
 
         // Broadcast each suggestion via SignalR so the UI updates immediately.
         foreach (var suggestion in suggestions)
         {
-            await hubContext.Clients.Group(id.ToString()).SendAsync(
+            await hubContext.Clients.Group(sessionGroupId).SendAsync(
                 SignalREvents.SuggestionAdded,
                 new
                 {

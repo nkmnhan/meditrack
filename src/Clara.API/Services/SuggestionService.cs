@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Clara.API.Application.Models;
 using Clara.API.Data;
 using Clara.API.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -65,6 +66,7 @@ public sealed partial class SuggestionService : ISuggestionService
     public async Task<List<Suggestion>> GenerateSuggestionsAsync(
         Guid sessionId,
         SuggestionSourceEnum source,
+        Func<AgentEvent, Task>? onAgentEvent = null,
         CancellationToken cancellationToken = default)
     {
         var stopwatch = Stopwatch.StartNew();
@@ -109,6 +111,12 @@ public sealed partial class SuggestionService : ISuggestionService
                 _serviceProvider.GetRequiredService<ICorrectiveRagService>(),
                 _patientContextService,
                 _serviceProvider.GetRequiredService<ILogger<AgentTools>>());
+
+            // Wire agent event callback so tool calls emit progressive UI events
+            agentTools.SetEventCallback(onAgentEvent);
+
+            if (onAgentEvent != null)
+                await onAgentEvent(new AgentEvent.Thinking(1));
 
             // Resolve keyed chat client and wrap with function invocation
             var chatClientKey = source == SuggestionSourceEnum.OnDemand ? "ondemand" : "batch";
@@ -205,6 +213,9 @@ public sealed partial class SuggestionService : ISuggestionService
                 stopwatch.ElapsedMilliseconds,
                 matchingSkill?.Id ?? "none");
 
+            if (onAgentEvent != null)
+                await onAgentEvent(new AgentEvent.Completed(suggestions.Count, stopwatch.ElapsedMilliseconds));
+
             return suggestions;
         }
         catch (Exception exception)
@@ -213,6 +224,10 @@ public sealed partial class SuggestionService : ISuggestionService
                 exception,
                 "Failed to generate suggestions for session {SessionId}",
                 sessionId);
+
+            if (onAgentEvent != null)
+                await onAgentEvent(new AgentEvent.Failed(exception.Message));
+
             return []; // Return empty list on error
         }
     }

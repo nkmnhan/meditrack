@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Clara.API.Application.Models;
 using Microsoft.Extensions.AI;
 
 namespace Clara.API.Services;
@@ -12,6 +13,7 @@ public sealed class AgentTools
     private readonly ICorrectiveRagService _ragService;
     private readonly IPatientContextService _patientContextService;
     private readonly ILogger<AgentTools> _logger;
+    private Func<AgentEvent, Task>? _onEvent;
 
     public AgentTools(
         ICorrectiveRagService ragService,
@@ -23,13 +25,26 @@ public sealed class AgentTools
         _logger = logger;
     }
 
+    /// <summary>
+    /// Wires a callback to receive agent events as tool calls execute.
+    /// Called by SuggestionService immediately after construction.
+    /// </summary>
+    public void SetEventCallback(Func<AgentEvent, Task>? callback) => _onEvent = callback;
+
     [Description("Search the medical knowledge base for clinical guidelines, drug information, or treatment protocols. Use when the conversation mentions a clinical topic you need evidence for.")]
     public async Task<string> SearchKnowledgeAsync(
         [Description("Search query — use specific medical terminology")] string query,
         CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Agent tool: search_knowledge('{Query}')", query);
+
+        if (_onEvent != null)
+            await _onEvent(new AgentEvent.ToolStarted("search_knowledge", $"Searching: {query}"));
+
         var results = await _ragService.SearchWithGradingAsync(query, topK: 3, cancellationToken: cancellationToken);
+
+        if (_onEvent != null)
+            await _onEvent(new AgentEvent.ToolCompleted("search_knowledge", results.Count > 0, $"{results.Count} results"));
 
         if (results.Count == 0)
             return "No relevant medical guidelines found for this query.";
@@ -45,7 +60,14 @@ public sealed class AgentTools
         CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Agent tool: get_patient_context('{PatientId}')", patientId);
+
+        if (_onEvent != null)
+            await _onEvent(new AgentEvent.ToolStarted("get_patient_context", "Loading patient information"));
+
         var context = await _patientContextService.GetPatientContextAsync(patientId, cancellationToken);
+
+        if (_onEvent != null)
+            await _onEvent(new AgentEvent.ToolCompleted("get_patient_context", context != null, context != null ? "Context loaded" : "Not available"));
 
         if (context == null)
             return "Patient context not available. Provide suggestions based on transcript only.";

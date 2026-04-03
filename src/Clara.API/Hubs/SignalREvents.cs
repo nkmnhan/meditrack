@@ -18,4 +18,12 @@ public static class SignalREvents
     // Suggestion action events (tracking doctor responses)
     public const string SuggestionAccepted = "SuggestionAccepted";
     public const string SuggestionDismissed = "SuggestionDismissed";
+
+    // Agent processing events (progressive UI updates during suggestion generation)
+    public const string AgentThinking = "AgentThinking";
+    public const string AgentToolStarted = "AgentToolStarted";
+    public const string AgentToolCompleted = "AgentToolCompleted";
+    public const string AgentTextChunk = "AgentTextChunk";
+    public const string AgentCompleted = "AgentCompleted";
+    public const string AgentFailed = "AgentFailed";
 }
