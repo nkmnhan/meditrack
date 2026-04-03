@@ -59,12 +59,12 @@ public sealed partial class SuggestionService : ISuggestionService
     /// Generates AI suggestions for a session.
     /// </summary>
     /// <param name="sessionId">The session to generate suggestions for.</param>
-    /// <param name="source">Trigger source: "batch" (auto) or "on_demand" (user-requested).</param>
+    /// <param name="source">Trigger source: Batch (auto) or OnDemand (user-requested).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>List of generated suggestions.</returns>
     public async Task<List<Suggestion>> GenerateSuggestionsAsync(
         Guid sessionId,
-        string source,
+        SuggestionSourceEnum source,
         CancellationToken cancellationToken = default)
     {
         var stopwatch = Stopwatch.StartNew();
@@ -116,7 +116,7 @@ public sealed partial class SuggestionService : ISuggestionService
             var prompt = BuildPrompt(conversationText, knowledgeContext, patientContext, matchingSkill);
 
             // Resolve the appropriate keyed IChatClient based on suggestion source
-            var chatClientKey = source == SuggestionSources.OnDemand ? "ondemand" : "batch";
+            var chatClientKey = source == SuggestionSourceEnum.OnDemand ? "ondemand" : "batch";
             var chatClient = _serviceProvider.GetRequiredKeyedService<IChatClient>(chatClientKey);
 
             // Call LLM
@@ -139,9 +139,9 @@ public sealed partial class SuggestionService : ISuggestionService
                     Id = Guid.NewGuid(),
                     SessionId = sessionId,
                     Content = suggestionOutput.Content,
-                    Type = suggestionOutput.Type,
+                    Type = EnumConversions.ParseSuggestionType(suggestionOutput.Type),
                     Source = source,
-                    Urgency = suggestionOutput.Urgency,
+                    Urgency = EnumConversions.ParseSuggestionUrgency(suggestionOutput.Urgency),
                     Confidence = suggestionOutput.Confidence,
                     TriggeredAt = DateTimeOffset.UtcNow,
                     SourceTranscriptLineIds = sourceLineIds
@@ -238,9 +238,9 @@ public sealed partial class SuggestionService : ISuggestionService
             Id = suggestion.Id,
             Content = suggestion.Content,
             TriggeredAt = suggestion.TriggeredAt,
-            Type = suggestion.Type,
-            Source = suggestion.Source,
-            Urgency = suggestion.Urgency,
+            Type = suggestion.Type.ToValue(),
+            Source = suggestion.Source.ToValue(),
+            Urgency = suggestion.Urgency?.ToValue(),
             Confidence = suggestion.Confidence,
             SourceTranscriptLineIds = suggestion.SourceTranscriptLineIds,
             AcceptedAt = suggestion.AcceptedAt,

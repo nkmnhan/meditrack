@@ -6,34 +6,37 @@ namespace Clara.API.Domain;
 public sealed class Suggestion
 {
     public Guid Id { get; set; }
-    
+
     public Guid SessionId { get; set; }
-    
+
     /// <summary>
     /// The suggestion content (markdown-formatted bullet points).
     /// </summary>
     public required string Content { get; set; }
-    
+
     /// <summary>
     /// When the suggestion was generated.
     /// </summary>
     public DateTimeOffset TriggeredAt { get; set; }
-    
+
     /// <summary>
-    /// Type of suggestion: 'clinical', 'medication', 'follow_up', 'differential'.
+    /// Type of suggestion: Clinical, Medication, FollowUp, Differential.
+    /// Stored as snake_case string in the database via EF value converter.
     /// </summary>
-    public required string Type { get; set; }
-    
+    public required SuggestionTypeEnum Type { get; set; }
+
     /// <summary>
-    /// How the suggestion was triggered: 'batch' (auto) or 'on_demand' (user-requested).
+    /// How the suggestion was triggered: Batch (auto) or OnDemand (user-requested).
+    /// Stored as snake_case string in the database via EF value converter.
     /// </summary>
-    public required string Source { get; set; }
-    
+    public required SuggestionSourceEnum Source { get; set; }
+
     /// <summary>
-    /// Urgency level: 'low', 'medium', 'high'.
+    /// Urgency level: Low, Medium, High.
+    /// Stored as lowercase string in the database via EF value converter.
     /// </summary>
-    public string? Urgency { get; set; }
-    
+    public SuggestionUrgencyEnum? Urgency { get; set; }
+
     /// <summary>
     /// Confidence score (0.0 to 1.0) from the LLM.
     /// </summary>

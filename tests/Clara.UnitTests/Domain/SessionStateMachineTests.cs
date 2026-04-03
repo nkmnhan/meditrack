@@ -13,7 +13,7 @@ public sealed class SessionStateMachineTests
             Id = Guid.NewGuid(),
             DoctorId = "doctor-1",
             StartedAt = DateTimeOffset.UtcNow,
-            Status = SessionStatus.Active
+            Status = SessionStatusEnum.Active
         };
     }
 
@@ -26,7 +26,7 @@ public sealed class SessionStateMachineTests
 
         session.Pause();
 
-        session.Status.Should().Be(SessionStatus.Paused);
+        session.Status.Should().Be(SessionStatusEnum.Paused);
     }
 
     [Fact]
@@ -36,7 +36,7 @@ public sealed class SessionStateMachineTests
 
         session.Complete();
 
-        session.Status.Should().Be(SessionStatus.Completed);
+        session.Status.Should().Be(SessionStatusEnum.Completed);
         session.EndedAt.Should().NotBeNull();
     }
 
@@ -47,7 +47,7 @@ public sealed class SessionStateMachineTests
 
         session.Cancel();
 
-        session.Status.Should().Be(SessionStatus.Cancelled);
+        session.Status.Should().Be(SessionStatusEnum.Cancelled);
         session.EndedAt.Should().NotBeNull();
     }
 
@@ -61,7 +61,7 @@ public sealed class SessionStateMachineTests
 
         session.Resume();
 
-        session.Status.Should().Be(SessionStatus.Active);
+        session.Status.Should().Be(SessionStatusEnum.Active);
     }
 
     [Fact]
@@ -72,7 +72,7 @@ public sealed class SessionStateMachineTests
 
         session.Complete();
 
-        session.Status.Should().Be(SessionStatus.Completed);
+        session.Status.Should().Be(SessionStatusEnum.Completed);
         session.EndedAt.Should().NotBeNull();
     }
 
@@ -84,7 +84,7 @@ public sealed class SessionStateMachineTests
 
         session.Cancel();
 
-        session.Status.Should().Be(SessionStatus.Cancelled);
+        session.Status.Should().Be(SessionStatusEnum.Cancelled);
         session.EndedAt.Should().NotBeNull();
     }
 

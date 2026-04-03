@@ -150,7 +150,7 @@ public class DevController : ControllerBase
 
         var suggestions = await _suggestionService.GenerateSuggestionsAsync(
             sessionId,
-            source: SuggestionSources.DevForce,
+            source: SuggestionSourceEnum.DevForce,
             cancellationToken);
 
         // Broadcast via SignalR
@@ -162,8 +162,8 @@ public class DevController : ControllerBase
                 {
                     id = suggestion.Id,
                     content = suggestion.Content,
-                    type = suggestion.Type,
-                    urgency = suggestion.Urgency,
+                    type = suggestion.Type.ToValue(),
+                    urgency = suggestion.Urgency?.ToValue(),
                     confidence = suggestion.Confidence,
                     triggeredAt = suggestion.TriggeredAt
                 }, cancellationToken);

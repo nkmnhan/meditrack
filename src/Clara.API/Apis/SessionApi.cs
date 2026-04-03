@@ -151,7 +151,7 @@ public static class SessionApi
 
         var suggestions = await suggestionService.GenerateSuggestionsAsync(
             id,
-            source: SuggestionSources.OnDemand,
+            source: SuggestionSourceEnum.OnDemand,
             cancellationToken);
 
         // Broadcast each suggestion via SignalR so the UI updates immediately.
@@ -163,10 +163,10 @@ public static class SessionApi
                 {
                     id = suggestion.Id,
                     content = suggestion.Content,
-                    type = suggestion.Type,
-                    urgency = suggestion.Urgency,
+                    type = suggestion.Type.ToValue(),
+                    urgency = suggestion.Urgency?.ToValue(),
                     confidence = suggestion.Confidence,
-                    source = suggestion.Source,
+                    source = suggestion.Source.ToValue(),
                     triggeredAt = suggestion.TriggeredAt
                 },
                 cancellationToken);
@@ -179,9 +179,9 @@ public static class SessionApi
             {
                 Id = suggestion.Id,
                 Content = suggestion.Content,
-                Type = suggestion.Type,
-                Source = suggestion.Source,
-                Urgency = suggestion.Urgency,
+                Type = suggestion.Type.ToValue(),
+                Source = suggestion.Source.ToValue(),
+                Urgency = suggestion.Urgency?.ToValue(),
                 Confidence = suggestion.Confidence,
                 TriggeredAt = suggestion.TriggeredAt
             }).ToList()

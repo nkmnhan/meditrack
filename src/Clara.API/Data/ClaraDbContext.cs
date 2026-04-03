@@ -60,7 +60,10 @@ public sealed class ClaraDbContext : DbContext
 
             entity.Property(session => session.Status)
                 .HasColumnName("status")
-                .IsRequired();
+                .IsRequired()
+                .HasConversion(
+                    status => status.ToValue(),
+                    value => EnumConversions.ParseSessionStatus(value));
 
             entity.Property(session => session.AudioRecorded)
                 .HasColumnName("audio_recorded")
@@ -148,14 +151,23 @@ public sealed class ClaraDbContext : DbContext
 
             entity.Property(suggestion => suggestion.Type)
                 .HasColumnName("type")
-                .IsRequired();
+                .IsRequired()
+                .HasConversion(
+                    type => type.ToValue(),
+                    value => EnumConversions.ParseSuggestionType(value));
 
             entity.Property(suggestion => suggestion.Source)
                 .HasColumnName("source")
-                .IsRequired();
+                .IsRequired()
+                .HasConversion(
+                    source => source.ToValue(),
+                    value => EnumConversions.ParseSuggestionSource(value));
 
             entity.Property(suggestion => suggestion.Urgency)
-                .HasColumnName("urgency");
+                .HasColumnName("urgency")
+                .HasConversion(
+                    urgency => urgency.HasValue ? urgency.Value.ToValue() : null,
+                    value => value != null ? EnumConversions.ParseSuggestionUrgency(value) : (SuggestionUrgencyEnum?)null);
 
             entity.Property(suggestion => suggestion.Confidence)
                 .HasColumnName("confidence");

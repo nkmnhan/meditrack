@@ -13,8 +13,8 @@ public sealed class SuggestionIdempotencyTests
             Id = Guid.NewGuid(),
             SessionId = Guid.NewGuid(),
             Content = "Consider checking blood pressure",
-            Type = SuggestionType.Clinical,
-            Source = SuggestionSources.Batch,
+            Type = SuggestionTypeEnum.Clinical,
+            Source = SuggestionSourceEnum.Batch,
             TriggeredAt = DateTimeOffset.UtcNow
         };
     }

@@ -5,7 +5,7 @@ namespace Clara.API.Services;
 
 public interface ISuggestionService
 {
-    Task<List<Suggestion>> GenerateSuggestionsAsync(Guid sessionId, string source, CancellationToken cancellationToken = default);
+    Task<List<Suggestion>> GenerateSuggestionsAsync(Guid sessionId, SuggestionSourceEnum source, CancellationToken cancellationToken = default);
     Task<SuggestionResponse> AcceptSuggestionAsync(Guid sessionId, Guid suggestionId, string doctorId, CancellationToken cancellationToken = default);
     Task<SuggestionResponse> DismissSuggestionAsync(Guid sessionId, Guid suggestionId, string doctorId, CancellationToken cancellationToken = default);
 }

@@ -129,7 +129,7 @@ public sealed class BatchTriggerService : IBatchTriggerService
 
             var suggestions = await suggestionService.GenerateSuggestionsAsync(
                 sessionGuid,
-                source: SuggestionSources.Batch,
+                source: SuggestionSourceEnum.Batch,
                 CancellationToken.None);
 
             // Broadcast suggestions to connected clients
@@ -141,10 +141,10 @@ public sealed class BatchTriggerService : IBatchTriggerService
                     {
                         id = suggestion.Id,
                         content = suggestion.Content,
-                        type = suggestion.Type,
-                        urgency = suggestion.Urgency,
+                        type = suggestion.Type.ToValue(),
+                        urgency = suggestion.Urgency?.ToValue(),
                         confidence = suggestion.Confidence,
-                        source = suggestion.Source,
+                        source = suggestion.Source.ToValue(),
                         triggeredAt = suggestion.TriggeredAt,
                         sourceTranscriptLineIds = suggestion.SourceTranscriptLineIds,
                         acceptedAt = suggestion.AcceptedAt,
