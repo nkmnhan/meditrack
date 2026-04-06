@@ -52,6 +52,18 @@ paths:
 - **Assertions:** FluentAssertions — NEVER `Assert.*`
 - **Test data:** Bogus when needed
 
+## Knowledge Capture
+
+After fixing a non-trivial bug, discovering a gotcha, or making an architectural decision:
+- Suggest `/learn save` to the user
+- Knowledge is saved to `.claude/shared-memory/index.json` (DEFAULT, shared via git)
+- Optionally synced to PostgreSQL `claude.knowledge` table (extension, local)
+- Install the skill: copy `.claude/skills/learn.md` to `~/.claude/skills/learn.md`
+
+Before investigating an issue, check past learnings:
+- Read `.claude/shared-memory/index.json` for known fixes and gotchas
+- If PostgreSQL is available: `SELECT * FROM claude.search_knowledge('query');`
+
 ## Compaction Instruction
 
 When compacting context, ALWAYS preserve: modified file list, current branch name, test commands, and active plan steps.

@@ -1,0 +1,11 @@
+{
+  "$description": "Shared team knowledge — committed to git, syncs with collaborators. This is the GitHub-based shared memory index.",
+  "$usage": "Claude reads this file to find shared learnings. Update via /learn skill or manually. Push to share with team.",
+  "$updated": "2026-04-06",
+  "learnings": [],
+  "principles": [],
+  "fixes": [],
+  "patterns": [],
+  "decisions": [],
+  "gotchas": []
+}
