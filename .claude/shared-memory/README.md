@@ -25,7 +25,13 @@ This directory is the **GitHub-based shared memory** for Claude Code sessions. I
 | **3 (personal)** | Claude memory | `~/.claude/projects/.../memory/` | No (local) | None |
 
 GitHub shared memory is the **default** — always works, no setup, syncs via git.
-PostgreSQL is an **optional extension** — faster full-text search when available.
+Full-text search without DB: `node .claude/hooks/search-knowledge.mjs "query"`
+PostgreSQL is an **optional extension** for faster queries when available.
+
+## Setup
+
+**No setup needed.** The `/learn` skill is auto-discovered from `.claude/skills/learn/SKILL.md`.
+PostgreSQL extension (optional): `docker-compose up -d` then `psql -f scripts/init-claude-knowledge.sql`
 
 ## Categories
 

@@ -58,7 +58,7 @@ After fixing a non-trivial bug, discovering a gotcha, or making an architectural
 - Suggest `/learn save` to the user
 - Knowledge is saved to `.claude/shared-memory/index.json` (DEFAULT, shared via git)
 - Optionally synced to PostgreSQL `claude.knowledge` table (extension, local)
-- Install the skill: copy `.claude/skills/learn.md` to `~/.claude/skills/learn.md`
+- Skill is auto-discovered from `.claude/skills/learn/SKILL.md` — no install needed
 
 Before investigating an issue, check past learnings:
 - Read `.claude/shared-memory/index.json` for known fixes and gotchas

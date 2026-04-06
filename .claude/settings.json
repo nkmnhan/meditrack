@@ -62,13 +62,26 @@
     ]
   },
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/session-start.mjs",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Glob|Grep",
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/scout-block.mjs"
+            "command": "node .claude/hooks/scout-block.mjs",
+            "timeout": 5000
           }
         ]
       }
@@ -79,7 +92,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/post-edit-lint.mjs"
+            "command": "node .claude/hooks/post-edit-lint.mjs",
+            "timeout": 15000
           }
         ]
       },
@@ -88,7 +102,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/output-compress.mjs"
+            "command": "node .claude/hooks/output-compress.mjs",
+            "timeout": 5000,
+            "async": true
           }
         ]
       }
@@ -99,7 +115,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/pre-compact-save.mjs"
+            "command": "node .claude/hooks/pre-compact-save.mjs",
+            "timeout": 10000
           }
         ]
       }

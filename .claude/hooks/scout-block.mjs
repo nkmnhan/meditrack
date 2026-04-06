@@ -4,7 +4,7 @@
  */
 import { readFileSync } from 'fs';
 
-const input = JSON.parse(readFileSync('/dev/stdin', 'utf8'));
+const input = JSON.parse(readFileSync(0, 'utf8'));
 const toolName = input?.tool_name || '';
 const toolInput = input?.tool_input || {};
 
