@@ -9,7 +9,7 @@ paths:
 
 # Web ↔ Design Sync Rule (MANDATORY)
 
-These two projects share components and must stay in sync:
+Two projects share components and MUST stay in sync:
 - `src/MediTrack.Web/` — production React 19 app (RTK Query, React Router v7)
 - `design/` — Lovable design system (React Query, React Router v6)
 
@@ -35,27 +35,13 @@ These two projects share components and must stay in sync:
 
 ## Page-level sync
 
-Web feature pages map to design page files. When editing page UI (layout, copy, spacing, CTAs), update both:
-
 | Web path | Design path |
 |----------|-------------|
-| `src/features/landing/components/*.tsx` | `src/pages/Landing.tsx` (monolithic — all 11 sub-components inline) |
+| `src/features/landing/components/*.tsx` | `src/pages/Landing.tsx` (monolithic) |
 | `src/features/*/components/*Page.tsx` | `src/pages/*.tsx` |
 | `src/features/admin/components/*Page.tsx` | `src/pages/admin/Admin*.tsx` |
 
-**Note:** Design `Landing.tsx` is a single monolithic file containing all sections that Web splits into separate sub-components (HeroSection, FeaturesSection, etc.). When updating any Web landing sub-component, find and update the corresponding section inside `design/src/pages/Landing.tsx`.
-
-## FeatureGuide ↔ PageExplorer sync
-
-The Web `FeatureGuide/` and Design `PageExplorer.tsx` are counterparts — same bookmark-tab trigger, same panel UI. When editing either:
-
-| Web path | Design path |
-|----------|-------------|
-| `src/shared/components/FeatureGuide/FeatureGuideButton.tsx` | `src/components/PageExplorer.tsx` (trigger + panel combined) |
-| `src/shared/components/FeatureGuide/FeatureGuidePanel.tsx` | `src/components/FeatureGuide/FeatureGuidePanel.tsx` |
-| `src/shared/components/FeatureGuide/FeatureGuideData.ts` | `src/components/FeatureGuide/FeatureGuideData.ts` |
-
-**Design differences:** PageExplorer also includes a page-tree navigator (design-only). Only the trigger button, bookmark tab shape, and Quick Tour section need syncing.
+**Note:** Design `Landing.tsx` is a single monolithic file. When updating any Web landing sub-component, find and update the corresponding section inside `design/src/pages/Landing.tsx`.
 
 ## What does NOT need syncing
 
@@ -63,5 +49,4 @@ The Web `FeatureGuide/` and Design `PageExplorer.tsx` are counterparts — same 
 - `shared/store/` (Web-only: RTK Query)
 - `shared/demo/` (Web-only: demo mode)
 - `lib/` (Design-only: React Query)
-- `lovable-tagger` (Design-only)
-- PageExplorer page-tree navigator (Design-only — the page category tree inside the panel)
+- PageExplorer page-tree navigator (Design-only)

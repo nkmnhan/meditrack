@@ -13,6 +13,7 @@
       "Bash(npx *)",
       "Bash(dotnet build *)",
       "Bash(dotnet test *)",
+      "Bash(dotnet format *)",
       "Bash(docker-compose *)",
       "Bash(docker compose *)",
       "Bash(git status *)",
@@ -24,6 +25,11 @@
       "Bash(git stash *)",
       "Bash(git show *)",
       "Bash(git blame *)",
+      "Bash(git switch *)",
+      "Bash(git merge *)",
+      "Bash(git checkout *)",
+      "Bash(git fetch *)",
+      "Bash(git pull *)",
       "Bash(ls *)",
       "Bash(mkdir *)",
       "Bash(cat *)",
@@ -61,7 +67,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node C:/nkmn/Projects/meditrack/.claude/hooks/post-edit-lint.mjs"
+            "command": "node .claude/hooks/post-edit-lint.mjs"
           }
         ]
       }
