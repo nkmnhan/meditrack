@@ -11,6 +11,7 @@
       "Bash(npm run lint)",
       "Bash(npm test *)",
       "Bash(npx *)",
+      "Bash(node *)",
       "Bash(dotnet build *)",
       "Bash(dotnet test *)",
       "Bash(dotnet format *)",
@@ -61,6 +62,17 @@
     ]
   },
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Glob|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/scout-block.mjs"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit",
@@ -68,6 +80,26 @@
           {
             "type": "command",
             "command": "node .claude/hooks/post-edit-lint.mjs"
+          }
+        ]
+      },
+      {
+        "matcher": "Glob|Grep|Read|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/output-compress.mjs"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/pre-compact-save.mjs"
           }
         ]
       }

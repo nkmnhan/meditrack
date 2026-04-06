@@ -50,16 +50,19 @@ When the user invokes `/learn`, ask which action:
    SELECT claude.upsert_knowledge('fix', 'ef-core-n-plus-1-patient-list', '...', ARRAY['backend','ef-core','performance'], 'src/Patient.API/Services/PatientService.cs');
    ```
 
-### `/learn search <query>` — Find past knowledge
+### `/learn search <query>` — Full-text search (no DB required)
 
-1. Read `.claude/shared-memory/index.json`
-2. Search all category arrays for entries matching the query (check key, value, tags)
-3. If PostgreSQL is available, ALSO search via mcp__postgres:
+1. Run the built-in search engine:
+   ```bash
+   node .claude/hooks/search-knowledge.mjs "query terms"
+   ```
+   This searches all entries by key, value, tags, and source with ranked scoring + fuzzy matching.
+2. If PostgreSQL is available, ALSO search via mcp__postgres for deeper results:
    ```sql
    SELECT * FROM claude.search_knowledge('patient list slow', NULL, NULL, 10);
    ```
-4. Present matches grouped by category, most recent first
-5. If nothing found, say so — don't hallucinate past learnings
+3. Present matches grouped by category, most recent first
+4. If nothing found, say so — don't hallucinate past learnings
 
 ### `/learn list [category]` — Browse knowledge
 
