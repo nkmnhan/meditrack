@@ -50,3 +50,11 @@ paths:
 - PostgreSQL 17 with pgvector extension (for Clara RAG)
 - EF Core for ORM — NEVER use `FromSqlRaw` with string concatenation
 - Migrations managed per-service DbContext
+- **Npgsql JSONB** requires `EnableDynamicJson()` on `NpgsqlDataSourceBuilder` — without it, `Dictionary<string,string>` columns throw at runtime
+- **Pgvector type mapping** must be registered at BOTH levels: `NpgsqlDataSourceBuilder` (Npgsql) AND `UseVector()` (EF Core)
+- **Extension method conflict**: `Pgvector` and `Pgvector.EntityFrameworkCore` both define `UseVector()` — isolate `NpgsqlDataSourceBuilder` calls in files that only import `using Pgvector;`
+
+## Docker
+
+- **Every service** needs `IdentityUrl` in docker-compose — even Identity.API itself (it validates its own JWT tokens via OIDC discovery)
+- Default dev password: see `docker-compose.override.yml` `POSTGRES_PASSWORD` default

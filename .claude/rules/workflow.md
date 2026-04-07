@@ -43,6 +43,14 @@ paths:
 | `MedicalRecords.UnitTests` | Unit | NSubstitute | Domain entities, value objects, CQRS handlers |
 | `Clara.IntegrationTests` | Integration | PostgreSQL + pgvector | API endpoints, SignalR, DB queries |
 
+## Integration Test Rules
+
+- **ALWAYS** use `ConfigureTestServices` (not `ConfigureServices`) to override app registrations — it runs AFTER the app's DI setup
+- **ALWAYS** replace auth with a fake handler that injects role claims — real JWT needs IdentityServer running
+- **ALWAYS** replace external AI services (`IEmbeddingGenerator`, `IChatClient`) with fakes — NEVER call real APIs in tests
+- **ALWAYS** configure `NpgsqlDataSourceBuilder` with `EnableDynamicJson()` and pgvector when replacing `DbContextOptions`
+- **NEVER** assume a random GUID exists in the DB — create test data via the API first
+
 ## Test Conventions
 
 - **Naming:** `{ClassName}Tests.cs` mirrors `{ClassName}.cs`
