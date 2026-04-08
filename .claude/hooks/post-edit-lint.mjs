@@ -6,7 +6,7 @@ import { readFileSync } from 'fs';
 import { execSync } from 'child_process';
 import { resolve } from 'path';
 
-const input = JSON.parse(readFileSync('/dev/stdin', 'utf8'));
+const input = JSON.parse(readFileSync(0, 'utf8'));
 const filePath = input?.tool_input?.file_path || input?.tool_input?.path || '';
 
 // Only lint frontend TypeScript/React files

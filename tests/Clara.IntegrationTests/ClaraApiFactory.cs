@@ -1,6 +1,12 @@
+using Clara.API.Data;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Clara.IntegrationTests;
 
@@ -27,7 +33,37 @@ public sealed class ClaraApiFactory : WebApplicationFactory<Program>
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ConnectionStrings:ClaraDb"] = testConnectionString,
+                ["IdentityUrl"] = "https://localhost:5001",
             });
+        });
+
+        builder.ConfigureTestServices(services =>
+        {
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
+                options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
+            })
+            .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
+                TestAuthHandler.SchemeName, _ => { });
+
+            // Replace ClaraDbContext with pgvector + dynamic JSON data source
+            var descriptor = services.SingleOrDefault(
+                d => d.ServiceType == typeof(DbContextOptions<ClaraDbContext>));
+            if (descriptor is not null)
+                services.Remove(descriptor);
+
+            var testConnectionString = Environment.GetEnvironmentVariable("CLARA_TEST_DB")
+                ?? DefaultTestConnectionString;
+
+            var dataSource = TestDataSourceFactory.Create(testConnectionString);
+
+            services.AddDbContext<ClaraDbContext>(options =>
+                options.UseNpgsql(dataSource, npgsql => npgsql.UseVector()));
+
+            // Replace real AI services with fakes to avoid calling OpenAI
+            services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(
+                new FakeEmbeddingGenerator());
         });
     }
 }

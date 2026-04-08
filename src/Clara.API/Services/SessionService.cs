@@ -138,9 +138,8 @@ public sealed class SessionService : ISessionService
         // Clean up batch trigger timer to prevent Timer leak
         _batchTriggerService.CleanupSession(sessionId.ToString());
 
-        _logger.LogInformation(
-            "Session {SessionId} ended for doctor {DoctorId}. Duration: {Duration}",
-            session.Id, doctorId, session.EndedAt - session.StartedAt);
+        _logger.LogInformation("Session {SessionId} ended. Duration: {Duration}",
+            session.Id, session.EndedAt - session.StartedAt);
 
         return MapToResponse(session);
     }
