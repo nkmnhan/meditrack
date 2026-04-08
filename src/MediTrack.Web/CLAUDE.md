@@ -1,75 +1,6 @@
 # MediTrack Web — Frontend Application
 
-## Dual-Update Rule (MANDATORY)
-
-When modifying **shared components, layouts, pages, or styling** in this project, you MUST also update the corresponding file in `design/`. These two projects must stay in sync:
-
-| Web (`src/MediTrack.Web/src/`) | Design (`design/src/`) |
-|---|---|
-| `shared/components/*.tsx` | `components/*.tsx` |
-| `shared/components/ui/*.tsx` | `components/ui/*.tsx` |
-| `shared/hooks/*.ts` | `hooks/*.ts` |
-| `shared/utils/clsxMerge.ts` | `shared/utils/clsxMerge.ts` |
-| `features/clara/components/*` | `components/clara/*` |
-| `features/*/components/*Page.tsx` | `pages/*.tsx` |
-| `tailwind.config.ts` | `tailwind.config.ts` |
-
-**Exceptions** (Web-only, no sync needed): `shared/auth/`, `shared/store/`, `shared/demo/`, RTK Query slices, Redux state.
-
-### Page Component Map
-
-| Design Page (`design/src/pages/`) | Web Component (`src/MediTrack.Web/src/features/`) | Route |
-|---|---|---|
-| `Landing.tsx` | `landing/components/LandingPage.tsx` (composes 11 sub-components) | `/` |
-| `Index.tsx` | `dashboard/components/DashboardPage.tsx` | `/dashboard` |
-| `PatientList.tsx` | `patients/components/PatientList.tsx` | `/patients` |
-| `PatientDetail.tsx` | `patients/components/PatientDetail.tsx` | `/patients/:id` |
-| `PatientNew.tsx` | `patients/components/PatientForm.tsx` (create mode) | `/patients/new` |
-| `Appointments.tsx` | `appointments/components/AppointmentCalendarPage.tsx` | `/appointments` |
-| `AppointmentDetail.tsx` | `appointments/components/AppointmentDetailPage.tsx` | `/appointments/:id` |
-| `MedicalRecordsList.tsx` | `medical-records/components/MedicalRecordsIndexPage.tsx` | `/medical-records` |
-| `MedicalRecordDetail.tsx` | `medical-records/components/MedicalRecordDetailPage.tsx` | `/medical-records/:id` |
-| `ClaraStart.tsx` | `clara/components/SessionStartScreen.tsx` | `/clara` |
-| `ClaraSession.tsx` | `clara/components/LiveSessionView.tsx` | `/clara/session/:id` |
-| `SessionSummary.tsx` | `clara/components/SessionSummary.tsx` | `/clara/session/:id/summary` |
-| `Login.tsx` | *(none — OIDC redirect via Duende)* | — |
-| `admin/AdminDashboard.tsx` | `admin/components/AdminDashboardPage.tsx` | `/admin/dashboard` |
-| `admin/AdminReports.tsx` | `admin/components/AdminReportsPage.tsx` | `/admin/reports` |
-| `admin/AdminUsers.tsx` | `admin/components/AdminUsersPage.tsx` | `/admin/users` |
-| `admin/AdminSystem.tsx` | `admin/components/AdminSystemPage.tsx` | `/admin/system` |
-| `admin/AdminAudit.tsx` | `admin/components/AdminAuditPage.tsx` | `/admin/audit` |
-| `admin/AdminFhirViewer.tsx` | `admin/components/AdminFhirViewerPage.tsx` | `/admin/fhir` |
-| `admin/AdminImportWizard.tsx` | `admin/components/AdminImportWizardPage.tsx` | `/admin/import` |
-| `admin/AdminIntegrations.tsx` | `admin/components/AdminIntegrationsPage.tsx` | `/admin/integrations` |
-
-### Shared Component Map
-
-| Design (`design/src/components/`) | Web (`src/MediTrack.Web/src/`) |
-|---|---|
-| `AppShell.tsx` | `shared/components/Layout.tsx` |
-| `CommandPalette.tsx` | `shared/components/CommandPalette.tsx` |
-| `NotificationCenter.tsx` | `shared/components/NotificationCenter.tsx` |
-| `DashboardCustomizer.tsx` | `features/dashboard/components/DashboardCustomizer.tsx` |
-| `NaturalLanguageSearch.tsx` | `features/patients/components/NaturalLanguageSearch.tsx` |
-| `PatientTimeline.tsx` | `features/patients/components/PatientTimeline.tsx` |
-| `NavLink.tsx` | *(inline in Layout.tsx)* |
-| `PageExplorer.tsx` | *(design-only — not synced)* |
-| `clara/ClaraFab.tsx` | `shared/components/clara/ClaraFab.tsx` |
-| `clara/ClaraPanel.tsx` | `shared/components/clara/ClaraPanel.tsx` |
-| `clara/ClaraPanelContext.tsx` | `shared/components/clara/ClaraPanelContext.tsx` |
-| `FeatureGuide/*` | `shared/components/FeatureGuide/*` |
-
-### Hook Map
-
-| Design (`design/src/hooks/`) | Web (`src/MediTrack.Web/src/`) |
-|---|---|
-| `use-mobile.tsx` | `shared/hooks/use-mobile.tsx` |
-| `use-toast.ts` | `shared/hooks/use-toast.ts` |
-| `useCountUp.ts` | `features/landing/components/HeroSection.tsx` (inline) |
-| `useDashboardLayout.ts` | `features/dashboard/hooks/useDashboardLayout.ts` |
-| `useScrollReveal.ts` | `features/landing/hooks/useScrollReveal.ts` |
-
----
+> Styling, patterns, and design-sync rules are in `.claude/rules/frontend/`. This file covers Web-specific structure only.
 
 ## Feature Structure
 
@@ -82,8 +13,6 @@ When modifying **shared components, layouts, pages, or styling** in this project
 | `landing` | 11 | `useScrollReveal` | — | ClaraMiniDemo, HeroSection |
 | `medical-records` | 6 | `useMedicalRecordsSearch` | `medicalRecordsApi.ts` | Tabs: notes, prescriptions, vitals, attachments |
 | `patients` | 5 | — | `patientApi.ts` | NaturalLanguageSearch, PatientTimeline |
-
----
 
 ## Path Aliases
 
@@ -162,6 +91,7 @@ Never use raw SVGs, Font Awesome, or other icon libraries.
 - Stack on mobile: `flex-col md:flex-row`
 - Hide secondary: `hidden md:block`
 
+
 ## Key Shared Files
 
 | File | Purpose |
@@ -174,7 +104,6 @@ Never use raw SVGs, Font Awesome, or other icon libraries.
 | `shared/hooks/use-toast.ts` | Sonner toast wrapper |
 | `shared/components/Layout.tsx` | App shell (sidebar + header + content) |
 | `shared/components/CommandPalette.tsx` | Ctrl+K command search |
-| `shared/components/Breadcrumb.tsx` | Page breadcrumb navigation |
 | `shared/auth/roles.ts` | Role constants (must match backend `UserRoles.cs`) |
 
 ## Build & Dev

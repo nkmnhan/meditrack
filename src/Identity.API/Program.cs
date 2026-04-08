@@ -168,11 +168,4 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Swagger
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
 await app.RunAsync();

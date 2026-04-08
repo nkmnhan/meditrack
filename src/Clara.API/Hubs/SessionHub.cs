@@ -184,6 +184,20 @@ public sealed class SessionHub : Hub
             return;
         }
 
+        await ValidateSessionOwnershipAsync(sessionGuid, doctorId);
+
+        if (!SessionHubValidation.IsValidSpeaker(speaker))
+        {
+            _logger.LogWarning("Invalid speaker role rejected");
+            return;
+        }
+
+        if (!SessionHubValidation.IsValidTranscriptText(text))
+        {
+            _logger.LogWarning("Transcript text rejected (empty or exceeds limit)");
+            return;
+        }
+
         var line = new TranscriptLine
         {
             Id = Guid.NewGuid(),

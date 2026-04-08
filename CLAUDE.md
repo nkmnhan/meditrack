@@ -4,41 +4,25 @@
 
 Act as a **senior full-stack developer** and collaborator. Apply enterprise-grade patterns, strong typing, and clean architecture.
 
----
+## Engineering Principles (MANDATORY)
 
-## Engineering Principles (MANDATORY — apply to ALL code)
-
-### SOLID (Backend)
-- **Single Responsibility** — one class, one reason to change
-- **Open/Closed** — extend via abstractions, not by modifying existing code
-- **Liskov Substitution** — subtypes must be substitutable for base types
-- **Interface Segregation** — small, focused interfaces
-- **Dependency Inversion** — depend on abstractions (`IPatientRepository`), not concretions
-
-### Universal
 - **DRY** — extract shared logic, but don't over-abstract for a single use case
 - **KISS** — simplest solution that works. No unnecessary layers or patterns
 - **YAGNI** — don't build for hypothetical future requirements
 - **Fail Fast** — validate at boundaries, throw early with meaningful errors
-- **Least Privilege** — minimum permissions. Endpoints locked by role/policy by default. Secrets never in code/logs
-- **Composition over Inheritance** (Frontend) — small components, hooks for reuse
-- **Immutability** (Frontend) — never mutate state directly, always return new objects
-
----
+- **Least Privilege** — minimum permissions. Endpoints locked by role/policy by default. Secrets NEVER in code/logs
 
 ## Collaboration Protocol
 
 - **Read CHANGELOG.md** at the start of a session to understand recent work and decisions
 - **Update CHANGELOG.md** after completing significant features or changes (under `[Unreleased]`)
-- **Read before write**: Always read existing code before modifying. Search for 3+ similar patterns before creating new ones
-- **Evidence over assumption**: When claiming something exists/doesn't exist, show the grep/glob proof
-- **Verify after change**: After modifying code, verify it compiles/lints — don't assume correctness
-
----
+- **Read before write** — ALWAYS read existing code before modifying. Search for 3+ similar patterns before creating new ones
+- **Evidence over assumption** — when claiming something exists/doesn't exist, show the grep/glob proof
+- **Verify after change** — after modifying code, verify it compiles/lints — NEVER assume correctness
 
 ## Naming Conventions (MANDATORY)
 
-- **Meaningful names only** — never `d`, `e`, `v`, `tmp`, `res`, `cb`, `fn`, `arr` (except `i`/`j` in simple loops)
+- **Meaningful names only** — NEVER `d`, `e`, `v`, `tmp`, `res`, `cb`, `fn`, `arr` (except `i`/`j` in simple loops)
 - Booleans: `is`, `has`, `can`, `should` prefix
 - Event handlers: `on`/`handle` prefix
 - Async: verb prefix (`fetchPatient`, `saveAppointment`)
@@ -83,12 +67,13 @@ When the user says these terms, go directly to the right location — no searchi
 | web | 3000 | — | React SPA |
 | nexus | 15178 | — | Aspire dashboard |
 
+
 ## Tech Stack
 
 | Layer | Stack |
 |-------|-------|
 | **Backend** | .NET 10, EF Core, FluentValidation, AutoMapper, MediatR, RabbitMQ, PostgreSQL, Duende IdentityServer |
-| **Frontend** | React 19, Vite, TypeScript, Tailwind CSS, shadcn/ui, RTK Query, React Router v7 |
+| **Frontend** | React 19 + Compiler, Vite, TypeScript, Tailwind CSS, shadcn/ui, RTK Query, React Router v7 |
 | **AI** | Clara.API (MCP), SignalR, pgvector, Deepgram, Microsoft.Extensions.AI |
 | **Infra** | Docker Compose, Aspire.Nexus, OpenTelemetry, Jaeger, Prometheus |
 
@@ -188,43 +173,18 @@ npm test                                                  # Frontend tests (src/
 | `MedicalRecords.UnitTests` | Unit | NSubstitute | Domain entities, value objects, CQRS handlers |
 | `Clara.IntegrationTests` | Integration | PostgreSQL + pgvector | API endpoints, SignalR, DB queries |
 
----
 
-## Development Workflow
-
-For non-trivial work, follow this sequence:
-
-1. **Design** — explore requirements and constraints before coding
-2. **Plan** — create step-by-step implementation plan (save to `docs/superpowers/plans/`)
-3. **Isolate** — use a feature branch or git worktree (`.worktrees/`)
-4. **Execute** — implement in small, verifiable steps
-5. **Verify** — run `npm run lint` + `npm run build` (frontend), `dotnet build` (backend when SDK available)
-6. **Finish** — merge or create PR
-
-**If the `superpowers` plugin is installed**, use its skills to automate these steps:
-`/superpowers:brainstorming` → `/superpowers:writing-plans` → `/superpowers:using-git-worktrees` → `/superpowers:executing-plans` → `/superpowers:verification-before-completion` → `/superpowers:finishing-a-development-branch`
-
-**TDD is mandatory for all new code** — use `/superpowers:test-driven-development` when available.
-
-**Test commands:**
-```bash
-dotnet test                                              # All tests
-dotnet test --filter "FullyQualifiedName~UnitTests"      # Unit tests only (no DB needed)
-dotnet test --filter "FullyQualifiedName~IntegrationTests" # Integration tests (needs Docker)
-npm test                                                  # Frontend tests (src/MediTrack.Web/)
-```
-
-**Test project map:**
-| Project | Type | Dependencies | When to use |
-|---------|------|-------------|-------------|
-| `Clara.UnitTests` | Unit | NSubstitute | Services, handlers, domain logic |
-| `MedicalRecords.UnitTests` | Unit | NSubstitute | Domain entities, value objects, CQRS handlers |
-| `Clara.IntegrationTests` | Integration | PostgreSQL + pgvector | API endpoints, SignalR, DB queries |
-
----
 
 ## Detailed Rules
 
-Backend, frontend, security, dependency, and AI rules are in `.claude/rules/`.
-Per-service domain context is in each service's `CLAUDE.md` (loaded automatically when working in that directory).
-Code review standards are in `REVIEW.md` (used by `claude review`).
+Backend, frontend, business, and workflow rules are in `.claude/rules/` (loaded automatically by path scope).
+Per-service domain context is in each service's `CLAUDE.md`.
+Code review standards are in `REVIEW.md`.
+
+---
+
+## CRITICAL — verify before every change
+
+1. **NEVER** hardcode secrets, log PHI, or skip `[Authorize]` on endpoints
+2. **NEVER** use manual `React.memo`/`useCallback`/`useMemo` — React Compiler handles it
+3. **ALWAYS** read existing code before modifying — evidence over assumption

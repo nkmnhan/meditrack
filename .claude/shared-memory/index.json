@@ -1,0 +1,49 @@
+{
+  "$description": "Shared team knowledge — committed to git, syncs with collaborators. This is the GitHub-based shared memory index.",
+  "$usage": "Claude reads this file to find shared learnings. Update via /learn skill or manually. Push to share with team.",
+  "$updated": "2026-04-06",
+  "learnings": [],
+  "principles": [],
+  "fixes": [
+    {
+      "category": "fix",
+      "key": "integration-test-auth-bypass",
+      "value": "Integration tests returned 401 because WebApplicationFactory's ConfigureServices runs BEFORE the app's Program.cs, so the app's JWT scheme overwrites the test scheme. Fix: use ConfigureTestServices (runs AFTER) to replace DefaultAuthenticateScheme and DefaultChallengeScheme with a fake TestAuthHandler.",
+      "tags": ["backend", "testing", "auth", "integration-tests"],
+      "source": "tests/Clara.IntegrationTests/ClaraApiFactory.cs",
+      "date": "2026-04-07",
+      "author": "nhan"
+    },
+    {
+      "category": "fix",
+      "key": "identity-api-missing-identity-url",
+      "value": "Identity.API crashes on startup with 'IdentityUrl configuration is required' because it validates JWT tokens on its own REST endpoints and needs Authority URL for OIDC discovery. Fix: add IdentityUrl=https://identity-api:8443 to docker-compose.override.yml for the identity-api service.",
+      "tags": ["backend", "docker", "identity", "config"],
+      "source": "docker-compose.override.yml",
+      "date": "2026-04-07",
+      "author": "nhan"
+    }
+  ],
+  "patterns": [],
+  "decisions": [],
+  "gotchas": [
+    {
+      "category": "gotcha",
+      "key": "pgvector-ef-core-extension-method-conflict",
+      "value": "Pgvector.EntityFrameworkCore's UseVector() extension on NpgsqlDbContextOptionsBuilder shadows Pgvector's UseVector() on NpgsqlDataSourceBuilder. When both packages are in scope, the compiler picks the wrong overload. Fix: isolate NpgsqlDataSourceBuilder.UseVector() in a separate file that only imports 'using Pgvector;' without EF Core usings.",
+      "tags": ["backend", "ef-core", "pgvector", "testing"],
+      "source": "tests/Clara.IntegrationTests/TestDataSourceFactory.cs",
+      "date": "2026-04-07",
+      "author": "nhan"
+    },
+    {
+      "category": "gotcha",
+      "key": "npgsql-jsonb-dynamic-json-opt-in",
+      "value": "Npgsql 8+ requires explicit opt-in for JSONB serialization of Dictionary<string,string> via EnableDynamicJson() on NpgsqlDataSourceBuilder. Without it, saving entities with JSONB columns throws 'Writing values of Dictionary is not supported'. The app's normal UseNpgsql doesn't call this — it works in production because of different initialization paths, but test factories that rebuild the DbContext need it explicitly.",
+      "tags": ["backend", "ef-core", "npgsql", "jsonb", "testing"],
+      "source": "tests/Clara.IntegrationTests/ClaraApiFactory.cs",
+      "date": "2026-04-07",
+      "author": "nhan"
+    }
+  ]
+}
