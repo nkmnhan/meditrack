@@ -5,7 +5,7 @@ description: >
   approach. Use BEFORE committing to an implementation plan, after completing a major feature, when
   a design feels "too easy", or when the team needs someone to ask "what could go wrong?".
   This agent makes the project better by finding problems before production does.
-model: claude-opus-4-5
+model: claude-opus-4-6
 tools:
   - read
   - glob

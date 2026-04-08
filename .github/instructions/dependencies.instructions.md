@@ -44,3 +44,10 @@ Before adding any dependency:
 
 - Pin exact versions in `package.json` for production dependencies when security is critical
 - Run `npm audit` regularly; flag high/critical vulnerabilities before merging
+
+## Database Runtime Gotchas
+
+- **Npgsql JSONB** requires `EnableDynamicJson()` on `NpgsqlDataSourceBuilder` — without it, `Dictionary<string,string>` columns throw at runtime
+- **pgvector type mapping** must be registered at BOTH levels: `NpgsqlDataSourceBuilder` (Npgsql) AND `UseVector()` (EF Core)
+- **Extension method conflict**: `Pgvector` and `Pgvector.EntityFrameworkCore` both define `UseVector()` — isolate `NpgsqlDataSourceBuilder` calls in files that only import `using Pgvector;`
+- **Docker**: every service needs `IdentityUrl` in `docker-compose` — even Identity.API itself (it validates its own JWT tokens via OIDC discovery)

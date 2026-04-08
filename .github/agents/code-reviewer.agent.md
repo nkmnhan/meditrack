@@ -4,7 +4,7 @@ description: >
   Reviews code changes for bugs, logic errors, security vulnerabilities, SOLID violations,
   naming convention violations, and adherence to project standards. Use after code changes,
   when reviewing pull requests, validating test coverage, or auditing existing code quality.
-model: claude-sonnet-4-5
+model: claude-sonnet-4-6
 tools:
   - read
   - glob

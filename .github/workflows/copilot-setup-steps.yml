@@ -31,6 +31,9 @@ jobs:
       - name: Restore NuGet packages
         run: dotnet restore MediTrack.sln
 
+      - name: Warm NuGet build cache
+        run: dotnet build MediTrack.sln --no-restore
+
       # ── Node.js 22 ───────────────────────────────────────────────────────────
       - name: Set up Node.js 22
         uses: actions/setup-node@v4

@@ -1,5 +1,5 @@
 ---
-applyTo: "src/Clara.API/**,skills/**"
+applyTo: "src/Clara.API/**,skills/**,tests/Clara.*/**"
 ---
 
 # Clara AI / MCP Rules

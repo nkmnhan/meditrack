@@ -106,10 +106,14 @@ dotnet test --filter "FullyQualifiedName~IntegrationTests"        # Integration 
 
 ## Development Workflow
 
-1. **Read before write** — always read existing code before modifying. Search for similar patterns first.
-2. **TDD first** — write failing tests, then implementation, then refactor.
-3. **Verify** — always run `dotnet build` / `npm run build` + `npm run lint` after changes.
-4. **Update CHANGELOG.md** — under `[Unreleased]` after significant features.
+1. **Pre-work** — before writing any code:
+   - Check `.claude/shared-memory/index.json` for known fixes/gotchas related to the task
+   - Check `.claude/index/backend-registry.json` or `frontend-registry.json` for existing services, components, hooks, and utils — **never create what already exists**
+   - Read the service's local `CLAUDE.md` for domain-specific context
+2. **Read before write** — always read existing code before modifying. Search for similar patterns first.
+3. **TDD first** — write failing tests, then implementation, then refactor.
+4. **Verify** — always run `dotnet build` / `npm run build` + `npm run lint` after changes.
+5. **Update CHANGELOG.md** — under `[Unreleased]` after significant features.
 
 ---
 

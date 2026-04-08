@@ -117,6 +117,8 @@ function Component({ children }: Props) {}
 | `accent-*`             | Violet — highlights, Clara AI   | Allowed (semantic)            |
 | `success/warning/error/info-*` | Status feedback         | Allowed (perceptual scales)   |
 | `healing-*`            | Brand warm teal accents         | Allowed (CSS var-backed)      |
+| `status-scheduled/completed/cancelled/...` | Appointment workflow states | Allowed (fixed hex) |
+| `triage-critical/urgent/routine` | Medical urgency levels  | Allowed (fixed hex)           |
 
 **Perceptual scale rule**: Shade numbers have consistent semantic meaning in both light AND dark mode.
 `50` = subtle bg, `200` = border, `500` = solid/base, `600`+ = text (WCAG AA).

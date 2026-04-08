@@ -5,7 +5,7 @@ description: >
   and breaks down large features into actionable tasks. Use when planning multi-step features,
   resolving conflicting approaches, prioritizing technical debt, or when a decision-maker is needed
   who balances pragmatism with engineering excellence.
-model: claude-opus-4-5
+model: claude-opus-4-6
 tools:
   - read
   - write

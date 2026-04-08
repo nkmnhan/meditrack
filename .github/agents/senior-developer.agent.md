@@ -4,7 +4,7 @@ description: >
   Implements features, writes production code, creates tests (TDD-first), refactors existing code,
   fixes bugs, and builds end-to-end functionality across backend (.NET 10) and frontend (React 19 + TypeScript).
   Use for hands-on coding tasks that require deep knowledge of the MediTrack codebase.
-model: claude-sonnet-4-5
+model: claude-sonnet-4-6
 tools:
   - read
   - write

@@ -19,11 +19,11 @@ applyTo: "**/*.cs,src/MediTrack.Web/src/**/*.{ts,tsx},design/src/**/*.{ts,tsx},d
 - No stack traces to clients
 - No default credentials in any environment
 
-## Injection (A05)
+## Supply Chain Failures (A03)
 
-- Parameterized queries only via EF Core LINQ — **never** `FromSqlRaw` with string concatenation
-- **Never** `dangerouslySetInnerHTML` in React
-- LLM prompt injection defense: wrap user content in XML delimiters when building prompts
+- Run `npm audit` and `dotnet list package --vulnerable` regularly
+- Pin dependency versions — never use `latest` or open ranges
+- Verify package integrity; review transitive dependencies before adding new packages
 
 ## Cryptographic Failures (A04)
 
@@ -45,6 +45,25 @@ applyTo: "**/*.cs,src/MediTrack.Web/src/**/*.{ts,tsx},design/src/**/*.{ts,tsx},d
 - **Never** log secrets, passwords, tokens, or PHI in any log output
 - Structured logging (key-value pairs, not interpolated strings)
 - Alert on anomalies
+
+## Vulnerable & Outdated Components (A06)
+
+- Keep frameworks and libraries updated
+- Monitor CVE advisories for dependencies
+- Automate dependency scanning in CI
+
+## Software & Data Integrity Failures (A08)
+
+- Validate deserialized types against allowlists — never deserialize arbitrary types
+- Use SRI (Subresource Integrity) for external scripts
+- Verify CI/CD pipeline integrity; sign artifacts where possible
+
+## Mishandling of Exceptional Conditions (A10)
+
+- **Fail securely** — errors must never bypass security controls
+- Catch exceptions at boundaries; let them propagate within domain logic
+- **Never expose stack traces** to clients
+- Validate all error paths still enforce authorization
 
 ## Required Security Headers (every service)
 

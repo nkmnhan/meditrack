@@ -5,7 +5,7 @@ description: >
   boundaries, reviews data models, and evaluates integration patterns (event bus, MCP, SignalR).
   Use when designing new features, refactoring service boundaries, planning database schemas,
   or evaluating technology choices.
-model: claude-opus-4-5
+model: claude-opus-4-6
 tools:
   - read
   - glob
