@@ -56,6 +56,7 @@
     <!-- AI Abstraction Layer (Microsoft.Extensions.AI) -->
     <PackageVersion Include="Microsoft.Extensions.AI" Version="10.3.0" />
     <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.3.0" />
+    <PackageVersion Include="Anthropic.SDK" Version="4.0.0" />
 
     <!-- AI Providers -->
     <PackageVersion Include="OpenAI" Version="2.8.0" />

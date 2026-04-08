@@ -1,6 +1,5 @@
 using Clara.API.Application.Models;
 using Clara.API.Domain;
-using Microsoft.Extensions.AI;
 
 namespace Clara.API.Services;
 
@@ -17,12 +16,6 @@ public interface IAgentService
 
     /// <summary>Human-readable name shown in UI and logs.</summary>
     string DisplayName { get; }
-
-    /// <summary>The system prompt loaded by this agent.</summary>
-    string SystemPrompt { get; }
-
-    /// <summary>The tools exposed to the LLM during the ReAct loop.</summary>
-    IList<AITool> Tools { get; }
 
     /// <summary>
     /// Runs the agent reasoning loop and returns a verified list of suggestion items.

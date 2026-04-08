@@ -11,6 +11,7 @@ using MediTrack.ServiceDefaults;
 using MediTrack.ServiceDefaults.Extensions;
 using MediTrack.Shared.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,11 @@ builder.Services.AddDbContext<AuditReadContext>(options =>
 
 // Authentication & Authorization
 builder.Services.AddDefaultAuthentication(builder.Configuration);
+
+// AI options — strongly-typed, validated at startup (fail fast on misconfiguration)
+builder.Services.AddOptions<AIOptions>()
+    .BindConfiguration(AIOptions.SectionName)
+    .ValidateOnStart();
 
 // AI Services (IChatClient, IEmbeddingGenerator)
 builder.Services.AddAIServices(builder.Configuration);

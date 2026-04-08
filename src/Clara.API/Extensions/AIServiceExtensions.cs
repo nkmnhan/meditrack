@@ -1,52 +1,125 @@
 using System.ClientModel;
 using System.Net.Http.Headers;
+using Anthropic.SDK;
+using Clara.API.Application.Models;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Options;
 using OpenAI;
+using Polly;
+using Polly.Retry;
+using Polly.Timeout;
 
 namespace Clara.API.Extensions;
 
 /// <summary>
 /// Extension methods for registering AI services (IChatClient, IEmbeddingGenerator)
 /// and resilient HTTP clients (Deepgram, OpenAI, PatientApi).
+///
+/// Provider switching is config-only — set AI:ChatProvider to "anthropic" or "openai".
+/// Embeddings always use OpenAI (Anthropic has no embedding model).
+///
+/// Each registered IChatClient is wrapped in a ChatClientBuilder pipeline:
+///   leaf → UseLogging → UseOpenTelemetry → ResilienceChatClient (outermost)
 /// </summary>
 public static class AIServiceExtensions
 {
     /// <summary>
-    /// Registers IChatClient and IEmbeddingGenerator with Microsoft.Extensions.AI abstraction layer.
-    /// Note: OpenTelemetry integration will be added when M.E.AI.OpenTelemetry package is available.
+    /// Registers keyed IChatClient instances and IEmbeddingGenerator.
+    /// Chat provider is selected via AI:ChatProvider ("openai" | "anthropic").
+    /// Embedding provider is always OpenAI (AI:OpenAI:ApiKey required regardless of chat provider).
     /// </summary>
     public static IServiceCollection AddAIServices(
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var openAiApiKey = configuration["AI:OpenAI:ApiKey"] 
-            ?? throw new InvalidOperationException("AI:OpenAI:ApiKey is not configured");
-        var batchModel = configuration["AI:OpenAI:BatchModel"] ?? "gpt-4o-mini";
-        var onDemandModel = configuration["AI:OpenAI:OnDemandModel"] ?? "gpt-4o";
-        var embeddingModel = configuration["AI:OpenAI:EmbeddingModel"] ?? "text-embedding-3-small";
+        // Batch: cost-optimised (90% of calls)
+        services.AddKeyedSingleton<IChatClient>("batch", (sp, _) =>
+        {
+            var opts = sp.GetRequiredService<IOptions<AIOptions>>().Value;
+            var leaf = CreateChatClient(opts, opts.BatchModel);
+            return BuildPipeline(leaf, sp);
+        });
 
-        // Create OpenAI client (shared for both chat and embeddings)
-        var openAiClient = new OpenAIClient(new ApiKeyCredential(openAiApiKey));
+        // On-demand/urgent: accuracy-optimised (10% of calls)
+        services.AddKeyedSingleton<IChatClient>("ondemand", (sp, _) =>
+        {
+            var opts = sp.GetRequiredService<IOptions<AIOptions>>().Value;
+            var leaf = CreateChatClient(opts, opts.OnDemandModel);
+            return BuildPipeline(leaf, sp);
+        });
 
-        // Register keyed IChatClient instances for tiered model routing
-        // Batch: GPT-4o-mini (90% of calls — cost-optimized)
-        services.AddKeyedSingleton<IChatClient>("batch", (sp, key) =>
-            openAiClient.GetChatClient(batchModel).AsIChatClient());
-
-        // On-demand/urgent: GPT-4o (10% of calls — accuracy-optimized)
-        services.AddKeyedSingleton<IChatClient>("ondemand", (sp, key) =>
-            openAiClient.GetChatClient(onDemandModel).AsIChatClient());
-
-        // Default (non-keyed) for backward compatibility
+        // Default non-keyed client for backward compatibility — resolves to batch
         services.AddSingleton<IChatClient>(sp =>
-            openAiClient.GetChatClient(batchModel).AsIChatClient());
+            sp.GetRequiredKeyedService<IChatClient>("batch"));
 
-        // Register IEmbeddingGenerator (embedding abstraction)
-        // IEmbeddingGenerator<string, Embedding<float>> wraps the OpenAI embedding client
+        // Embeddings always use OpenAI — Anthropic has no embedding model
         services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(sp =>
-            openAiClient.GetEmbeddingClient(embeddingModel).AsIEmbeddingGenerator());
+        {
+            var opts = sp.GetRequiredService<IOptions<AIOptions>>().Value;
+            if (string.IsNullOrEmpty(opts.OpenAI.ApiKey))
+                throw new InvalidOperationException("AI:OpenAI:ApiKey is required for embeddings");
+            var openAiClient = new OpenAIClient(new ApiKeyCredential(opts.OpenAI.ApiKey));
+            return openAiClient.GetEmbeddingClient(opts.OpenAI.EmbeddingModel).AsIEmbeddingGenerator();
+        });
 
         return services;
+    }
+
+    private static IChatClient CreateChatClient(AIOptions opts, string model) =>
+        opts.ChatProvider.ToLowerInvariant() switch
+        {
+            "anthropic" => CreateAnthropicClient(opts, model),
+            _ => CreateOpenAIClient(opts, model)
+        };
+
+    private static IChatClient CreateOpenAIClient(AIOptions opts, string model)
+    {
+        if (string.IsNullOrEmpty(opts.OpenAI.ApiKey))
+            throw new InvalidOperationException("AI:OpenAI:ApiKey is not configured");
+
+        return new OpenAIClient(new ApiKeyCredential(opts.OpenAI.ApiKey))
+            .GetChatClient(model)
+            .AsIChatClient();
+    }
+
+    private static IChatClient CreateAnthropicClient(AIOptions opts, string model)
+    {
+        if (string.IsNullOrEmpty(opts.Anthropic.ApiKey))
+            throw new InvalidOperationException("AI:Anthropic:ApiKey is not configured");
+
+        return new AnthropicChatClientAdapter(new AnthropicClient(opts.Anthropic.ApiKey), model);
+    }
+
+    /// <summary>
+    /// Wraps a leaf IChatClient in the full observability + resilience pipeline:
+    ///   leaf → UseLogging → UseOpenTelemetry → ResilienceChatClient
+    ///
+    /// Pipeline order: outermost middleware runs first on the way in / last on the way out.
+    /// Resilience is outermost so it retries the full instrumented call.
+    /// </summary>
+    private static IChatClient BuildPipeline(IChatClient leaf, IServiceProvider sp)
+    {
+        var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+
+        var resiliencePipeline = new ResiliencePipelineBuilder<ChatResponse>()
+            .AddRetry(new RetryStrategyOptions<ChatResponse>
+            {
+                MaxRetryAttempts = 3,
+                BackoffType = DelayBackoffType.Exponential,
+                UseJitter = true,
+                Delay = TimeSpan.FromSeconds(1),
+                ShouldHandle = new PredicateBuilder<ChatResponse>()
+                    .Handle<HttpRequestException>()
+                    .Handle<TimeoutRejectedException>()
+            })
+            .AddTimeout(TimeSpan.FromSeconds(60))
+            .Build();
+
+        return new ChatClientBuilder(leaf)
+            .UseLogging(loggerFactory)
+            .UseOpenTelemetry(loggerFactory, sourceName: "Clara.AI")
+            .Use(next => new ResilienceChatClient(next, resiliencePipeline))
+            .Build();
     }
 
     /// <summary>
@@ -64,7 +137,7 @@ public static class AIServiceExtensions
             var deepgramApiKey = configuration["AI:Deepgram:ApiKey"];
             if (!string.IsNullOrEmpty(deepgramApiKey) && deepgramApiKey != "REPLACE_IN_OVERRIDE")
             {
-                client.DefaultRequestHeaders.Authorization = 
+                client.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Token", deepgramApiKey);
             }
         })

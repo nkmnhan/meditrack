@@ -12,6 +12,7 @@
     <!-- AI Abstraction Layer (Microsoft.Extensions.AI) -->
     <PackageReference Include="Microsoft.Extensions.AI" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
+    <PackageReference Include="Anthropic.SDK" />
 
     <!-- AI Providers -->
     <PackageReference Include="OpenAI" />
