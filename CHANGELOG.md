@@ -6,6 +6,27 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [Unreleased]
 
 ### Added
+- GitHub Copilot hooks, MCP, and tooling (2026-04-08)
+  - `.github/hooks/post-edit-lint.json` — Copilot coding agent PostToolUse hook: ESLint on `.ts/.tsx` files after every edit (equivalent to Claude's `post-edit-lint.mjs`, different format)
+  - `.vscode/mcp.json` — VS Code MCP server config translated from `.mcp.json` (`servers` key, `inputs` secret prompt for postgres DSN)
+  - `.vscode/settings.json` — VS Code: Copilot agent mode, MCP enabled, ESLint/Prettier on save, Tailwind `clsxMerge` class regex, search exclusions
+  - `.vscode/extensions.json` — Recommended extensions: Copilot, C# Dev Kit, ESLint, Prettier, Tailwind, GitLens, Docker, Playwright
+  - `.github/workflows/lint.yml` — CI lint gate on all PRs: ESLint (frontend) + dotnet build (backend)
+- GitHub Copilot configuration (2026-04-08) — full parity with Claude Code setup
+  - `.github/copilot-instructions.md` — repository-wide instructions (engineering principles, naming, service map, tech stack, commands)
+  - `.github/instructions/backend.instructions.md` — Clean Architecture, MediatR, NuGet CPM, EF Core rules (scoped to `**/*.cs`)
+  - `.github/instructions/frontend.instructions.md` — React 19, RTK Query, semantic tokens, React Compiler rules (scoped to Web + Design)
+  - `.github/instructions/security.instructions.md` — OWASP Top 10:2025, PHI audit, secrets rules (broad scope)
+  - `.github/instructions/ai-mcp.instructions.md` — Clara MCP architecture, cost routing, ReAct loop (scoped to `src/Clara.API/`)
+  - `.github/instructions/dependencies.instructions.md` — license policy, NuGet CPM, npm audit rules
+  - `.github/instructions/web-design-sync.instructions.md` — dual-update mandate for shared components (Web ↔ Design)
+  - `.github/agents/tech-lead.agent.md` — Staff Tech Lead agent (Claude Opus)
+  - `.github/agents/senior-developer.agent.md` — Senior Dev agent with TDD protocol (Claude Sonnet)
+  - `.github/agents/code-reviewer.agent.md` — Principal reviewer with structured output format (Claude Sonnet)
+  - `.github/agents/system-architect.agent.md` — Distributed systems architect (Claude Opus, max effort)
+  - `.github/agents/devils-advocate.agent.md` — Contrarian critic for stress-testing designs (Claude Opus, max effort)
+  - `.github/workflows/copilot-setup-steps.yml` — Copilot coding agent environment (.NET 10, Node 22, NuGet + npm restore)
+  - `AGENTS.md` — portable root-level agent manifest (Copilot, Cursor, Codex, Jules compatible)
 - Cross-session agent memory (2026-04-03) — P3.3
   - `AgentMemory` domain entity — episodic/semantic observations with pgvector embedding for cosine similarity search
   - `IAgentMemoryService` / `AgentMemoryService` — store, recall-by-patient (recency), recall-by-similarity (HNSW cosine)

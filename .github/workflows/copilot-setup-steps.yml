@@ -1,0 +1,71 @@
+name: Copilot Setup Steps
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+  # Job name MUST be exactly "copilot-setup-steps"
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # ── .NET 10 ──────────────────────────────────────────────────────────────
+      - name: Set up .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Restore NuGet packages
+        run: dotnet restore MediTrack.sln
+
+      # ── Node.js 22 ───────────────────────────────────────────────────────────
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: src/MediTrack.Web/package-lock.json
+
+      - name: Install frontend dependencies (web)
+        working-directory: src/MediTrack.Web
+        run: npm ci
+
+      - name: Install frontend dependencies (design submodule)
+        working-directory: design
+        run: npm ci
+
+      # ── Environment hints for the agent ──────────────────────────────────────
+      - name: Print environment summary
+        run: |
+          echo "=== .NET version ==="
+          dotnet --version
+          echo "=== Node version ==="
+          node --version
+          echo "=== npm version ==="
+          npm --version
+          echo ""
+          echo "=== Services ==="
+          echo "identity  → port 5001 (Duende IdentityServer)"
+          echo "patient   → port 5002 (/api/patients, Simple CRUD)"
+          echo "appointment → port 5003 (/api/appointments, Simple CRUD)"
+          echo "records   → port 5004 (/api/medicalrecords, DDD+CQRS)"
+          echo "clara     → port 5005 (/api/clara, MCP+SignalR)"
+          echo "web       → port 3000 (React SPA)"
+          echo ""
+          echo "=== Test commands ==="
+          echo "dotnet test --filter 'FullyQualifiedName~UnitTests'       # no DB"
+          echo "dotnet test --filter 'FullyQualifiedName~IntegrationTests' # needs Docker"
+          echo "npm test  (in src/MediTrack.Web/)"
