@@ -136,7 +136,7 @@ public sealed class SessionSeeder
                 PatientId = patientId,
                 StartedAt = timestampOffset,
                 EndedAt = status != "Active" ? endTimestamp : null,
-                Status = status,
+                Status = EnumConversions.ParseSessionStatus(status),
                 AudioRecorded = random.NextDouble() < 0.85,
                 SessionType = sessionType,
             });
@@ -159,9 +159,9 @@ public sealed class SessionSeeder
                     SessionId = sessionId,
                     Content = content,
                     TriggeredAt = timestampOffset.AddMinutes(random.Next(0, durationMinutes)),
-                    Type = suggestionType,
-                    Source = random.NextDouble() < 0.7 ? "batch" : "on_demand",
-                    Urgency = urgency,
+                    Type = EnumConversions.ParseSuggestionType(suggestionType),
+                    Source = random.NextDouble() < 0.7 ? SuggestionSourceEnum.Batch : SuggestionSourceEnum.OnDemand,
+                    Urgency = EnumConversions.ParseSuggestionUrgency(urgency),
                     Confidence = (float)(0.5 + random.NextDouble() * 0.5),
                 });
             }
