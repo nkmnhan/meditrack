@@ -8,7 +8,7 @@ model: sonnet
 color: green
 memory: project
 tools: Read, Glob, Grep, Bash
-effort: high
+effort: medium
 ---
 
 # Code Reviewer — MediTrack

@@ -104,6 +104,23 @@ dotnet test --filter "FullyQualifiedName~IntegrationTests"        # Integration 
 
 ---
 
+## Agent Model Gateway — Route to the Right Model
+
+Every task has a right agent. Using the wrong one wastes your monthly quota:
+
+| Task | Agent | Model | Cost tier |
+|------|-------|-------|-----------|
+| Explore code, search patterns, "where is X?" | `scout` | Haiku | 🟢 Cheap |
+| Implement features, fix bugs, write tests | `senior-developer` | Sonnet | 🟡 Standard |
+| Review PRs, audit security, check conventions | `code-reviewer` | Sonnet | 🟡 Standard |
+| Plan features, break down tasks | `tech-lead` | Opus | 🔴 Premium |
+| Design architecture, data models | `system-architect` | Opus | 🔴 Premium |
+| Stress-test plans, challenge assumptions | `devils-advocate` | Opus | 🔴 Premium |
+
+**Golden rule**: default one tier cheaper than you think you need. Upgrade only if quality is insufficient.
+
+---
+
 ## Development Workflow
 
 1. **Pre-work** — before writing any code:

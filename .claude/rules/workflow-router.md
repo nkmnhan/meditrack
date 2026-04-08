@@ -7,7 +7,22 @@ paths:
 
 When the user's request matches a pattern below, suggest the appropriate workflow.
 
-## Intent Detection
+## Workflow Router — Use the Right Agent for the Task
+
+This is your **model gateway**. Route every task to the cheapest model that can do the job well.
+
+| Task type | Agent to use | Model tier | Why |
+|-----------|-------------|------------|-----|
+| Explore, search, "where is X", "does this exist?" | `scout` | **Haiku** 🟢 | Read-only; no reasoning needed |
+| Implement feature, fix bug, write tests (TDD) | `senior-developer` | **Sonnet** 🟡 | Needs code quality judgment |
+| Review PR, audit security, check conventions | `code-reviewer` | **Sonnet** 🟡 | Needs pattern recognition |
+| Plan features, break down tasks, resolve conflicts | `tech-lead` | **Opus** 🔴 | Needs deep reasoning |
+| Design service boundaries, data models, scalability | `system-architect` | **Opus** 🔴 | Needs architectural depth |
+| Challenge a plan, stress-test a design | `devils-advocate` | **Opus** 🔴 | Needs adversarial reasoning |
+
+**Rule**: Default to the agent one tier CHEAPER than you think you need. Upgrade only if output quality is insufficient.
+
+## Intent Detection → Agent Routing
 
 | User says... | Detected intent | Recommended workflow |
 |-------------|-----------------|---------------------|
