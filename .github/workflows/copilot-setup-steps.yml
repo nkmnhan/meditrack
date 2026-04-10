@@ -19,8 +19,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       # ── .NET 10 ──────────────────────────────────────────────────────────────
       - name: Set up .NET 10 SDK
@@ -44,10 +42,6 @@ jobs:
 
       - name: Install frontend dependencies (web)
         working-directory: src/MediTrack.Web
-        run: npm ci
-
-      - name: Install frontend dependencies (design submodule)
-        working-directory: design
         run: npm ci
 
       # ── Environment hints for the agent ──────────────────────────────────────
