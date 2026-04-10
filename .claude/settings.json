@@ -45,12 +45,7 @@
       "Bash(git worktree *)",
       "Bash(ls *)",
       "Bash(mkdir *)",
-      "Bash(cat *)",
       "Bash(wc *)",
-      "Bash(rm *)",
-      "Bash(find *)",
-      "Bash(grep *)",
-      "Bash(strings *)",
       "Bash(head *)",
       "Bash(tail *)",
       "Bash(gh pr *)",
@@ -67,14 +62,22 @@
     "deny": [
       "Bash(rm -rf *)",
       "Bash(rm -r *)",
+      "Bash(rm *)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(ssh *)",
       "Bash(git push --force *)",
       "Bash(git push -f *)",
       "Bash(git push origin +*)",
+      "Bash(git push origin main)",
+      "Bash(git push origin main *)",
       "Bash(git reset --hard *)",
       "Bash(git checkout -- *)",
       "Bash(git clean *)",
       "Bash(git branch -D *)",
       "Bash(dotnet add package *)",
+      "Bash(dotnet ef database drop *)",
+      "Bash(dotnet ef migrations remove *)",
       "Read(.env*)",
       "Read(**/*.pem)",
       "Read(**/*.key)",
@@ -114,7 +117,7 @@
           {
             "type": "command",
             "command": "node .claude/hooks/post-edit-lint.mjs",
-            "timeout": 15000
+            "timeout": 35000
           }
         ]
       },
@@ -124,8 +127,7 @@
           {
             "type": "command",
             "command": "node .claude/hooks/output-compress.mjs",
-            "timeout": 5000,
-            "async": true
+            "timeout": 5000
           }
         ]
       }
