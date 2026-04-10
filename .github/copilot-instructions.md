@@ -154,9 +154,19 @@ color-themes.ts → themeDerivation.ts → use-color-theme.ts → ThemeSwitcher.
 
 These mirror the deny list in `.claude/settings.json`. **Never execute these**, even if asked:
 
+### File deletion
+- `rm *` — never delete any files (any form of rm is prohibited)
+- `rm -r *` / `rm -rf *` — never delete directories recursively
+
+### Network / remote access
+- `curl *` — no arbitrary network calls (data exfiltration risk)
+- `wget *` — no arbitrary downloads
+- `ssh *` — no unauthorized remote access
+
 ### Destructive git commands
-- `rm -rf` — never delete directories recursively
-- `git push --force` — no force push under any circumstances
+- `git push --force` / `git push -f *` — no force push under any circumstances
+- `git push origin +*` — no force push via refspec
+- `git push origin main` — no direct push to main (bypass of branch protection)
 - `git reset --hard` — no hard reset (data loss risk)
 - `git checkout -- <file>` — no discarding uncommitted changes
 - `git clean -f / -fd / -fx` — no wiping untracked files
@@ -165,12 +175,17 @@ These mirror the deny list in `.claude/settings.json`. **Never execute these**, 
 ### Package management
 - `dotnet add package` — **never add NuGet packages directly**. All packages must go through `Directory.Packages.props` (Central Package Management). Propose the addition in a comment instead.
 
+### Destructive database operations
+- `dotnet ef database drop *` — never drop the database
+- `dotnet ef migrations remove *` — never remove applied migrations
+
 ### Secret / credential access
 - Never read, log, echo, or reference: `.env*`, `*.pem`, `*.key`, `*credentials*`, `*secret*`
 - Never commit secrets, tokens, or connection strings to source code
 - Secrets belong in environment variables or the secrets manager only
 
 ### Allowed extras (from `.claude/settings.local.json`)
-- `dotnet ef` commands (migrations, database updates) — permitted
+- `dotnet ef migrations add *` — permitted (create new migrations)
+- `dotnet ef database update *` — permitted (apply pending migrations)
 - Commit operations via configured skills — permitted
 
