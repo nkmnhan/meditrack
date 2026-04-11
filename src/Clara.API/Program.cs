@@ -43,8 +43,8 @@ builder.Services.AddAIServices(builder.Configuration);
 // Resilient HTTP clients (Deepgram, OpenAI, PatientApi)
 builder.Services.AddResilientHttpClients(builder.Configuration);
 
-// Rate limiting policies (prevents abuse and cost overruns)
-builder.Services.AddRateLimitingPolicies();
+// Rate limiting policies (prevents abuse and cost overruns; relaxed in Development for E2E tests)
+builder.Services.AddRateLimitingPolicies(builder.Environment);
 
 // FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();

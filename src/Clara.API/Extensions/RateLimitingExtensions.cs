@@ -25,33 +25,40 @@ public static class RateLimitingExtensions
 
     /// <summary>
     /// Adds rate limiting policies for AI endpoints.
+    /// Limits are relaxed in Development to allow E2E and integration tests to run
+    /// multiple session creation calls without hitting the production rate limit.
     /// </summary>
-    public static IServiceCollection AddRateLimitingPolicies(this IServiceCollection services)
+    public static IServiceCollection AddRateLimitingPolicies(
+        this IServiceCollection services,
+        IHostEnvironment environment)
     {
+        var isDevelopment = environment.IsDevelopment();
+
         services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-            // On-demand suggestion: 1 request per 10 seconds per user
-            // Prevents button-mashing and controls LLM API costs
+            // On-demand suggestion: 1 request per 10 seconds per user in production.
+            // Relaxed in development to 60 per minute to unblock E2E tests.
             options.AddPolicy(Policies.Suggest, context =>
                 RateLimitPartition.GetFixedWindowLimiter(
                     partitionKey: context.User?.Identity?.Name ?? context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
                     factory: _ => new FixedWindowRateLimiterOptions
                     {
-                        PermitLimit = 1,
-                        Window = TimeSpan.FromSeconds(10),
+                        PermitLimit = isDevelopment ? 60 : 1,
+                        Window = isDevelopment ? TimeSpan.FromMinutes(1) : TimeSpan.FromSeconds(10),
                         QueueLimit = 0
                     }));
 
-            // Session creation: 5 sessions per minute per user
-            // Prevents session spam
+            // Session creation: 5 per minute per user in production.
+            // Relaxed in development to 60 per minute to unblock E2E tests that
+            // create multiple sessions across test runs within the same rate-limit window.
             options.AddPolicy(Policies.SessionCreate, context =>
                 RateLimitPartition.GetFixedWindowLimiter(
                     partitionKey: context.User?.Identity?.Name ?? context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
                     factory: _ => new FixedWindowRateLimiterOptions
                     {
-                        PermitLimit = 5,
+                        PermitLimit = isDevelopment ? 60 : 5,
                         Window = TimeSpan.FromMinutes(1),
                         QueueLimit = 0
                     }));

@@ -176,16 +176,34 @@ export function useSession({
       setTimeout(() => setAgentStatus("idle"), 5000);
     });
 
+    // Track whether the effect was cleaned up (React Strict Mode runs effects twice
+    // in development — the first cleanup fires while the connection is still negotiating,
+    // producing an AbortError. The `cleanedUp` guard suppresses the spurious error and
+    // ensures the second attempt proceeds cleanly).
+    let cleanedUp = false;
+
     // Start connection
     const startConnection = async () => {
       try {
         setConnectionStatus("connecting");
         await connection.start();
+
+        // If cleanup ran while we were connecting, close the connection and exit
+        if (cleanedUp) {
+          connection.stop();
+          return;
+        }
+
         setConnectionStatus("connected");
 
         // Join the session
         await connection.invoke("JoinSession", sessionId);
       } catch (error) {
+        // AbortError is expected during React Strict Mode's double-invoke cleanup —
+        // the connection is intentionally stopped mid-negotiation on the first pass.
+        if (cleanedUp || (error instanceof Error && error.name === "AbortError")) {
+          return;
+        }
         console.error("Failed to connect to session hub:", error);
         setConnectionStatus("disconnected");
         onErrorRef.current?.(
@@ -198,6 +216,7 @@ export function useSession({
 
     // Cleanup on unmount
     return () => {
+      cleanedUp = true;
       connection.off("TranscriptLineAdded");
       connection.off("SuggestionAdded");
       connection.off("SessionUpdated");

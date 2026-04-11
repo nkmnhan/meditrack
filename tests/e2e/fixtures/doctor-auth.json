@@ -1,0 +1,61 @@
+{
+  "cookies": [
+    {
+      "name": ".AspNetCore.Antiforgery.LXSbpa6Pfs8",
+      "value": "CfDJ8GgdBlBtr1BAqs-zl6mfaPRegEHpbuJBNLNJNbS2nxJBEQm8BClR_5hF1Fn76yBJ9FojFWpv7TXeBY2gMhgBYHsF2QzKupTjy-pRDK1yReYJ7VhodAHa7MXW2joOcoBmtRI-wCMes6d5XXLI7YFmwVY",
+      "domain": "localhost",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Strict"
+    },
+    {
+      "name": "idsrv.session",
+      "value": "A17825C251E6E05C7ECFCDA8EECB305D",
+      "domain": "localhost",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": ".AspNetCore.Identity.Application",
+      "value": "CfDJ8GgdBlBtr1BAqs-zl6mfaPTHLVpSQvnemGrQ8tpJ583FkXuasdqw2ungdYwXHqGT-SWrMM8oWvLszRFkraVwavtRF_JYItQnF1Gww_8nsNctwvFphJk0fIpegXaNqQXZ5nU_dyKpC6htBZT9PX1w-Y5MxbRIp5XyjvVLp51xaXsxz0Voy9oNKaka6ql6841jHSzKn726eubZ3C-vnyaMoaaPldjUvpGKxd3Via2XWx_UKBr5dlWz8Ph0UCJXhnH9j-oWPuit9xKz5LdiQ6vO80Lk__7wgDRLYP4yHCrU9v6RUYhps7E2H1FZQDjudmKP4eqG9Pxr-xN4-qR_Z20j_yiMC7okTVVbvLTT9CHnJwrDvwvaKPRnwbBl-RQ9y3OjhaAaZEqW8WsV48UdjOUOlq1MhunmPoo9p_hl7ueXcLmWmNGKSMj_onbzBroZYQqGjyJGiSEgmf9XRqfxz-jLL35keIKS5q7YYBTgXqv3GIC72mxBg9Cys-7kmNOGbHQ6TMmai2VN7QYy4o7pR9Vb5p1pVZgu5iwAnP0f_51P7XCOHrNso3L98isxT9atMOGXRECiBpiqVbXaHaGwglUMtreg0O_VuUwC4QYDADcbBDdErz27ECR55bVXGZVrMCfPQh7WOz5J5EySYJ3rmsyziU8feFy2zTG_QjDZu9Tn2Li0gJ9mVS9DlKoO6cU-MwoUddiU9GFL57eXSe1cqzxEa-69m7qu7m7Q5-sKU_G7yISoGQtIYDGdaYclNK4GrR1-BG_Si7otyDHwhF3tCeyc3GFqpQkfM5Gj9CaQtpQknsDUG-IBHJphcmrmX_YBuPZ3Pfo6I6lUjTNPMNxlNtnQTg7zjHp3odt2wEZs4_z_XR0JOtU0lePhzudbBR9-rdSgrDurve0J3s-38a66cGZYTixGi8STlo7RvDJ4mmv-YFzebxSe1qYynd08MAmdw_qqWFivlsBJCdAg2O3-EizoYf9uUzmo1Kq-OniVOlpJn3h_wkBQFdLXttiylPM32eJKjw",
+      "domain": "localhost",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "https://localhost:3000",
+      "localStorage": [
+        {
+          "name": "meditrack-color-theme",
+          "value": "default"
+        },
+        {
+          "name": "meditrack-feature-guide",
+          "value": "{\"hasInteracted\":false,\"completedStepIds\":[],\"isDismissed\":false}"
+        },
+        {
+          "name": "meditrack-dashboard-layout",
+          "value": "[{\"id\":\"stats\",\"label\":\"Stats Overview\",\"isVisible\":true},{\"id\":\"schedule\",\"label\":\"Today's Schedule\",\"isVisible\":true},{\"id\":\"quick-actions\",\"label\":\"Quick Actions\",\"isVisible\":true},{\"id\":\"recent-patients\",\"label\":\"Recent Patients\",\"isVisible\":true},{\"id\":\"clara-suggestions\",\"label\":\"Clara's Suggestions\",\"isVisible\":true}]"
+        },
+        {
+          "name": "meditrack-theme",
+          "value": "system"
+        },
+        {
+          "name": "__playwright_oidc__oidc.user:https://localhost:5001:meditrack-web",
+          "value": "{\"id_token\":\"eyJhbGciOiJSUzI1NiIsImtpZCI6IkUxNUZEQTA4NjgyNzVDREI4QTk1QzAyODVFMDBENEE3IiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwczovL2xvY2FsaG9zdDo1MDAxIiwibmJmIjoxNzc1OTIzODc4LCJpYXQiOjE3NzU5MjM4NzgsImV4cCI6MTc3NTkyNDE3OCwiYXVkIjoibWVkaXRyYWNrLXdlYiIsImFtciI6WyJwd2QiXSwiYXRfaGFzaCI6ImI5QXFoNVRTUDVrY2Qwb2V3VkxYSEEiLCJzaWQiOiJBMTc4MjVDMjUxRTZFMDVDN0VDRkNEQThFRUNCMzA1RCIsInN1YiI6ImE1YzFmY2JhLWNlOWItNDJjNS1iYzdiLThmMTFmZTA0YmZiZCIsImF1dGhfdGltZSI6MTc3NTkyMzg3OCwiaWRwIjoibG9jYWwiLCJnaXZlbl9uYW1lIjoiSmFuZSIsImZhbWlseV9uYW1lIjoiU21pdGgiLCJuYW1lIjoiSmFuZSBTbWl0aCIsInJvbGUiOiJEb2N0b3IifQ.NgLdgMeX6dmo0o8uJaf1UWa42L1Zxy88Zj3LaFMd2lGPDxJl2p2zdXiI1CBXnXltQCewri_8EynOmPMLJjkGinps0LGyMJ9-_DiB-Nav1RP6RCgWs9R6FwJWhvUqkZHa-a6iMnV5ZiI43CjNLh8ayOp3NDybukTa1KVW2iiO6133jHfiY4Fd5QS-hPPU1GjBb0pIfG9gI2ceh0nS_grFK9-zOzSi7MmQv6pWOVeYMhDYcAoClNFxi6i8arHSbFn7BUL7f0sAGtfzW06beH7y1IRrNosxBAn8jUi31ypTGcbVZs-OrzdgaC3d2xNB-6KeMbkyG-OgvwgxF_mP6zea3A\",\"session_state\":\"FfRB7lnhEGb4PG0fHNBRIw5_ZrdSkglgeEtaF7PYgj8.35BC9955907AC51842A1BB528093033F\",\"access_token\":\"eyJhbGciOiJSUzI1NiIsImtpZCI6IkUxNUZEQTA4NjgyNzVDREI4QTk1QzAyODVFMDBENEE3IiwidHlwIjoiYXQrand0In0.eyJpc3MiOiJodHRwczovL2xvY2FsaG9zdDo1MDAxIiwibmJmIjoxNzc1OTIzODc4LCJpYXQiOjE3NzU5MjM4NzgsImV4cCI6MTc3NTkyNTY3OCwiYXVkIjoiaHR0cHM6Ly9sb2NhbGhvc3Q6NTAwMS9yZXNvdXJjZXMiLCJzY29wZSI6WyJvcGVuaWQiLCJwcm9maWxlIiwicm9sZXMiLCJwYXRpZW50LWFwaSIsImFwcG9pbnRtZW50LWFwaSIsIm1lZGljYWxyZWNvcmRzLWFwaSIsIm9mZmxpbmVfYWNjZXNzIl0sImFtciI6WyJwd2QiXSwiY2xpZW50X2lkIjoibWVkaXRyYWNrLXdlYiIsInN1YiI6ImE1YzFmY2JhLWNlOWItNDJjNS1iYzdiLThmMTFmZTA0YmZiZCIsImF1dGhfdGltZSI6MTc3NTkyMzg3OCwiaWRwIjoibG9jYWwiLCJnaXZlbl9uYW1lIjoiSmFuZSIsImZhbWlseV9uYW1lIjoiU21pdGgiLCJuYW1lIjoiSmFuZSBTbWl0aCIsInJvbGUiOiJEb2N0b3IiLCJzaWQiOiJBMTc4MjVDMjUxRTZFMDVDN0VDRkNEQThFRUNCMzA1RCIsImp0aSI6IjA5NjE5QjU0RkQ3MjhEMDZCRTJGNkUzMTBERTg4NzUxIn0.6Zhopr7145IHsXJCG1ypD0XerbnFp9XIBTrehAjuCG4EwJ_R5-r7OYyzDgxsU6-b4eDXki6lpn3dvso-Y9L54wQIT7T4ep5g8SquGNTQri9CSDtu4pkl_yOUTy2LNg_g3OaZPngzNIvRSIamSrgtfQ9QXx_ATAdJjRtrylHO43U6MkoaNWjlROgON-223Gx3M-0fwpRFRjy27hBj_P5fziQX0t6M8i8t784Fw64S7KvTur0rZd1eH1ejNb3CY-0Fc4kQt_De2PDHOYFMqol4DTJRJe3Osh6CYYr07Ul6-DLW3Ns-VPmmMdkbYfHro3N53Wx5l4TqvTbcLpf8hhSiLQ\",\"refresh_token\":\"404AB16B4D2289B869C62B1AED506F6EF9C33291F54F3B77FDAA0F140B8063A6-1\",\"token_type\":\"Bearer\",\"scope\":\"openid profile roles patient-api appointment-api medicalrecords-api offline_access\",\"profile\":{\"iss\":\"https://localhost:5001\",\"iat\":1775923878,\"exp\":1775924178,\"aud\":\"meditrack-web\",\"sid\":\"A17825C251E6E05C7ECFCDA8EECB305D\",\"sub\":\"a5c1fcba-ce9b-42c5-bc7b-8f11fe04bfbd\",\"idp\":\"local\",\"given_name\":\"Jane\",\"family_name\":\"Smith\",\"name\":\"Jane Smith\",\"role\":\"Doctor\"},\"expires_at\":1775925678}"
+        }
+      ]
+    }
+  ]
+}

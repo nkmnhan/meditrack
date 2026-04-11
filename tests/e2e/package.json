@@ -1,0 +1,17 @@
+{
+  "name": "meditrack-e2e",
+  "version": "1.0.0",
+  "description": "MediTrack end-to-end tests with Playwright",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:clara": "playwright test tests/clara",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "playwright": "^1.58.2"
+  }
+}
