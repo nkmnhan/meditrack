@@ -104,15 +104,31 @@ export function useSession({
       onSuggestionRef.current?.(suggestion);
     });
 
-    // Handle session state updates
+    // Handle session state updates — hydrates historical transcript + suggestions on join
     connection.on("SessionUpdated", (updatedSession: Session) => {
       setSession(updatedSession);
+      if (updatedSession.transcriptLines?.length) {
+        setTranscriptLines(updatedSession.transcriptLines);
+      }
+      if (updatedSession.suggestions?.length) {
+        setSuggestions(updatedSession.suggestions);
+      }
     });
 
     // Handle errors from server
-    connection.on("Error", (errorMessage: string) => {
+    connection.on("SessionError", (errorMessage: string) => {
       console.error("Session error:", errorMessage);
       onErrorRef.current?.(new Error(errorMessage));
+    });
+
+    connection.on("SttError", (errorMessage: string) => {
+      console.error("STT error:", errorMessage);
+      onErrorRef.current?.(new Error(`Transcription error: ${errorMessage}`));
+    });
+
+    connection.on("TranscriptError", (errorMessage: string) => {
+      console.error("Transcript error:", errorMessage);
+      onErrorRef.current?.(new Error(`Transcript error: ${errorMessage}`));
     });
 
     // Start connection
@@ -140,7 +156,9 @@ export function useSession({
       connection.off("TranscriptLineAdded");
       connection.off("SuggestionAdded");
       connection.off("SessionUpdated");
-      connection.off("Error");
+      connection.off("SessionError");
+      connection.off("SttError");
+      connection.off("TranscriptError");
       connection.stop();
       connectionRef.current = null;
     };

@@ -71,7 +71,19 @@ internal sealed class SuggestionCriticService : ISuggestionCriticService
                 return suggestions;
             }
 
-            var criticResponse = JsonSerializer.Deserialize<CriticResponse>(responseText, SnakeCaseJsonOptions);
+            // Strip markdown code fences if LLM wraps response in ```json ... ```
+            var rawJson = responseText.Trim();
+            if (rawJson.StartsWith("```"))
+            {
+                var firstNewline = rawJson.IndexOf('\n');
+                if (firstNewline >= 0)
+                    rawJson = rawJson[(firstNewline + 1)..];
+                var lastFence = rawJson.LastIndexOf("```");
+                if (lastFence >= 0)
+                    rawJson = rawJson[..lastFence].Trim();
+            }
+
+            var criticResponse = JsonSerializer.Deserialize<CriticResponse>(rawJson, SnakeCaseJsonOptions);
 
             if (criticResponse?.CritiquedSuggestions == null || criticResponse.CritiquedSuggestions.Count == 0)
             {

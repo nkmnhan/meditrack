@@ -28,6 +28,10 @@ export function useAudioRecording({
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  // WebM container header is only present in the first chunk. All subsequent
+  // chunks must be prefixed with it to form a valid standalone WebM file that
+  // Deepgram (and other REST STT APIs) can parse.
+  const webmHeaderRef = useRef<ArrayBuffer | null>(null);
 
   const isSupported =
     typeof navigator !== "undefined" &&
@@ -55,6 +59,7 @@ export function useAudioRecording({
       });
 
       streamRef.current = stream;
+      webmHeaderRef.current = null;
 
       // Determine supported MIME type
       const mimeType = getSupportedMimeType();
@@ -66,7 +71,22 @@ export function useAudioRecording({
         if (event.data.size > 0) {
           try {
             const arrayBuffer = await event.data.arrayBuffer();
-            onAudioChunk(arrayBuffer);
+
+            if (webmHeaderRef.current === null) {
+              // First chunk — contains the WebM EBML header + codec info + first audio frames.
+              // Save it so we can prepend it to every subsequent chunk.
+              webmHeaderRef.current = arrayBuffer;
+              onAudioChunk(arrayBuffer);
+            } else {
+              // Subsequent chunks — raw audio frames only, no container header.
+              // Deepgram REST API rejects these as "corrupt data" without the header.
+              // Prepend the saved header to produce a valid standalone WebM file.
+              const header = webmHeaderRef.current;
+              const combined = new Uint8Array(header.byteLength + arrayBuffer.byteLength);
+              combined.set(new Uint8Array(header), 0);
+              combined.set(new Uint8Array(arrayBuffer), header.byteLength);
+              onAudioChunk(combined.buffer);
+            }
           } catch (error) {
             console.error("Failed to process audio chunk:", error);
             onError?.(

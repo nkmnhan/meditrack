@@ -241,14 +241,14 @@ services:
     build:
       context: src/MediTrack.Web
       dockerfile: Dockerfile
+      args:
+        VITE_IDENTITY_URL: https://localhost:5001
+        VITE_PATIENT_API_URL: https://localhost:5002
+        VITE_APPOINTMENT_API_URL: https://localhost:5003
+        VITE_MEDICALRECORDS_API_URL: https://localhost:5004
+        VITE_CLARA_API_URL: https://localhost:5005
     ports:
       - "3000:443"
-    environment:
-      - VITE_IDENTITY_URL=https://localhost:5001
-      - VITE_PATIENT_API_URL=https://localhost:5002
-      - VITE_APPOINTMENT_API_URL=https://localhost:5003
-      - VITE_MEDICALRECORDS_API_URL=https://localhost:5004
-      - VITE_CLARA_API_URL=https://localhost:5005
     depends_on:
       - identity-api
       - clara-api

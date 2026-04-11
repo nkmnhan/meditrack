@@ -7,20 +7,24 @@ namespace Clara.API.Health;
 /// <summary>
 /// Custom health check for Clara service.
 /// Verifies database connectivity, pgvector extension, and AI service reachability.
+/// The AI provider checked is determined by <c>AI:ChatProvider</c> config via <see cref="IAiProviderHealthCheck"/>.
 /// </summary>
 public sealed class ClaraHealthCheck : IHealthCheck
 {
     private readonly ClaraDbContext _db;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IAiProviderHealthCheck _aiProviderHealthCheck;
     private readonly ILogger<ClaraHealthCheck> _logger;
 
     public ClaraHealthCheck(
         ClaraDbContext db,
         IHttpClientFactory httpClientFactory,
+        IAiProviderHealthCheck aiProviderHealthCheck,
         ILogger<ClaraHealthCheck> logger)
     {
         _db = db;
         _httpClientFactory = httpClientFactory;
+        _aiProviderHealthCheck = aiProviderHealthCheck;
         _logger = logger;
     }
 
@@ -29,6 +33,7 @@ public sealed class ClaraHealthCheck : IHealthCheck
         CancellationToken cancellationToken = default)
     {
         var data = new Dictionary<string, object>();
+        var isDegraded = false;
 
         // Check PostgreSQL — CRITICAL (unhealthy if down)
         try
@@ -45,7 +50,15 @@ public sealed class ClaraHealthCheck : IHealthCheck
                 "SELECT COUNT(*)::int AS \"Value\" FROM pg_extension WHERE extname = 'vector'")
                 .FirstOrDefaultAsync(cancellationToken);
 
-            data["pgvector"] = extensionExists > 0 ? "enabled" : "not_enabled";
+            if (extensionExists > 0)
+            {
+                data["pgvector"] = "enabled";
+            }
+            else
+            {
+                data["pgvector"] = "not_enabled";
+                isDegraded = true;
+            }
         }
         catch (Exception exception)
         {
@@ -59,38 +72,38 @@ public sealed class ClaraHealthCheck : IHealthCheck
         {
             var deepgramClient = _httpClientFactory.CreateClient("Deepgram");
             var deepgramResponse = await deepgramClient.GetAsync("v1/projects", cancellationToken);
-            data["deepgram"] = deepgramResponse.StatusCode switch
+            var deepgramStatus = deepgramResponse.StatusCode switch
             {
                 System.Net.HttpStatusCode.OK => "healthy",
                 System.Net.HttpStatusCode.Unauthorized => "invalid_key",
                 _ => "degraded"
             };
+            data["deepgram"] = deepgramStatus;
+            if (deepgramStatus == "degraded") isDegraded = true;
         }
         catch (Exception exception)
         {
             _logger.LogWarning(exception, "Deepgram health check failed");
             data["deepgram"] = "unreachable";
+            isDegraded = true;
         }
 
-        // Check OpenAI reachability (list models endpoint — lightweight, no token cost)
-        // Degraded, not unhealthy — circuit breaker handles outages
+        // Check configured AI chat provider — provider resolved from AI:ChatProvider config.
+        // Degraded, not unhealthy — circuit breaker handles outages.
         try
         {
-            var openAiClient = _httpClientFactory.CreateClient("OpenAI");
-            var openAiResponse = await openAiClient.GetAsync("v1/models", cancellationToken);
-            data["openai"] = openAiResponse.IsSuccessStatusCode ? "reachable" : "degraded";
+            var providerResult = await _aiProviderHealthCheck.CheckAsync(cancellationToken);
+            data[_aiProviderHealthCheck.ProviderName] = providerResult.Description ?? providerResult.Status.ToString();
+            if (providerResult.Status != HealthStatus.Healthy) isDegraded = true;
         }
         catch (Exception exception)
         {
-            _logger.LogWarning(exception, "OpenAI health check failed");
-            data["openai"] = "unreachable";
+            _logger.LogWarning(exception, "AI provider health check failed for {Provider}", _aiProviderHealthCheck.ProviderName);
+            data[_aiProviderHealthCheck.ProviderName] = "unreachable";
+            isDegraded = true;
         }
 
-        // Overall: healthy if PostgreSQL is up (AI services are degraded, not critical)
-        var hasDegradedService = data.Values.Any(value =>
-            value is string status && status is "degraded" or "unreachable" or "not_enabled");
-
-        return hasDegradedService
+        return isDegraded
             ? HealthCheckResult.Degraded("AI services partially unavailable", data: data)
             : HealthCheckResult.Healthy("All systems operational", data);
     }

@@ -87,7 +87,7 @@ internal sealed class ClaraDoctorAgent : IAgentService
         {
             Tools = _agentTools.CreateAITools(),
             Temperature = 0.3f,
-            MaxOutputTokens = 500,
+            MaxOutputTokens = 1200,
             ResponseFormat = ChatResponseFormat.Json,
         };
 

@@ -40,6 +40,23 @@ public static class AuthenticationExtensions
                     NameClaimType = "name",
                     RoleClaimType = "role"
                 };
+                // SignalR WebSocket and SSE connections cannot send an Authorization header,
+                // so the client passes the token in the "access_token" query parameter.
+                // The JWT middleware must be told to extract it from there for hub endpoints.
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            path.StartsWithSegments("/sessionHub"))
+                        {
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
         services.AddAuthorizationBuilder()

@@ -24,6 +24,10 @@ public sealed class AIOptions
     {
         public string ApiKey { get; set; } = string.Empty;
         public string EmbeddingModel { get; set; } = "text-embedding-3-small";
+
+        /// <summary>True when the key is present and not a placeholder value.</summary>
+        public bool IsConfigured =>
+            !string.IsNullOrEmpty(ApiKey) && !ApiKey.StartsWith("sk-placeholder");
     }
 
     public sealed class AnthropicProviderOptions

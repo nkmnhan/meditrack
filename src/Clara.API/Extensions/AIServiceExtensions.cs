@@ -2,6 +2,7 @@ using System.ClientModel;
 using System.Net.Http.Headers;
 using Anthropic.SDK;
 using Clara.API.Application.Models;
+using Clara.API.Health;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
 using OpenAI;
@@ -52,14 +53,39 @@ public static class AIServiceExtensions
         services.AddSingleton<IChatClient>(sp =>
             sp.GetRequiredKeyedService<IChatClient>("batch"));
 
-        // Embeddings always use OpenAI — Anthropic has no embedding model
+        // Embeddings always use OpenAI — Anthropic has no embedding model.
+        // Missing/placeholder key degrades to a no-op generator (logs a warning) so Claude-only
+        // setups can still run without RAG/knowledge features.
         services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(sp =>
         {
             var opts = sp.GetRequiredService<IOptions<AIOptions>>().Value;
-            if (string.IsNullOrEmpty(opts.OpenAI.ApiKey))
-                throw new InvalidOperationException("AI:OpenAI:ApiKey is required for embeddings");
+            var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(AIServiceExtensions));
+            if (!opts.OpenAI.IsConfigured)
+            {
+                logger.LogWarning(
+                    "AI:OpenAI:ApiKey is not configured — embeddings disabled. " +
+                    "Knowledge search and RAG features will not work.");
+                return new NullEmbeddingGenerator();
+            }
             var openAiClient = new OpenAIClient(new ApiKeyCredential(opts.OpenAI.ApiKey));
             return openAiClient.GetEmbeddingClient(opts.OpenAI.EmbeddingModel).AsIEmbeddingGenerator();
+        });
+
+        // Startup validator — enforces ChatProvider value + active provider key at launch.
+        services.AddSingleton<IValidateOptions<AIOptions>, AIOptionsValidator>();
+
+        // AI provider health checks — keyed by provider name, mirroring the IChatClient pattern.
+        services.AddKeyedSingleton<IAiProviderHealthCheck>("anthropic",
+            (sp, _) => new AnthropicProviderHealthCheck(sp.GetRequiredService<IHttpClientFactory>()));
+        services.AddKeyedSingleton<IAiProviderHealthCheck>("openai",
+            (sp, _) => new OpenAIProviderHealthCheck(sp.GetRequiredService<IHttpClientFactory>()));
+
+        // Non-keyed default resolved from AI:ChatProvider config — used by ClaraHealthCheck.
+        services.AddSingleton<IAiProviderHealthCheck>(sp =>
+        {
+            var opts = sp.GetRequiredService<IOptions<AIOptions>>().Value;
+            var key = opts.ChatProvider.ToLowerInvariant() == "anthropic" ? "anthropic" : "openai";
+            return sp.GetRequiredKeyedService<IAiProviderHealthCheck>(key);
         });
 
         return services;
@@ -171,6 +197,19 @@ public static class AIServiceExtensions
         })
         .AddStandardResilienceHandler();
 
+        // Anthropic client (for health checks)
+        services.AddHttpClient("Anthropic", client =>
+        {
+            client.BaseAddress = new Uri("https://api.anthropic.com/");
+            var anthropicApiKey = configuration["AI:Anthropic:ApiKey"];
+            if (!string.IsNullOrEmpty(anthropicApiKey))
+            {
+                client.DefaultRequestHeaders.Add("x-api-key", anthropicApiKey);
+                client.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
+            }
+        })
+        .AddStandardResilienceHandler();
+
         // Patient.API client - for fetching patient context
         var patientApiUrl = configuration["Services:PatientApi"] ?? "https://patient-api:8443";
         services.AddHttpClient("PatientApi", client =>
@@ -181,4 +220,27 @@ public static class AIServiceExtensions
 
         return services;
     }
+}
+
+/// <summary>
+/// No-op embedding generator used when OpenAI key is absent (Claude-only setups).
+/// Returns zero vectors so callers don't crash, but RAG/similarity search won't work.
+/// </summary>
+internal sealed class NullEmbeddingGenerator : IEmbeddingGenerator<string, Embedding<float>>
+{
+    public EmbeddingGeneratorMetadata Metadata { get; } = new("null", null, null, 0);
+
+    public Task<GeneratedEmbeddings<Embedding<float>>> GenerateAsync(
+        IEnumerable<string> values,
+        EmbeddingGenerationOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        var embeddings = values
+            .Select(_ => new Embedding<float>(Array.Empty<float>()))
+            .ToList();
+        return Task.FromResult(new GeneratedEmbeddings<Embedding<float>>(embeddings));
+    }
+
+    public void Dispose() { }
+    public object? GetService(Type serviceType, object? serviceKey = null) => null;
 }

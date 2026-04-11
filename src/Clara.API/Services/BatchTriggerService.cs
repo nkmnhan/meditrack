@@ -39,6 +39,9 @@ public sealed class BatchTriggerService : IBatchTriggerService
     {
         var state = _sessionStates.GetOrAdd(sessionId, _ => CreateNewState(sessionId));
 
+        // Track all utterances for the timer-based threshold (any speaker)
+        Interlocked.Increment(ref state.TotalUtteranceCount);
+
         // Only count patient utterances for auto-batch and urgent keyword detection
         if (line.Speaker == SpeakerRole.Patient)
         {
@@ -97,13 +100,14 @@ public sealed class BatchTriggerService : IBatchTriggerService
     /// </summary>
     private void OnTimerElapsed(string sessionId)
     {
-        if (!_sessionStates.TryGetValue(sessionId, out var state) || state.PatientUtteranceCount == 0)
+        if (!_sessionStates.TryGetValue(sessionId, out var state) || state.TotalUtteranceCount == 0)
         {
             return;
         }
 
         // Reset before firing to prevent concurrent timer re-entry from triggering again
         Interlocked.Exchange(ref state.PatientUtteranceCount, 0);
+        Interlocked.Exchange(ref state.TotalUtteranceCount, 0);
         state.ResetTimer();
 
         // Fire-and-forget — all exceptions are caught inside TriggerBatchSuggestionAsync
@@ -211,6 +215,7 @@ public sealed class BatchTriggerService : IBatchTriggerService
         private bool _disposed;
 
         public int PatientUtteranceCount;
+        public int TotalUtteranceCount;
 
         public SessionBatchState(string sessionId, Action<string> onTimerElapsed, TimeSpan timeout)
         {
