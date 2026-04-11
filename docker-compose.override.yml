@@ -124,8 +124,10 @@ services:
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
       - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
+      - AI__ChatProvider=anthropic
+      - AI__Anthropic__ApiKey=${CLAUDE_TOKEN:-}
       - AI__OpenAI__ApiKey=${OPENAI_API_KEY:-sk-placeholder-for-dev}
-      - AI__Deepgram__ApiKey=${DEEPGRAM_API_KEY:-placeholder-for-dev}
+      - AI__Deepgram__ApiKey=${DEEP_GRAM_TOKEN:-}
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
     volumes:
       - ./dev-certs/certs:/certs:ro

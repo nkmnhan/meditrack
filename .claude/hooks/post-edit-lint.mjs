@@ -4,9 +4,9 @@
  * - C#: dotnet format --verify-no-changes on the owning project
  * Catches errors immediately so Claude can fix them in the same turn.
  */
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync, readdirSync } from 'fs';
 import { execSync } from 'child_process';
-import { resolve, dirname, join } from 'path';
+import { resolve, dirname } from 'path';
 
 const input = JSON.parse(readFileSync(0, 'utf8'));
 const filePath = input?.tool_input?.file_path || input?.tool_input?.path || '';
@@ -37,8 +37,10 @@ if (filePath.match(/\.cs$/)) {
   const findProject = (startDir) => {
     let dir = startDir;
     for (let i = 0; i < 8; i++) {
-      const entries = (() => { try { return execSync(`ls "${dir}"/*.csproj 2>/dev/null`, { encoding: 'utf8' }).trim(); } catch { return ''; } })();
-      if (entries) return dir;
+      try {
+        const hasCsproj = readdirSync(dir).some(f => f.endsWith('.csproj'));
+        if (hasCsproj) return dir;
+      } catch { /* unreadable dir, keep walking up */ }
       const parent = dirname(dir);
       if (parent === dir) return null;
       dir = parent;

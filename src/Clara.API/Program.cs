@@ -12,16 +12,18 @@ using MediTrack.ServiceDefaults.Extensions;
 using MediTrack.Shared.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults("clara-api");
 
-// Database with pgvector support
+// Database with pgvector + EnableDynamicJson (required for List<Guid> JSONB columns in Npgsql 8).
+// DataSource built via ClaraDataSourceFactory to avoid the Pgvector/Pgvector.EntityFrameworkCore
+// UseVector() extension method conflict — see ClaraDbContextFactory.cs.
+var claraDataSource = ClaraDataSourceFactory.Build(
+    builder.Configuration.GetConnectionString("ClaraDb")!);
+
 builder.Services.AddDbContext<ClaraDbContext>(options =>
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("ClaraDb"),
-        npgsqlOptions => npgsqlOptions.UseVector()));
+    options.UseNpgsql(claraDataSource, npgsqlOptions => npgsqlOptions.UseVector()));
 
 // Read-only audit database context (cross-boundary read access to Notification.Worker's audit DB)
 builder.Services.AddDbContext<AuditReadContext>(options =>

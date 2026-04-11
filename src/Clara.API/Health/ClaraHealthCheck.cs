@@ -53,14 +53,18 @@ public sealed class ClaraHealthCheck : IHealthCheck
             return HealthCheckResult.Unhealthy("PostgreSQL unreachable", exception, data);
         }
 
-        // Check Deepgram reachability (HEAD request, no billing impact)
-        // Degraded, not unhealthy — manual text fallback works
+        // Check Deepgram reachability — GET /v1/projects validates both connectivity and API key
+        // 200 = key valid, 401 = key invalid (key problem not connectivity), 4xx/5xx = degraded
         try
         {
             var deepgramClient = _httpClientFactory.CreateClient("Deepgram");
-            using var deepgramRequest = new HttpRequestMessage(HttpMethod.Head, "v1/listen");
-            var deepgramResponse = await deepgramClient.SendAsync(deepgramRequest, cancellationToken);
-            data["deepgram"] = deepgramResponse.IsSuccessStatusCode ? "reachable" : "degraded";
+            var deepgramResponse = await deepgramClient.GetAsync("v1/projects", cancellationToken);
+            data["deepgram"] = deepgramResponse.StatusCode switch
+            {
+                System.Net.HttpStatusCode.OK => "healthy",
+                System.Net.HttpStatusCode.Unauthorized => "invalid_key",
+                _ => "degraded"
+            };
         }
         catch (Exception exception)
         {
