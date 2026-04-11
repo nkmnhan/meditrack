@@ -26,4 +26,20 @@ public static class SignalREvents
     public const string AgentTextChunk = "AgentTextChunk";
     public const string AgentCompleted = "AgentCompleted";
     public const string AgentFailed = "AgentFailed";
+
+    /// <summary>
+    /// Maps an AgentEvent to its SignalR event name constant.
+    /// Centralises the switch so BatchTriggerService and SessionApi stay in sync
+    /// when new event types are added.
+    /// </summary>
+    public static string? GetAgentEventName(Application.Models.AgentEvent agentEvent) => agentEvent switch
+    {
+        Application.Models.AgentEvent.Thinking     => AgentThinking,
+        Application.Models.AgentEvent.ToolStarted  => AgentToolStarted,
+        Application.Models.AgentEvent.ToolCompleted => AgentToolCompleted,
+        Application.Models.AgentEvent.TextChunk    => AgentTextChunk,
+        Application.Models.AgentEvent.Completed    => AgentCompleted,
+        Application.Models.AgentEvent.Failed       => AgentFailed,
+        _ => null
+    };
 }

@@ -142,6 +142,13 @@ public sealed class AgentMemoryService : IAgentMemoryService
             return [];
         }
 
+        // Raise ef_search for higher recall on clinical data (default 40 is too low).
+        // SET is session-scoped — safe here because each request gets a new DbContext scope.
+        if (_db.Database.ProviderName == "Npgsql.EntityFrameworkCore.PostgreSQL")
+        {
+            await _db.Database.ExecuteSqlRawAsync("SET hnsw.ef_search = 100", cancellationToken);
+        }
+
         // Filter base query by agent, optionally by patient
         var baseQuery = _db.AgentMemories
             .Where(memory => memory.AgentId == agentId && memory.Embedding != null);

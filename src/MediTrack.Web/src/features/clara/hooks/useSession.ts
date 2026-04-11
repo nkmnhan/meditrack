@@ -13,6 +13,11 @@ const HUB_URL = `${CLARA_API_URL}/sessionHub`;
 
 interface UseSessionOptions {
   sessionId: string;
+  /** Historical transcript lines loaded from the REST API — seeds state on mount so the
+   * transcript is visible immediately, before SignalR's SessionUpdated fires. */
+  initialTranscriptLines?: readonly TranscriptLine[];
+  /** Historical suggestions loaded from the REST API — seeds state on mount. */
+  initialSuggestions?: readonly Suggestion[];
   onTranscriptLine?: (line: TranscriptLine) => void;
   onSuggestion?: (suggestion: Suggestion) => void;
   onError?: (error: Error) => void;
@@ -32,6 +37,8 @@ interface UseSessionReturn {
  */
 export function useSession({
   sessionId,
+  initialTranscriptLines,
+  initialSuggestions,
   onTranscriptLine,
   onSuggestion,
   onError,
@@ -39,8 +46,13 @@ export function useSession({
   const [connectionStatus, setConnectionStatus] =
     useState<ConnectionStatus>("disconnected");
   const [session, setSession] = useState<Session | null>(null);
-  const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>([]);
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  // Seed from REST data so the transcript is visible before SignalR connects
+  const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>(
+    () => (initialTranscriptLines ? [...initialTranscriptLines] : [])
+  );
+  const [suggestions, setSuggestions] = useState<Suggestion[]>(
+    () => (initialSuggestions ? [...initialSuggestions] : [])
+  );
 
   const connectionRef = useRef<signalR.HubConnection | null>(null);
   const sessionIdRef = useRef(sessionId);
@@ -104,14 +116,25 @@ export function useSession({
       onSuggestionRef.current?.(suggestion);
     });
 
-    // Handle session state updates — hydrates historical transcript + suggestions on join
+    // Handle session state updates from server (fires after JoinSession).
+    // Use the server's authoritative list as the source of truth, since it
+    // may include lines created before this client session (e.g. after a refresh).
     connection.on("SessionUpdated", (updatedSession: Session) => {
       setSession(updatedSession);
       if (updatedSession.transcriptLines?.length) {
-        setTranscriptLines(updatedSession.transcriptLines);
+        // Merge: server list is authoritative; append any locally-added lines not yet persisted
+        setTranscriptLines((prev) => {
+          const serverIds = new Set(updatedSession.transcriptLines.map((l) => l.id));
+          const localOnly = prev.filter((l) => !serverIds.has(l.id));
+          return [...updatedSession.transcriptLines, ...localOnly];
+        });
       }
       if (updatedSession.suggestions?.length) {
-        setSuggestions(updatedSession.suggestions);
+        setSuggestions((prev) => {
+          const serverIds = new Set(updatedSession.suggestions.map((s) => s.id));
+          const localOnly = prev.filter((s) => !serverIds.has(s.id));
+          return [...updatedSession.suggestions, ...localOnly];
+        });
       }
     });
 

@@ -55,3 +55,13 @@ public static class SessionStatus
     public const string Cancelled = "cancelled";
 }
 
+/// <summary>
+/// Agent memory type constants — whitelisted values for AgentMemory.MemoryType.
+/// Episodic: specific events from a session. Semantic: generalised knowledge about a patient.
+/// </summary>
+public static class MemoryTypes
+{
+    public const string Episodic = "episodic";
+    public const string Semantic = "semantic";
+}
+

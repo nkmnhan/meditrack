@@ -18,6 +18,7 @@ internal sealed class ClaraDoctorAgent : IAgentService
     private readonly ICorrectiveRagService _ragService;
     private readonly IPatientContextService _patientContextService;
     private readonly ISuggestionCriticService _criticService;
+    private readonly IAgentMemoryService _memoryService;
     private readonly SkillLoaderService _skillLoaderService;
     private readonly ILogger<ClaraDoctorAgent> _logger;
     private readonly AgentTools _agentTools;
@@ -32,6 +33,7 @@ internal sealed class ClaraDoctorAgent : IAgentService
         ICorrectiveRagService ragService,
         IPatientContextService patientContextService,
         ISuggestionCriticService criticService,
+        IAgentMemoryService memoryService,
         SkillLoaderService skillLoaderService,
         ILogger<ClaraDoctorAgent> logger,
         ILogger<AgentTools>? agentToolsLogger = null)
@@ -40,6 +42,7 @@ internal sealed class ClaraDoctorAgent : IAgentService
         _ragService = ragService;
         _patientContextService = patientContextService;
         _criticService = criticService;
+        _memoryService = memoryService;
         _skillLoaderService = skillLoaderService;
         _logger = logger;
         _agentTools = new AgentTools(
@@ -67,7 +70,28 @@ internal sealed class ClaraDoctorAgent : IAgentService
         if (onAgentEvent != null)
             await onAgentEvent(new AgentEvent.Thinking(1));
 
-        var prompt = BuildAgentPrompt(context.ConversationText, context.PatientId, context.MatchingSkill);
+        // Recall relevant memories for this patient before building the prompt.
+        // This gives the agent continuity across sessions (e.g. known allergies, past issues).
+        List<Domain.AgentMemory> priorMemories = [];
+        if (!string.IsNullOrWhiteSpace(context.PatientId))
+        {
+            try
+            {
+                priorMemories = await _memoryService.RecallSimilarMemoriesAsync(
+                    AgentId,
+                    context.ConversationText,
+                    context.PatientId,
+                    limit: 3,
+                    cancellationToken);
+            }
+            catch (Exception exception)
+            {
+                // Memory recall is enrichment — never block suggestion generation on failure
+                _logger.LogWarning(exception, "Memory recall failed for session {SessionId}", context.SessionId);
+            }
+        }
+
+        var prompt = BuildAgentPrompt(context.ConversationText, context.PatientId, context.MatchingSkill, priorMemories);
 
         // Resolve keyed chat client and wrap with function invocation
         var chatClientKey = context.Source == SuggestionSourceEnum.OnDemand ? "ondemand" : "batch";
@@ -132,18 +156,45 @@ internal sealed class ClaraDoctorAgent : IAgentService
         if (onAgentEvent != null)
             await onAgentEvent(new AgentEvent.Completed(verifiedSuggestions.Count, stopwatch.ElapsedMilliseconds));
 
+        // Store an episodic memory of this session's key observations so future sessions
+        // can recall what was discussed and suggested for this patient.
+        if (!string.IsNullOrWhiteSpace(context.PatientId) && verifiedSuggestions.Count > 0)
+        {
+            try
+            {
+                var suggestionSummary = string.Join("; ", verifiedSuggestions
+                    .Select(s => $"[{s.Type}] {s.Content}"));
+                var memoryContent = $"Session {context.SessionId}: {suggestionSummary}";
+
+                await _memoryService.StoreMemoryAsync(
+                    AgentId,
+                    context.SessionId,
+                    context.PatientId,
+                    memoryContent,
+                    Domain.MemoryTypes.Episodic,
+                    cancellationToken);
+            }
+            catch (Exception exception)
+            {
+                // Memory storage is best-effort — never block returning suggestions on failure
+                _logger.LogWarning(exception, "Memory storage failed for session {SessionId}", context.SessionId);
+            }
+        }
+
         return verifiedSuggestions;
     }
 
     /// <summary>
     /// Builds the agent prompt. Tools provide knowledge and patient context on demand —
     /// the LLM decides what to fetch based on the conversation content.
+    /// Prior memories from previous sessions are injected when available.
     /// This is agent-specific: the patient companion agent will use a different prompt builder.
     /// </summary>
     internal static string BuildAgentPrompt(
         string conversationText,
         string? patientId,
-        ClinicalSkill? matchingSkill)
+        ClinicalSkill? matchingSkill,
+        IReadOnlyList<Domain.AgentMemory>? priorMemories = null)
     {
         var parts = new List<string>
         {
@@ -151,6 +202,12 @@ internal sealed class ClaraDoctorAgent : IAgentService
             conversationText,
             "</TRANSCRIPT>"
         };
+
+        if (priorMemories is { Count: > 0 })
+        {
+            parts.Add("## Prior Session Context (recalled from agent memory)");
+            parts.Add(string.Join("\n", priorMemories.Select(m => $"- {m.Content}")));
+        }
 
         if (!string.IsNullOrWhiteSpace(patientId))
         {

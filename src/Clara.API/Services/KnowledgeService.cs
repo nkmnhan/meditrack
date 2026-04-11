@@ -50,6 +50,12 @@ public sealed class KnowledgeService : IKnowledgeService
             var embeddingResult = await _embeddingGenerator.GenerateAsync([query], cancellationToken: cancellationToken);
             var queryVector = new Vector(embeddingResult[0].Vector.ToArray());
 
+            // Raise ef_search for higher recall on clinical knowledge base (default 40 is too low).
+            if (_db.Database.ProviderName == "Npgsql.EntityFrameworkCore.PostgreSQL")
+            {
+                await _db.Database.ExecuteSqlRawAsync("SET hnsw.ef_search = 100", cancellationToken);
+            }
+
             // Query using cosine distance (pgvector <=> operator)
             // Note: pgvector uses distance (lower is better), so we convert to similarity
             var results = await _db.KnowledgeChunks

@@ -12,6 +12,8 @@ public sealed class ClaraDoctorAgentTests
 {
     private readonly ICorrectiveRagService _ragService;
     private readonly IPatientContextService _patientContextService;
+    private readonly ISuggestionCriticService _criticService;
+    private readonly IAgentMemoryService _memoryService;
     private readonly SkillLoaderService _skillLoaderService;
     private readonly IServiceProvider _serviceProvider;
     private readonly ClaraDoctorAgent _agent;
@@ -20,18 +22,31 @@ public sealed class ClaraDoctorAgentTests
     {
         _ragService = Substitute.For<ICorrectiveRagService>();
         _patientContextService = Substitute.For<IPatientContextService>();
+        // InternalsVisibleTo + DynamicProxyGenAssembly2 are both set in Clara.API.csproj,
+        // so NSubstitute can proxy internal interfaces directly.
+        _criticService = Substitute.For<ISuggestionCriticService>();
+        _memoryService = Substitute.For<IAgentMemoryService>();
         _skillLoaderService = new SkillLoaderService(
             NullLogger<SkillLoaderService>.Instance,
             new ConfigurationBuilder().Build());
         _serviceProvider = Substitute.For<IServiceProvider>();
 
-        // Use a hand-written stub for the internal ISuggestionCriticService interface —
-        // NSubstitute cannot proxy internal types without strong-naming the assembly.
+        // Default critic returns suggestions unchanged (pass-through)
+        _criticService
+            .CritiqueAsync(Arg.Any<List<SuggestionItem>>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => callInfo.Arg<List<SuggestionItem>>());
+
+        // Default memory recall returns empty list
+        _memoryService
+            .RecallSimilarMemoriesAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns([]);
+
         _agent = new ClaraDoctorAgent(
             _serviceProvider,
             _ragService,
             _patientContextService,
-            new PassThroughCriticService(),
+            _criticService,
+            _memoryService,
             _skillLoaderService,
             NullLogger<ClaraDoctorAgent>.Instance);
     }
@@ -192,17 +207,43 @@ public sealed class ClaraDoctorAgentTests
         result.Should().NotContain("get_patient_context");
     }
 
-    /// <summary>
-    /// Minimal stub that passes suggestions through unchanged.
-    /// Used in place of NSubstitute because ISuggestionCriticService is internal
-    /// and Castle DynamicProxy cannot proxy internal types without a strong-named assembly.
-    /// </summary>
-    private sealed class PassThroughCriticService : ISuggestionCriticService
+    [Fact]
+    public void BuildAgentPrompt_WithPriorMemories_ShouldIncludePriorContextSection()
     {
-        public Task<List<SuggestionItem>> CritiqueAsync(
-            List<SuggestionItem> suggestions,
-            string transcript,
-            CancellationToken cancellationToken = default)
-            => Task.FromResult(suggestions);
+        var memories = new List<AgentMemory>
+        {
+            new()
+            {
+                Id = Guid.NewGuid(),
+                AgentId = "clara-doctor",
+                SessionId = Guid.NewGuid(),
+                PatientId = "p-42",
+                Content = "Session abc: [clinical] Consider ECG; [medication] Aspirin 325mg",
+                MemoryType = MemoryTypes.Episodic,
+                CreatedAt = DateTimeOffset.UtcNow,
+                LastAccessedAt = DateTimeOffset.UtcNow
+            }
+        };
+
+        var result = ClaraDoctorAgent.BuildAgentPrompt(
+            "[Doctor]: Any chest pain today?",
+            patientId: "p-42",
+            matchingSkill: null,
+            priorMemories: memories);
+
+        result.Should().Contain("## Prior Session Context");
+        result.Should().Contain("Consider ECG");
+    }
+
+    [Fact]
+    public void BuildAgentPrompt_WithNoMemories_ShouldNotContainPriorContextSection()
+    {
+        var result = ClaraDoctorAgent.BuildAgentPrompt(
+            "[Doctor]: First visit?",
+            patientId: "p-42",
+            matchingSkill: null,
+            priorMemories: []);
+
+        result.Should().NotContain("## Prior Session Context");
     }
 }

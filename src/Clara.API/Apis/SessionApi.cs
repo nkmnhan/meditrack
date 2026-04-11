@@ -153,17 +153,7 @@ public static class SessionApi
 
         async Task BroadcastAgentEvent(AgentEvent agentEvent)
         {
-            var eventName = agentEvent switch
-            {
-                AgentEvent.Thinking => SignalREvents.AgentThinking,
-                AgentEvent.ToolStarted => SignalREvents.AgentToolStarted,
-                AgentEvent.ToolCompleted => SignalREvents.AgentToolCompleted,
-                AgentEvent.TextChunk => SignalREvents.AgentTextChunk,
-                AgentEvent.Completed => SignalREvents.AgentCompleted,
-                AgentEvent.Failed => SignalREvents.AgentFailed,
-                _ => null
-            };
-
+            var eventName = SignalREvents.GetAgentEventName(agentEvent);
             if (eventName != null)
             {
                 await hubContext.Clients.Group(sessionGroupId)

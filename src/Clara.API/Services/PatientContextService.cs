@@ -106,6 +106,9 @@ public sealed class PatientContextService : IPatientContextService
                 exception,
                 "JSON parsing error for patient {PatientId}",
                 patientId);
+            // Data was fetched (HTTP 200) but parsing failed — still audit the access attempt
+            await PublishAuditEventAsync(patientId, isSuccess: false,
+                errorMessage: "JSON parsing error", cancellationToken: cancellationToken);
             return null;
         }
     }
