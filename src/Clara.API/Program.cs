@@ -141,7 +141,12 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 
 // SignalR for real-time communication
-builder.Services.AddSignalR();
+// MaximumReceiveMessageSize raised to 1MB: audio chunks (WebM/Opus) can exceed the 32KB default,
+// especially the first chunk which carries the full EBML container header + codec info.
+builder.Services.AddSignalR(options =>
+{
+    options.MaximumReceiveMessageSize = 1024 * 1024; // 1MB
+});
 
 WebApplication app = builder.Build();
 
