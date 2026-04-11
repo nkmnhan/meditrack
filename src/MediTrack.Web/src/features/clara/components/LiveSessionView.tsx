@@ -143,6 +143,7 @@ export function LiveSessionView() {
     connectionStatus,
     transcriptLines,
     suggestions,
+    agentStatus,
     sendAudioChunk,
   } = useSession({
     sessionId: sessionId ?? "",
@@ -534,7 +535,7 @@ export function LiveSessionView() {
           {/* Suggestions Panel */}
           <SuggestionPanel
             suggestions={suggestions}
-            isLoading={isRequestingSuggestions}
+            isLoading={isRequestingSuggestions || agentStatus !== "idle"}
             count={suggestions.length}
             className={clsxMerge(
               isPatientSidebarExpanded

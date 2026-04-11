@@ -74,6 +74,9 @@ export interface KnowledgeSearchResponse {
 
 export type ConnectionStatus = "connecting" | "connected" | "reconnecting" | "disconnected";
 
+/** Tracks which stage of the AI pipeline is currently running. */
+export type AgentStatus = "idle" | "thinking" | "tool-running" | "streaming" | "failed";
+
 /* ── Enhancement Types ── */
 
 export type ConfidenceLevel = "high" | "medium" | "low";

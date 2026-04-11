@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import { getOidcAccessToken } from "@/shared/auth/getOidcAccessToken";
 import type {
+  AgentStatus,
   ConnectionStatus,
   Session,
   TranscriptLine,
@@ -28,6 +29,8 @@ interface UseSessionReturn {
   session: Session | null;
   transcriptLines: TranscriptLine[];
   suggestions: Suggestion[];
+  /** Current AI pipeline stage — drives thinking/loading indicators in the UI. */
+  agentStatus: AgentStatus;
   sendAudioChunk: (audioData: ArrayBuffer) => Promise<void>;
 }
 
@@ -46,6 +49,7 @@ export function useSession({
   const [connectionStatus, setConnectionStatus] =
     useState<ConnectionStatus>("disconnected");
   const [session, setSession] = useState<Session | null>(null);
+  const [agentStatus, setAgentStatus] = useState<AgentStatus>("idle");
   // Seed from REST data so the transcript is visible before SignalR connects
   const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>(
     () => (initialTranscriptLines ? [...initialTranscriptLines] : [])
@@ -154,6 +158,24 @@ export function useSession({
       onErrorRef.current?.(new Error(`Transcript error: ${errorMessage}`));
     });
 
+    // SessionJoined — server confirmation that this client was added to the session group
+    connection.on("SessionJoined", () => {
+      // No state change needed — connection.invoke("JoinSession") already sets "connected"
+    });
+
+    // Agent pipeline events — drive the thinking/loading indicator in the suggestions panel
+    connection.on("AgentThinking", () => setAgentStatus("thinking"));
+    connection.on("AgentToolStarted", () => setAgentStatus("tool-running"));
+    connection.on("AgentToolCompleted", () => setAgentStatus("thinking"));
+    connection.on("AgentTextChunk", () => setAgentStatus("streaming"));
+    connection.on("AgentCompleted", () => setAgentStatus("idle"));
+    connection.on("AgentFailed", (errorMessage: string) => {
+      console.error("Agent failed:", errorMessage);
+      setAgentStatus("failed");
+      // Auto-clear failed state after 5 s so the panel doesn't stay stuck
+      setTimeout(() => setAgentStatus("idle"), 5000);
+    });
+
     // Start connection
     const startConnection = async () => {
       try {
@@ -182,6 +204,13 @@ export function useSession({
       connection.off("SessionError");
       connection.off("SttError");
       connection.off("TranscriptError");
+      connection.off("SessionJoined");
+      connection.off("AgentThinking");
+      connection.off("AgentToolStarted");
+      connection.off("AgentToolCompleted");
+      connection.off("AgentTextChunk");
+      connection.off("AgentCompleted");
+      connection.off("AgentFailed");
       connection.stop();
       connectionRef.current = null;
     };
@@ -215,6 +244,7 @@ export function useSession({
     session,
     transcriptLines,
     suggestions,
+    agentStatus,
     sendAudioChunk,
   };
 }
