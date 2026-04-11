@@ -5,6 +5,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
+### Fixed
+- Clara code review + live session improvements (2026-04-11) — feat/clara-agentic-ai
+  - **Chat persistence on refresh** — `useSession` now seeds state from REST data (`initialTranscriptLines`/`initialSuggestions`) immediately on mount; `SessionUpdated` merges rather than replaces to handle reconnect deduplication; `LiveSessionView` passes `sessionData` to the hook. Transcript and suggestions now survive full page refresh.
+  - **Agent memory no-op fixed** — `IAgentMemoryService` was registered in DI but never injected into `ClaraDoctorAgent`; wired `RecallSimilarMemoriesAsync` (before prompt build) and `StoreMemoryAsync` (after verified suggestions). Both calls are non-fatal (try-catch).
+  - **Duplicate validation removed** — `SessionHub.SendTranscriptLine` had an exact copy of the ownership check block (lines 163–176 = lines 143–162), causing a redundant DB query on every transcript message.
+  - **`BroadcastAgentEvent` deduplicated** — identical switch expression in `BatchTriggerService` and `SessionApi` extracted to `SignalREvents.GetAgentEventName()`.
+  - **HNSW recall tuned** — `SET hnsw.ef_search = 100` added before cosine distance queries in `KnowledgeService` and `AgentMemoryService` (default 40 gives poor recall on clinical data).
+  - **PHI audit gap fixed** — `JsonException` catch in `PatientContextService` now publishes a failed audit event (HIPAA compliance).
+  - **`MemoryTypes` constants** — `MemoryTypes.Episodic`/`MemoryTypes.Semantic` replace free-form strings in `AgentMemory` usage.
+  - **Test quality** — `ClaraDoctorAgentTests` replaced `PassThroughCriticService` hand-written stub with `Substitute.For<ISuggestionCriticService>()` (InternalsVisibleTo already set); added `IAgentMemoryService` mock; 2 new `BuildAgentPrompt` memory tests.
+
 ### Added
 - GitHub Copilot hooks, MCP, and tooling (2026-04-08)
   - `.github/hooks/post-edit-lint.json` — Copilot coding agent PostToolUse hook: ESLint on `.ts/.tsx` files after every edit (equivalent to Claude's `post-edit-lint.mjs`, different format)
