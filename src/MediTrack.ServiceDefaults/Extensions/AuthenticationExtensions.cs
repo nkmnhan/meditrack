@@ -23,15 +23,15 @@ public static class AuthenticationExtensions
             .AddJwtBearer(options =>
             {
                 options.Authority = identityUrl;
-                options.RequireHttpsMetadata = false;
+                options.RequireHttpsMetadata = true;
                 // Disable default claim type mapping so JWT claims keep their short names
                 // (e.g. "role" stays "role", "sub" stays "sub") instead of being mapped to
                 // long .NET URIs like "http://schemas.microsoft.com/ws/2008/06/identity/claims/role".
                 // Without this, RoleClaimType = "role" doesn't match the mapped claim type and
                 // user.IsInRole() always returns false.
                 options.MapInboundClaims = false;
-                // Issuer validation is off because the internal authority URL
-                // (http://identity-api:8080) differs from the browser-facing issuer
+                // Issuer validation is off because the internal container authority URL
+                // (https://identity-api:8443) differs from the browser-facing issuer
                 // (https://localhost:5001). Signature validation remains on.
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
