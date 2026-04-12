@@ -137,6 +137,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__AppointmentDb=Host=postgres;Database=meditrack_appointments;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD};
       - IdentityUrl=https://identity-api:8443
+      - PatientApiUrl=https://patient-api:8443
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
       - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
@@ -160,6 +161,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__MedicalRecordsDb=Host=postgres;Database=meditrack_records;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD};
       - IdentityUrl=https://identity-api:8443
+      - PatientApiUrl=https://patient-api:8443
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
       - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}

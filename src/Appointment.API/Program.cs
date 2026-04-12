@@ -38,7 +38,7 @@ builder.Services.AddScoped<AppointmentAnalyticsService>();
 builder.Services.AddTransient<AuthenticationDelegatingHandler>();
 builder.Services.AddHttpClient<IPatientResolver, PatientResolver>(client =>
 {
-    var patientApiUrl = builder.Configuration["PatientApiUrl"] ?? "http://patient-api:8080";
+    var patientApiUrl = builder.Configuration["PatientApiUrl"] ?? "https://patient-api:8443";
     client.BaseAddress = new Uri(patientApiUrl);
 })
 .AddHttpMessageHandler<AuthenticationDelegatingHandler>();
