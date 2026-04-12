@@ -33,6 +33,10 @@ echo Generating certificates for localhost + container hostnames ...
 "%MKCERT%" -cert-file "%CERTS_DIR%\localhost.pem" -key-file "%CERTS_DIR%\localhost-key.pem" ^
     localhost 127.0.0.1 ::1 ^
     identity-api patient-api appointment-api medicalrecords-api clara-api
+if errorlevel 1 (
+    echo [!] mkcert cert generation failed.
+    exit /b 1
+)
 
 :: Export mkcert root CA into the certs directory so containers can trust it
 echo.
