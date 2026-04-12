@@ -52,7 +52,7 @@ builder.Services.AddAuthentication()
     .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
     {
         options.Authority = identityUrl;
-        options.RequireHttpsMetadata = false;
+        options.RequireHttpsMetadata = true;
         options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
