@@ -5,6 +5,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
+### Security
+- HTTPS production-parity — OWASP A04/A02 compliant inter-container TLS (2026-04-12) — feat/clara-agentic-ai
+  - **No plain HTTP ports** — removed `http://+:8080` from `ASPNETCORE_URLS` on all 5 .NET API services; `EXPOSE 8080` removed from all affected Dockerfiles
+  - **HTTPS IdentityUrl everywhere** — `IdentityUrl=https://identity-api:8443` in both `docker-compose.yml` (production base) and `docker-compose.override.yml` (dev); `http://identity-api:8080` is gone
+  - **HTTPS PatientApiUrl** — hardcoded `http://patient-api:8080` fallback replaced with `https://patient-api:8443` in `Appointment.API` and `MedicalRecords.API`; `PatientApiUrl` added as explicit env var in both compose files
+  - **Proper CA chain validation** — `dev-certs/setup-certs.cmd` regenerates mkcert cert with all container hostnames as SANs (`identity-api`, `patient-api`, `appointment-api`, `medicalrecords-api`, `clara-api`); exports `rootCA.pem` to `dev-certs/certs/`
+  - **Shared entrypoint script** — `scripts/docker-entrypoint.sh` installs mkcert CA into container system trust store at startup via `update-ca-certificates`; strict no-op in production (file never mounted)
+  - **`RequireHttpsMetadata = true`** — enforced in `AuthenticationExtensions.cs` (all 4 downstream services) and `Identity.API/Program.cs`; `DangerousAcceptAnyServerCertificateValidator` bypass never used
+
 ### Fixed
 - Clara code review + live session improvements (2026-04-11) — feat/clara-agentic-ai
   - **Chat persistence on refresh** — `useSession` now seeds state from REST data (`initialTranscriptLines`/`initialSuggestions`) immediately on mount; `SessionUpdated` merges rather than replaces to handle reconnect deduplication; `LiveSessionView` passes `sessionData` to the hook. Transcript and suggestions now survive full page refresh.
