@@ -7,7 +7,7 @@ echo.
 
 cd /d %~dp0src\Aspire.Nexus
 
-dotnet run --launch-profile http
+dotnet run --launch-profile https
 
 echo.
 pause
