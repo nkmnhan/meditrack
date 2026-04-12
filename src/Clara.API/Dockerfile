@@ -1,6 +1,5 @@
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 WORKDIR /app
-EXPOSE 8080
 EXPOSE 8443
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
@@ -24,11 +23,14 @@ FROM build AS publish
 RUN dotnet publish "Clara.API.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
+# Root required so the entrypoint can install the dev CA via update-ca-certificates.
+# Production: rootCA.pem is never mounted — entrypoint is a strict no-op.
+USER root
 WORKDIR /app
-
-# Copy skills and seed data from repo root
+COPY scripts/docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 COPY --from=publish /app/publish .
 COPY skills/core/ /app/skills/core/
 COPY seed-data/Guidelines/ /app/seed-data/Guidelines/
-
-ENTRYPOINT ["dotnet", "Clara.API.dll"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["dotnet", "Clara.API.dll"]
