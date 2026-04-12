@@ -27,18 +27,34 @@ if errorlevel 1 (
     exit /b 1
 )
 
-:: Generate certificate for localhost
+:: Generate certificate covering localhost AND all Docker container hostnames
 echo.
-echo Generating certificates for localhost ...
-"%MKCERT%" -cert-file "%CERTS_DIR%\localhost.pem" -key-file "%CERTS_DIR%\localhost-key.pem" localhost 127.0.0.1 ::1
+echo Generating certificates for localhost + container hostnames ...
+"%MKCERT%" -cert-file "%CERTS_DIR%\localhost.pem" -key-file "%CERTS_DIR%\localhost-key.pem" ^
+    localhost 127.0.0.1 ::1 ^
+    identity-api patient-api appointment-api medicalrecords-api clara-api
+
+:: Export mkcert root CA into the certs directory so containers can trust it
+echo.
+echo Copying mkcert root CA to dev-certs\certs\ ...
+for /f "tokens=*" %%i in ('"%MKCERT%" -CAROOT') do set CAROOT=%%i
+copy "%CAROOT%\rootCA.pem" "%CERTS_DIR%\rootCA.pem" /y
+if errorlevel 1 (
+    echo [!] Failed to copy rootCA.pem. Check mkcert -CAROOT path.
+    exit /b 1
+)
 
 echo.
 echo ============================================================
 echo   Certificates created in dev-certs\certs\
-echo     localhost.pem       (certificate)
-echo     localhost-key.pem   (private key)
+echo     localhost.pem         (certificate -- covers all services)
+echo     localhost-key.pem     (private key)
+echo     rootCA.pem            (mkcert root CA -- mounted into containers)
 echo.
-echo   Local CA installed in system trust store.
-echo   Run: docker-compose up -d --build
+echo   SANs: localhost 127.0.0.1 ::1
+echo         identity-api patient-api appointment-api
+echo         medicalrecords-api clara-api
+echo.
+echo   NEXT: docker-compose build --no-cache
 echo ============================================================
 endlocal
