@@ -15,6 +15,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
   - **`RequireHttpsMetadata = true`** — enforced in `AuthenticationExtensions.cs` (all 4 downstream services) and `Identity.API/Program.cs`; `DangerousAcceptAnyServerCertificateValidator` bypass never used
 
 ### Fixed
+- Claude hook path resolution (2026-04-12)
+  - `.claude/settings.json` hook commands now resolve through `CLAUDE_PROJECT_DIR` instead of relative `.claude/hooks/...` paths, fixing `PostToolUse:Bash hook error` / `node:internal/modules/cjs/loader:1458` when Claude fires hooks outside the repo root cwd.
 - Clara code review + live session improvements (2026-04-11) — feat/clara-agentic-ai
   - **Chat persistence on refresh** — `useSession` now seeds state from REST data (`initialTranscriptLines`/`initialSuggestions`) immediately on mount; `SessionUpdated` merges rather than replaces to handle reconnect deduplication; `LiveSessionView` passes `sessionData` to the hook. Transcript and suggestions now survive full page refresh.
   - **Agent memory no-op fixed** — `IAgentMemoryService` was registered in DI but never injected into `ClaraDoctorAgent`; wired `RecallSimilarMemoriesAsync` (before prompt build) and `StoreMemoryAsync` (after verified suggestions). Both calls are non-fatal (try-catch).

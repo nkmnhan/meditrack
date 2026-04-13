@@ -34,12 +34,18 @@ public static class IdentityServerConfig
                 AllowedGrantTypes = GrantTypes.Code,
                 RequirePkce = true,
                 RequireClientSecret = false,
-                RedirectUris = [$"{webClientUrl}/callback"],
+                RedirectUris =
+                [
+                    $"{webClientUrl}/callback",
+                    $"{webClientUrl}/silent-renew.html",  // oidc-client-ts automaticSilentRenew
+                ],
                 PostLogoutRedirectUris = [webClientUrl],
                 AllowedCorsOrigins = [webClientUrl],
                 AllowOfflineAccess = true,
                 AlwaysIncludeUserClaimsInIdToken = true,
-                AccessTokenLifetime = 1800, // 30 minutes
+                // 8 hours — long enough to outlast any dev/E2E test session.
+                // Tokens expire naturally; monitorSession is disabled on the SPA.
+                AccessTokenLifetime = 28800,
                 AllowedScopes =
                 [
                     IdentityServerConstants.StandardScopes.OpenId,

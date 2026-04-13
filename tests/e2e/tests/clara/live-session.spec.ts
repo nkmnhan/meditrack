@@ -133,7 +133,7 @@ test.describe("Clara Live Session — Nexus", () => {
     await context.addInitScript({ content: OIDC_RESTORE_SCRIPT });
 
     const page = await context.newPage();
-    await page.goto(WEB_URL, { waitUntil: "networkidle" });
+    await page.goto(WEB_URL, { waitUntil: "domcontentloaded" });
     accessToken = await extractAccessToken(page);
     await page.close();
     await context.close();
@@ -153,7 +153,7 @@ test.describe("Clara Live Session — Nexus", () => {
   // ── Test 1: Clara page loads with session start UI ────────────────────────
 
   test("navigates to Clara and shows session start screen", async ({ page }) => {
-    await page.goto(`${WEB_URL}/clara`, { waitUntil: "networkidle" });
+    await page.goto(`${WEB_URL}/clara`, { waitUntil: "domcontentloaded" });
 
     // Clara start page has heading "Start New Session" and a start button
     await expect(page.getByRole("heading", { name: "Start New Session" })).toBeVisible({ timeout: 10_000 });
@@ -163,7 +163,7 @@ test.describe("Clara Live Session — Nexus", () => {
   // ── Test 2: Live session view loads after clicking start ──────────────────
 
   test("clicking Start Session with Clara opens live session view", async ({ page }) => {
-    await page.goto(`${WEB_URL}/clara`, { waitUntil: "networkidle" });
+    await page.goto(`${WEB_URL}/clara`, { waitUntil: "domcontentloaded" });
 
     await page.getByRole("button", { name: /Start Session with Clara/i }).click();
 
@@ -191,10 +191,9 @@ test.describe("Clara Live Session — Nexus", () => {
     sessionId = await createClaraSession(request, accessToken!);
 
     // Navigate to live session view
-    await page.goto(`${WEB_URL}/clara/session/${sessionId}`, { waitUntil: "networkidle" });
+    await page.goto(`${WEB_URL}/clara/session/${sessionId}`, { waitUntil: "domcontentloaded" });
 
     // Wait for SignalR to connect (hub join happens on mount)
-    await page.waitForLoadState("networkidle");
     await page.waitForTimeout(2000);
 
     // Inject test conversation — simulates what Deepgram STT produces from real mic audio
@@ -216,7 +215,7 @@ test.describe("Clara Live Session — Nexus", () => {
     test.skip(!accessToken, "No access token — skip");
 
     sessionId = await createClaraSession(request, accessToken!);
-    await page.goto(`${WEB_URL}/clara/session/${sessionId}`, { waitUntil: "networkidle" });
+    await page.goto(`${WEB_URL}/clara/session/${sessionId}`, { waitUntil: "domcontentloaded" });
     await page.waitForTimeout(2000);
 
     // Give the AI context
@@ -245,7 +244,7 @@ test.describe("Clara Live Session — Nexus", () => {
     test.skip(!accessToken, "No access token — skip");
 
     sessionId = await createClaraSession(request, accessToken!);
-    await page.goto(`${WEB_URL}/clara/session/${sessionId}`, { waitUntil: "networkidle" });
+    await page.goto(`${WEB_URL}/clara/session/${sessionId}`, { waitUntil: "domcontentloaded" });
 
     // The recording button has aria-label="Start recording"
     const startRecordingBtn = page.getByRole("button", { name: "Start recording" });
@@ -278,7 +277,7 @@ test.describe("Clara Live Session — Nexus", () => {
     test.skip(!accessToken, "No access token — skip");
 
     // ── 1. Start session from Clara home page ──
-    await page.goto(`${WEB_URL}/clara`, { waitUntil: "networkidle" });
+    await page.goto(`${WEB_URL}/clara`, { waitUntil: "domcontentloaded" });
     await page.getByRole("button", { name: /Start Session with Clara/i }).click();
     await page.waitForURL(/\/clara\/session\/[a-f0-9-]+$/, { timeout: 15_000 });
 
@@ -323,7 +322,7 @@ test.describe("Clara Dev Endpoints — Nexus", () => {
   test.use({ storageState: DOCTOR_AUTH_STATE });
 
   test("seed-transcript endpoint injects conversation into session", async ({ page, request }) => {
-    await page.goto(WEB_URL, { waitUntil: "networkidle" });
+    await page.goto(WEB_URL, { waitUntil: "domcontentloaded" });
     const token = await extractAccessToken(page);
     test.skip(!token, "No access token — skip");
 
@@ -355,7 +354,7 @@ test.describe("Clara Dev Endpoints — Nexus", () => {
   });
 
   test("scenarios endpoint lists all available test conversations", async ({ page, request }) => {
-    await page.goto(WEB_URL, { waitUntil: "networkidle" });
+    await page.goto(WEB_URL, { waitUntil: "domcontentloaded" });
     const token = await extractAccessToken(page);
     test.skip(!token, "No access token — skip");
 
@@ -371,7 +370,7 @@ test.describe("Clara Dev Endpoints — Nexus", () => {
   });
 
   test("force-suggest endpoint generates AI suggestions immediately", async ({ page, request }) => {
-    await page.goto(WEB_URL, { waitUntil: "networkidle" });
+    await page.goto(WEB_URL, { waitUntil: "domcontentloaded" });
     const token = await extractAccessToken(page);
     test.skip(!token, "No access token — skip");
 

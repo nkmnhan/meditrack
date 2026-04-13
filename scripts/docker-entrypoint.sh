@@ -1,14 +1,21 @@
 #!/bin/sh
 set -e
 
-# Install the mkcert dev CA into the system trust store.
-# This allows .NET's SslStream to validate TLS certs signed by the dev CA,
-# including the cert used by identity-api (which covers container hostnames).
+# Install the mkcert dev CA into the system trust store so .NET's SslStream
+# trusts TLS certs signed by the dev CA (identity-api, patient-api, etc.).
 #
-# Production containers never have /certs/rootCA.pem mounted — this block
-# is a strict no-op in staging and production.
-if [ -f /certs/rootCA.pem ]; then
-    cp /certs/rootCA.pem /usr/local/share/ca-certificates/mkcert-rootCA.crt
+# Accepts both filenames:
+#   rootCA.pem  — output of setup-certs.cmd (canonical name going forward)
+#   ca.crt      — legacy name that may exist from earlier manual cert generation
+#
+# Production containers never mount /certs — this block is a strict no-op.
+CA_FILE=""
+if   [ -f /certs/rootCA.pem ]; then CA_FILE=/certs/rootCA.pem
+elif [ -f /certs/ca.crt ];     then CA_FILE=/certs/ca.crt
+fi
+
+if [ -n "$CA_FILE" ]; then
+    cp "$CA_FILE" /usr/local/share/ca-certificates/mkcert-rootCA.crt
     update-ca-certificates 2>/dev/null || true
 fi
 

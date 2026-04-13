@@ -202,7 +202,11 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - AllowedHosts=localhost;clara-api;${ALLOWED_HOSTS:-}
       - ConnectionStrings__ClaraDb=Host=postgres;Database=meditrack_clara;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD};
+      - ConnectionStrings__AuditDatabase=Host=postgres;Database=meditrack_audit;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD};
       - IdentityUrl=https://identity-api:8443
+      - Services__PatientApi=https://patient-api:8443
+      - Services__AppointmentApi=https://appointment-api:8443
+      - Services__IdentityApi=https://identity-api:8443
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
       - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}

@@ -30,8 +30,11 @@ async function globalSetup(config: FullConfig) {
 
   const page = await context.newPage();
 
-  // Navigate to the landing page
-  await page.goto(baseURL ?? "https://localhost:3000", { waitUntil: "networkidle" });
+  // Navigate to the landing page.
+  // Use "domcontentloaded" instead of "networkidle" — Docker nginx serves a production
+  // bundle that may have background API calls from RTK Query keeping the network active,
+  // which causes "networkidle" to never fire (or take >30s) in the Docker environment.
+  await page.goto(baseURL ?? "https://localhost:3000", { waitUntil: "domcontentloaded" });
 
   // Click Sign In — landing page has a "Sign In to Explore" button (not a link)
   const signInButton = page
@@ -52,17 +55,44 @@ async function globalSetup(config: FullConfig) {
   // Wait for redirect back to dashboard
   await page.waitForURL(/localhost:3000\/dashboard/, { timeout: 20_000 });
 
-  // Let oidc-client-ts store tokens in sessionStorage
-  await page.waitForLoadState("networkidle");
-  await page.waitForTimeout(1500);
+  // oidc-client-ts stores tokens in sessionStorage BEFORE navigating to /dashboard
+  // (the navigate call in CallbackPage fires only after isAuthenticated=true).
+  // Use a fixed delay instead of waitForLoadState("networkidle") — networkidle is
+  // unreliable when automaticSilentRenew or RTK Query polls create background requests.
+  await page.waitForTimeout(2000);
 
   // Playwright's storageState captures localStorage but NOT sessionStorage.
   // oidc-client-ts stores the authenticated user in sessionStorage by default.
   // Copy it to localStorage under a backup key so storageState preserves it.
   // The OIDC_RESTORE_SCRIPT in fixtures.ts moves it back to sessionStorage on page load.
+
+  // Dump all sessionStorage keys for diagnostics — helps detect key mismatches between
+  // oidc-client-ts versions (e.g. authority trailing-slash normalization differences).
+  const sessionStorageKeys = await page.evaluate(() => {
+    const keys: string[] = [];
+    for (let i = 0; i < window.sessionStorage.length; i++) {
+      const k = window.sessionStorage.key(i);
+      if (k) keys.push(k);
+    }
+    return keys;
+  });
+  console.log(`[global-setup] sessionStorage keys: ${JSON.stringify(sessionStorageKeys)}`);
+  console.log(`[global-setup] expected OIDC key: "${OIDC_SESSION_KEY}"`);
+
   const backupCount = await page.evaluate(
     ({ sessionKey, backupKey }: { sessionKey: string; backupKey: string }) => {
-      const token = window.sessionStorage.getItem(sessionKey);
+      // Try the exact key first
+      let token = window.sessionStorage.getItem(sessionKey);
+      if (!token) {
+        // Fallback: find any oidc.user key (covers authority URL normalization differences)
+        for (let i = 0; i < window.sessionStorage.length; i++) {
+          const k = window.sessionStorage.key(i);
+          if (k && k.startsWith("oidc.user:")) {
+            token = window.sessionStorage.getItem(k);
+            break;
+          }
+        }
+      }
       if (token) {
         window.localStorage.setItem(backupKey, token);
         return 1;
@@ -76,6 +106,32 @@ async function globalSetup(config: FullConfig) {
     console.warn("[global-setup] OIDC token not found in sessionStorage — auth state may be incomplete");
   } else {
     console.log("[global-setup] OIDC token backed up to localStorage for storageState capture");
+  }
+
+  // Verify the saved token is not already expired.
+  // This catches the edge case where oidc-client-ts restored an old backup from
+  // a previous login rather than using the freshly-issued token (e.g. after an
+  // identity-api restart that wiped its in-memory session store).
+  const tokenEntry = await page.evaluate((sessionKey: string) => {
+    try {
+      return JSON.parse(sessionStorage.getItem(sessionKey) ?? "{}") as Record<string, unknown>;
+    } catch {
+      return {} as Record<string, unknown>;
+    }
+  }, OIDC_SESSION_KEY);
+
+  if (tokenEntry.expires_at) {
+    const nowSeconds = Date.now() / 1000;
+    const remainingSeconds = (tokenEntry.expires_at as number) - nowSeconds;
+    if (remainingSeconds < 300) {
+      throw new Error(
+        `[global-setup] Access token expires in ${Math.round(remainingSeconds)}s — ` +
+        "identity-api may have issued a stale token. Ensure identity-api is healthy " +
+        "and restart it before re-running the tests."
+      );
+    }
+    const remainingHours = Math.round((remainingSeconds / 3600) * 10) / 10;
+    console.log(`[global-setup] Access token is fresh — valid for ${remainingHours}h`);
   }
 
   // Save auth state (cookies + localStorage — now includes OIDC backup)

@@ -4,7 +4,7 @@ import type {
   FetchArgs,
   FetchBaseQueryError,
 } from "@reduxjs/toolkit/query";
-import { getOidcAccessToken, clearOidcSession } from "./getOidcAccessToken";
+import { getOidcAccessToken } from "./getOidcAccessToken";
 
 /**
  * Creates a baseQuery that:
@@ -32,10 +32,15 @@ export function createBaseQueryWithReauth(
     const result = await rawBaseQuery(args, api, extraOptions);
 
     if (result.error?.status === 401) {
-      // Token expired or invalid — clear stale session and redirect to a protected route.
-      // ProtectedRoute will detect !isAuthenticated and trigger signinRedirect().
-      clearOidcSession();
-      window.location.href = "/dashboard";
+      // Log the 401 but do NOT do a full-page navigation (window.location.href).
+      // A hard redirect clears sessionStorage, wiping the OIDC session and causing
+      // an auth redirect loop. Instead, let the error propagate to the component.
+      //
+      // Transient 401s (e.g. after identity-api restart flushes its signing key) are
+      // handled automatically: ASP.NET JwtBearer refreshes its JWKS on the next
+      // request. If the token is genuinely expired, oidc-client-ts automaticSilentRenew
+      // will renew it before expiry. ProtectedRoute handles the !isAuthenticated case.
+      console.warn("[baseQuery] 401 Unauthorized — token may be expired or service JWKS is stale");
     }
 
     return result;
