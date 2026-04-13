@@ -1,23 +1,29 @@
 using Clara.API.Apis;
+using Clara.API.Application.Models;
 using Clara.API.Data;
 using Clara.API.Extensions;
 using Clara.API.Health;
 using Clara.API.Hubs;
 using Clara.API.Services;
+using MediTrack.EventBusRabbitMQ;
 using FluentValidation;
 using MediTrack.ServiceDefaults;
 using MediTrack.ServiceDefaults.Extensions;
+using MediTrack.Shared.Services;
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.Extensions.Options;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults("clara-api");
 
-// Database with pgvector support
+// Database with pgvector + EnableDynamicJson (required for List<Guid> JSONB columns in Npgsql 8).
+// DataSource built via ClaraDataSourceFactory to avoid the Pgvector/Pgvector.EntityFrameworkCore
+// UseVector() extension method conflict — see ClaraDbContextFactory.cs.
+var claraDataSource = ClaraDataSourceFactory.Build(
+    builder.Configuration.GetConnectionString("ClaraDb")!);
+
 builder.Services.AddDbContext<ClaraDbContext>(options =>
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("ClaraDb"),
-        npgsqlOptions => npgsqlOptions.UseVector()));
+    options.UseNpgsql(claraDataSource, npgsqlOptions => npgsqlOptions.UseVector()));
 
 // Read-only audit database context (cross-boundary read access to Notification.Worker's audit DB)
 builder.Services.AddDbContext<AuditReadContext>(options =>
@@ -26,28 +32,53 @@ builder.Services.AddDbContext<AuditReadContext>(options =>
 // Authentication & Authorization
 builder.Services.AddDefaultAuthentication(builder.Configuration);
 
+// AI options — strongly-typed, validated at startup (fail fast on misconfiguration)
+builder.Services.AddOptions<AIOptions>()
+    .BindConfiguration(AIOptions.SectionName)
+    .ValidateOnStart();
+
 // AI Services (IChatClient, IEmbeddingGenerator)
 builder.Services.AddAIServices(builder.Configuration);
 
 // Resilient HTTP clients (Deepgram, OpenAI, PatientApi)
 builder.Services.AddResilientHttpClients(builder.Configuration);
 
-// Rate limiting policies (prevents abuse and cost overruns)
-builder.Services.AddRateLimitingPolicies();
+// Rate limiting policies (prevents abuse and cost overruns; relaxed in Development for E2E tests)
+builder.Services.AddRateLimitingPolicies(builder.Environment);
 
 // FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
+// Batch trigger options (AI:Batching config section)
+builder.Services.Configure<BatchTriggerOptions>(
+    builder.Configuration.GetSection(BatchTriggerOptions.SectionName));
+
+// PHI audit event bus (HIPAA mandatory — every AI-PHI interaction must be audit-logged)
+builder.Services.AddRabbitMQEventBus(builder.Configuration);
+builder.Services.AddScoped<IPHIAuditService, PHIAuditService>();
+
 // Session management services
-builder.Services.AddSingleton<BatchTriggerService>();
-builder.Services.AddScoped<SessionService>();
-builder.Services.AddScoped<DeepgramService>();
-builder.Services.AddScoped<SpeakerDetectionService>();
+builder.Services.AddSingleton<IBatchTriggerService, BatchTriggerService>();
+builder.Services.AddScoped<ISessionService, SessionService>();
+builder.Services.AddScoped<ITranscriptionService, DeepgramService>();
+builder.Services.AddScoped<ISpeakerDetectionService, SpeakerDetectionService>();
 
 // AI suggestion services
-builder.Services.AddScoped<KnowledgeService>();
-builder.Services.AddScoped<PatientContextService>();
-builder.Services.AddScoped<SuggestionService>();
+builder.Services.AddScoped<IKnowledgeService, KnowledgeService>();
+builder.Services.AddScoped<ICorrectiveRagService, CorrectiveRagService>();
+builder.Services.AddScoped<IPatientContextService, PatientContextService>();
+builder.Services.AddScoped<ISuggestionCriticService, SuggestionCriticService>();
+
+// Agent registry — keyed so callers can resolve by agent ID
+builder.Services.AddKeyedScoped<IAgentService, ClaraDoctorAgent>("clara-doctor");
+builder.Services.AddKeyedScoped<IAgentService, PatientCompanionAgent>("patient-companion");
+
+// Default agent resolved by SuggestionService (unkeyed) — doctor agent for clinical sessions
+builder.Services.AddScoped<IAgentService>(sp =>
+    sp.GetRequiredKeyedService<IAgentService>("clara-doctor"));
+
+builder.Services.AddScoped<ISuggestionService, SuggestionService>();
+builder.Services.AddScoped<IAgentMemoryService, AgentMemoryService>();
 
 // Analytics service (admin reports)
 builder.Services.AddScoped<AnalyticsService>();
@@ -110,7 +141,12 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 
 // SignalR for real-time communication
-builder.Services.AddSignalR();
+// MaximumReceiveMessageSize raised to 1MB: audio chunks (WebM/Opus) can exceed the 32KB default,
+// especially the first chunk which carries the full EBML container header + codec info.
+builder.Services.AddSignalR(options =>
+{
+    options.MaximumReceiveMessageSize = 1024 * 1024; // 1MB
+});
 
 WebApplication app = builder.Build();
 

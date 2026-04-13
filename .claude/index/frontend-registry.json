@@ -1,0 +1,67 @@
+{
+  "$description": "Frontend component/hook/util registry — check here BEFORE creating new code",
+  "$updated": "2026-04-06",
+  "sharedComponents": {
+    "Layout": "App shell: sidebar + header + content wrapper",
+    "CommandPalette": "Ctrl+K command search (routes, CRUD actions)",
+    "NotificationCenter": "Bell icon with notification popover",
+    "Breadcrumb": "Navigation breadcrumb trail with links",
+    "PageSkeleton": "Loading skeleton for page structure",
+    "NotFound": "404 error page component",
+    "BrandIcons": "GitHub and brand logo SVG components",
+    "Calendar": "ScheduleX calendar wrapper with customizations",
+    "CalendarEventTooltip": "Event hover tooltip for calendar",
+    "ClaraPanel": "Side/drawer panel for Clara AI companion",
+    "ClaraFab": "Floating action button to open Clara panel",
+    "ClaraPanelContext": "Context provider for Clara panel state",
+    "FeatureGuideButton": "Toggle button for feature guide",
+    "FeatureGuidePanel": "Carousel guide for feature onboarding"
+  },
+  "sharedHooks": {
+    "useIsMobile": "Detects mobile breakpoint (<768px)",
+    "useToast": "Sonner toast notification wrapper"
+  },
+  "sharedUtils": {
+    "clsxMerge": "Merge conditional Tailwind classes + resolve conflicts",
+    "chartColors": "Hex color tokens for Recharts (STATUS_PALETTE, TYPE_PALETTE)",
+    "avatarUtils": "getInitials(name), getAvatarColor(id) for user avatars"
+  },
+  "featureHooks": {
+    "appointments": {
+      "useAppointmentCalendar": "Calendar state, event mapping, ScheduleX config",
+      "useAppointmentActions": "Status transition mutations (confirm, check-in, complete, cancel)"
+    },
+    "clara": {
+      "useSession": "Session lifecycle, SignalR connection management",
+      "useAudioRecording": "Browser audio capture, chunking, streaming",
+      "useUndoHistory": "Undo/redo for session edits",
+      "useVoiceCommands": "Voice command parsing"
+    },
+    "dashboard": {
+      "useDashboard": "Fetches stats from all features",
+      "useDashboardLayout": "Customizable widget layout state"
+    },
+    "medical-records": {
+      "useMedicalRecordsSearch": "Patient search dropdown + record filtering"
+    },
+    "landing": {
+      "useScrollReveal": "Scroll-triggered animations for hero section"
+    }
+  },
+  "featureApis": {
+    "adminApi": ["getUsers", "changeUserRole", "deactivateUser", "activateUser"],
+    "appointmentApi": ["getAppointments", "getAppointmentById", "createAppointment", "updateAppointment", "confirmAppointment", "checkInAppointment", "startAppointment", "completeAppointment", "cancelAppointment", "rescheduleAppointment", "markNoShow", "getDashboardStats", "checkConflicts"],
+    "claraApi": ["getSessions", "startSession", "getSession", "endSession", "requestSuggestions", "searchKnowledge", "getAuditLogs", "getAnalyticsOverview"],
+    "medicalRecordsApi": ["getMedicalRecordById", "getMedicalRecordsByPatientId", "createMedicalRecord", "updateDiagnosis", "addClinicalNote", "addPrescription", "recordVitalSigns", "addAttachment", "resolveMedicalRecord", "archiveMedicalRecord"],
+    "patientApi": ["getPatients", "searchPatients", "getPatientById", "createPatient", "updatePatient", "deactivatePatient", "activatePatient"]
+  },
+  "uiPrimitives": [
+    "Accordion", "Alert", "AlertDialog", "Avatar", "Badge", "Breadcrumb", "Button",
+    "Calendar", "Card", "Carousel", "Checkbox", "Collapsible", "Command", "Dialog",
+    "Drawer", "DropdownMenu", "Form", "HoverCard", "Input", "Label", "Menubar",
+    "NavigationMenu", "Pagination", "Popover", "Progress", "RadioGroup", "ScrollArea",
+    "Select", "Separator", "Sheet", "Sidebar", "Skeleton", "Slider", "Sonner",
+    "Switch", "Table", "Tabs", "Textarea", "Toast", "Toaster", "Toggle", "ToggleGroup",
+    "Tooltip"
+  ]
+}

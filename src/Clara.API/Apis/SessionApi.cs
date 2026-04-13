@@ -59,7 +59,7 @@ public static class SessionApi
     }
 
     private static async Task<IResult> GetSessions(
-        [FromServices] SessionService sessionService,
+        [FromServices] ISessionService sessionService,
         ClaimsPrincipal user,
         CancellationToken cancellationToken)
     {
@@ -72,7 +72,7 @@ public static class SessionApi
 
     private static async Task<IResult> StartSession(
         [FromBody] StartSessionRequest request,
-        [FromServices] SessionService sessionService,
+        [FromServices] ISessionService sessionService,
         [FromServices] IValidator<StartSessionRequest> validator,
         ClaimsPrincipal user,
         CancellationToken cancellationToken)
@@ -93,7 +93,7 @@ public static class SessionApi
 
     private static async Task<IResult> GetSession(
         Guid id,
-        [FromServices] SessionService sessionService,
+        [FromServices] ISessionService sessionService,
         ClaimsPrincipal user,
         CancellationToken cancellationToken)
     {
@@ -109,7 +109,7 @@ public static class SessionApi
 
     private static async Task<IResult> EndSession(
         Guid id,
-        [FromServices] SessionService sessionService,
+        [FromServices] ISessionService sessionService,
         ClaimsPrincipal user,
         CancellationToken cancellationToken)
     {
@@ -133,8 +133,8 @@ public static class SessionApi
 
     private static async Task<IResult> RequestSuggestion(
         Guid id,
-        [FromServices] SuggestionService suggestionService,
-        [FromServices] SessionService sessionService,
+        [FromServices] ISuggestionService suggestionService,
+        [FromServices] ISessionService sessionService,
         [FromServices] IHubContext<SessionHub> hubContext,
         ClaimsPrincipal user,
         CancellationToken cancellationToken)
@@ -149,24 +149,37 @@ public static class SessionApi
             return Results.NotFound(new { message = $"Session {id} not found" });
         }
 
+        var sessionGroupId = id.ToString();
+
+        async Task BroadcastAgentEvent(AgentEvent agentEvent)
+        {
+            var eventName = SignalREvents.GetAgentEventName(agentEvent);
+            if (eventName != null)
+            {
+                await hubContext.Clients.Group(sessionGroupId)
+                    .SendAsync(eventName, agentEvent, CancellationToken.None);
+            }
+        }
+
         var suggestions = await suggestionService.GenerateSuggestionsAsync(
             id,
-            source: SuggestionSources.OnDemand,
+            source: SuggestionSourceEnum.OnDemand,
+            onAgentEvent: BroadcastAgentEvent,
             cancellationToken);
 
         // Broadcast each suggestion via SignalR so the UI updates immediately.
         foreach (var suggestion in suggestions)
         {
-            await hubContext.Clients.Group(id.ToString()).SendAsync(
+            await hubContext.Clients.Group(sessionGroupId).SendAsync(
                 SignalREvents.SuggestionAdded,
                 new
                 {
                     id = suggestion.Id,
                     content = suggestion.Content,
-                    type = suggestion.Type,
-                    urgency = suggestion.Urgency,
+                    type = suggestion.Type.ToValue(),
+                    urgency = suggestion.Urgency?.ToValue(),
                     confidence = suggestion.Confidence,
-                    source = suggestion.Source,
+                    source = suggestion.Source.ToValue(),
                     triggeredAt = suggestion.TriggeredAt
                 },
                 cancellationToken);
@@ -179,9 +192,9 @@ public static class SessionApi
             {
                 Id = suggestion.Id,
                 Content = suggestion.Content,
-                Type = suggestion.Type,
-                Source = suggestion.Source,
-                Urgency = suggestion.Urgency,
+                Type = suggestion.Type.ToValue(),
+                Source = suggestion.Source.ToValue(),
+                Urgency = suggestion.Urgency?.ToValue(),
                 Confidence = suggestion.Confidence,
                 TriggeredAt = suggestion.TriggeredAt
             }).ToList()

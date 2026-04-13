@@ -33,10 +33,12 @@ builder.Services.AddDbContext<MedicalRecordsDbContext>(options =>
 builder.Services.AddDbContext<AuditDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("AuditDatabase")));
 
+// EnableDynamicJson is required for List<Guid> JSONB columns in Npgsql 8+.
+// ClaraDataSourceFactory wraps NpgsqlDataSourceBuilder with EnableDynamicJson + pgvector.
+var claraDataSource = ClaraDataSourceFactory.Build(
+    builder.Configuration.GetConnectionString("ClaraDb")!);
 builder.Services.AddDbContext<ClaraDbContext>(options =>
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("ClaraDb"),
-        npgsqlOptions => npgsqlOptions.UseVector()));
+    options.UseNpgsql(claraDataSource, npgsqlOptions => npgsqlOptions.UseVector()));
 
 // ── ASP.NET Identity (for IdentitySeeder) ──
 

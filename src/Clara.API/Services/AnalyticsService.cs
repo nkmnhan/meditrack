@@ -1,5 +1,6 @@
 using Clara.API.Application.Models;
 using Clara.API.Data;
+using Clara.API.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace Clara.API.Services;
@@ -128,7 +129,7 @@ public sealed class AnalyticsService
             .OrderByDescending(entry => entry.Count)
             .Select(entry => new SuggestionBreakdownEntry
             {
-                Type = entry.Type,
+                Type = entry.Type.ToValue(),
                 Count = entry.Count,
                 Percentage = total > 0 ? Math.Round(entry.Count * 100.0 / total, 1) : 0,
             })

@@ -25,7 +25,7 @@ public class DevController : ControllerBase
 {
     private readonly ClaraDbContext _db;
     private readonly IHubContext<SessionHub> _hubContext;
-    private readonly SuggestionService _suggestionService;
+    private readonly ISuggestionService _suggestionService;
     private readonly ILogger<DevController> _logger;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -37,7 +37,7 @@ public class DevController : ControllerBase
     public DevController(
         ClaraDbContext db,
         IHubContext<SessionHub> hubContext,
-        SuggestionService suggestionService,
+        ISuggestionService suggestionService,
         ILogger<DevController> logger)
     {
         _db = db;
@@ -150,8 +150,8 @@ public class DevController : ControllerBase
 
         var suggestions = await _suggestionService.GenerateSuggestionsAsync(
             sessionId,
-            source: SuggestionSources.DevForce,
-            cancellationToken);
+            source: SuggestionSourceEnum.DevForce,
+            cancellationToken: cancellationToken);
 
         // Broadcast via SignalR
         foreach (var suggestion in suggestions)
@@ -162,8 +162,8 @@ public class DevController : ControllerBase
                 {
                     id = suggestion.Id,
                     content = suggestion.Content,
-                    type = suggestion.Type,
-                    urgency = suggestion.Urgency,
+                    type = suggestion.Type.ToValue(),
+                    urgency = suggestion.Urgency?.ToValue(),
                     confidence = suggestion.Confidence,
                     triggeredAt = suggestion.TriggeredAt
                 }, cancellationToken);

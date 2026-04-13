@@ -8,7 +8,7 @@ namespace Clara.API.Services;
 /// Handles speech-to-text transcription via Deepgram REST API.
 /// MVP uses REST API (per-chunk). WebSocket streaming deferred to Phase 7.
 /// </summary>
-public sealed class DeepgramService
+public sealed class DeepgramService : ITranscriptionService
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<DeepgramService> _logger;
@@ -34,7 +34,7 @@ public sealed class DeepgramService
     /// <param name="audioChunk">Audio data (expected format: audio/webm from MediaRecorder).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Transcribed text, or null if transcription failed or produced no text.</returns>
-    public async Task<DeepgramResult?> TranscribeAsync(
+    public async Task<TranscriptionResult?> TranscribeAsync(
         string sessionId,
         byte[] audioChunk,
         CancellationToken cancellationToken = default)
@@ -91,7 +91,7 @@ public sealed class DeepgramService
                 "Deepgram transcribed {CharCount} chars with confidence {Confidence:F2} for session {SessionId}",
                 transcript.Length, confidence ?? 0, sessionId);
 
-            return new DeepgramResult(transcript, confidence);
+            return new TranscriptionResult(transcript, confidence);
         }
         catch (HttpRequestException exception)
         {
@@ -105,11 +105,6 @@ public sealed class DeepgramService
         }
     }
 }
-
-/// <summary>
-/// Result from Deepgram transcription.
-/// </summary>
-public sealed record DeepgramResult(string Transcript, float? Confidence);
 
 /// <summary>
 /// Deepgram API response model.

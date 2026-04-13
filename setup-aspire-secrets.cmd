@@ -5,12 +5,42 @@ echo MediTrack - Aspire.Nexus Secrets Setup
 echo ========================================
 echo.
 
+if "%CLAUDE_TOKEN%"=="" (
+    echo ERROR: CLAUDE_TOKEN environment variable is not set.
+    echo        Run: set CLAUDE_TOKEN=sk-ant-api03-...
+    exit /b 1
+)
+
+if "%DEEP_GRAM_TOKEN%"=="" (
+    echo ERROR: DEEP_GRAM_TOKEN environment variable is not set.
+    echo        Run: set DEEP_GRAM_TOKEN=...
+    exit /b 1
+)
+
+if "%OPENAI_API_KEY%"=="" (
+    echo WARNING: OPENAI_API_KEY not set -- using placeholder ^(embeddings will fail^).
+    set "OPENAI_API_KEY=sk-placeholder-for-dev"
+)
+
+echo.
+echo [1/3] Clearing existing user secrets...
+dotnet user-secrets clear --project "%~dp0src\Aspire.Nexus\Aspire.Nexus.csproj"
+if %errorlevel% neq 0 (
+    echo ERROR: Failed to clear user secrets. Is .NET SDK installed?
+    exit /b 1
+)
+echo [OK] Existing secrets cleared.
+
+echo.
+echo [2/3] Creating secrets directory...
 set "SECRETS_DIR=%APPDATA%\Microsoft\UserSecrets\aspire-nexus"
 
 if not exist "%SECRETS_DIR%" (
     mkdir "%SECRETS_DIR%"
 )
 
+echo.
+echo [3/3] Writing new secrets...
 (
 echo {
 echo   "AppHost": {
@@ -113,9 +143,16 @@ echo           "KeyPath": "../../dev-certs/certs/localhost-key.pem"
 echo         },
 echo         "EnvironmentVariables": {
 echo           "IdentityUrl": "https://localhost:5001",
+echo           "Services__PatientApi": "https://localhost:5002",
 echo           "ConnectionStrings__ClaraDb": "Host=localhost;Port=5432;Database=meditrack_clara;Username=meditrack;Password=MediTrack_Dev@2026!",
 echo           "ConnectionStrings__AuditDatabase": "Host=localhost;Port=5432;Database=meditrack_audit;Username=meditrack;Password=MediTrack_Dev@2026!",
-echo           "ConnectionStrings__rabbitmq": "amqp://meditrack:meditrack_secret@localhost:5672/"
+echo           "ConnectionStrings__rabbitmq": "amqp://meditrack:meditrack_secret@localhost:5672/",
+echo           "AI__ChatProvider": "anthropic",
+echo           "AI__BatchModel": "claude-haiku-4-5-20251001",
+echo           "AI__OnDemandModel": "claude-sonnet-4-6",
+echo           "AI__Anthropic__ApiKey": "%CLAUDE_TOKEN%",
+echo           "AI__Deepgram__ApiKey": "%DEEP_GRAM_TOKEN%",
+echo           "AI__OpenAI__ApiKey": "%OPENAI_API_KEY%"
 echo         }
 echo       },
 echo       "simulator": {

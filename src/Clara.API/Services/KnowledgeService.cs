@@ -10,7 +10,7 @@ namespace Clara.API.Services;
 /// <summary>
 /// RAG search service for querying the knowledge base using vector similarity.
 /// </summary>
-public sealed class KnowledgeService
+public sealed class KnowledgeService : IKnowledgeService
 {
     private readonly ClaraDbContext _db;
     private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator;
@@ -49,6 +49,12 @@ public sealed class KnowledgeService
             // GenerateAsync returns GeneratedEmbeddings<Embedding<float>>
             var embeddingResult = await _embeddingGenerator.GenerateAsync([query], cancellationToken: cancellationToken);
             var queryVector = new Vector(embeddingResult[0].Vector.ToArray());
+
+            // Raise ef_search for higher recall on clinical knowledge base (default 40 is too low).
+            if (_db.Database.ProviderName == "Npgsql.EntityFrameworkCore.PostgreSQL")
+            {
+                await _db.Database.ExecuteSqlRawAsync("SET hnsw.ef_search = 100", cancellationToken);
+            }
 
             // Query using cosine distance (pgvector <=> operator)
             // Note: pgvector uses distance (lower is better), so we convert to similarity

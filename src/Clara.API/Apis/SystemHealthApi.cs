@@ -17,6 +17,7 @@ public static class SystemHealthApi
         ("Patient API", "Patient CRUD & demographics", "Services:PatientApi", "https://patient-api:8443"),
         ("Appointment API", "Calendar & scheduling engine", "Services:AppointmentApi", "https://appointment-api:8443"),
         ("Medical Records API", "EHR read/write & FHIR bridge", "Services:MedicalRecordsApi", "https://medicalrecords-api:8443"),
+        // notification-worker is a background worker with no external callers — it binds HTTP only (no TLS config in compose).
         ("Notification Worker", "Event processing & audit logging", "Services:NotificationWorker", "http://notification-worker:8080"),
         ("Clara AI Service", "AI clinical companion & MCP server", "Services:ClaraApi", "https://clara-api:8443"),
     ];

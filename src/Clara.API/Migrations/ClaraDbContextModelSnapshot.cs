@@ -25,6 +25,72 @@ namespace MediTrack.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "vector");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Clara.API.Domain.AgentMemory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("AccessCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("access_count");
+
+                    b.Property<string>("AgentId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("agent_id");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Vector>("Embedding")
+                        .HasColumnType("vector(1536)")
+                        .HasColumnName("embedding");
+
+                    b.Property<DateTimeOffset>("LastAccessedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_accessed_at");
+
+                    b.Property<string>("MemoryType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("memory_type");
+
+                    b.Property<string>("PatientId")
+                        .HasColumnType("text")
+                        .HasColumnName("patient_id");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("session_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AgentId");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("Embedding")
+                        .HasAnnotation("Npgsql:StorageParameter:ef_construction", 64)
+                        .HasAnnotation("Npgsql:StorageParameter:m", 16);
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Embedding"), "hnsw");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Embedding"), new[] { "vector_cosine_ops" });
+
+                    b.HasIndex("PatientId");
+
+                    b.ToTable("agent_memories", (string)null);
+                });
+
             modelBuilder.Entity("Clara.API.Domain.Document", b =>
                 {
                     b.Property<Guid>("Id")
@@ -180,6 +246,10 @@ namespace MediTrack.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<DateTimeOffset?>("AcceptedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("accepted_at");
+
                     b.Property<float?>("Confidence")
                         .HasColumnType("real")
                         .HasColumnName("confidence");
@@ -189,6 +259,14 @@ namespace MediTrack.Migrations
                         .HasColumnType("text")
                         .HasColumnName("content");
 
+                    b.Property<DateTimeOffset?>("DismissedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("dismissed_at");
+
+                    b.Property<string>("Reasoning")
+                        .HasColumnType("text")
+                        .HasColumnName("reasoning");
+
                     b.Property<Guid>("SessionId")
                         .HasColumnType("uuid")
                         .HasColumnName("session_id");
@@ -197,6 +275,11 @@ namespace MediTrack.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("source");
+
+                    b.PrimitiveCollection<List<Guid>>("SourceTranscriptLineIds")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("source_transcript_line_ids");
 
                     b.Property<DateTimeOffset>("TriggeredAt")
                         .HasColumnType("timestamp with time zone")

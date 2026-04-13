@@ -5,7 +5,102 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
+### Security
+- HTTPS production-parity — OWASP A04/A02 compliant inter-container TLS (2026-04-12) — feat/clara-agentic-ai
+  - **No plain HTTP ports** — removed `http://+:8080` from `ASPNETCORE_URLS` on all 5 .NET API services; `EXPOSE 8080` removed from all affected Dockerfiles
+  - **HTTPS IdentityUrl everywhere** — `IdentityUrl=https://identity-api:8443` in both `docker-compose.yml` (production base) and `docker-compose.override.yml` (dev); `http://identity-api:8080` is gone
+  - **HTTPS PatientApiUrl** — hardcoded `http://patient-api:8080` fallback replaced with `https://patient-api:8443` in `Appointment.API` and `MedicalRecords.API`; `PatientApiUrl` added as explicit env var in both compose files
+  - **Proper CA chain validation** — `dev-certs/setup-certs.cmd` regenerates mkcert cert with all container hostnames as SANs (`identity-api`, `patient-api`, `appointment-api`, `medicalrecords-api`, `clara-api`); exports `rootCA.pem` to `dev-certs/certs/`
+  - **Shared entrypoint script** — `scripts/docker-entrypoint.sh` installs mkcert CA into container system trust store at startup via `update-ca-certificates`; strict no-op in production (file never mounted)
+  - **`RequireHttpsMetadata = true`** — enforced in `AuthenticationExtensions.cs` (all 4 downstream services) and `Identity.API/Program.cs`; `DangerousAcceptAnyServerCertificateValidator` bypass never used
+
+### Fixed
+- Claude hook path resolution (2026-04-12)
+  - `.claude/settings.json` hook commands now resolve through `CLAUDE_PROJECT_DIR` instead of relative `.claude/hooks/...` paths, fixing `PostToolUse:Bash hook error` / `node:internal/modules/cjs/loader:1458` when Claude fires hooks outside the repo root cwd.
+- Clara code review + live session improvements (2026-04-11) — feat/clara-agentic-ai
+  - **Chat persistence on refresh** — `useSession` now seeds state from REST data (`initialTranscriptLines`/`initialSuggestions`) immediately on mount; `SessionUpdated` merges rather than replaces to handle reconnect deduplication; `LiveSessionView` passes `sessionData` to the hook. Transcript and suggestions now survive full page refresh.
+  - **Agent memory no-op fixed** — `IAgentMemoryService` was registered in DI but never injected into `ClaraDoctorAgent`; wired `RecallSimilarMemoriesAsync` (before prompt build) and `StoreMemoryAsync` (after verified suggestions). Both calls are non-fatal (try-catch).
+  - **Duplicate validation removed** — `SessionHub.SendTranscriptLine` had an exact copy of the ownership check block (lines 163–176 = lines 143–162), causing a redundant DB query on every transcript message.
+  - **`BroadcastAgentEvent` deduplicated** — identical switch expression in `BatchTriggerService` and `SessionApi` extracted to `SignalREvents.GetAgentEventName()`.
+  - **HNSW recall tuned** — `SET hnsw.ef_search = 100` added before cosine distance queries in `KnowledgeService` and `AgentMemoryService` (default 40 gives poor recall on clinical data).
+  - **PHI audit gap fixed** — `JsonException` catch in `PatientContextService` now publishes a failed audit event (HIPAA compliance).
+  - **`MemoryTypes` constants** — `MemoryTypes.Episodic`/`MemoryTypes.Semantic` replace free-form strings in `AgentMemory` usage.
+  - **Test quality** — `ClaraDoctorAgentTests` replaced `PassThroughCriticService` hand-written stub with `Substitute.For<ISuggestionCriticService>()` (InternalsVisibleTo already set); added `IAgentMemoryService` mock; 2 new `BuildAgentPrompt` memory tests.
+
 ### Added
+- GitHub Copilot hooks, MCP, and tooling (2026-04-08)
+  - `.github/hooks/post-edit-lint.json` — Copilot coding agent PostToolUse hook: ESLint on `.ts/.tsx` files after every edit (equivalent to Claude's `post-edit-lint.mjs`, different format)
+  - `.vscode/mcp.json` — VS Code MCP server config translated from `.mcp.json` (`servers` key, `inputs` secret prompt for postgres DSN)
+  - `.vscode/settings.json` — VS Code: Copilot agent mode, MCP enabled, ESLint/Prettier on save, Tailwind `clsxMerge` class regex, search exclusions
+  - `.vscode/extensions.json` — Recommended extensions: Copilot, C# Dev Kit, ESLint, Prettier, Tailwind, GitLens, Docker, Playwright
+  - `.github/workflows/lint.yml` — CI lint gate on all PRs: ESLint (frontend) + dotnet build (backend)
+- GitHub Copilot configuration (2026-04-08) — full parity with Claude Code setup
+  - `.github/copilot-instructions.md` — repository-wide instructions (engineering principles, naming, service map, tech stack, commands)
+  - `.github/instructions/backend.instructions.md` — Clean Architecture, MediatR, NuGet CPM, EF Core rules (scoped to `**/*.cs`)
+  - `.github/instructions/frontend.instructions.md` — React 19, RTK Query, semantic tokens, React Compiler rules (scoped to Web + Design)
+  - `.github/instructions/security.instructions.md` — OWASP Top 10:2025, PHI audit, secrets rules (broad scope)
+  - `.github/instructions/ai-mcp.instructions.md` — Clara MCP architecture, cost routing, ReAct loop (scoped to `src/Clara.API/`)
+  - `.github/instructions/dependencies.instructions.md` — license policy, NuGet CPM, npm audit rules
+  - `.github/instructions/web-design-sync.instructions.md` — dual-update mandate for shared components (Web ↔ Design)
+  - `.github/agents/tech-lead.agent.md` — Staff Tech Lead agent (Claude Opus)
+  - `.github/agents/senior-developer.agent.md` — Senior Dev agent with TDD protocol (Claude Sonnet)
+  - `.github/agents/code-reviewer.agent.md` — Principal reviewer with structured output format (Claude Sonnet)
+  - `.github/agents/system-architect.agent.md` — Distributed systems architect (Claude Opus, max effort)
+  - `.github/agents/devils-advocate.agent.md` — Contrarian critic for stress-testing designs (Claude Opus, max effort)
+  - `.github/workflows/copilot-setup-steps.yml` — Copilot coding agent environment (.NET 10, Node 22, NuGet + npm restore)
+  - `AGENTS.md` — portable root-level agent manifest (Copilot, Cursor, Codex, Jules compatible)
+- Cross-session agent memory (2026-04-03) — P3.3
+  - `AgentMemory` domain entity — episodic/semantic observations with pgvector embedding for cosine similarity search
+  - `IAgentMemoryService` / `AgentMemoryService` — store, recall-by-patient (recency), recall-by-similarity (HNSW cosine)
+  - Embedding failure is non-fatal — memories are stored without a vector and fall back to recency recall
+  - Access metadata (`LastAccessedAt`, `AccessCount`) updated on every recall as an importance signal
+  - `ClaraDbContext.AgentMemories` DbSet + `agent_memories` table with HNSW index (`vector_cosine_ops`, m=16, ef_construction=64)
+  - `ClaraDbContext` made provider-aware — pgvector/jsonb columns ignored for InMemory provider (unit test compatibility)
+  - 10 unit tests in `AgentMemoryServiceTests.cs` (CRUD, filter by agent/patient, limit, access metadata, embedding failure, fallback)
+  - Registered as `IAgentMemoryService` → `AddScoped` in `Program.cs`
+- Reflection/Critique loop for suggestion hallucination detection (2026-04-03) — P2.4
+  - `SuggestionCriticService` — second LLM call verifies each suggestion against the transcript
+  - `ISuggestionCriticService` (internal) — interface in `Interfaces.cs`, keyed to `"batch"` chat client (GPT-4o-mini)
+  - `Prompts/critic.txt` — critic prompt: rules for supported/unsupported/revised judgments
+  - `SuggestionService.GenerateSuggestionsAsync` — integrates critic after `ParseLlmResponse`, before DB save
+  - Unsupported suggestions removed; supported with improved phrasing are revised in-place
+  - Graceful degradation: any critic failure returns original suggestions unchanged (never blocks generation)
+  - 4 unit tests in `SuggestionCriticServiceTests.cs` (all-supported, removed, revised, LLM-failure paths)
+- ReAct agent loop for Clara suggestion generation (2026-04-03) — P1.3
+  - `AgentTools.cs` — two AI-callable tools: `search_knowledge` (CorrectiveRAG) and `get_patient_context`
+  - `SuggestionService.GenerateSuggestionsAsync` replaced hardcoded pipeline with `FunctionInvokingChatClient` ReAct loop
+  - LLM now decides which tools to call based on conversation content (no longer always-RAG + always-patient-context)
+  - `BuildAgentPrompt` replaces old 4-param `BuildPrompt` — instructs LLM on available tools, inlines clinical skill
+  - `IKnowledgeService` removed from `SuggestionService` constructor (now accessed via `AgentTools` → `CorrectiveRagService`)
+  - Token budget increased to 500 (was 300) to accommodate tool-call round-trips
+  - 8 new unit tests in `AgentToolsTests.cs` (tool output format, empty results, tool registration)
+  - 8 updated tests in `SuggestionServiceBuildPromptTests.cs` for new `BuildAgentPrompt` contract
+- PHI audit trail for Clara AI context access (2026-04-03) — HIPAA P2.5
+  - `PatientContextService` now injects `IPHIAuditService` and publishes an audit event on every patient context access
+  - Success path: logs accessed fields (`age,gender,allergies,medications,conditions,recentVisit`) with `action: AIContextAccess`
+  - Failure paths (HTTP error, `HttpRequestException`): logs `success: false` with the error detail
+  - Null/empty `patientId` (early-return guard): no audit event published
+  - Audit call is best-effort — wrapped in try/catch so failures never interrupt clinical workflows
+  - `PHIAuditService` and `RabbitMQ EventBus` registered in `Clara.API/Program.cs`
+  - 3 new unit tests in `PHIAuditTests.cs` covering success, HTTP failure, and null patientId paths
+- Clara agentic AI improvements — research-driven enhancements (2026-04-02)
+  - P0: Urgent keyword bypass in BatchTriggerService (chest pain, seizure, etc. → immediate suggestions)
+  - P0: Disconnect cleanup — batch trigger timers cleaned up when SignalR disconnects
+  - P0: Config-driven thresholds — `BatchTriggerOptions` via `IOptions<>` (utterance count, timeout, keywords)
+  - P1: Tiered model routing — keyed `IChatClient` (batch → GPT-4o-mini, on-demand → GPT-4o)
+  - P1: Evidence linking — `SourceTranscriptLineIds` on suggestions traces claims to source transcript
+  - P1: Streaming agent event types (`AgentEvent` hierarchy: Thinking, ToolStarted, ToolCompleted, TextChunk)
+  - P2: Service interfaces — `ISuggestionService`, `IKnowledgeService`, `IPatientContextService`, `IBatchTriggerService`, `ISessionService`
+  - P2: Rich domain model — `Session.Complete()`, `Pause()`, `Resume()`, `Cancel()` with state machine validation
+  - P2: Domain enums — `SessionStatusEnum`, `SuggestionTypeEnum`, `SuggestionUrgencyEnum`, `SuggestionSourceEnum`
+  - P2: Suggestion tracking — `AcceptedAt`/`DismissedAt` fields + `AcceptSuggestion`/`DismissSuggestion` hub methods
+  - P2: Enhanced system prompt — grounding rules, confidence calibration, reasoning field, hallucination prevention
+  - `SessionStatus` moved from `SessionService.cs` to `Domain/Constants.cs` (domain concept)
+  - New SignalR events: `AgentThinking`, `AgentToolStarted`, `AgentToolCompleted`, `AgentTextChunk`, `SuggestionAccepted`, `SuggestionDismissed`
+- Clara agentic AI research & plan — `docs/clara-agentic-ai-plan.md` (2026-04-02)
+  - Competitive analysis: Canvas Hyperscribe, Nuance DAX, Abridge, Suki, Nabla, Amazon HealthScribe
+  - Architecture patterns: ReAct, Plan-and-Execute, Reflection/Critique, Multi-Agent, Corrective RAG
+  - Multi-agent extensibility design for future patient companion agent
 - Perceptual color scale system — 100+ CSS variables per theme (2026-03-21)
   - `deriveColorScale()` generates brand scales (50-950) and semantic scales (50-900) from palette
   - `harmonizeHue()` shifts success/warning/error/info toward primary hue for visual cohesion
@@ -30,6 +125,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
   - Services: SuggestionService (BuildPrompt, ParseLlmResponse), KnowledgeSeederService (ChunkText, ExtractCategory), SkillLoaderService, DeepgramService, PatientContextService, BatchTriggerService
   - Security: SessionHub input validation, ConfigValidator
   - Shared: MockHttpMessageHandler test infrastructure
+
 - Competitive analysis & improvement specs — feature gaps, Clara enhancements, UI/UX roadmap (2026-03-15)
 - TDD infrastructure — Clara.UnitTests + MedicalRecords.UnitTests projects, NSubstitute + Testcontainers packages (2026-03-15)
 - Superpowers plugin integration — workflow section in CLAUDE.md, output directories, .gitignore entries (2026-03-15)

@@ -1,14 +1,16 @@
 using System.Text.Json;
+using MediTrack.Shared.Services;
 
 namespace Clara.API.Services;
 
 /// <summary>
 /// Fetches patient context from Patient.API for context-aware AI suggestions.
-/// PHI access is audit-logged via the EventBus.
+/// PHI access is audit-logged via the EventBus on every access attempt (HIPAA mandatory).
 /// </summary>
-public sealed class PatientContextService
+public sealed class PatientContextService : IPatientContextService
 {
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IPHIAuditService _auditService;
     private readonly ILogger<PatientContextService> _logger;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -19,9 +21,11 @@ public sealed class PatientContextService
 
     public PatientContextService(
         IHttpClientFactory httpClientFactory,
+        IPHIAuditService auditService,
         ILogger<PatientContextService> logger)
     {
         _httpClientFactory = httpClientFactory;
+        _auditService = auditService;
         _logger = logger;
     }
 
@@ -51,6 +55,8 @@ public sealed class PatientContextService
                 _logger.LogWarning(
                     "Failed to fetch patient context for {PatientId}: {StatusCode}",
                     patientId, response.StatusCode);
+                await PublishAuditEventAsync(patientId, isSuccess: false,
+                    errorMessage: $"HTTP {(int)response.StatusCode}", cancellationToken: cancellationToken);
                 return null;
             }
 
@@ -78,6 +84,10 @@ public sealed class PatientContextService
                 "Fetched patient context for {PatientId}: {AllergiesCount} allergies, {MedicationsCount} medications",
                 patientId, context.Allergies.Count, context.ActiveMedications.Count);
 
+            await PublishAuditEventAsync(patientId, isSuccess: true,
+                accessedFields: "age,gender,allergies,medications,conditions,recentVisit",
+                cancellationToken: cancellationToken);
+
             return context;
         }
         catch (HttpRequestException exception)
@@ -86,6 +96,8 @@ public sealed class PatientContextService
                 exception,
                 "HTTP error fetching patient context for {PatientId}",
                 patientId);
+            await PublishAuditEventAsync(patientId, isSuccess: false,
+                errorMessage: exception.Message, cancellationToken: cancellationToken);
             return null;
         }
         catch (JsonException exception)
@@ -94,7 +106,43 @@ public sealed class PatientContextService
                 exception,
                 "JSON parsing error for patient {PatientId}",
                 patientId);
+            // Data was fetched (HTTP 200) but parsing failed — still audit the access attempt
+            await PublishAuditEventAsync(patientId, isSuccess: false,
+                errorMessage: "JSON parsing error", cancellationToken: cancellationToken);
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Best-effort PHI audit publish. Failures are logged as warnings but never propagate
+    /// to the caller — audit must never interrupt a clinical workflow.
+    /// </summary>
+    private async Task PublishAuditEventAsync(
+        string patientId,
+        bool isSuccess,
+        string? accessedFields = null,
+        string? errorMessage = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _auditService.PublishAccessAsync(
+                resourceType: "PatientContext",
+                resourceId: patientId,
+                patientId: Guid.TryParse(patientId, out var parsedId) ? parsedId : Guid.Empty,
+                action: "AIContextAccess",
+                accessedFields: accessedFields,
+                success: isSuccess,
+                errorMessage: errorMessage,
+                additionalContext: new { purpose = "AI suggestion generation" },
+                cancellationToken: cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            // Never let audit failures impact clinical workflows
+            _logger.LogWarning(
+                exception,
+                "Failed to publish PHI audit event for patient {PatientId}", patientId);
         }
     }
 

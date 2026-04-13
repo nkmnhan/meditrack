@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import { getOidcAccessToken } from "@/shared/auth/getOidcAccessToken";
 import type {
+  AgentStatus,
   ConnectionStatus,
   Session,
   TranscriptLine,
@@ -13,6 +14,11 @@ const HUB_URL = `${CLARA_API_URL}/sessionHub`;
 
 interface UseSessionOptions {
   sessionId: string;
+  /** Historical transcript lines loaded from the REST API — seeds state on mount so the
+   * transcript is visible immediately, before SignalR's SessionUpdated fires. */
+  initialTranscriptLines?: readonly TranscriptLine[];
+  /** Historical suggestions loaded from the REST API — seeds state on mount. */
+  initialSuggestions?: readonly Suggestion[];
   onTranscriptLine?: (line: TranscriptLine) => void;
   onSuggestion?: (suggestion: Suggestion) => void;
   onError?: (error: Error) => void;
@@ -23,6 +29,8 @@ interface UseSessionReturn {
   session: Session | null;
   transcriptLines: TranscriptLine[];
   suggestions: Suggestion[];
+  /** Current AI pipeline stage — drives thinking/loading indicators in the UI. */
+  agentStatus: AgentStatus;
   sendAudioChunk: (audioData: ArrayBuffer) => Promise<void>;
 }
 
@@ -32,6 +40,8 @@ interface UseSessionReturn {
  */
 export function useSession({
   sessionId,
+  initialTranscriptLines,
+  initialSuggestions,
   onTranscriptLine,
   onSuggestion,
   onError,
@@ -39,8 +49,14 @@ export function useSession({
   const [connectionStatus, setConnectionStatus] =
     useState<ConnectionStatus>("disconnected");
   const [session, setSession] = useState<Session | null>(null);
-  const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>([]);
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [agentStatus, setAgentStatus] = useState<AgentStatus>("idle");
+  // Seed from REST data so the transcript is visible before SignalR connects
+  const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>(
+    () => (initialTranscriptLines ? [...initialTranscriptLines] : [])
+  );
+  const [suggestions, setSuggestions] = useState<Suggestion[]>(
+    () => (initialSuggestions ? [...initialSuggestions] : [])
+  );
 
   const connectionRef = useRef<signalR.HubConnection | null>(null);
   const sessionIdRef = useRef(sessionId);
@@ -104,27 +120,90 @@ export function useSession({
       onSuggestionRef.current?.(suggestion);
     });
 
-    // Handle session state updates
+    // Handle session state updates from server (fires after JoinSession).
+    // Use the server's authoritative list as the source of truth, since it
+    // may include lines created before this client session (e.g. after a refresh).
     connection.on("SessionUpdated", (updatedSession: Session) => {
       setSession(updatedSession);
+      if (updatedSession.transcriptLines?.length) {
+        // Merge: server list is authoritative; append any locally-added lines not yet persisted
+        setTranscriptLines((prev) => {
+          const serverIds = new Set(updatedSession.transcriptLines.map((l) => l.id));
+          const localOnly = prev.filter((l) => !serverIds.has(l.id));
+          return [...updatedSession.transcriptLines, ...localOnly];
+        });
+      }
+      if (updatedSession.suggestions?.length) {
+        setSuggestions((prev) => {
+          const serverIds = new Set(updatedSession.suggestions.map((s) => s.id));
+          const localOnly = prev.filter((s) => !serverIds.has(s.id));
+          return [...updatedSession.suggestions, ...localOnly];
+        });
+      }
     });
 
     // Handle errors from server
-    connection.on("Error", (errorMessage: string) => {
+    connection.on("SessionError", (errorMessage: string) => {
       console.error("Session error:", errorMessage);
       onErrorRef.current?.(new Error(errorMessage));
     });
+
+    connection.on("SttError", (errorMessage: string) => {
+      console.error("STT error:", errorMessage);
+      onErrorRef.current?.(new Error(`Transcription error: ${errorMessage}`));
+    });
+
+    connection.on("TranscriptError", (errorMessage: string) => {
+      console.error("Transcript error:", errorMessage);
+      onErrorRef.current?.(new Error(`Transcript error: ${errorMessage}`));
+    });
+
+    // SessionJoined — server confirmation that this client was added to the session group
+    connection.on("SessionJoined", () => {
+      // No state change needed — connection.invoke("JoinSession") already sets "connected"
+    });
+
+    // Agent pipeline events — drive the thinking/loading indicator in the suggestions panel
+    connection.on("AgentThinking", () => setAgentStatus("thinking"));
+    connection.on("AgentToolStarted", () => setAgentStatus("tool-running"));
+    connection.on("AgentToolCompleted", () => setAgentStatus("thinking"));
+    connection.on("AgentTextChunk", () => setAgentStatus("streaming"));
+    connection.on("AgentCompleted", () => setAgentStatus("idle"));
+    connection.on("AgentFailed", (errorMessage: string) => {
+      console.error("Agent failed:", errorMessage);
+      setAgentStatus("failed");
+      // Auto-clear failed state after 5 s so the panel doesn't stay stuck
+      setTimeout(() => setAgentStatus("idle"), 5000);
+    });
+
+    // Track whether the effect was cleaned up (React Strict Mode runs effects twice
+    // in development — the first cleanup fires while the connection is still negotiating,
+    // producing an AbortError. The `cleanedUp` guard suppresses the spurious error and
+    // ensures the second attempt proceeds cleanly).
+    let cleanedUp = false;
 
     // Start connection
     const startConnection = async () => {
       try {
         setConnectionStatus("connecting");
         await connection.start();
+
+        // If cleanup ran while we were connecting, close the connection and exit
+        if (cleanedUp) {
+          connection.stop();
+          return;
+        }
+
         setConnectionStatus("connected");
 
         // Join the session
         await connection.invoke("JoinSession", sessionId);
       } catch (error) {
+        // AbortError is expected during React Strict Mode's double-invoke cleanup —
+        // the connection is intentionally stopped mid-negotiation on the first pass.
+        if (cleanedUp || (error instanceof Error && error.name === "AbortError")) {
+          return;
+        }
         console.error("Failed to connect to session hub:", error);
         setConnectionStatus("disconnected");
         onErrorRef.current?.(
@@ -137,10 +216,20 @@ export function useSession({
 
     // Cleanup on unmount
     return () => {
+      cleanedUp = true;
       connection.off("TranscriptLineAdded");
       connection.off("SuggestionAdded");
       connection.off("SessionUpdated");
-      connection.off("Error");
+      connection.off("SessionError");
+      connection.off("SttError");
+      connection.off("TranscriptError");
+      connection.off("SessionJoined");
+      connection.off("AgentThinking");
+      connection.off("AgentToolStarted");
+      connection.off("AgentToolCompleted");
+      connection.off("AgentTextChunk");
+      connection.off("AgentCompleted");
+      connection.off("AgentFailed");
       connection.stop();
       connectionRef.current = null;
     };
@@ -174,6 +263,7 @@ export function useSession({
     session,
     transcriptLines,
     suggestions,
+    agentStatus,
     sendAudioChunk,
   };
 }

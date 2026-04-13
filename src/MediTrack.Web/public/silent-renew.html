@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Silent Renew</title>
+  </head>
+  <body>
+    <!--
+      oidc-client-ts silent token renewal callback.
+      This page is loaded in a hidden iframe during automaticSilentRenew.
+      oidc-client-ts reads the authorization code from this iframe's location.href
+      directly (same-origin), then exchanges it for tokens — no JS needed here.
+      Keeping this page lightweight prevents the full React bundle from loading
+      in every renewal cycle, which would block Playwright networkidle detection.
+    -->
+  </body>
+</html>

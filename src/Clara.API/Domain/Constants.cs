@@ -43,3 +43,25 @@ public static class SuggestionUrgency
 
     public static readonly string[] All = [Low, Medium, High];
 }
+
+/// <summary>
+/// Session status constants.
+/// </summary>
+public static class SessionStatus
+{
+    public const string Active = "active";
+    public const string Paused = "paused";
+    public const string Completed = "completed";
+    public const string Cancelled = "cancelled";
+}
+
+/// <summary>
+/// Agent memory type constants — whitelisted values for AgentMemory.MemoryType.
+/// Episodic: specific events from a session. Semantic: generalised knowledge about a patient.
+/// </summary>
+public static class MemoryTypes
+{
+    public const string Episodic = "episodic";
+    public const string Semantic = "semantic";
+}
+

@@ -1,4 +1,7 @@
 {
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
   "permissions": {
     "allow": [
       "Read",
@@ -11,10 +14,19 @@
       "Bash(npm run lint)",
       "Bash(npm test *)",
       "Bash(npx *)",
+      "Bash(node *)",
       "Bash(dotnet build *)",
       "Bash(dotnet test *)",
+      "Bash(CLARA_TEST_DB=* dotnet test *)",
+      "Bash(dotnet run *)",
+      "Bash(dotnet format *)",
       "Bash(docker-compose *)",
       "Bash(docker compose *)",
+      "Bash(docker logs *)",
+      "Bash(docker ps *)",
+      "Bash(docker stop *)",
+      "Bash(docker start *)",
+      "Bash(docker inspect *)",
       "Bash(git status *)",
       "Bash(git diff *)",
       "Bash(git log *)",
@@ -24,10 +36,18 @@
       "Bash(git stash *)",
       "Bash(git show *)",
       "Bash(git blame *)",
+      "Bash(git switch *)",
+      "Bash(git merge *)",
+      "Bash(git checkout *)",
+      "Bash(git fetch *)",
+      "Bash(git pull *)",
+      "Bash(git push *)",
+      "Bash(git worktree *)",
       "Bash(ls *)",
       "Bash(mkdir *)",
-      "Bash(cat *)",
       "Bash(wc *)",
+      "Bash(head *)",
+      "Bash(tail *)",
       "Bash(gh pr *)",
       "Bash(gh issue *)",
       "Bash(gh run *)",
@@ -41,12 +61,23 @@
     ],
     "deny": [
       "Bash(rm -rf *)",
+      "Bash(rm -r *)",
+      "Bash(rm *)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(ssh *)",
       "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push origin +*)",
+      "Bash(git push origin main)",
+      "Bash(git push origin main *)",
       "Bash(git reset --hard *)",
       "Bash(git checkout -- *)",
       "Bash(git clean *)",
       "Bash(git branch -D *)",
       "Bash(dotnet add package *)",
+      "Bash(dotnet ef database drop *)",
+      "Bash(dotnet ef migrations remove *)",
       "Read(.env*)",
       "Read(**/*.pem)",
       "Read(**/*.key)",
@@ -55,13 +86,50 @@
     ]
   },
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.mjs\"",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Glob|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/scout-block.mjs\"",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit",
         "hooks": [
           {
             "type": "command",
-            "command": "node C:/nkmn/Projects/meditrack/.claude/hooks/post-edit-lint.mjs"
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-edit-lint.mjs\"",
+            "timeout": 35000
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-compact-save.mjs\"",
+            "timeout": 10000
           }
         ]
       }
@@ -70,6 +138,13 @@
   "enabledPlugins": {
     "superpowers@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true,
-    "figma@claude-plugins-official": true
-  }
+    "figma@claude-plugins-official": true,
+    "csharp-lsp@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "playwright@claude-plugins-official": true,
+    "microsoft-docs@claude-plugins-official": true,
+    "coderabbit@claude-plugins-official": true
+  },
+  "model": "claude-sonnet-4-6",
+  "effortLevel": "medium"
 }

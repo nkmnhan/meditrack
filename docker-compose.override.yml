@@ -7,10 +7,11 @@ services:
   identity-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:8080;https://+:8443
+      - ASPNETCORE_URLS=https://+:8443
       - Kestrel__Certificates__Default__Path=/certs/localhost.pem
       - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
       - ConnectionStrings__IdentityDb=Host=postgres;Database=meditrack_identity;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
+      - IdentityUrl=https://identity-api:8443
       - WebClientUrl=https://localhost:3000
       - ServiceClientSecret=${SERVICE_CLIENT_SECRET:-service-secret-dev}
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
@@ -27,11 +28,11 @@ services:
   patient-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:8080;https://+:8443
+      - ASPNETCORE_URLS=https://+:8443
       - Kestrel__Certificates__Default__Path=/certs/localhost.pem
       - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
       - ConnectionStrings__PatientDb=Host=postgres;Database=meditrack_patients;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
-      - IdentityUrl=http://identity-api:8080
+      - IdentityUrl=https://identity-api:8443
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
       - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
@@ -51,11 +52,12 @@ services:
   appointment-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:8080;https://+:8443
+      - ASPNETCORE_URLS=https://+:8443
       - Kestrel__Certificates__Default__Path=/certs/localhost.pem
       - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
       - ConnectionStrings__AppointmentDb=Host=postgres;Database=meditrack_appointments;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
-      - IdentityUrl=http://identity-api:8080
+      - IdentityUrl=https://identity-api:8443
+      - PatientApiUrl=https://patient-api:8443
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
       - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
@@ -75,11 +77,12 @@ services:
   medicalrecords-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:8080;https://+:8443
+      - ASPNETCORE_URLS=https://+:8443
       - Kestrel__Certificates__Default__Path=/certs/localhost.pem
       - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
       - ConnectionStrings__MedicalRecordsDb=Host=postgres;Database=meditrack_records;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
-      - IdentityUrl=http://identity-api:8080
+      - IdentityUrl=https://identity-api:8443
+      - PatientApiUrl=https://patient-api:8443
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
       - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
@@ -115,16 +118,22 @@ services:
   clara-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:8080;https://+:8443
+      - ASPNETCORE_URLS=https://+:8443
       - Kestrel__Certificates__Default__Path=/certs/localhost.pem
       - Kestrel__Certificates__Default__KeyPath=/certs/localhost-key.pem
       - ConnectionStrings__ClaraDb=Host=postgres;Database=meditrack_clara;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
+      - ConnectionStrings__AuditDatabase=Host=postgres;Database=meditrack_audit;Username=${POSTGRES_USER:-meditrack};Password=${POSTGRES_PASSWORD:-MediTrack_Dev@2026!};
       - IdentityUrl=https://identity-api:8443
+      - Services__PatientApi=https://patient-api:8443
+      - Services__AppointmentApi=https://appointment-api:8443
+      - Services__IdentityApi=https://identity-api:8443
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER:-guest}
       - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS:-guest}
+      - AI__ChatProvider=anthropic
+      - AI__Anthropic__ApiKey=${CLAUDE_TOKEN:-}
       - AI__OpenAI__ApiKey=${OPENAI_API_KEY:-sk-placeholder-for-dev}
-      - AI__Deepgram__ApiKey=${DEEPGRAM_API_KEY:-placeholder-for-dev}
+      - AI__Deepgram__ApiKey=${DEEP_GRAM_TOKEN:-}
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
     volumes:
       - ./dev-certs/certs:/certs:ro
@@ -155,11 +164,12 @@ services:
         condition: service_started
 
   web:
-    environment:
-      - VITE_IDENTITY_URL=https://localhost:5001
-      - VITE_PATIENT_API_URL=https://localhost:5002
-      - VITE_APPOINTMENT_API_URL=https://localhost:5003
-      - VITE_MEDICALRECORDS_API_URL=https://localhost:5004
-      - VITE_CLARA_API_URL=https://localhost:5005
+    build:
+      args:
+        VITE_IDENTITY_URL: https://localhost:5001
+        VITE_PATIENT_API_URL: https://localhost:5002
+        VITE_APPOINTMENT_API_URL: https://localhost:5003
+        VITE_MEDICALRECORDS_API_URL: https://localhost:5004
+        VITE_CLARA_API_URL: https://localhost:5005
     volumes:
       - ./dev-certs/certs:/certs:ro

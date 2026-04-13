@@ -26,7 +26,7 @@ public static class KnowledgeApi
     private static async Task<IResult> SearchKnowledge(
         [FromBody] KnowledgeSearchRequest request,
         [FromServices] IValidator<KnowledgeSearchRequest> validator,
-        [FromServices] KnowledgeService knowledgeService,
+        [FromServices] IKnowledgeService knowledgeService,
         CancellationToken cancellationToken)
     {
         var validationResult = await validator.ValidateAsync(request, cancellationToken);

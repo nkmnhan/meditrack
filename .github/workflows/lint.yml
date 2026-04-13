@@ -1,0 +1,50 @@
+name: Lint
+
+on:
+  pull_request:
+    branches: ["**"]
+  push:
+    branches: [main, develop]
+
+jobs:
+  lint-frontend:
+    name: ESLint (Web)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: src/MediTrack.Web/package-lock.json
+
+      - name: Install dependencies
+        working-directory: src/MediTrack.Web
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: src/MediTrack.Web
+        run: npm run lint
+
+  build-backend:
+    name: dotnet build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.x"
+
+      - name: Restore
+        run: dotnet restore MediTrack.sln
+
+      - name: Build (no warnings as errors)
+        run: dotnet build MediTrack.sln --no-restore --configuration Release

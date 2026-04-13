@@ -29,7 +29,7 @@ WORKDIR "/src/src/MediTrack.Simulator"
 RUN dotnet build "MediTrack.Simulator.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "MediTrack.Simulator.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "MediTrack.Simulator.csproj" -c Release -o /app/publish /p:UseAppHost=false /p:ErrorOnDuplicatePublishOutputFiles=false
 
 FROM base AS final
 WORKDIR /app

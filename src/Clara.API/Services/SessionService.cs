@@ -8,15 +8,15 @@ namespace Clara.API.Services;
 /// <summary>
 /// Manages clinical session lifecycle: start, get, end.
 /// </summary>
-public sealed class SessionService
+public sealed class SessionService : ISessionService
 {
     private readonly ClaraDbContext _db;
-    private readonly BatchTriggerService _batchTriggerService;
+    private readonly IBatchTriggerService _batchTriggerService;
     private readonly ILogger<SessionService> _logger;
 
     public SessionService(
         ClaraDbContext db,
-        BatchTriggerService batchTriggerService,
+        IBatchTriggerService batchTriggerService,
         ILogger<SessionService> logger)
     {
         _db = db;
@@ -38,7 +38,7 @@ public sealed class SessionService
             DoctorId = doctorId,
             PatientId = request.PatientId,
             StartedAt = DateTimeOffset.UtcNow,
-            Status = SessionStatus.Active,
+            Status = SessionStatusEnum.Active,
             AudioRecorded = request.AudioRecorded,
             SessionType = request.SessionType,
             SpeakerMap = new Dictionary<string, string>()
@@ -62,23 +62,35 @@ public sealed class SessionService
         int limit = 10,
         CancellationToken cancellationToken = default)
     {
-        var sessions = await _db.Sessions
+        // Materialise entities before projecting to avoid EF Core translation of .ToValue() extension methods
+        var sessionEntities = await _db.Sessions
             .Where(session => session.DoctorId == doctorId)
             .OrderByDescending(session => session.StartedAt)
             .Take(limit)
+            .Select(session => new
+            {
+                session.Id,
+                session.PatientId,
+                session.StartedAt,
+                session.EndedAt,
+                session.Status,
+                session.SessionType,
+                SuggestionCount = session.Suggestions.Count
+            })
+            .ToListAsync(cancellationToken);
+
+        return sessionEntities
             .Select(session => new SessionSummaryResponse
             {
                 Id = session.Id,
                 PatientId = session.PatientId,
                 StartedAt = session.StartedAt,
                 EndedAt = session.EndedAt,
-                Status = session.Status,
+                Status = session.Status.ToValue(),
                 SessionType = session.SessionType,
-                SuggestionCount = session.Suggestions.Count
+                SuggestionCount = session.SuggestionCount
             })
-            .ToListAsync(cancellationToken);
-
-        return sessions;
+            .ToList();
     }
 
     /// <summary>
@@ -115,21 +127,19 @@ public sealed class SessionService
                 cancellationToken)
             ?? throw new KeyNotFoundException($"Session {sessionId} not found");
 
-        if (session.Status == SessionStatus.Completed)
+        if (session.Status is SessionStatusEnum.Completed or SessionStatusEnum.Cancelled)
         {
             throw new InvalidOperationException($"Session {sessionId} is already ended");
         }
 
-        session.EndedAt = DateTimeOffset.UtcNow;
-        session.Status = SessionStatus.Completed;
+        session.Complete();
         await _db.SaveChangesAsync(cancellationToken);
 
         // Clean up batch trigger timer to prevent Timer leak
         _batchTriggerService.CleanupSession(sessionId.ToString());
 
-        _logger.LogInformation(
-            "Session {SessionId} ended for doctor {DoctorId}. Duration: {Duration}",
-            session.Id, doctorId, session.EndedAt - session.StartedAt);
+        _logger.LogInformation("Session {SessionId} ended. Duration: {Duration}",
+            session.Id, session.EndedAt - session.StartedAt);
 
         return MapToResponse(session);
     }
@@ -143,7 +153,7 @@ public sealed class SessionService
             PatientId = session.PatientId,
             StartedAt = session.StartedAt,
             EndedAt = session.EndedAt,
-            Status = session.Status,
+            Status = session.Status.ToValue(),
             AudioRecorded = session.AudioRecorded,
             SessionType = session.SessionType,
             TranscriptLines = session.TranscriptLines
@@ -162,23 +172,15 @@ public sealed class SessionService
                     Id = s.Id,
                     Content = s.Content,
                     TriggeredAt = s.TriggeredAt,
-                    Type = s.Type,
-                    Source = s.Source,
-                    Urgency = s.Urgency,
-                    Confidence = s.Confidence
+                    Type = s.Type.ToValue(),
+                    Source = s.Source.ToValue(),
+                    Urgency = s.Urgency?.ToValue(),
+                    Confidence = s.Confidence,
+                    SourceTranscriptLineIds = s.SourceTranscriptLineIds,
+                    AcceptedAt = s.AcceptedAt,
+                    DismissedAt = s.DismissedAt
                 })
                 .ToList()
         };
     }
-}
-
-/// <summary>
-/// Session status constants.
-/// </summary>
-public static class SessionStatus
-{
-    public const string Active = "active";
-    public const string Paused = "paused";
-    public const string Completed = "completed";
-    public const string Cancelled = "cancelled";
 }

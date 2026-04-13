@@ -1,4 +1,5 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web"><PropertyGroup>  <UserSecretsId>4e39e10c-5172-45fc-8ea8-178bafd52ca1</UserSecretsId>
+  </PropertyGroup>
 
   <ItemGroup>
     <!-- Data -->
@@ -12,6 +13,7 @@
     <!-- AI Abstraction Layer (Microsoft.Extensions.AI) -->
     <PackageReference Include="Microsoft.Extensions.AI" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
+    <PackageReference Include="Anthropic.SDK" />
 
     <!-- AI Providers -->
     <PackageReference Include="OpenAI" />
@@ -50,9 +52,11 @@
   </ItemGroup>
 
   <!-- Allow integration test project to access internal types (e.g. Program) -->
+  <!-- DynamicProxyGenAssembly2 is required so NSubstitute can proxy internal interfaces -->
   <ItemGroup>
     <InternalsVisibleTo Include="Clara.IntegrationTests" />
     <InternalsVisibleTo Include="Clara.UnitTests" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
   </ItemGroup>
 
   <!-- Include test-data/ in Debug only (not in production image) -->

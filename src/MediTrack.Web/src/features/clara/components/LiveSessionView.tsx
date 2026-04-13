@@ -136,14 +136,19 @@ export function LiveSessionView() {
     ? `#${sessionId.slice(0, 8).toUpperCase()}`
     : "#---";
 
-  // Session management via SignalR
+  // Session management via SignalR, seeded with REST data so transcript persists on refresh.
+  // initialTranscriptLines/initialSuggestions fill state immediately; SignalR's SessionUpdated
+  // then merges the authoritative server list once the connection is established.
   const {
     connectionStatus,
     transcriptLines,
     suggestions,
+    agentStatus,
     sendAudioChunk,
   } = useSession({
     sessionId: sessionId ?? "",
+    initialTranscriptLines: sessionData?.transcriptLines,
+    initialSuggestions: sessionData?.suggestions,
     onError: (sessionError) => {
       setError(sessionError.message);
     },
@@ -530,7 +535,7 @@ export function LiveSessionView() {
           {/* Suggestions Panel */}
           <SuggestionPanel
             suggestions={suggestions}
-            isLoading={isRequestingSuggestions}
+            isLoading={isRequestingSuggestions || agentStatus !== "idle"}
             count={suggestions.length}
             className={clsxMerge(
               isPatientSidebarExpanded

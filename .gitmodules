@@ -1,6 +1,8 @@
 [submodule "design"]
 	path = design
 	url = https://github.com/nkmnhan/meditrack-styleguide
+	branch = main
 [submodule "src/Aspire.Nexus"]
 	path = src/Aspire.Nexus
 	url = https://github.com/nkmnhan/Aspire.Nexus
+	branch = main
