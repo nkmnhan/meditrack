@@ -92,7 +92,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/session-start.mjs",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.mjs\"",
             "timeout": 10000
           }
         ]
@@ -104,7 +104,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/scout-block.mjs",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/scout-block.mjs\"",
             "timeout": 5000
           }
         ]
@@ -116,18 +116,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/post-edit-lint.mjs",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-edit-lint.mjs\"",
             "timeout": 35000
-          }
-        ]
-      },
-      {
-        "matcher": "Glob|Grep|Read|Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node .claude/hooks/output-compress.mjs",
-            "timeout": 5000
           }
         ]
       }
@@ -138,7 +128,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/pre-compact-save.mjs",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-compact-save.mjs\"",
             "timeout": 10000
           }
         ]

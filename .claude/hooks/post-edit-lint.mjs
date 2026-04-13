@@ -20,12 +20,11 @@ if (filePath.match(/MediTrack\.Web\/src\/.*\.(ts|tsx)$/)) {
       timeout: 15000,
       stdio: ['pipe', 'pipe', 'pipe']
     });
-    process.stdout.write(JSON.stringify({ continue: true }));
+    process.stdout.write(JSON.stringify({}));
   } catch (error) {
     const lintOutput = error.stdout?.toString() || error.stderr?.toString() || '';
     process.stdout.write(JSON.stringify({
-      continue: true,
-      message: `ESLint errors in ${filePath.split(/[\\/]/).pop()}:\n${lintOutput.slice(0, 500)}`
+      additionalContext: `ESLint errors in ${filePath.split(/[\\/]/).pop()}:\n${lintOutput.slice(0, 500)}`
     }));
   }
   process.exit(0);
@@ -60,16 +59,15 @@ if (filePath.match(/\.cs$/)) {
       timeout: 30000,
       stdio: ['pipe', 'pipe', 'pipe']
     });
-    process.stdout.write(JSON.stringify({ continue: true }));
+    process.stdout.write(JSON.stringify({}));
   } catch (error) {
     const output = error.stdout?.toString() || error.stderr?.toString() || '';
     process.stdout.write(JSON.stringify({
-      continue: true,
-      message: `dotnet format issues in ${filePath.split(/[\\/]/).pop()}:\n${output.slice(0, 500)}`
+      additionalContext: `dotnet format issues in ${filePath.split(/[\\/]/).pop()}:\n${output.slice(0, 500)}`
     }));
   }
   process.exit(0);
 }
 
 // Not a linted file type — continue
-process.stdout.write(JSON.stringify({ continue: true }));
+process.stdout.write(JSON.stringify({}));

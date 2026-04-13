@@ -80,11 +80,24 @@ Unlike CLAUDE.md (~70% compliance), hooks are **100% deterministic**.
 | Auto-reminders (sync, changelog) | Code style guidance |
 | Environment setup | Design principles |
 
+## Hook Output Format (PostToolUse)
+
+PostToolUse input uses **`tool_response`** (not `tool_output`). Valid output fields:
+
+| Field | Use |
+|-------|-----|
+| `additionalContext` | Feedback visible to Claude (e.g., lint errors) |
+| `decision: "block"` + `reason` | Block the action and show reason |
+| *(omit decision)* | Allow through — output `{}` |
+
+**NEVER use `message` or `continue`** — not valid for PostToolUse, silently ignored.
+**CANNOT suppress/replace regular tool output** — only MCP tools support `updatedMCPToolOutput`.
+
 ## settings.json — Permissions
 
 - **Allow list**: common safe operations (git, npm, dotnet, MCP tools)
 - **Deny list**: destructive ops (rm -rf, force push, reset hard), secret files, unauthorized package installs
-- **ALWAYS use relative paths** in hook commands (not absolute)
+- **ALWAYS anchor hook commands to `CLAUDE_PROJECT_DIR`** so they survive `cwd` changes without hardcoded machine-specific paths
 - **Test hooks** after adding by editing a file and checking the output
 
 ## Anti-Patterns to Avoid
@@ -93,5 +106,5 @@ Unlike CLAUDE.md (~70% compliance), hooks are **100% deterministic**.
 - **Duplicating rules** across files → they drift and contradict
 - **Prose paragraphs** for rules → tables and bullets get better compliance
 - **Soft language** for hard rules → "prefer" gets ignored under pressure
-- **Hardcoded paths** in hooks → breaks on other machines
+- **Relative paths that assume repo-root cwd** in hooks → break when Claude changes directories
 - **Monolithic rule files** → 200+ line files lose effectiveness past line 100
