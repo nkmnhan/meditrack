@@ -9,8 +9,10 @@ export function ClaraFab() {
 
   // Hide on Clara session pages (avoids overlap with ClaraStart bottom bar)
   const isOnClaraPage = location.pathname.startsWith("/clara");
+  // Hide on patient detail pages — PatientDetail has its own contextual Clara FAB
+  const isOnPatientDetailPage = /^\/patients\/[^/]+$/.test(location.pathname);
 
-  if (isOpen || isOnClaraPage) return null;
+  if (isOpen || isOnClaraPage || isOnPatientDetailPage) return null;
 
   return (
     <button
