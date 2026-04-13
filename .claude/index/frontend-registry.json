@@ -23,7 +23,6 @@
   },
   "sharedUtils": {
     "clsxMerge": "Merge conditional Tailwind classes + resolve conflicts",
-    "cn": "Alias for clsxMerge (shadcn convention)",
     "chartColors": "Hex color tokens for Recharts (STATUS_PALETTE, TYPE_PALETTE)",
     "avatarUtils": "getInitials(name), getAvatarColor(id) for user avatars"
   },

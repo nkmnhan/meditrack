@@ -11,7 +11,7 @@ namespace Clara.API.Services;
 /// 2. Pause heuristic: >3 second gap likely indicates speaker change
 /// 3. LLM confirmation: During suggestion pass, LLM can flag misidentifications
 /// </summary>
-public sealed class SpeakerDetectionService
+public sealed class SpeakerDetectionService : ISpeakerDetectionService
 {
     private readonly ClaraDbContext _db;
     private readonly ILogger<SpeakerDetectionService> _logger;

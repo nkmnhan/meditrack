@@ -60,8 +60,8 @@ builder.Services.AddScoped<IPHIAuditService, PHIAuditService>();
 // Session management services
 builder.Services.AddSingleton<IBatchTriggerService, BatchTriggerService>();
 builder.Services.AddScoped<ISessionService, SessionService>();
-builder.Services.AddScoped<DeepgramService>();
-builder.Services.AddScoped<SpeakerDetectionService>();
+builder.Services.AddScoped<ITranscriptionService, DeepgramService>();
+builder.Services.AddScoped<ISpeakerDetectionService, SpeakerDetectionService>();
 
 // AI suggestion services
 builder.Services.AddScoped<IKnowledgeService, KnowledgeService>();

@@ -3,6 +3,28 @@ using Clara.API.Domain;
 
 namespace Clara.API.Services;
 
+public interface ITranscriptionService
+{
+    /// <summary>
+    /// Transcribes an audio chunk and returns the result, or null if transcription failed.
+    /// </summary>
+    Task<TranscriptionResult?> TranscribeAsync(
+        string sessionId,
+        byte[] audioChunk,
+        CancellationToken cancellationToken = default);
+}
+
+/// <summary>Result from a speech-to-text transcription.</summary>
+public sealed record TranscriptionResult(string Transcript, float? Confidence);
+
+public interface ISpeakerDetectionService
+{
+    /// <summary>
+    /// Infers the current speaker ("Doctor" or "Patient") for the next transcript line.
+    /// </summary>
+    Task<string> InferSpeakerAsync(Guid sessionId, CancellationToken cancellationToken = default);
+}
+
 public interface IAgentMemoryService
 {
     /// <summary>

@@ -21,8 +21,8 @@ public sealed class SessionHub : Hub
     private static readonly ConcurrentDictionary<string, string> ConnectionSessions = new();
 
     private readonly ClaraDbContext _db;
-    private readonly DeepgramService _deepgram;
-    private readonly SpeakerDetectionService _speakerDetection;
+    private readonly ITranscriptionService _transcription;
+    private readonly ISpeakerDetectionService _speakerDetection;
     private readonly IBatchTriggerService _batchTrigger;
     private readonly ISessionService _sessionService;
     private readonly ISuggestionService _suggestionService;
@@ -30,15 +30,15 @@ public sealed class SessionHub : Hub
 
     public SessionHub(
         ClaraDbContext db,
-        DeepgramService deepgram,
-        SpeakerDetectionService speakerDetection,
+        ITranscriptionService transcription,
+        ISpeakerDetectionService speakerDetection,
         IBatchTriggerService batchTrigger,
         ISessionService sessionService,
         ISuggestionService suggestionService,
         ILogger<SessionHub> logger)
     {
         _db = db;
-        _deepgram = deepgram;
+        _transcription = transcription;
         _speakerDetection = speakerDetection;
         _batchTrigger = batchTrigger;
         _sessionService = sessionService;
@@ -213,7 +213,7 @@ public sealed class SessionHub : Hub
             }
 
             // Forward to Deepgram REST API
-            var result = await _deepgram.TranscribeAsync(sessionId, audioBytes);
+            var result = await _transcription.TranscribeAsync(sessionId, audioBytes);
 
             if (result is null || string.IsNullOrWhiteSpace(result.Transcript))
             {
