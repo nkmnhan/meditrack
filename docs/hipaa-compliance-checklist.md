@@ -1,5 +1,7 @@
 # HIPAA Compliance Checklist for MediTrack
 
+> **Stack note:** MediTrack uses **PostgreSQL** (not SQL Server). References to TDE in legacy sections have been updated to reflect PostgreSQL managed disk encryption. The file `docs/tde-configuration.md` is marked obsolete.
+
 ## Overview
 
 This checklist maps MediTrack's implementation to HIPAA Security Rule requirements. The HIPAA Security Rule establishes national standards to protect electronic protected health information (ePHI).
@@ -41,7 +43,7 @@ This checklist maps MediTrack's implementation to HIPAA Security Rule requiremen
 - ⏳ Vulnerability scanning and penetration testing
 
 **Implemented:**
-- TDE for data at rest
+- Encryption at rest (PostgreSQL managed disk encryption — see [deployment.md](deployment.md))
 - TLS for data in transit  
 - JWT authentication
 - Role-based access control
@@ -303,14 +305,14 @@ This checklist maps MediTrack's implementation to HIPAA Security Rule requiremen
 - Automatic logoff after token expiration
 
 #### (iv) Encryption and Decryption (A)
-- ✅ TDE (Transparent Data Encryption) for databases ✅
+- ✅ Encryption at rest (PostgreSQL with managed disk encryption — see [deployment.md](deployment.md)) ✅
 - ✅ TLS for data in transit ✅
 - ⏳ Encrypted backups
 
 **Implemented:**
-- TDE on all databases (see `docs/tde-configuration.md`)
+- Encryption at rest via PostgreSQL managed disk encryption (see [deployment.md](deployment.md))
 - HTTPS only (TLS 1.2+)
-- SQL connection string: `Encrypt=True`
+- PostgreSQL connection string: `sslmode=require`
 
 **Needed:**
 - Azure Backup encryption verification
@@ -344,7 +346,7 @@ This checklist maps MediTrack's implementation to HIPAA Security Rule requiremen
 
 **Implemented:**
 - Integration event IDs for audit correlation
-- SQL Server transaction log
+- PostgreSQL WAL (Write-Ahead Log) for audit trail
 
 ### §164.312(d) — Person or Entity Authentication (R)
 
@@ -375,7 +377,7 @@ This checklist maps MediTrack's implementation to HIPAA Security Rule requiremen
 
 **Implemented:**
 - TLS on all HTTP traffic
-- SQL Server TLS connection
+- PostgreSQL TLS connection (`sslmode=require`)
 
 ---
 
@@ -433,7 +435,7 @@ This checklist maps MediTrack's implementation to HIPAA Security Rule requiremen
 
 ### ✅ Completed (11 items)
 
-1. Transparent Data Encryption (TDE) configured
+1. Encryption at rest configured (PostgreSQL managed disk encryption)
 2. TLS/HTTPS for data in transit
 3. Role-based access control (RBAC)
 4. JWT authentication with token expiration
@@ -521,7 +523,7 @@ Store in `docs/compliance/`:
 5. ⏳ **Training records** — Proof of employee HIPAA training
 6. ⏳ **Business Associate Agreements** — All signed BAAs
 7. ⏳ **Incident response plan** — Written and tested
-8. ✅ **Encryption verification** — TDE and TLS enabled
+8. ✅ **Encryption verification** — PostgreSQL encryption at rest and TLS in transit enabled
 9. ⏳ **Backup procedures** — Documented and tested
 10. ⏳ **Sanction policy** — Disciplinary actions for violations
 

@@ -1,6 +1,6 @@
 # MediTrack EMR System — Improvement Roadmap
 
-*Last Updated: February 26, 2026*
+*Last Updated: April 16, 2026*
 
 ---
 
@@ -9,6 +9,8 @@
 MediTrack has achieved **70-75% feature parity** with industry-standard EMR systems. The core foundation is solid: appointment scheduling (90% complete), medical records (75% complete), patient management (80% complete), authentication, and role-based access control are production-ready.
 
 This document outlines the strategic roadmap to reach **full EMR maturity** over the next 12-18 months, prioritizing features that deliver the highest clinical value and regulatory compliance.
+
+> **Phase status (as of April 2026):** Phase 5 (Foundation–Admin) and Phase 6a (Polish) are complete. Phase 6b (Clara Agentic AI) is in progress on `feat/clara-agentic-ai`. The gaps documented below reflect remaining Phase 6b+ work.
 
 ---
 

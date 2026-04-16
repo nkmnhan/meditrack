@@ -2,7 +2,23 @@
 
 > **⚠️ OBSOLETE**: This document applies to SQL Server only. MediTrack now uses **PostgreSQL** (as of Phase 6a, February 2026). For PostgreSQL encryption at rest, see [deployment.md](deployment.md) for cloud-managed encryption options (Azure Database for PostgreSQL, AWS RDS) or use filesystem-level encryption (LUKS, dm-crypt).
 
-## Overview
+## Overview (OBSOLETE — PostgreSQL only)
+
+This document was written for SQL Server TDE. MediTrack migrated to **PostgreSQL** in Phase 6a (February 2026).
+
+### Current encryption approach
+
+| Deployment | Encryption at Rest | Reference |
+|------------|-------------------|-----------|
+| Azure | Azure Database for PostgreSQL — encryption enabled by default | [deployment.md](deployment.md) |
+| AWS | RDS PostgreSQL — encryption enabled by default | [deployment.md](deployment.md) |
+| Self-hosted Docker | Filesystem-level encryption (LUKS / dm-crypt) | [deployment.md](deployment.md) |
+
+The remainder of this document is preserved for historical reference only.
+
+---
+
+## [HISTORICAL] SQL Server TDE
 
 Transparent Data Encryption (TDE) encrypts data at rest, protecting PHI stored in databases from unauthorized access at the physical storage level. TDE is a critical HIPAA security requirement.
 

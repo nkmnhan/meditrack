@@ -5,6 +5,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
+### Documentation
+- Documentation gap fill (2026-04-16) — feat/theme-consistency
+  - **15 new CLAUDE.md files** covering all previously undocumented services and features:
+    - Backend: `EventBus`, `EventBusRabbitMQ`, `IntegrationEventLogEF`, `MediTrack.ServiceDefaults`, `MediTrack.Shared`, `MediTrack.Simulator`, `MedicalRecords.API`, `MedicalRecords.Infrastructure`, `Notification.Worker`
+    - Frontend: `features/admin`, `features/dashboard`, `features/landing`
+    - Tests: `Clara.UnitTests`, `MedicalRecords.UnitTests`, `Clara.IntegrationTests`
+  - **HIPAA compliance checklist** — replaced 7 stale SQL Server/TDE references with PostgreSQL equivalents; added stack note at top
+  - **TDE configuration doc** — strengthened OBSOLETE banner with explicit PostgreSQL migration table and historical section separator
+  - **Improvement roadmap** — updated last-modified date + added phase status note (Phase 6b in progress)
+  - **PatientResolver.cs** — removed stale TODO comment (`by-user` endpoint was implemented in Phase 5)
+
 ### Security
 - HTTPS production-parity — OWASP A04/A02 compliant inter-container TLS (2026-04-12) — feat/clara-agentic-ai
   - **No plain HTTP ports** — removed `http://+:8080` from `ASPNETCORE_URLS` on all 5 .NET API services; `EXPOSE 8080` removed from all affected Dockerfiles
