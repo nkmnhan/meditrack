@@ -7,6 +7,10 @@ paths:
   - "src/**/Data/**"
 ---
 
+<!-- maintainer: paths: ["**/*.csproj", "**/package.json", "Directory.Packages.props"]
+     Loads when editing package/dependency files. NuGet CPM, npm audit, license rules.
+     Keep under 50 lines. -->
+
 # Data & Dependencies
 
 ## NuGet — Central Package Management (MANDATORY)

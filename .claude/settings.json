@@ -133,6 +133,18 @@
           }
         ]
       }
+    ],
+    "InstructionsLoaded": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/instructions-loaded.mjs\"",
+            "timeout": 5000
+          }
+        ]
+      }
     ]
   },
   "enabledPlugins": {

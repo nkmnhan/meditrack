@@ -142,6 +142,7 @@ docker-compose.env
 # Claude Code — keep shared config, ignore personal/local/temp
 .claude/settings.local.json
 .claude/.compact-marker.json
+.claude/logs/
 
 
 # Git worktrees (local development isolation)

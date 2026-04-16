@@ -4,6 +4,10 @@ paths:
   - "design/**"
 ---
 
+<!-- maintainer: paths scoped to Web + Design files.
+     React 19 patterns, RTK Query, React Router v7, component conventions.
+     Keep under 80 lines. -->
+
 # Frontend Patterns
 
 ## Core Principles

@@ -3,6 +3,10 @@ paths:
   - "**/*"
 ---
 
+<!-- maintainer: paths: ["**/*"] — loads every session.
+     Token-saving lookup table. Check .claude/index/*.json before Glob/Grep.
+     Keep under 40 lines. -->
+
 # Project Index — Read Before Exploring
 
 > **Token-saving rule**: Check these registries BEFORE using Glob/Grep to explore the codebase.

@@ -4,6 +4,10 @@ paths:
   - "src/**/*.csproj"
 ---
 
+<!-- maintainer: paths: ["src/**/*.cs", "src/**/*.csproj"]
+     Loads when editing any C# or project file. Clean Architecture + SOLID rules.
+     Keep under 80 lines. -->
+
 # Backend Architecture
 
 ## SOLID Principles (MANDATORY)

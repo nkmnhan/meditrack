@@ -31,29 +31,7 @@ Act as a **senior full-stack developer** and collaborator. Apply enterprise-grad
 
 ## Shorthand Aliases
 
-When the user says these terms, go directly to the right location — no searching needed:
-
-| Term | Means | Path |
-|------|-------|------|
-| **nexus** | Aspire.Nexus (public orchestrator tool) | `src/Aspire.Nexus/` |
-| **design** | Lovable design system (git submodule) | `design/` |
-| **clara** | Clara AI clinical companion service | `src/Clara.API/` |
-| **web** | React frontend application | `src/MediTrack.Web/` |
-| **identity** | Duende IdentityServer service | `src/Identity.API/` |
-| **patient** | Patient management service | `src/Patient.API/` |
-| **appointment** | Appointment scheduling service | `src/Appointment.API/` |
-| **records** | Medical records DDD service | `src/MedicalRecords.Domain/` + `MedicalRecords.Infrastructure/` + `MedicalRecords.API/` |
-| **defaults** | Shared service infrastructure | `src/MediTrack.ServiceDefaults/` |
-| **eventbus** | RabbitMQ event bus abstraction | `src/EventBus/` + `src/EventBusRabbitMQ/` |
-| **outbox** | Integration event log (outbox pattern) | `src/IntegrationEventLogEF/` |
-| **notification** | Background notification worker | `src/Notification.Worker/` |
-| **simulator** | Test data seeder | `src/MediTrack.Simulator/` |
-| **theme** | Theme system (switcher, derivation, config) | See Theme File Map below |
-| **theme config** | Centralized color palette definitions | `design/src/shared/config/color-themes.ts` |
-| **theme engine** | Derivation: 5 hex → 25+ CSS vars | `src/MediTrack.Web/src/shared/utils/themeDerivation.ts` |
-| **theme switcher** | UI: palette picker popover | `design/src/components/ThemeSwitcher.tsx` |
-| **theme hook** | Runtime: `<style>` injection + localStorage | `design/src/hooks/use-color-theme.ts` |
-| **tokens** | CSS variables (:root / .dark) | `src/MediTrack.Web/src/index.css` + `design/src/index.css` |
+@.claude/rules/business/aliases.md
 
 ## Service Map
 
@@ -141,39 +119,6 @@ Shade numbers have **consistent semantic meaning** regardless of light/dark:
 - Selection is **mutually exclusive**: Light/Dark/System OR a color palette, never both
 
 ---
-
-## Development Workflow
-
-For non-trivial work, follow this sequence:
-
-1. **Design** — explore requirements and constraints before coding
-2. **Plan** — create step-by-step implementation plan (save to `docs/superpowers/plans/`)
-3. **Isolate** — use a feature branch or git worktree (`.worktrees/`)
-4. **Execute** — implement in small, verifiable steps
-5. **Verify** — run `npm run lint` + `npm run build` (frontend), `dotnet build` (backend when SDK available)
-6. **Finish** — merge or create PR
-
-**If the `superpowers` plugin is installed**, use its skills to automate these steps:
-`/superpowers:brainstorming` → `/superpowers:writing-plans` → `/superpowers:using-git-worktrees` → `/superpowers:executing-plans` → `/superpowers:verification-before-completion` → `/superpowers:finishing-a-development-branch`
-
-**TDD is mandatory for all new code** — use `/superpowers:test-driven-development` when available.
-
-**Test commands:**
-```bash
-dotnet test                                              # All tests
-dotnet test --filter "FullyQualifiedName~UnitTests"      # Unit tests only (no DB needed)
-dotnet test --filter "FullyQualifiedName~IntegrationTests" # Integration tests (needs Docker)
-npm test                                                  # Frontend tests (src/MediTrack.Web/)
-```
-
-**Test project map:**
-| Project | Type | Dependencies | When to use |
-|---------|------|-------------|-------------|
-| `Clara.UnitTests` | Unit | NSubstitute | Services, handlers, domain logic |
-| `MedicalRecords.UnitTests` | Unit | NSubstitute | Domain entities, value objects, CQRS handlers |
-| `Clara.IntegrationTests` | Integration | PostgreSQL + pgvector | API endpoints, SignalR, DB queries |
-
-
 
 ## Development Workflow
 

@@ -6,6 +6,10 @@ paths:
   - "docker-compose*"
 ---
 
+<!-- maintainer: paths scoped to src/ files.
+     OWASP + HIPAA compliance rules. Complements security.md.
+     Keep under 60 lines. -->
+
 # Compliance & Security (OWASP Top 10:2025)
 
 | # | Risk | Rule |

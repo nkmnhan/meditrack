@@ -6,6 +6,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [Unreleased]
 
 ### Documentation
+- Claude settings standards sync (2026-04-17) — Anthropic official compliance
+  - HTML maintainer comments added to all 15 `.claude/rules/**/*.md` files (zero token cost)
+  - `InstructionsLoaded` hook: logs per-file which instruction files load, when, and why
+    (`.claude/hooks/instructions-loaded.mjs` + registered in `.claude/settings.json`)
+  - `meta-settings-guide.md` updated with `@import` syntax, HTML comments, 200-line limit,
+    and `InstructionsLoaded` hook documentation
+  - `.claude/logs/` added to `.gitignore` for hook log output
 - Documentation gap fill (2026-04-16) — feat/theme-consistency
   - **15 new CLAUDE.md files** covering all previously undocumented services and features:
     - Backend: `EventBus`, `EventBusRabbitMQ`, `IntegrationEventLogEF`, `MediTrack.ServiceDefaults`, `MediTrack.Shared`, `MediTrack.Simulator`, `MedicalRecords.API`, `MedicalRecords.Infrastructure`, `Notification.Worker`
