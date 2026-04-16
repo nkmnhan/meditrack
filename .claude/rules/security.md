@@ -6,6 +6,10 @@ paths:
   - "docker-compose*"
 ---
 
+<!-- maintainer: paths: ["src/**/*.cs", "src/MediTrack.Web/**", "design/**"]
+     Loads when editing backend or frontend files. OWASP Top 10 rules.
+     Keep under 60 lines. -->
+
 # Security Rules (OWASP Top 10:2025)
 
 | # | Risk | Rule |

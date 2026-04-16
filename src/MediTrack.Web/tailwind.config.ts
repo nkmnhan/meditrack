@@ -120,7 +120,7 @@ const tailwindConfig: Config = {
         healing: cssScale("healing", STEPS_HEALING),
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
         serif: ["Georgia", "Merriweather", "serif"],  // For medical documents, printable reports
       },
       borderRadius: {

@@ -6,6 +6,11 @@ paths:
   - "REVIEW.md"
 ---
 
+<!-- maintainer: paths: [".claude/**", "CLAUDE.md", "**/CLAUDE.md", "REVIEW.md"]
+     Governs how to write and organize CLAUDE.md, rules, hooks, and settings.
+     This is the authoritative style guide for Claude Code configuration itself.
+     Keep under 120 lines. -->
+
 # Meta: Claude Settings Best Practices
 
 > This file governs how to write and organize Claude Code configuration itself.
@@ -13,10 +18,10 @@ paths:
 
 ## Root CLAUDE.md — The Executive Summary
 
-- **MUST** stay under 80 lines — primacy bias means first ~100 lines get the most attention
+- **Target under 200 lines** — longer files reduce adherence. Use `@import` and `.claude/rules/` to extract content.
 - **MUST** contain ONLY universal rules that apply to every single interaction
 - **MUST** end with a 3-line "CRITICAL" recap — exploits recency bias as a safety net
-- **NEVER** put reference tables (file maps, port maps, aliases) in root — they waste prime attention space
+- **NEVER** put reference tables (file maps, port maps, aliases) in root — use `@import` instead
 - **NEVER** use soft language ("prefer", "try to") for mandatory rules — use MUST/NEVER/ALWAYS
 
 ## Path-Scoped Rules (.claude/rules/) — The RAG Layer
@@ -69,6 +74,20 @@ Rules load on-demand based on file paths being edited (like RAG retrieval). This
 - **NEVER duplicate** content from `.claude/rules/` — just add a pointer
 - **Focus on domain language** that Claude can't infer from code
 
+## Importing Additional Files (`@import`)
+
+Use `@path/to/file` to pull external content into CLAUDE.md without duplicating it:
+- Imported files expand inline at load time (max 5 hops deep)
+- Relative paths resolve from the importing file
+- Root CLAUDE.md uses `@.claude/rules/business/aliases.md` for the aliases table
+
+## HTML Block Comments (Zero Token Cost)
+
+Block-level `<!-- ... -->` comments are **stripped before context injection**. Use them for:
+- Explaining WHEN a file loads and WHY a rule exists
+- Maintainer notes invisible to Claude but visible in file editors
+- Comments INSIDE code blocks are preserved (not stripped)
+
 ## Hooks — Deterministic Enforcement
 
 Unlike CLAUDE.md (~70% compliance), hooks are **100% deterministic**.
@@ -79,6 +98,7 @@ Unlike CLAUDE.md (~70% compliance), hooks are **100% deterministic**.
 | Block dangerous commands | Naming conventions |
 | Auto-reminders (sync, changelog) | Code style guidance |
 | Environment setup | Design principles |
+| Debug instruction loading (`InstructionsLoaded`) | — |
 
 ## Hook Output Format (PostToolUse)
 

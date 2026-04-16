@@ -1,5 +1,9 @@
 # Critical Rules (Unconditional — always loaded)
 
+<!-- maintainer: no paths: frontmatter — loads unconditionally every session.
+     Contains security, architecture, and workflow MUST/NEVER rules that apply to ALL files.
+     Keep under 30 lines. Add here only when a rule must fire 100% of the time. -->
+
 > These rules have NO paths: frontmatter because path-scoped loading has known bugs
 > (GitHub #16299, #23478). Critical rules MUST load every session regardless.
 

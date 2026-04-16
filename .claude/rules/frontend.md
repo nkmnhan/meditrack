@@ -4,6 +4,10 @@ paths:
   - "design/**"
 ---
 
+<!-- maintainer: paths scoped to Web + Design files.
+     High-level frontend rules index. Points to sub-rules in frontend/ subdirectory.
+     Keep under 30 lines. -->
+
 # Frontend Rules
 
 > Principles (KISS, YAGNI, DRY, Composition, Immutability) are in root CLAUDE.md — always loaded.

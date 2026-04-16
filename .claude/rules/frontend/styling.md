@@ -6,6 +6,10 @@ paths:
   - "**/index.css"
 ---
 
+<!-- maintainer: paths scoped to Web + Design + tailwind.config.ts.
+     Color token rules, Tailwind usage, dark mode. No raw Tailwind colors.
+     Keep under 80 lines. -->
+
 # Frontend Styling (Tailwind CSS)
 
 ## General Rules

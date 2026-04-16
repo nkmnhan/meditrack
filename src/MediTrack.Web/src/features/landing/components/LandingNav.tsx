@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Stethoscope, Menu, X } from "lucide-react";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
 import { GitHubIcon } from "@/shared/components/BrandIcons";
+import { ThemeSwitcherPopover } from "@/shared/components/ThemeSwitcher";
 
 interface LandingNavProps {
   readonly onSignIn: () => void;
@@ -27,7 +28,7 @@ export function LandingNav({ onSignIn }: LandingNavProps) {
         </div>
 
         {/* Desktop links */}
-        <div className="hidden items-center gap-8 md:flex">
+        <div className="hidden items-center gap-6 lg:flex">
           {navLinks.map((link) => (
             <a
               key={link.href}
@@ -37,6 +38,7 @@ export function LandingNav({ onSignIn }: LandingNavProps) {
               {link.label}
             </a>
           ))}
+          <ThemeSwitcherPopover />
           <a
             href="https://github.com/nkmnhan/meditrack"
             target="_blank"
@@ -46,6 +48,11 @@ export function LandingNav({ onSignIn }: LandingNavProps) {
           >
             <GitHubIcon className="h-5 w-5" />
           </a>
+          <div className="animate-border-gradient rounded-lg">
+            <a href="https://meditrack-styleguide.lovable.app" target="_blank" rel="noopener noreferrer" className="h-10 inline-flex items-center justify-center whitespace-nowrap rounded-[6px] bg-card px-5 text-sm font-semibold text-foreground/80 transition-colors hover:bg-muted">
+              Try Demo
+            </a>
+          </div>
           <button
             onClick={onSignIn}
             className="h-10 rounded-lg bg-primary-700 px-5 text-sm font-semibold text-white transition-colors hover:bg-primary-600"
@@ -57,7 +64,7 @@ export function LandingNav({ onSignIn }: LandingNavProps) {
         {/* Mobile hamburger */}
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="rounded-lg p-2 text-foreground/80 hover:bg-muted md:hidden"
+          className="rounded-lg p-2 text-foreground/80 hover:bg-muted lg:hidden"
           aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
         >
           {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -66,7 +73,7 @@ export function LandingNav({ onSignIn }: LandingNavProps) {
 
       {/* Mobile menu */}
       {isMobileMenuOpen && (
-        <div className="border-t border-border bg-card px-4 pb-4 pt-2 md:hidden">
+        <div className="border-t border-border bg-card px-4 pb-4 pt-2 lg:hidden">
           <div className="flex flex-col gap-1">
             {navLinks.map((link) => (
               <a
@@ -94,6 +101,18 @@ export function LandingNav({ onSignIn }: LandingNavProps) {
               <GitHubIcon className="h-4 w-4" />
               GitHub
             </a>
+            <ThemeSwitcherPopover className="w-full justify-start gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground/80 hover:bg-muted" />
+            <div className="animate-border-gradient mt-2 rounded-lg">
+              <a
+                href="https://meditrack-styleguide.lovable.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="h-11 inline-flex w-full items-center justify-center rounded-[6px] bg-card text-sm font-semibold text-foreground/80 transition-colors hover:bg-muted"
+              >
+                Try Demo
+              </a>
+            </div>
             <button
               onClick={() => {
                 setIsMobileMenuOpen(false);

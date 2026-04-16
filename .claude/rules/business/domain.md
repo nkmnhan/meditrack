@@ -5,6 +5,10 @@ paths:
   - "docs/**"
 ---
 
+<!-- maintainer: paths: ["src/**"] — loads when editing any src/ file.
+     Service map, inter-service links, domain rules. Single source of truth for domain facts.
+     Keep under 50 lines. -->
+
 # Business Domain
 
 ## Service Map

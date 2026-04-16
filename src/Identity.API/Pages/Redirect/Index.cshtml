@@ -1,9 +1,11 @@
 @page
 @model MediTrack.Identity.Pages.Redirect.Index
 
-<div class="redirect-page">
-    <div class="login-card">
-        <div class="login-header">
+<meta name="redirect-uri" content="@Model.RedirectUri" />
+
+<div class="card-page">
+    <div class="card">
+        <div class="card-header">
             <h1>Redirecting...</h1>
             <p>You are now being returned to the application.</p>
         </div>
@@ -11,9 +13,5 @@
 </div>
 
 @section scripts {
-    <script>
-        window.addEventListener("load", function () {
-            window.location = "@Model.RedirectUri";
-        });
-    </script>
+    <script src="~/js/redirect.js"></script>
 }

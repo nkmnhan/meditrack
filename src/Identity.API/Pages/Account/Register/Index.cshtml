@@ -4,46 +4,78 @@
     ViewData["Title"] = "Register";
 }
 
-<div class="login-page">
-    <div class="login-card">
-        <div class="login-header">
-            <h1>MediTrack</h1>
-            <p>Create your account</p>
+<div class="auth-page">
+    <partial name="_AuthBranding" />
+
+    <!-- Right form panel -->
+    <div class="auth-form-panel">
+        <div class="auth-form">
+            <!-- Mobile branding -->
+            <div class="auth-mobile-brand">
+                <div class="auth-mobile-brand-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3" /><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4" /><circle cx="20" cy="10" r="2" />
+                    </svg>
+                </div>
+                <h1>MediTrack</h1>
+            </div>
+
+            <form method="post">
+                <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+                <h2 class="auth-heading">Create your account</h2>
+                <p class="auth-subheading">Join MediTrack to get started</p>
+
+                <!-- Email -->
+                <div class="form-group">
+                    <label asp-for="Input.Email" class="form-label">Email address</label>
+                    <div class="input-wrapper">
+                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
+                        <input asp-for="Input.Email" class="form-input form-input-icon" placeholder="you@example.com" autocomplete="email" autofocus />
+                    </div>
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                </div>
+
+                <!-- First Name -->
+                <div class="form-group">
+                    <label asp-for="Input.FirstName" class="form-label">First Name</label>
+                    <input asp-for="Input.FirstName" class="form-input" placeholder="John" />
+                    <span asp-validation-for="Input.FirstName" class="text-danger"></span>
+                </div>
+
+                <!-- Last Name -->
+                <div class="form-group">
+                    <label asp-for="Input.LastName" class="form-label">Last Name</label>
+                    <input asp-for="Input.LastName" class="form-input" placeholder="Doe" />
+                    <span asp-validation-for="Input.LastName" class="text-danger"></span>
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+                    <label asp-for="Input.Password" class="form-label">Password</label>
+                    <div class="input-wrapper">
+                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+                        <input asp-for="Input.Password" class="form-input form-input-icon" type="password" placeholder="Enter your password" autocomplete="new-password" />
+                    </div>
+                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="form-group">
+                    <label asp-for="Input.ConfirmPassword" class="form-label">Confirm Password</label>
+                    <div class="input-wrapper">
+                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+                        <input asp-for="Input.ConfirmPassword" class="form-input form-input-icon" type="password" placeholder="Confirm your password" autocomplete="new-password" />
+                    </div>
+                    <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Register</button>
+
+                <p class="auth-link">
+                    Already have an account? <a asp-page="/Account/Login/Index">Sign in</a>
+                </p>
+            </form>
         </div>
-
-        <form method="post">
-            <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
-
-            <div class="form-group">
-                <label asp-for="Input.Email">Email</label>
-                <input asp-for="Input.Email" class="form-input" placeholder="you@example.com" autocomplete="email" autofocus />
-                <span asp-validation-for="Input.Email" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Input.FirstName">First Name</label>
-                <input asp-for="Input.FirstName" class="form-input" placeholder="John" />
-                <span asp-validation-for="Input.FirstName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Input.LastName">Last Name</label>
-                <input asp-for="Input.LastName" class="form-input" placeholder="Doe" />
-                <span asp-validation-for="Input.LastName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Input.Password">Password</label>
-                <input asp-for="Input.Password" class="form-input" type="password" placeholder="Enter your password" autocomplete="new-password" />
-                <span asp-validation-for="Input.Password" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Input.ConfirmPassword">Confirm Password</label>
-                <input asp-for="Input.ConfirmPassword" class="form-input" type="password" placeholder="Confirm your password" autocomplete="new-password" />
-                <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
-            </div>
-            <button type="submit" class="btn btn-primary">Register</button>
-
-            <div class="register-link">
-                <p>Already have an account? <a asp-page="/Account/Login/Index">Sign in</a></p>
-            </div>
-        </form>
     </div>
 </div>

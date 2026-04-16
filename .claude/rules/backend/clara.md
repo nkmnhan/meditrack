@@ -5,6 +5,10 @@ paths:
   - "tests/Clara.*/**"
 ---
 
+<!-- maintainer: paths: ["src/Clara.API/**", "skills/**", "tests/Clara.*/**"]
+     Loads when editing Clara AI service files. MCP architecture, cost strategy, PHI rules.
+     Keep under 60 lines. -->
+
 # Clara / MCP / AI Rules
 
 ## Architecture

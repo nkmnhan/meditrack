@@ -3,6 +3,10 @@ paths:
   - "**/*"
 ---
 
+<!-- maintainer: paths: ["**/*"] — loads every session.
+     Routes user intent to the correct agent/skill. Model tier guide.
+     Keep under 60 lines. -->
+
 # Workflow Router — Auto-detect Intent
 
 When the user's request matches a pattern below, suggest the appropriate workflow.

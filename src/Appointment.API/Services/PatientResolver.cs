@@ -22,8 +22,7 @@ public class PatientResolver : IPatientResolver
     {
         try
         {
-            // TODO: This endpoint doesn't exist yet in Patient.API — needs to be implemented
-            // For Phase 6: Add GET /api/patients/by-user/{userId} endpoint to Patient.API
+            // Endpoint: GET /api/patients/by-user/{userId} — implemented in Patient.API (PatientsApi.cs)
             var response = await _httpClient.GetAsync($"/api/patients/by-user/{userId}", cancellationToken);
             
             if (!response.IsSuccessStatusCode)

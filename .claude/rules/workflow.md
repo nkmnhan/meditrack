@@ -3,6 +3,10 @@ paths:
   - "**/*"
 ---
 
+<!-- maintainer: paths: ["**/*"] — loads every session regardless of file type.
+     Contains TDD workflow, test conventions, compaction instructions.
+     Keep under 80 lines. -->
+
 # Development Workflow
 
 ## For Non-Trivial Work

@@ -7,6 +7,10 @@ paths:
   - "design/tailwind.config.ts"
 ---
 
+<!-- maintainer: paths scoped to shared components and feature component directories.
+     Dual-update mandate: Web ↔ Design submodule must stay in sync.
+     Keep under 50 lines. -->
+
 # Web ↔ Design Sync Rule (MANDATORY)
 
 Two projects share components and MUST stay in sync:
