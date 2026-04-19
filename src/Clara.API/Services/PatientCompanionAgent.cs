@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using Clara.API.Application.Models;
+using Clara.API.Extensions;
 using Microsoft.Extensions.AI;
 
 namespace Clara.API.Services;
@@ -16,7 +17,7 @@ internal sealed class PatientCompanionAgent : IAgentService
     private readonly IPatientContextService _patientContextService;
     private readonly ILogger<PatientCompanionAgent> _logger;
 
-    public string AgentId => "patient-companion";
+    public string AgentId => AgentKeys.PatientCompanion;
     public string DisplayName => "Clara — Patient Companion";
     public string SystemPrompt { get; }
     public IList<AITool> Tools => CreatePatientSafeTools();
@@ -50,7 +51,7 @@ internal sealed class PatientCompanionAgent : IAgentService
         var prompt = BuildCompanionPrompt(context.ConversationText, context.PatientId);
 
         // Patient companion always uses batch (cost-optimized — high volume patient interactions)
-        var innerClient = _serviceProvider.GetRequiredKeyedService<IChatClient>("batch");
+        var innerClient = _serviceProvider.GetRequiredKeyedService<IChatClient>(ChatClientKeys.Batch);
         var agentClient = new ChatClientBuilder(innerClient)
             .UseFunctionInvocation()
             .Build();

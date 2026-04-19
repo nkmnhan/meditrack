@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using Clara.API.Application.Models;
 using Clara.API.Domain;
+using Clara.API.Extensions;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Clara.API.Services;
 
@@ -22,11 +22,12 @@ internal sealed class ClaraDoctorAgent : IAgentService
     private readonly SkillLoaderService _skillLoaderService;
     private readonly ILogger<ClaraDoctorAgent> _logger;
     private readonly AgentTools _agentTools;
+    private readonly IList<AITool> _tools;
 
-    public string AgentId => "clara-doctor";
+    public string AgentId => AgentKeys.ClaraDoctor;
     public string DisplayName => "Clara — Clinical Assistant";
     public string SystemPrompt { get; }
-    public IList<AITool> Tools => _agentTools.CreateAITools();
+    public IList<AITool> Tools => _tools;
 
     public ClaraDoctorAgent(
         IServiceProvider serviceProvider,
@@ -35,8 +36,8 @@ internal sealed class ClaraDoctorAgent : IAgentService
         ISuggestionCriticService criticService,
         IAgentMemoryService memoryService,
         SkillLoaderService skillLoaderService,
-        ILogger<ClaraDoctorAgent> logger,
-        ILogger<AgentTools>? agentToolsLogger = null)
+        AgentTools agentTools,
+        ILogger<ClaraDoctorAgent> logger)
     {
         _serviceProvider = serviceProvider;
         _ragService = ragService;
@@ -45,10 +46,8 @@ internal sealed class ClaraDoctorAgent : IAgentService
         _memoryService = memoryService;
         _skillLoaderService = skillLoaderService;
         _logger = logger;
-        _agentTools = new AgentTools(
-            ragService,
-            patientContextService,
-            agentToolsLogger ?? NullLoggerFactory.Instance.CreateLogger<AgentTools>());
+        _agentTools = agentTools;
+        _tools = agentTools.CreateAITools();
         SystemPrompt = LoadSystemPrompt();
     }
 
@@ -94,7 +93,9 @@ internal sealed class ClaraDoctorAgent : IAgentService
         var prompt = BuildAgentPrompt(context.ConversationText, context.PatientId, context.MatchingSkill, priorMemories);
 
         // Resolve keyed chat client and wrap with function invocation
-        var chatClientKey = context.Source == SuggestionSourceEnum.OnDemand ? "ondemand" : "batch";
+        var chatClientKey = context.Source == SuggestionSourceEnum.OnDemand
+            ? ChatClientKeys.OnDemand
+            : ChatClientKeys.Batch;
         var innerClient = _serviceProvider.GetRequiredKeyedService<IChatClient>(chatClientKey);
         var agentClient = new ChatClientBuilder(innerClient)
             .UseFunctionInvocation()
@@ -109,7 +110,7 @@ internal sealed class ClaraDoctorAgent : IAgentService
 
         var chatOptions = new ChatOptions
         {
-            Tools = _agentTools.CreateAITools(),
+            Tools = _tools,
             Temperature = 0.3f,
             MaxOutputTokens = 1200,
             ResponseFormat = ChatResponseFormat.Json,

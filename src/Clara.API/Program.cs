@@ -69,13 +69,16 @@ builder.Services.AddScoped<ICorrectiveRagService, CorrectiveRagService>();
 builder.Services.AddScoped<IPatientContextService, PatientContextService>();
 builder.Services.AddScoped<ISuggestionCriticService, SuggestionCriticService>();
 
+// Agent tools — scoped so each request gets its own instance with fresh event callback
+builder.Services.AddScoped<AgentTools>();
+
 // Agent registry — keyed so callers can resolve by agent ID
-builder.Services.AddKeyedScoped<IAgentService, ClaraDoctorAgent>("clara-doctor");
-builder.Services.AddKeyedScoped<IAgentService, PatientCompanionAgent>("patient-companion");
+builder.Services.AddKeyedScoped<IAgentService, ClaraDoctorAgent>(AgentKeys.ClaraDoctor);
+builder.Services.AddKeyedScoped<IAgentService, PatientCompanionAgent>(AgentKeys.PatientCompanion);
 
 // Default agent resolved by SuggestionService (unkeyed) — doctor agent for clinical sessions
 builder.Services.AddScoped<IAgentService>(sp =>
-    sp.GetRequiredKeyedService<IAgentService>("clara-doctor"));
+    sp.GetRequiredKeyedService<IAgentService>(AgentKeys.ClaraDoctor));
 
 builder.Services.AddScoped<ISuggestionService, SuggestionService>();
 builder.Services.AddScoped<IAgentMemoryService, AgentMemoryService>();

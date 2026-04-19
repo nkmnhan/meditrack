@@ -16,6 +16,7 @@ public sealed class ClaraDoctorAgentTests
     private readonly IAgentMemoryService _memoryService;
     private readonly SkillLoaderService _skillLoaderService;
     private readonly IServiceProvider _serviceProvider;
+    private readonly AgentTools _agentTools;
     private readonly ClaraDoctorAgent _agent;
 
     public ClaraDoctorAgentTests()
@@ -41,6 +42,11 @@ public sealed class ClaraDoctorAgentTests
             .RecallSimilarMemoriesAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
+        _agentTools = new AgentTools(
+            _ragService,
+            _patientContextService,
+            NullLogger<AgentTools>.Instance);
+
         _agent = new ClaraDoctorAgent(
             _serviceProvider,
             _ragService,
@@ -48,6 +54,7 @@ public sealed class ClaraDoctorAgentTests
             _criticService,
             _memoryService,
             _skillLoaderService,
+            _agentTools,
             NullLogger<ClaraDoctorAgent>.Instance);
     }
 

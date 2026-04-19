@@ -53,11 +53,21 @@ internal sealed class AnthropicChatClientAdapter : IChatClient
         return MapResponse(result);
     }
 
-    public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+    public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
-        CancellationToken cancellationToken = default)
-        => throw new NotSupportedException("AnthropicChatClientAdapter does not support streaming.");
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        // Anthropic SDK streaming requires additional work to map streamed events to M.E.AI updates.
+        // This buffered fallback satisfies the IChatClient LSP contract by collecting the full
+        // response and yielding it as a single update.
+        var response = await GetResponseAsync(messages, options, cancellationToken);
+        yield return new ChatResponseUpdate(ChatRole.Assistant, response.Text)
+        {
+            FinishReason = response.FinishReason,
+            ModelId = response.ModelId
+        };
+    }
 
     public object? GetService(Type serviceType, object? key = null)
         => serviceType.IsInstanceOfType(this) ? this : null;

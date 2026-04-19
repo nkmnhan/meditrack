@@ -22,20 +22,23 @@ public static class ConfigValidator
 
     /// <summary>
     /// Validates critical config values on startup. Throws in Production if placeholders remain.
+    /// Checks the active provider's key only — Anthropic deployments don't need an OpenAI key.
     /// </summary>
     public static void ValidateProductionConfig(IConfiguration configuration, IHostEnvironment environment)
     {
         if (!environment.IsProduction())
             return;
 
-        var openAiKey = configuration["AI:OpenAI:ApiKey"];
-        var deepgramKey = configuration["AI:Deepgram:ApiKey"];
+        var provider = configuration["AI:ChatProvider"] ?? AIProviderNames.OpenAI;
+        var activeKeyPath = provider.Equals(AIProviderNames.Anthropic, StringComparison.OrdinalIgnoreCase)
+            ? "AI:Anthropic:ApiKey"
+            : "AI:OpenAI:ApiKey";
 
-        if (!IsRealApiKey(openAiKey))
+        if (!IsRealApiKey(configuration[activeKeyPath]))
             throw new InvalidOperationException(
-                "AI:OpenAI:ApiKey is a placeholder. Set a real API key for production.");
+                $"{activeKeyPath} is a placeholder. Set a real API key for production.");
 
-        if (!IsRealApiKey(deepgramKey))
+        if (!IsRealApiKey(configuration["AI:Deepgram:ApiKey"]))
             throw new InvalidOperationException(
                 "AI:Deepgram:ApiKey is a placeholder. Set a real API key for production.");
     }
