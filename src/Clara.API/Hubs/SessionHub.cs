@@ -18,7 +18,7 @@ namespace Clara.API.Hubs;
 [Authorize(Roles = UserRoles.Doctor)]
 public sealed class SessionHub : Hub
 {
-    private record ConnectionInfo(string SessionId, string DoctorId);
+    private record ConnectionInfo(string SessionId, string DoctorId, ISttProvider SttProvider);
     private static readonly ConcurrentDictionary<string, ConnectionInfo> ConnectionSessions = new();
 
     // Per-session speaker cache — avoids a DB query on every audio chunk.
@@ -31,7 +31,7 @@ public sealed class SessionHub : Hub
 
     private readonly ClaraDbContext _db;
     private readonly ITranscriptionService _transcription;
-    private readonly IStreamingTranscriptionService _streamingTranscription;
+    private readonly ISttProviderFactory _sttFactory;
     private readonly IHubContext<SessionHub> _hubContext;
     private readonly ISpeakerDetectionService _speakerDetection;
     private readonly IBatchTriggerService _batchTrigger;
@@ -43,7 +43,7 @@ public sealed class SessionHub : Hub
     public SessionHub(
         ClaraDbContext db,
         ITranscriptionService transcription,
-        IStreamingTranscriptionService streamingTranscription,
+        ISttProviderFactory sttFactory,
         IHubContext<SessionHub> hubContext,
         ISpeakerDetectionService speakerDetection,
         IBatchTriggerService batchTrigger,
@@ -54,7 +54,7 @@ public sealed class SessionHub : Hub
     {
         _db = db;
         _transcription = transcription;
-        _streamingTranscription = streamingTranscription;
+        _sttFactory = sttFactory;
         _hubContext = hubContext;
         _speakerDetection = speakerDetection;
         _batchTrigger = batchTrigger;
@@ -101,8 +101,10 @@ public sealed class SessionHub : Hub
 
         await ValidateSessionOwnershipAsync(sessionGuid, doctorId);
 
+        var sttProvider = _sttFactory.GetProvider(sessionId);
+
         await Groups.AddToGroupAsync(Context.ConnectionId, sessionId);
-        ConnectionSessions[Context.ConnectionId] = new ConnectionInfo(sessionId, doctorId);
+        ConnectionSessions[Context.ConnectionId] = new ConnectionInfo(sessionId, doctorId, sttProvider);
 
         _logger.LogInformation(
             "Client {ConnectionId} joined session {SessionId}",
@@ -124,9 +126,8 @@ public sealed class SessionHub : Hub
             }
         }
 
-        // Open persistent Deepgram WebSocket. The callback is invoked from a background
-        // thread (WS receive loop), so we use IHubContext rather than Clients directly.
-        await _streamingTranscription.OpenStreamAsync(sessionId, async chunk =>
+        // Open STT provider stream. Callback runs on a background thread, so use IHubContext.
+        await sttProvider.OpenStreamAsync(sessionId, async chunk =>
         {
             var speaker = InferSpeakerFromCache(sessionId);
 
@@ -184,11 +185,12 @@ public sealed class SessionHub : Hub
         await ValidateSessionOwnershipAsync(sessionGuid, doctorId);
 
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, sessionId);
-        ConnectionSessions.TryRemove(Context.ConnectionId, out _);
+        ConnectionSessions.TryRemove(Context.ConnectionId, out var leftConn);
 
         if (!ConnectionSessions.Values.Any(c => c.SessionId == sessionId))
         {
-            await _streamingTranscription.CloseStreamAsync(sessionId);
+            if (leftConn is not null)
+                await leftConn.SttProvider.CloseStreamAsync(sessionId);
             SpeakerCache.TryRemove(sessionId, out _);
         }
 
@@ -291,8 +293,7 @@ public sealed class SessionHub : Hub
                 return;
             }
 
-            // Pipe directly to the open Deepgram WebSocket — no HTTP overhead
-            await _streamingTranscription.SendAudioAsync(sessionId, audioBytes);
+            await connInfo.SttProvider.SendAudioAsync(sessionId, audioBytes);
         }
         catch (FormatException exception)
         {
@@ -435,10 +436,9 @@ public sealed class SessionHub : Hub
                 "Cleaned up batch trigger for session {SessionId} on disconnect",
                 connInfo.SessionId);
 
-            // Close Deepgram stream and evict speaker cache when no connections remain
             if (!ConnectionSessions.Values.Any(c => c.SessionId == connInfo.SessionId))
             {
-                await _streamingTranscription.CloseStreamAsync(connInfo.SessionId);
+                await connInfo.SttProvider.CloseStreamAsync(connInfo.SessionId);
                 SpeakerCache.TryRemove(connInfo.SessionId, out _);
             }
         }

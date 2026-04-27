@@ -62,8 +62,12 @@ builder.Services.AddScoped<IPHIAuditService, PHIAuditService>();
 builder.Services.AddSingleton<IBatchTriggerService, BatchTriggerService>();
 builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<ITranscriptionService, DeepgramService>();
-builder.Services.AddSingleton<IDeepgramWebSocketFactory, DeepgramWebSocketFactory>();
-builder.Services.AddSingleton<IStreamingTranscriptionService, DeepgramStreamingService>();
+builder.Services.AddKeyedSingleton<ISttProvider>(SttProviderType.Deepgram, (sp, _) => new DeepgramSttProvider(
+    sp.GetRequiredService<IConfiguration>(),
+    new DeepgramWebSocketFactory(),
+    sp.GetRequiredService<ILogger<DeepgramSttProvider>>()));
+builder.Services.AddKeyedSingleton<ISttProvider, WhisperSttProvider>(SttProviderType.Whisper);
+builder.Services.AddSingleton<ISttProviderFactory, SttProviderFactory>();
 builder.Services.AddScoped<ISpeakerDetectionService, SpeakerDetectionService>();
 
 // AI suggestion services
@@ -96,6 +100,13 @@ builder.Services.AddScoped<IAskService>(sp => new AskService(
 
 // Analytics service (admin reports)
 builder.Services.AddScoped<AnalyticsService>();
+
+// Whisper STT HTTP client (self-hosted faster-whisper OpenAI-compatible API)
+builder.Services.AddHttpClient<WhisperSttProvider>((sp, client) =>
+{
+    var baseUrl = sp.GetRequiredService<IConfiguration>()["AI:Whisper:BaseUrl"] ?? "http://whisper-api:8000";
+    client.BaseAddress = new Uri(baseUrl);
+});
 
 // Infrastructure monitoring services
 builder.Services.AddHttpClient<PrometheusService>(client =>

@@ -8,7 +8,7 @@ namespace Clara.UnitTests.TestInfrastructure;
 /// In-memory fake WebSocket for testing DeepgramStreamingService without a network.
 /// Enqueue JSON messages — they are returned sequentially by ReceiveAsync.
 /// </summary>
-public sealed class FakeDeepgramWebSocket : IDeepgramWebSocket
+internal sealed class FakeDeepgramWebSocket : IDeepgramWebSocket
 {
     private readonly Queue<string> _messages = new();
     private readonly SemaphoreSlim _signal = new(0);
@@ -55,7 +55,7 @@ public sealed class FakeDeepgramWebSocket : IDeepgramWebSocket
     }
 }
 
-public sealed class FakeDeepgramWebSocketFactory : IDeepgramWebSocketFactory
+internal sealed class FakeDeepgramWebSocketFactory : IDeepgramWebSocketFactory
 {
     private readonly IDeepgramWebSocket _ws;
     public FakeDeepgramWebSocketFactory(IDeepgramWebSocket ws) => _ws = ws;

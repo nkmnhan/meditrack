@@ -134,6 +134,10 @@ services:
       - AI__Anthropic__ApiKey=${CLAUDE_TOKEN:-}
       - AI__OpenAI__ApiKey=${OPENAI_API_KEY:-sk-placeholder-for-dev}
       - AI__Deepgram__ApiKey=${DEEP_GRAM_TOKEN:-}
+      - AI__Stt__DefaultProvider=${STT_PROVIDER:-Deepgram}
+      - AI__Whisper__BaseUrl=${WHISPER_BASE_URL:-http://whisper-api:8000}
+      - AI__Whisper__BufferSeconds=5
+      - AI__Whisper__Model=base.en
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
     volumes:
       - ./dev-certs/certs:/certs:ro

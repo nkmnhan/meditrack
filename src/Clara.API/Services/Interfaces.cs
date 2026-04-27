@@ -120,20 +120,34 @@ internal interface ISuggestionCriticService
 }
 
 /// <summary>
-/// A single transcript result from the Deepgram streaming WebSocket.
-/// IsFinal=false means an interim result; IsFinal=true means the phrase is committed.
+/// A single transcript result from an STT provider.
+/// IsFinal=false = interim preview (Deepgram only). IsFinal=true = committed phrase.
 /// </summary>
 public sealed record TranscriptChunk(string Transcript, float? Confidence, bool IsFinal);
 
 /// <summary>
-/// Manages one persistent Deepgram WebSocket per session for real-time streaming STT.
+/// Selects which STT provider to use for a session.
 /// </summary>
-public interface IStreamingTranscriptionService
+public enum SttProviderType { Deepgram, Whisper }
+
+/// <summary>
+/// Resolves the appropriate ISttProvider for a given session.
+/// </summary>
+public interface ISttProviderFactory
+{
+    ISttProvider GetProvider(string sessionId);
+}
+
+/// <summary>
+/// Provides speech-to-text transcription for a session.
+/// Implementations differ in latency and hosting (cloud streaming vs self-hosted batch)
+/// but share the same callback contract: invoke onTranscript for every non-empty result.
+/// </summary>
+public interface ISttProvider
 {
     /// <summary>
-    /// Opens a Deepgram WebSocket for the session and starts a background receive loop
-    /// that invokes <paramref name="onTranscript"/> for every non-empty transcript chunk.
-    /// No-op if a stream is already open for this session.
+    /// Prepares the provider for a session. For streaming providers this opens a connection;
+    /// for batch providers this initialises a buffer. No-op if already prepared.
     /// </summary>
     Task OpenStreamAsync(
         string sessionId,
@@ -141,31 +155,12 @@ public interface IStreamingTranscriptionService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Sends raw PCM16 audio bytes to the open Deepgram WebSocket for the session.
-    /// Silently ignores if no stream is open.
+    /// Delivers raw PCM16 audio (16kHz mono) for the session.
     /// </summary>
     Task SendAudioAsync(string sessionId, byte[] audioBytes, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Sends a CloseStream message to Deepgram, waits for the final transcript,
-    /// and disposes the WebSocket for the session.
+    /// Signals end-of-session. Flushes any remaining audio and releases resources.
     /// </summary>
     Task CloseStreamAsync(string sessionId);
-}
-
-/// <summary>
-/// Abstraction over ClientWebSocket to allow unit testing without network access.
-/// </summary>
-public interface IDeepgramWebSocket : IAsyncDisposable
-{
-    System.Net.WebSockets.WebSocketState State { get; }
-    Task ConnectAsync(Uri uri, System.Net.Http.Headers.HttpRequestHeaders? headers, CancellationToken cancellationToken);
-    Task SendAsync(ReadOnlyMemory<byte> buffer, System.Net.WebSockets.WebSocketMessageType messageType, bool endOfMessage, CancellationToken cancellationToken);
-    ValueTask<System.Net.WebSockets.ValueWebSocketReceiveResult> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken);
-    Task CloseAsync(System.Net.WebSockets.WebSocketCloseStatus closeStatus, string? statusDescription, CancellationToken cancellationToken);
-}
-
-public interface IDeepgramWebSocketFactory
-{
-    IDeepgramWebSocket Create();
 }

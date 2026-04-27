@@ -7,9 +7,9 @@ using Xunit;
 
 namespace Clara.UnitTests.Services;
 
-public sealed class DeepgramStreamingServiceTests
+public sealed class DeepgramSttProviderTests
 {
-    private static DeepgramStreamingService CreateService(FakeDeepgramWebSocket fakeWs)
+    private static DeepgramSttProvider CreateProvider(FakeDeepgramWebSocket fakeWs)
     {
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -19,10 +19,10 @@ public sealed class DeepgramStreamingServiceTests
             .Build();
 
         var factory = new FakeDeepgramWebSocketFactory(fakeWs);
-        return new DeepgramStreamingService(
+        return new DeepgramSttProvider(
             config,
             factory,
-            NullLogger<DeepgramStreamingService>.Instance);
+            NullLogger<DeepgramSttProvider>.Instance);
     }
 
     [Fact]
@@ -39,10 +39,10 @@ public sealed class DeepgramStreamingServiceTests
         }
         """);
 
-        var service = CreateService(fakeWs);
+        var provider = CreateProvider(fakeWs);
         var received = new List<TranscriptChunk>();
 
-        await service.OpenStreamAsync("session-1", chunk =>
+        await provider.OpenStreamAsync("session-1", chunk =>
         {
             received.Add(chunk);
             return Task.CompletedTask;
@@ -70,10 +70,10 @@ public sealed class DeepgramStreamingServiceTests
         }
         """);
 
-        var service = CreateService(fakeWs);
+        var provider = CreateProvider(fakeWs);
         var received = new List<TranscriptChunk>();
 
-        await service.OpenStreamAsync("session-2", chunk =>
+        await provider.OpenStreamAsync("session-2", chunk =>
         {
             received.Add(chunk);
             return Task.CompletedTask;
@@ -100,9 +100,9 @@ public sealed class DeepgramStreamingServiceTests
         }
         """);
 
-        var service = CreateService(fakeWs);
+        var provider = CreateProvider(fakeWs);
         var received = new List<TranscriptChunk>();
-        await service.OpenStreamAsync("session-3", chunk =>
+        await provider.OpenStreamAsync("session-3", chunk =>
         {
             received.Add(chunk);
             return Task.CompletedTask;
@@ -119,9 +119,9 @@ public sealed class DeepgramStreamingServiceTests
         var fakeWs = new FakeDeepgramWebSocket();
         fakeWs.EnqueueMessage("""{"type": "Metadata", "transaction_key": "abc"}""");
 
-        var service = CreateService(fakeWs);
+        var provider = CreateProvider(fakeWs);
         var received = new List<TranscriptChunk>();
-        await service.OpenStreamAsync("session-4", chunk =>
+        await provider.OpenStreamAsync("session-4", chunk =>
         {
             received.Add(chunk);
             return Task.CompletedTask;
@@ -136,10 +136,10 @@ public sealed class DeepgramStreamingServiceTests
     public async Task CloseStreamAsync_WhenSessionExists_RemovesSessionAndClosesSocket()
     {
         var fakeWs = new FakeDeepgramWebSocket();
-        var service = CreateService(fakeWs);
+        var provider = CreateProvider(fakeWs);
 
-        await service.OpenStreamAsync("session-5", _ => Task.CompletedTask);
-        await service.CloseStreamAsync("session-5");
+        await provider.OpenStreamAsync("session-5", _ => Task.CompletedTask);
+        await provider.CloseStreamAsync("session-5");
 
         fakeWs.IsClosed.Should().BeTrue();
     }
@@ -148,9 +148,9 @@ public sealed class DeepgramStreamingServiceTests
     public async Task CloseStreamAsync_WhenSessionDoesNotExist_DoesNotThrow()
     {
         var fakeWs = new FakeDeepgramWebSocket();
-        var service = CreateService(fakeWs);
+        var provider = CreateProvider(fakeWs);
 
-        var act = async () => await service.CloseStreamAsync("nonexistent-session");
+        var act = async () => await provider.CloseStreamAsync("nonexistent-session");
         await act.Should().NotThrowAsync();
     }
 }
