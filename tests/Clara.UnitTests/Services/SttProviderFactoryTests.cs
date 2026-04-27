@@ -29,7 +29,7 @@ public sealed class SttProviderFactoryTests
         var whisper = Substitute.For<ISttProvider>();
         var factory = CreateFactory("Deepgram", deepgram, whisper);
 
-        var result = factory.GetProvider("session-1");
+        var result = factory.GetProvider();
 
         result.Should().BeSameAs(deepgram);
     }
@@ -41,7 +41,7 @@ public sealed class SttProviderFactoryTests
         var whisper = Substitute.For<ISttProvider>();
         var factory = CreateFactory("Whisper", deepgram, whisper);
 
-        var result = factory.GetProvider("session-1");
+        var result = factory.GetProvider();
 
         result.Should().BeSameAs(whisper);
     }
@@ -53,7 +53,7 @@ public sealed class SttProviderFactoryTests
         var whisper = Substitute.For<ISttProvider>();
         var factory = CreateFactory("UnknownProvider", deepgram, whisper);
 
-        var result = factory.GetProvider("session-1");
+        var result = factory.GetProvider();
 
         result.Should().BeSameAs(deepgram);
     }
@@ -65,7 +65,7 @@ public sealed class SttProviderFactoryTests
         var whisper = Substitute.For<ISttProvider>();
         var factory = CreateFactory("", deepgram, whisper);
 
-        var result = factory.GetProvider("session-1");
+        var result = factory.GetProvider();
 
         result.Should().BeSameAs(deepgram);
     }

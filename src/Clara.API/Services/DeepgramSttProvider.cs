@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.IO;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -141,31 +142,37 @@ internal sealed class DeepgramSttProvider : ISttProvider
         Func<TranscriptChunk, Task> onTranscript,
         CancellationToken cancellationToken)
     {
-        var buffer = new byte[8192];
+        var buffer = new byte[16384];
+        using var messageBuffer = new MemoryStream(16384);
 
         try
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                var result = await ws.ReceiveAsync(buffer.AsMemory(), cancellationToken);
+                messageBuffer.SetLength(0);
+                ValueWebSocketReceiveResult result = default;
 
-                if (result.MessageType == WebSocketMessageType.Close)
-                    break;
+                do
+                {
+                    result = await ws.ReceiveAsync(buffer.AsMemory(), cancellationToken);
+                    if (result.MessageType == WebSocketMessageType.Close)
+                        return;
+                    if (result.Count > 0)
+                        messageBuffer.Write(buffer, 0, result.Count);
+                }
+                while (!result.EndOfMessage);
 
-                if (result.MessageType != WebSocketMessageType.Text || result.Count == 0)
+                if (result.MessageType != WebSocketMessageType.Text || messageBuffer.Length == 0)
                     continue;
 
-                var json = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                var json = Encoding.UTF8.GetString(messageBuffer.GetBuffer(), 0, (int)messageBuffer.Length);
                 var chunk = ParseTranscriptChunk(json);
 
                 if (chunk is not null)
                     await onTranscript(chunk);
             }
         }
-        catch (OperationCanceledException)
-        {
-            // Expected on session close
-        }
+        catch (OperationCanceledException) { }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Deepgram receive loop failed for session {SessionId}", sessionId);
@@ -181,8 +188,9 @@ internal sealed class DeepgramSttProvider : ISttProvider
             if (doc?.Type != "Results")
                 return null;
 
-            var transcript = doc.Channel?.Alternatives?.FirstOrDefault()?.Transcript;
-            var confidence = doc.Channel?.Alternatives?.FirstOrDefault()?.Confidence;
+            var alt = doc.Channel?.Alternatives?.FirstOrDefault();
+            var transcript = alt?.Transcript;
+            var confidence = alt?.Confidence;
 
             if (string.IsNullOrWhiteSpace(transcript))
                 return null;

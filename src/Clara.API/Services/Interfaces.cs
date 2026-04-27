@@ -135,7 +135,7 @@ public enum SttProviderType { Deepgram, Whisper }
 /// </summary>
 public interface ISttProviderFactory
 {
-    ISttProvider GetProvider(string sessionId);
+    ISttProvider GetProvider();
 }
 
 /// <summary>

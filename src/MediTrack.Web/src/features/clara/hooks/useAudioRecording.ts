@@ -3,8 +3,6 @@ import { useRef, useState } from "react";
 interface UseAudioRecordingOptions {
   onAudioChunk: (data: ArrayBuffer) => void;
   onError?: (error: Error) => void;
-  /** No longer used — chunk size is fixed at 100ms by the AudioWorklet processor. */
-  chunkIntervalMs?: number;
 }
 
 interface UseAudioRecordingReturn {

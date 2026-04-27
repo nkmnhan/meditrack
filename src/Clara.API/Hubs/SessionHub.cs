@@ -30,10 +30,8 @@ public sealed class SessionHub : Hub
     private const double SpeakerChangeGapSeconds = 1.0;
 
     private readonly ClaraDbContext _db;
-    private readonly ITranscriptionService _transcription;
     private readonly ISttProviderFactory _sttFactory;
     private readonly IHubContext<SessionHub> _hubContext;
-    private readonly ISpeakerDetectionService _speakerDetection;
     private readonly IBatchTriggerService _batchTrigger;
     private readonly ISessionService _sessionService;
     private readonly ISuggestionService _suggestionService;
@@ -42,10 +40,8 @@ public sealed class SessionHub : Hub
 
     public SessionHub(
         ClaraDbContext db,
-        ITranscriptionService transcription,
         ISttProviderFactory sttFactory,
         IHubContext<SessionHub> hubContext,
-        ISpeakerDetectionService speakerDetection,
         IBatchTriggerService batchTrigger,
         ISessionService sessionService,
         ISuggestionService suggestionService,
@@ -53,10 +49,8 @@ public sealed class SessionHub : Hub
         ILogger<SessionHub> logger)
     {
         _db = db;
-        _transcription = transcription;
         _sttFactory = sttFactory;
         _hubContext = hubContext;
-        _speakerDetection = speakerDetection;
         _batchTrigger = batchTrigger;
         _sessionService = sessionService;
         _suggestionService = suggestionService;
@@ -101,7 +95,7 @@ public sealed class SessionHub : Hub
 
         await ValidateSessionOwnershipAsync(sessionGuid, doctorId);
 
-        var sttProvider = _sttFactory.GetProvider(sessionId);
+        var sttProvider = _sttFactory.GetProvider();
 
         await Groups.AddToGroupAsync(Context.ConnectionId, sessionId);
         ConnectionSessions[Context.ConnectionId] = new ConnectionInfo(sessionId, doctorId, sttProvider);
@@ -158,7 +152,7 @@ public sealed class SessionHub : Hub
                 Confidence = chunk.Confidence
             };
 
-            await BroadcastTranscriptLineViaContext(sessionId, line);
+            await BroadcastTranscriptLine(sessionId, line);
             SpeakerCache[sessionId] = new SpeakerState(speaker, now);
 
             await using var scope = _scopeFactory.CreateAsyncScope();
@@ -187,7 +181,7 @@ public sealed class SessionHub : Hub
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, sessionId);
         ConnectionSessions.TryRemove(Context.ConnectionId, out var leftConn);
 
-        if (!ConnectionSessions.Values.Any(c => c.SessionId == sessionId))
+        if (!HasActiveConnections(sessionId))
         {
             if (leftConn is not null)
                 await leftConn.SttProvider.CloseStreamAsync(sessionId);
@@ -318,18 +312,15 @@ public sealed class SessionHub : Hub
             : last.Speaker;
     }
 
+    // IHubContext works in both hub invocation context and background threads.
     private async Task BroadcastTranscriptLine(string sessionId, TranscriptLine line)
-    {
-        var response = BuildTranscriptLineResponse(line);
-        await Clients.Group(sessionId).SendAsync(SignalREvents.TranscriptLineAdded, response);
-    }
-
-    // Used from the Deepgram WS receive loop (background thread — not a hub invocation context).
-    private async Task BroadcastTranscriptLineViaContext(string sessionId, TranscriptLine line)
     {
         var response = BuildTranscriptLineResponse(line);
         await _hubContext.Clients.Group(sessionId).SendAsync(SignalREvents.TranscriptLineAdded, response);
     }
+
+    private static bool HasActiveConnections(string sessionId)
+        => ConnectionSessions.Values.Any(c => c.SessionId == sessionId);
 
     private static TranscriptLineResponse BuildTranscriptLineResponse(TranscriptLine line) =>
         new()
@@ -436,7 +427,7 @@ public sealed class SessionHub : Hub
                 "Cleaned up batch trigger for session {SessionId} on disconnect",
                 connInfo.SessionId);
 
-            if (!ConnectionSessions.Values.Any(c => c.SessionId == connInfo.SessionId))
+            if (!HasActiveConnections(connInfo.SessionId))
             {
                 await connInfo.SttProvider.CloseStreamAsync(connInfo.SessionId);
                 SpeakerCache.TryRemove(connInfo.SessionId, out _);

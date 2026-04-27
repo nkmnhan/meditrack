@@ -294,11 +294,7 @@ function VoiceWaveform({ size = "sm" }: VoiceWaveformProps) {
 
   return (
     <div className={clsxMerge("flex items-end gap-0.5", size === "lg" ? "h-7" : "h-5")} aria-label="Microphone active">
-      <span className={barClass} />
-      <span className={barClass} />
-      <span className={barClass} />
-      <span className={barClass} />
-      <span className={barClass} />
+      {Array.from({ length: 5 }, (_, i) => <span key={i} className={barClass} />)}
     </div>
   );
 }

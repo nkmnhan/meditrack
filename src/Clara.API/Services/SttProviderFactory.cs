@@ -16,7 +16,7 @@ public sealed class SttProviderFactory : ISttProviderFactory
         _whisper = whisper;
     }
 
-    public ISttProvider GetProvider(string sessionId)
+    public ISttProvider GetProvider()
     {
         var configured = _configuration["AI:Stt:DefaultProvider"];
         return Enum.TryParse<SttProviderType>(configured, ignoreCase: true, out var providerType)
