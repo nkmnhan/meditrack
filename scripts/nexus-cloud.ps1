@@ -1,5 +1,5 @@
 # ============================================================
-#  MediTrack — Aspire Nexus + PAID AI
+#  MediTrack — Aspire Nexus + CLOUD AI
 #  STT  : Deepgram  (cloud, real-time)
 #  LLM  : Claude    (Anthropic)
 #  Embed: OpenAI    (text-embedding-3-small)
@@ -15,7 +15,7 @@ Set-Location $Root
 
 # ── Load .env ────────────────────────────────────────────────
 if (-not (Test-Path ".env")) {
-    Copy-Item "cmds\.env.example" ".env"
+    Copy-Item ".env.example" ".env"
     Write-Warning ".env created from template. Fill in your API keys and re-run."
     Start-Process notepad ".env"
     exit 1
@@ -37,11 +37,11 @@ foreach ($kv in $envVars.GetEnumerator()) {
 }
 
 # Also set the ASP.NET Core mapped names so services pick them up directly
-$env:AI__Anthropic__ApiKey   = $envVars["CLAUDE_TOKEN"]
-$env:AI__OpenAI__ApiKey      = if ($envVars["OPENAI_API_KEY"]) { $envVars["OPENAI_API_KEY"] } else { "sk-placeholder-for-dev" }
-$env:AI__Deepgram__ApiKey    = $envVars["DEEP_GRAM_TOKEN"]
+$env:AI__Anthropic__ApiKey    = $envVars["CLAUDE_TOKEN"]
+$env:AI__OpenAI__ApiKey       = if ($envVars["OPENAI_API_KEY"]) { $envVars["OPENAI_API_KEY"] } else { "sk-placeholder-for-dev" }
+$env:AI__Deepgram__ApiKey     = $envVars["DEEP_GRAM_TOKEN"]
 $env:AI__Stt__DefaultProvider = "Deepgram"
-$env:POSTGRES_PASSWORD       = if ($envVars["POSTGRES_PASSWORD"]) { $envVars["POSTGRES_PASSWORD"] } else { "MediTrack_Dev@2026!" }
+$env:POSTGRES_PASSWORD        = if ($envVars["POSTGRES_PASSWORD"]) { $envVars["POSTGRES_PASSWORD"] } else { "MediTrack_Dev@2026!" }
 
 # ── Start infrastructure (DB, MQ, monitoring) ───────────────
 Write-Host ""
@@ -53,8 +53,7 @@ Write-Host "  Starting infrastructure (Postgres, RabbitMQ, Jaeger, Prometheus)..
 docker compose up -d postgres rabbitmq jaeger prometheus otel-collector
 
 Write-Host ""
-Write-Host "  Starting Aspire Nexus dashboard..."
-Write-Host "  Dashboard: http://localhost:15178"
+Write-Host "  Starting Aspire Nexus — dashboard: http://localhost:15178"
 Write-Host ""
 
 dotnet run --project src/Aspire.Nexus --launch-profile http

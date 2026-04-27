@@ -1,5 +1,5 @@
 # ============================================================
-#  MediTrack — Aspire Nexus + FREE AI (no API keys required)
+#  MediTrack — Aspire Nexus + LOCAL AI (no API keys required)
 #  STT  : faster-whisper  (self-hosted Docker container)
 #  LLM  : none            (suggestions disabled)
 #  Embed: none            (RAG disabled)
@@ -15,10 +15,10 @@ $ErrorActionPreference = "Stop"
 $Root = (Split-Path $PSScriptRoot -Parent)
 Set-Location $Root
 
-# ── Load .env (optional — free mode needs no keys) ──────────
+# ── Load .env (optional — local mode needs no keys) ─────────
 if (-not (Test-Path ".env")) {
-    Copy-Item "cmds\.env.example" ".env"
-    Write-Host "  [i] .env created from template (API keys optional in free mode)."
+    Copy-Item ".env.example" ".env"
+    Write-Host "  [i] .env created from template (API keys optional in local mode)."
 }
 
 $envVars = @{}
@@ -32,12 +32,12 @@ foreach ($kv in $envVars.GetEnumerator()) {
     [System.Environment]::SetEnvironmentVariable($kv.Key, $kv.Value, "Process")
 }
 
-# Override STT to Whisper regardless of what .env says
-$env:AI__Stt__DefaultProvider  = "Whisper"
-$env:AI__Whisper__BaseUrl      = "http://localhost:8000"
+# Override STT to local Whisper regardless of what .env says
+$env:AI__Stt__DefaultProvider   = "Whisper"
+$env:AI__Whisper__BaseUrl       = "http://localhost:8000"
 $env:AI__Whisper__BufferSeconds = "5"
-$env:AI__Whisper__Model        = $envVars["WHISPER_MODEL"] ?? "base.en"
-$env:POSTGRES_PASSWORD         = $envVars["POSTGRES_PASSWORD"] ?? "MediTrack_Dev@2026!"
+$env:AI__Whisper__Model         = $envVars["WHISPER_MODEL"] ?? "base.en"
+$env:POSTGRES_PASSWORD          = $envVars["POSTGRES_PASSWORD"] ?? "MediTrack_Dev@2026!"
 
 # Optional — LLM suggestions work if keys are present
 if ($envVars["CLAUDE_TOKEN"]) {

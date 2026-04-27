@@ -1,6 +1,6 @@
 @echo off
 :: ============================================================
-::  MediTrack — Docker + FREE AI (no API keys required)
+::  MediTrack — Docker + LOCAL AI (no API keys required)
 ::  STT  : faster-whisper  (self-hosted, local)
 ::  LLM  : none            (suggestions disabled)
 ::  Embed: none            (RAG disabled)
@@ -12,8 +12,8 @@ setlocal
 cd /d %~dp0..
 
 if not exist ".env" (
-    copy cmds\.env.example .env >nul
-    echo  [i] Created .env from template ^(API keys optional in free mode^).
+    copy .env.example .env >nul
+    echo  [i] Created .env from template ^(API keys optional in local mode^).
 )
 
 set STT_PROVIDER=Whisper
@@ -39,6 +39,6 @@ echo  ────────────────────────�
 echo.
 echo  Note: LLM suggestions need CLAUDE_TOKEN in .env
 echo  Logs: docker compose logs -f clara-api whisper-api
-echo  Stop: cmds\stop.cmd
+echo  Stop: scripts\stop.cmd
 echo.
 pause

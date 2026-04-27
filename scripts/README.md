@@ -20,10 +20,10 @@ Copy the env template to the **project root**:
 
 ```bash
 # Linux / macOS / Git Bash
-cp cmds/.env.example .env
+cp .env.example .env
 
 # Windows CMD
-copy cmds\.env.example .env
+copy .env.example .env
 ```
 
 Then open `.env` and fill in your API keys for the tier you want.
@@ -34,12 +34,12 @@ Then open `.env` and fill in your API keys for the tier you want.
 
 | Script | Runtime | STT | LLM | API Keys |
 |--------|---------|-----|-----|---------|
-| `docker-paid` | Docker | Deepgram (cloud, ~200ms) | Claude + OpenAI | Required |
-| `docker-free` | Docker | Whisper (local, ~5s) | None* | None |
-| `nexus-paid` | Aspire Nexus | Deepgram (cloud, ~200ms) | Claude + OpenAI | Required |
-| `nexus-free` | Aspire Nexus | Whisper (local, ~5s) | None* | None |
+| `docker-cloud` | Docker | Deepgram (cloud, ~200ms) | Claude + OpenAI | Required |
+| `docker-local` | Docker | Whisper (local, ~5s) | None* | None |
+| `nexus-cloud` | Aspire Nexus | Deepgram (cloud, ~200ms) | Claude + OpenAI | Required |
+| `nexus-local` | Aspire Nexus | Whisper (local, ~5s) | None* | None |
 
-\* Add `CLAUDE_TOKEN` to `.env` to re-enable LLM suggestions in free mode.
+\* Add `CLAUDE_TOKEN` to `.env` to re-enable LLM suggestions in local mode.
 
 ---
 
@@ -48,15 +48,15 @@ Then open `.env` and fill in your API keys for the tier you want.
 ### Windows (double-click or CMD)
 
 ```cmd
-cmds\docker-paid.cmd
-cmds\docker-free.cmd
+scripts\docker-cloud.cmd
+scripts\docker-local.cmd
 ```
 
 ### Windows (PowerShell — Nexus modes)
 
 ```powershell
-.\cmds\nexus-paid.ps1
-.\cmds\nexus-free.ps1
+.\scripts\nexus-cloud.ps1
+.\scripts\nexus-local.ps1
 ```
 
 > **First run:** PowerShell may block unsigned scripts.
@@ -65,11 +65,11 @@ cmds\docker-free.cmd
 ### Linux / macOS / Git Bash
 
 ```bash
-chmod +x cmds/*.sh   # once
-./cmds/docker-paid.sh
-./cmds/docker-free.sh
-./cmds/nexus-paid.sh
-./cmds/nexus-free.sh
+chmod +x scripts/*.sh   # once
+./scripts/docker-cloud.sh
+./scripts/docker-local.sh
+./scripts/nexus-cloud.sh
+./scripts/nexus-local.sh
 ```
 
 ---
@@ -77,8 +77,8 @@ chmod +x cmds/*.sh   # once
 ## 4. Stop
 
 ```cmd
-cmds\stop.cmd          # Windows CMD
-.\cmds\stop.sh         # Git Bash / Linux
+scripts\stop.cmd          # Windows CMD
+./scripts/stop.sh         # Git Bash / Linux
 ```
 
 To also wipe all database volumes (fresh start):
@@ -91,7 +91,7 @@ docker compose --profile whisper down -v
 
 ## Mode Details
 
-### Docker Paid (`docker-paid`)
+### Docker Cloud (`docker-cloud`)
 
 Full production-equivalent stack. Every service runs in a container.
 
@@ -114,7 +114,7 @@ OPENAI_API_KEY=sk-...   # optional — enables RAG knowledge search
 
 ---
 
-### Docker Free (`docker-free`)
+### Docker Local (`docker-local`)
 
 Zero API cost. Self-hosted STT via [faster-whisper-server](https://github.com/fedirz/faster-whisper-server).
 
@@ -135,7 +135,7 @@ No required `.env` keys.
 
 ---
 
-### Nexus Paid (`nexus-paid`)
+### Nexus Cloud (`nexus-cloud`)
 
 .NET Aspire orchestrator manages all services. Hot-reload friendly.
 Infra (Postgres, RabbitMQ, monitoring) runs in Docker; .NET services run natively.
@@ -147,11 +147,11 @@ Aspire:  identity  patient  appointment  records  clara  web
 
 Dashboard: **http://localhost:15178** — live logs, traces, metrics per service.
 
-Required `.env` keys: same as Docker Paid.
+Required `.env` keys: same as Docker Cloud.
 
 ---
 
-### Nexus Free (`nexus-free`)
+### Nexus Local (`nexus-local`)
 
 Aspire + self-hosted Whisper. Whisper runs in Docker; .NET services run natively.
 
@@ -174,7 +174,7 @@ No required `.env` keys. STT latency ~5s per utterance.
 | Patient | https://localhost:5002 |
 | Appointment | https://localhost:5003 |
 | Records | https://localhost:5004 |
-| Whisper API | http://localhost:8000 (free mode only) |
+| Whisper API | http://localhost:8000 (local mode only) |
 | RabbitMQ | http://localhost:15672 (guest / guest) |
 | Jaeger | http://localhost:16686 |
 | Prometheus | http://localhost:9090 |
@@ -197,10 +197,10 @@ docker compose --profile seed run --rm simulator
 Change `STT_PROVIDER` in `.env` and restart `clara-api`:
 
 ```bash
-# Switch to Whisper
+# Switch to local Whisper
 STT_PROVIDER=Whisper docker compose --profile whisper up -d clara-api whisper-api
 
-# Switch back to Deepgram
+# Switch back to cloud Deepgram
 STT_PROVIDER=Deepgram docker compose up -d clara-api
 ```
 

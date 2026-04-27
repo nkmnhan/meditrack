@@ -1,6 +1,6 @@
 @echo off
 :: ============================================================
-::  MediTrack — Docker + PAID AI
+::  MediTrack — Docker + CLOUD AI
 ::  STT  : Deepgram  (cloud, real-time)
 ::  LLM  : Claude    (Anthropic)
 ::  Embed: OpenAI    (text-embedding-3-small)
@@ -15,7 +15,7 @@ if not exist ".env" (
     echo  [!] No .env found in project root.
     echo      Copying template — fill in your API keys, then re-run.
     echo.
-    copy cmds\.env.example .env >nul
+    copy .env.example .env >nul
     notepad .env
     pause & exit /b 1
 )
@@ -43,6 +43,6 @@ echo   Prometheus   http://localhost:9090
 echo  ────────────────────────────────────────────────────────────
 echo.
 echo  Logs:  docker compose logs -f clara-api
-echo  Stop:  cmds\stop.cmd
+echo  Stop:  scripts\stop.cmd
 echo.
 pause

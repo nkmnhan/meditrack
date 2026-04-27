@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
-#  MediTrack — Aspire Nexus + FREE AI (no API keys required)
+#  MediTrack — Aspire Nexus + LOCAL AI (no API keys required)
 #  STT  : faster-whisper  (self-hosted Docker container)
 #  LLM  : none            (suggestions disabled)
 #  Embed: none            (RAG disabled)
@@ -16,13 +16,12 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 if [ ! -f .env ]; then
-    cp cmds/.env.example .env
-    echo "  [i] .env created from template (API keys optional in free mode)."
+    cp .env.example .env
+    echo "  [i] .env created from template (API keys optional in local mode)."
 fi
 
 set -a; source .env 2>/dev/null || true; set +a
 
-# Override STT provider
 export AI__Stt__DefaultProvider="Whisper"
 export AI__Whisper__BaseUrl="http://localhost:8000"
 export AI__Whisper__BufferSeconds="5"
