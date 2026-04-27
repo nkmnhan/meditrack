@@ -45,10 +45,16 @@ public sealed class KnowledgeService : IKnowledgeService
 
         try
         {
-            // Generate embedding for the query using M.E.AI abstraction
-            // GenerateAsync returns GeneratedEmbeddings<Embedding<float>>
             var embeddingResult = await _embeddingGenerator.GenerateAsync([query], cancellationToken: cancellationToken);
-            var queryVector = new Vector(embeddingResult[0].Vector.ToArray());
+            var vectorArray = embeddingResult[0].Vector.ToArray();
+
+            if (vectorArray.Length == 0)
+            {
+                _logger.LogWarning("Embedding generator returned empty vector — knowledge search skipped (check OpenAI API key)");
+                return [];
+            }
+
+            var queryVector = new Vector(vectorArray);
 
             // Raise ef_search for higher recall on clinical knowledge base (default 40 is too low).
             if (_db.Database.ProviderName == "Npgsql.EntityFrameworkCore.PostgreSQL")
@@ -94,8 +100,8 @@ public sealed class KnowledgeService : IKnowledgeService
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "Knowledge search failed for query: {Query}", query);
-            throw;
+            _logger.LogWarning(exception, "Knowledge search failed — returning empty results (query length: {Length})", query.Length);
+            return [];
         }
     }
 

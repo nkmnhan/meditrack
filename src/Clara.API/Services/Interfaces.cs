@@ -83,6 +83,11 @@ public interface IPatientContextService
     Task<PatientContext?> GetPatientContextAsync(string patientId, CancellationToken cancellationToken = default);
 }
 
+public interface IAskService
+{
+    Task<string> AskAsync(string question, string? patientId, CancellationToken cancellationToken = default);
+}
+
 public interface ICorrectiveRagService
 {
     Task<List<KnowledgeSearchResult>> SearchWithGradingAsync(
@@ -112,4 +117,55 @@ internal interface ISuggestionCriticService
         List<SuggestionItem> suggestions,
         string transcript,
         CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// A single transcript result from the Deepgram streaming WebSocket.
+/// IsFinal=false means an interim result; IsFinal=true means the phrase is committed.
+/// </summary>
+public sealed record TranscriptChunk(string Transcript, float? Confidence, bool IsFinal);
+
+/// <summary>
+/// Manages one persistent Deepgram WebSocket per session for real-time streaming STT.
+/// </summary>
+public interface IStreamingTranscriptionService
+{
+    /// <summary>
+    /// Opens a Deepgram WebSocket for the session and starts a background receive loop
+    /// that invokes <paramref name="onTranscript"/> for every non-empty transcript chunk.
+    /// No-op if a stream is already open for this session.
+    /// </summary>
+    Task OpenStreamAsync(
+        string sessionId,
+        Func<TranscriptChunk, Task> onTranscript,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sends raw PCM16 audio bytes to the open Deepgram WebSocket for the session.
+    /// Silently ignores if no stream is open.
+    /// </summary>
+    Task SendAudioAsync(string sessionId, byte[] audioBytes, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sends a CloseStream message to Deepgram, waits for the final transcript,
+    /// and disposes the WebSocket for the session.
+    /// </summary>
+    Task CloseStreamAsync(string sessionId);
+}
+
+/// <summary>
+/// Abstraction over ClientWebSocket to allow unit testing without network access.
+/// </summary>
+public interface IDeepgramWebSocket : IAsyncDisposable
+{
+    System.Net.WebSockets.WebSocketState State { get; }
+    Task ConnectAsync(Uri uri, System.Net.Http.Headers.HttpRequestHeaders? headers, CancellationToken cancellationToken);
+    Task SendAsync(ReadOnlyMemory<byte> buffer, System.Net.WebSockets.WebSocketMessageType messageType, bool endOfMessage, CancellationToken cancellationToken);
+    ValueTask<System.Net.WebSockets.ValueWebSocketReceiveResult> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken);
+    Task CloseAsync(System.Net.WebSockets.WebSocketCloseStatus closeStatus, string? statusDescription, CancellationToken cancellationToken);
+}
+
+public interface IDeepgramWebSocketFactory
+{
+    IDeepgramWebSocket Create();
 }

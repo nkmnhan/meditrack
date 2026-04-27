@@ -7,6 +7,7 @@ import type {
   Session,
   TranscriptLine,
   Suggestion,
+  PendingTranscriptLine,
 } from "../types";
 
 import { CLARA_API_URL } from "../config";
@@ -28,6 +29,8 @@ interface UseSessionReturn {
   connectionStatus: ConnectionStatus;
   session: Session | null;
   transcriptLines: TranscriptLine[];
+  /** Interim (non-final) transcript line streaming from Deepgram. Null when idle. */
+  pendingLine: PendingTranscriptLine | null;
   suggestions: Suggestion[];
   /** Current AI pipeline stage — drives thinking/loading indicators in the UI. */
   agentStatus: AgentStatus;
@@ -57,6 +60,7 @@ export function useSession({
   const [suggestions, setSuggestions] = useState<Suggestion[]>(
     () => (initialSuggestions ? [...initialSuggestions] : [])
   );
+  const [pendingLine, setPendingLine] = useState<PendingTranscriptLine | null>(null);
 
   const connectionRef = useRef<signalR.HubConnection | null>(null);
   const sessionIdRef = useRef(sessionId);
@@ -108,8 +112,14 @@ export function useSession({
       setConnectionStatus("disconnected");
     });
 
-    // Handle incoming transcript lines
+    // Interim result — update the pending preview (not persisted, replaced by final)
+    connection.on("TranscriptInterimUpdated", (interim: PendingTranscriptLine) => {
+      setPendingLine(interim);
+    });
+
+    // Final result — clear pending preview and append committed line
     connection.on("TranscriptLineAdded", (line: TranscriptLine) => {
+      setPendingLine(null);
       setTranscriptLines((prev) => [...prev, line]);
       onTranscriptLineRef.current?.(line);
     });
@@ -217,6 +227,7 @@ export function useSession({
     // Cleanup on unmount
     return () => {
       cleanedUp = true;
+      connection.off("TranscriptInterimUpdated");
       connection.off("TranscriptLineAdded");
       connection.off("SuggestionAdded");
       connection.off("SessionUpdated");
@@ -262,6 +273,7 @@ export function useSession({
     connectionStatus,
     session,
     transcriptLines,
+    pendingLine,
     suggestions,
     agentStatus,
     sendAudioChunk,

@@ -56,7 +56,7 @@ public sealed class DeepgramService : ITranscriptionService
             // Use nova-2-medical model for better medical terminology recognition
             // punctuate=true adds punctuation, interim_results=false for REST mode
             var response = await httpClient.PostAsync(
-                "/v1/listen?model=nova-2-medical&punctuate=true&language=en",
+                "/v1/listen?model=nova-3-medical&punctuate=true&language=en",
                 content,
                 cancellationToken);
 

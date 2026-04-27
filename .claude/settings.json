@@ -45,6 +45,7 @@
       "Bash(git worktree *)",
       "Bash(ls *)",
       "Bash(mkdir *)",
+      "Bash(rm *)",
       "Bash(wc *)",
       "Bash(head *)",
       "Bash(tail *)",
@@ -62,7 +63,6 @@
     "deny": [
       "Bash(rm -rf *)",
       "Bash(rm -r *)",
-      "Bash(rm *)",
       "Bash(curl *)",
       "Bash(wget *)",
       "Bash(ssh *)",

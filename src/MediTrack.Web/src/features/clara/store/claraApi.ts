@@ -8,6 +8,8 @@ import type {
   KnowledgeSearchRequest,
   KnowledgeSearchResponse,
   GetSessionsParams,
+  AskClaraRequest,
+  AskClaraResponse,
 } from "../types";
 import type {
   AuditLogSearchParams,
@@ -112,6 +114,17 @@ export const claraApi = createApi({
     >({
       query: (body) => ({
         url: "/api/knowledge/search",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    /**
+     * Ask Clara a clinical question (asking mode — no live session required)
+     */
+    askClara: builder.mutation<AskClaraResponse, AskClaraRequest>({
+      query: (body) => ({
+        url: "/api/ask",
         method: "POST",
         body,
       }),
@@ -282,6 +295,7 @@ export const {
   useEndSessionMutation,
   useRequestSuggestionsMutation,
   useSearchKnowledgeMutation,
+  useAskClaraMutation,
   useGetAuditLogsQuery,
   useGetArchivedAuditLogsQuery,
   useGetAuditStatsQuery,

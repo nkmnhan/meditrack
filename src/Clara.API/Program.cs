@@ -11,6 +11,7 @@ using MediTrack.ServiceDefaults;
 using MediTrack.ServiceDefaults.Extensions;
 using MediTrack.Shared.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -61,6 +62,8 @@ builder.Services.AddScoped<IPHIAuditService, PHIAuditService>();
 builder.Services.AddSingleton<IBatchTriggerService, BatchTriggerService>();
 builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<ITranscriptionService, DeepgramService>();
+builder.Services.AddSingleton<IDeepgramWebSocketFactory, DeepgramWebSocketFactory>();
+builder.Services.AddSingleton<IStreamingTranscriptionService, DeepgramStreamingService>();
 builder.Services.AddScoped<ISpeakerDetectionService, SpeakerDetectionService>();
 
 // AI suggestion services
@@ -82,6 +85,14 @@ builder.Services.AddScoped<IAgentService>(sp =>
 
 builder.Services.AddScoped<ISuggestionService, SuggestionService>();
 builder.Services.AddScoped<IAgentMemoryService, AgentMemoryService>();
+
+// Asking mode — uses OnDemand (accuracy-optimised) chat client, no live session needed
+builder.Services.AddScoped<IAskService>(sp => new AskService(
+    sp.GetRequiredService<IKnowledgeService>(),
+    sp.GetRequiredService<IPatientContextService>(),
+    sp.GetRequiredKeyedService<IChatClient>(ChatClientKeys.OnDemand),
+    sp.GetRequiredService<ILogger<AskService>>()
+));
 
 // Analytics service (admin reports)
 builder.Services.AddScoped<AnalyticsService>();
@@ -193,6 +204,7 @@ app.MapHub<SessionHub>("/sessionHub");
 // Map API endpoints
 app.MapSessionEndpoints();
 app.MapKnowledgeEndpoints();
+app.MapAskEndpoints();
 app.MapAuditEndpoints();
 app.MapAnalyticsEndpoints();
 app.MapSystemHealthEndpoints();
