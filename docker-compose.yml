@@ -3,7 +3,7 @@ services:
     image: pgvector/pgvector:pg17
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-meditrack}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-MediTrack_Dev@2026!}
       POSTGRES_DB: meditrack
     ports:
       - "5432:5432"
@@ -222,6 +222,15 @@ services:
         condition: service_healthy
       identity-api:
         condition: service_started
+
+  whisper-api:
+    image: fedirz/faster-whisper-server:latest-cpu
+    ports:
+      - "8000:8000"
+    environment:
+      WHISPER__MODEL: ${WHISPER_MODEL:-base.en}
+    profiles:
+      - whisper
 
   simulator:
     image: ${DOCKER_REGISTRY:-meditrack}/simulator:${TAG:-latest}

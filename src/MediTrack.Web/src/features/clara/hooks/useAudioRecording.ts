@@ -3,13 +3,11 @@ import { useRef, useState } from "react";
 interface UseAudioRecordingOptions {
   onAudioChunk: (data: ArrayBuffer) => void;
   onError?: (error: Error) => void;
-  /** Interval in ms between audio chunks (default: 1000ms) */
-  chunkIntervalMs?: number;
 }
 
 interface UseAudioRecordingReturn {
-  isRecording: boolean;
-  isSupported: boolean;
+  readonly isRecording: boolean;
+  readonly isSupported: boolean;
   startRecording: () => Promise<void>;
   stopRecording: () => void;
   pauseRecording: () => void;
@@ -17,30 +15,27 @@ interface UseAudioRecordingReturn {
 }
 
 /**
- * Hook for capturing audio from the user's microphone.
- * Streams audio chunks at regular intervals for real-time transcription.
+ * Captures microphone audio as raw PCM16 chunks via AudioWorklet.
+ * Emits 100ms chunks (1600 samples at 16kHz) as ArrayBuffer — no container header.
+ * Compatible with Deepgram WebSocket streaming (encoding=linear16, sample_rate=16000).
  */
 export function useAudioRecording({
   onAudioChunk,
   onError,
-  chunkIntervalMs = 1000,
 }: UseAudioRecordingOptions): UseAudioRecordingReturn {
   const [isRecording, setIsRecording] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const isPausedRef = useRef(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  // WebM container header is only present in the first chunk. All subsequent
-  // chunks must be prefixed with it to form a valid standalone WebM file that
-  // Deepgram (and other REST STT APIs) can parse.
-  const webmHeaderRef = useRef<ArrayBuffer | null>(null);
+  const workletNodeRef = useRef<AudioWorkletNode | null>(null);
+  const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
 
   const isSupported =
     typeof navigator !== "undefined" &&
     typeof navigator.mediaDevices !== "undefined" &&
-    typeof MediaRecorder !== "undefined";
+    typeof AudioContext !== "undefined" &&
+    typeof AudioWorkletNode !== "undefined";
 
-  /**
-   * Start recording audio from the microphone
-   */
   async function startRecording() {
     if (!isSupported) {
       onError?.(new Error("Audio recording is not supported in this browser"));
@@ -48,113 +43,72 @@ export function useAudioRecording({
     }
 
     try {
-      // Request microphone access
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 16000, // Optimal for speech recognition
+          channelCount: 1,
+          sampleRate: 16000,
         },
       });
-
       streamRef.current = stream;
-      webmHeaderRef.current = null;
+      isPausedRef.current = false;
 
-      // Determine supported MIME type
-      const mimeType = getSupportedMimeType();
-      const mediaRecorder = new MediaRecorder(stream, { mimeType });
-      mediaRecorderRef.current = mediaRecorder;
+      const audioContext = new AudioContext({ sampleRate: 16000 });
+      audioContextRef.current = audioContext;
 
-      // Collect audio chunks and send them
-      mediaRecorder.ondataavailable = async (event) => {
-        if (event.data.size > 0) {
-          try {
-            const arrayBuffer = await event.data.arrayBuffer();
+      await audioContext.audioWorklet.addModule("/pcm-processor.js");
 
-            if (webmHeaderRef.current === null) {
-              // First chunk — contains the WebM EBML header + codec info + first audio frames.
-              // Save it so we can prepend it to every subsequent chunk.
-              webmHeaderRef.current = arrayBuffer;
-              onAudioChunk(arrayBuffer);
-            } else {
-              // Subsequent chunks — raw audio frames only, no container header.
-              // Deepgram REST API rejects these as "corrupt data" without the header.
-              // Prepend the saved header to produce a valid standalone WebM file.
-              const header = webmHeaderRef.current;
-              const combined = new Uint8Array(header.byteLength + arrayBuffer.byteLength);
-              combined.set(new Uint8Array(header), 0);
-              combined.set(new Uint8Array(arrayBuffer), header.byteLength);
-              onAudioChunk(combined.buffer);
-            }
-          } catch (error) {
-            console.error("Failed to process audio chunk:", error);
-            onError?.(
-              error instanceof Error
-                ? error
-                : new Error("Failed to process audio")
-            );
-          }
+      const workletNode = new AudioWorkletNode(audioContext, "pcm-processor");
+      workletNodeRef.current = workletNode;
+
+      workletNode.port.onmessage = (event: MessageEvent<ArrayBuffer>) => {
+        if (!isPausedRef.current) {
+          onAudioChunk(event.data);
         }
       };
 
-      mediaRecorder.onerror = (event) => {
-        const error = (event as ErrorEvent).error || new Error("MediaRecorder error");
-        console.error("MediaRecorder error:", error);
-        onError?.(error);
-        stopRecording();
-      };
+      const source = audioContext.createMediaStreamSource(stream);
+      sourceNodeRef.current = source;
+      source.connect(workletNode);
 
-      // Start recording with timeslice for chunked data
-      mediaRecorder.start(chunkIntervalMs);
+      // Connect to a silent gain node to keep the audio graph alive without feedback
+      const silentGain = audioContext.createGain();
+      silentGain.gain.value = 0;
+      workletNode.connect(silentGain);
+      silentGain.connect(audioContext.destination);
+
       setIsRecording(true);
     } catch (error) {
-      console.error("Failed to start recording:", error);
-      onError?.(
-        error instanceof Error
-          ? error
-          : new Error("Failed to access microphone")
-      );
+      onError?.(error instanceof Error ? error : new Error("Failed to access microphone"));
     }
   }
 
-  /**
-   * Stop recording and release resources
-   */
   function stopRecording() {
-    const mediaRecorder = mediaRecorderRef.current;
-    if (mediaRecorder && mediaRecorder.state !== "inactive") {
-      mediaRecorder.stop();
-    }
+    workletNodeRef.current?.disconnect();
+    workletNodeRef.current?.port.close();
+    workletNodeRef.current = null;
 
-    const stream = streamRef.current;
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
-    }
+    sourceNodeRef.current?.disconnect();
+    sourceNodeRef.current = null;
 
-    mediaRecorderRef.current = null;
+    streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
+
+    audioContextRef.current?.close();
+    audioContextRef.current = null;
+
     setIsRecording(false);
+    isPausedRef.current = false;
   }
 
-  /**
-   * Pause recording (keeps microphone stream open)
-   */
   function pauseRecording() {
-    const mediaRecorder = mediaRecorderRef.current;
-    if (mediaRecorder && mediaRecorder.state === "recording") {
-      mediaRecorder.pause();
-    }
+    isPausedRef.current = true;
   }
 
-  /**
-   * Resume recording after pause
-   */
   function resumeRecording() {
-    const mediaRecorder = mediaRecorderRef.current;
-    if (mediaRecorder && mediaRecorder.state === "paused") {
-      mediaRecorder.resume();
-    }
+    isPausedRef.current = false;
   }
 
   return {
@@ -165,26 +119,4 @@ export function useAudioRecording({
     pauseRecording,
     resumeRecording,
   };
-}
-
-/**
- * Get the best supported MIME type for audio recording
- */
-function getSupportedMimeType(): string {
-  const types = [
-    "audio/webm;codecs=opus",
-    "audio/webm",
-    "audio/ogg;codecs=opus",
-    "audio/ogg",
-    "audio/mp4",
-  ];
-
-  for (const type of types) {
-    if (MediaRecorder.isTypeSupported(type)) {
-      return type;
-    }
-  }
-
-  // Fallback - browser will use default
-  return "";
 }

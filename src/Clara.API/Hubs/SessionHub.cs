@@ -18,31 +18,43 @@ namespace Clara.API.Hubs;
 [Authorize(Roles = UserRoles.Doctor)]
 public sealed class SessionHub : Hub
 {
-    private static readonly ConcurrentDictionary<string, string> ConnectionSessions = new();
+    private record ConnectionInfo(string SessionId, string DoctorId, ISttProvider SttProvider);
+    private static readonly ConcurrentDictionary<string, ConnectionInfo> ConnectionSessions = new();
+
+    // Per-session speaker cache — avoids a DB query on every audio chunk.
+    // Seeded from transcript history on JoinSession; updated after each line is broadcast.
+    private record SpeakerState(string Speaker, DateTimeOffset Timestamp);
+    private static readonly ConcurrentDictionary<string, SpeakerState> SpeakerCache = new();
+
+    // Reduced from 3.0s to 1.0s to align with utterance_end_ms=1000 on the Deepgram WS.
+    private const double SpeakerChangeGapSeconds = 1.0;
 
     private readonly ClaraDbContext _db;
-    private readonly ITranscriptionService _transcription;
-    private readonly ISpeakerDetectionService _speakerDetection;
+    private readonly ISttProviderFactory _sttFactory;
+    private readonly IHubContext<SessionHub> _hubContext;
     private readonly IBatchTriggerService _batchTrigger;
     private readonly ISessionService _sessionService;
     private readonly ISuggestionService _suggestionService;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<SessionHub> _logger;
 
     public SessionHub(
         ClaraDbContext db,
-        ITranscriptionService transcription,
-        ISpeakerDetectionService speakerDetection,
+        ISttProviderFactory sttFactory,
+        IHubContext<SessionHub> hubContext,
         IBatchTriggerService batchTrigger,
         ISessionService sessionService,
         ISuggestionService suggestionService,
+        IServiceScopeFactory scopeFactory,
         ILogger<SessionHub> logger)
     {
         _db = db;
-        _transcription = transcription;
-        _speakerDetection = speakerDetection;
+        _sttFactory = sttFactory;
+        _hubContext = hubContext;
         _batchTrigger = batchTrigger;
         _sessionService = sessionService;
         _suggestionService = suggestionService;
+        _scopeFactory = scopeFactory;
         _logger = logger;
     }
 
@@ -68,7 +80,7 @@ public sealed class SessionHub : Hub
 
     /// <summary>
     /// Client joins a session group to receive real-time updates.
-    /// Immediately broadcasts current session state so the client's useSession() hook is populated.
+    /// Opens a persistent Deepgram WebSocket for the session.
     /// </summary>
     public async Task JoinSession(string sessionId)
     {
@@ -83,8 +95,10 @@ public sealed class SessionHub : Hub
 
         await ValidateSessionOwnershipAsync(sessionGuid, doctorId);
 
+        var sttProvider = _sttFactory.GetProvider();
+
         await Groups.AddToGroupAsync(Context.ConnectionId, sessionId);
-        ConnectionSessions[Context.ConnectionId] = sessionId;
+        ConnectionSessions[Context.ConnectionId] = new ConnectionInfo(sessionId, doctorId, sttProvider);
 
         _logger.LogInformation(
             "Client {ConnectionId} joined session {SessionId}",
@@ -92,17 +106,65 @@ public sealed class SessionHub : Hub
 
         await Clients.Caller.SendAsync(SignalREvents.SessionJoined, sessionId);
 
-        // Hydrate the caller with current session state so useSession() receives non-null data
+        // Hydrate the caller with current session state
         var sessionResponse = await _sessionService.GetSessionAsync(sessionGuid, doctorId);
 
         if (sessionResponse is not null)
         {
             await Clients.Caller.SendAsync(SignalREvents.SessionUpdated, sessionResponse);
+
+            if (sessionResponse.TranscriptLines is { Count: > 0 } lines)
+            {
+                var last = lines[^1];
+                SpeakerCache[sessionId] = new SpeakerState(last.Speaker, last.Timestamp);
+            }
         }
+
+        // Open STT provider stream. Callback runs on a background thread, so use IHubContext.
+        await sttProvider.OpenStreamAsync(sessionId, async chunk =>
+        {
+            var speaker = InferSpeakerFromCache(sessionId);
+
+            if (!chunk.IsFinal)
+            {
+                // Interim result — transient preview, not persisted
+                await _hubContext.Clients.Group(sessionId).SendAsync(
+                    SignalREvents.TranscriptInterimUpdated,
+                    new { speaker, text = chunk.Transcript });
+                return;
+            }
+
+            // Final result — persist and broadcast.
+            // Create a fresh scope: the hub's _db is tied to the JoinSession invocation
+            // scope which is disposed once that method returns, but this callback runs
+            // on the background Deepgram WS receive loop.
+            var now = DateTimeOffset.UtcNow;
+            if (!Guid.TryParse(sessionId, out var finalSessionGuid))
+                return;
+
+            var line = new TranscriptLine
+            {
+                Id = Guid.NewGuid(),
+                SessionId = finalSessionGuid,
+                Speaker = speaker,
+                Text = chunk.Transcript,
+                Timestamp = now,
+                Confidence = chunk.Confidence
+            };
+
+            await BroadcastTranscriptLine(sessionId, line);
+            SpeakerCache[sessionId] = new SpeakerState(speaker, now);
+
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var db = scope.ServiceProvider.GetRequiredService<ClaraDbContext>();
+            db.TranscriptLines.Add(line);
+            await db.SaveChangesAsync();
+            await _batchTrigger.OnTranscriptLineAddedAsync(sessionId, line);
+        });
     }
 
     /// <summary>
-    /// Client leaves a session group.
+    /// Client leaves a session group. Closes the Deepgram stream if no other connections remain.
     /// </summary>
     public async Task LeaveSession(string sessionId)
     {
@@ -117,7 +179,14 @@ public sealed class SessionHub : Hub
         await ValidateSessionOwnershipAsync(sessionGuid, doctorId);
 
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, sessionId);
-        ConnectionSessions.TryRemove(Context.ConnectionId, out _);
+        ConnectionSessions.TryRemove(Context.ConnectionId, out var leftConn);
+
+        if (!HasActiveConnections(sessionId))
+        {
+            if (leftConn is not null)
+                await leftConn.SttProvider.CloseStreamAsync(sessionId);
+            SpeakerCache.TryRemove(sessionId, out _);
+        }
 
         _logger.LogInformation(
             "Client {ConnectionId} left session {SessionId}",
@@ -172,16 +241,14 @@ public sealed class SessionHub : Hub
         _db.TranscriptLines.Add(line);
         await _db.SaveChangesAsync();
 
-        // Broadcast to all clients in session group
         await BroadcastTranscriptLine(sessionId, line);
-
-        // Auto-batch trigger check
         await _batchTrigger.OnTranscriptLineAddedAsync(sessionId, line);
     }
 
     /// <summary>
-    /// Receives audio chunk from client, transcribes via Deepgram, broadcasts transcript.
-    /// Audio format: base64-encoded audio/webm from MediaRecorder.
+    /// Receives audio chunk from client and pipes it to the open Deepgram WebSocket.
+    /// No REST call here — transcription is async via the WS receive loop.
+    /// Audio format: base64-encoded PCM16 (linear16, 16kHz mono).
     /// </summary>
     public async Task StreamAudioChunk(string sessionId, string audioBase64)
     {
@@ -189,19 +256,27 @@ public sealed class SessionHub : Hub
         {
             var doctorId = GetDoctorId();
 
-            if (!Guid.TryParse(sessionId, out var sessionGuid))
+            if (!Guid.TryParse(sessionId, out _))
             {
                 _logger.LogWarning("Invalid session ID format in StreamAudioChunk");
                 await Clients.Caller.SendAsync(SignalREvents.SttError, "Invalid session ID format");
                 return;
             }
 
-            await ValidateSessionOwnershipAsync(sessionGuid, doctorId);
-
-            if (string.IsNullOrWhiteSpace(audioBase64))
+            // Use in-memory cache — ownership validated on JoinSession
+            if (!ConnectionSessions.TryGetValue(Context.ConnectionId, out var connInfo) ||
+                connInfo.SessionId != sessionId ||
+                connInfo.DoctorId != doctorId)
             {
+                _logger.LogWarning(
+                    "Audio chunk rejected: connection {ConnectionId} not joined to session {SessionId}",
+                    Context.ConnectionId, sessionId);
+                await Clients.Caller.SendAsync(SignalREvents.SttError, "Session not found or access denied");
                 return;
             }
+
+            if (string.IsNullOrWhiteSpace(audioBase64))
+                return;
 
             var audioBytes = Convert.FromBase64String(audioBase64);
 
@@ -212,36 +287,7 @@ public sealed class SessionHub : Hub
                 return;
             }
 
-            // Forward to Deepgram REST API
-            var result = await _transcription.TranscribeAsync(sessionId, audioBytes);
-
-            if (result is null || string.IsNullOrWhiteSpace(result.Transcript))
-            {
-                // No transcript produced — could be silence or noise
-                return;
-            }
-
-            // Infer speaker based on session context (async to avoid thread-pool starvation)
-            var speaker = await _speakerDetection.InferSpeakerAsync(sessionGuid);
-
-            var line = new TranscriptLine
-            {
-                Id = Guid.NewGuid(),
-                SessionId = sessionGuid,
-                Speaker = speaker,
-                Text = result.Transcript,
-                Timestamp = DateTimeOffset.UtcNow,
-                Confidence = result.Confidence
-            };
-
-            _db.TranscriptLines.Add(line);
-            await _db.SaveChangesAsync();
-
-            // Broadcast to all clients in session group
-            await BroadcastTranscriptLine(sessionId, line);
-
-            // Auto-batch trigger check
-            await _batchTrigger.OnTranscriptLineAddedAsync(sessionId, line);
+            await connInfo.SttProvider.SendAudioAsync(sessionId, audioBytes);
         }
         catch (FormatException exception)
         {
@@ -250,11 +296,41 @@ public sealed class SessionHub : Hub
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "STT failed for session {SessionId}", sessionId);
-            // Don't crash the SignalR connection — STT failure is recoverable
+            _logger.LogError(exception, "Audio forwarding failed for session {SessionId}", sessionId);
             await Clients.Caller.SendAsync(SignalREvents.SttError, "Transcription temporarily unavailable");
         }
     }
+
+    private string InferSpeakerFromCache(string sessionId)
+    {
+        if (!SpeakerCache.TryGetValue(sessionId, out var last))
+            return SpeakerRole.Doctor;
+
+        var gap = DateTimeOffset.UtcNow - last.Timestamp;
+        return gap.TotalSeconds > SpeakerChangeGapSeconds
+            ? (last.Speaker == SpeakerRole.Doctor ? SpeakerRole.Patient : SpeakerRole.Doctor)
+            : last.Speaker;
+    }
+
+    // IHubContext works in both hub invocation context and background threads.
+    private async Task BroadcastTranscriptLine(string sessionId, TranscriptLine line)
+    {
+        var response = BuildTranscriptLineResponse(line);
+        await _hubContext.Clients.Group(sessionId).SendAsync(SignalREvents.TranscriptLineAdded, response);
+    }
+
+    private static bool HasActiveConnections(string sessionId)
+        => ConnectionSessions.Values.Any(c => c.SessionId == sessionId);
+
+    private static TranscriptLineResponse BuildTranscriptLineResponse(TranscriptLine line) =>
+        new()
+        {
+            Id = line.Id,
+            Speaker = line.Speaker,
+            Text = line.Text,
+            Timestamp = line.Timestamp,
+            Confidence = line.Confidence
+        };
 
     /// <summary>
     /// Broadcasts a suggestion to session group. Server-side only — not client-callable.
@@ -268,22 +344,8 @@ public sealed class SessionHub : Hub
             suggestion.Id, sessionId);
     }
 
-    private async Task BroadcastTranscriptLine(string sessionId, TranscriptLine line)
-    {
-        var response = new TranscriptLineResponse
-        {
-            Id = line.Id,
-            Speaker = line.Speaker,
-            Text = line.Text,
-            Timestamp = line.Timestamp,
-            Confidence = line.Confidence
-        };
-
-        await Clients.Group(sessionId).SendAsync(SignalREvents.TranscriptLineAdded, response);
-    }
-
     /// <summary>
-    /// Doctor accepts a suggestion. Delegates to SuggestionService for idempotency enforcement.
+    /// Doctor accepts a suggestion.
     /// </summary>
     public async Task AcceptSuggestion(string sessionId, string suggestionId)
     {
@@ -320,7 +382,7 @@ public sealed class SessionHub : Hub
     }
 
     /// <summary>
-    /// Doctor dismisses a suggestion. Delegates to SuggestionService for idempotency enforcement.
+    /// Doctor dismisses a suggestion.
     /// </summary>
     public async Task DismissSuggestion(string sessionId, string suggestionId)
     {
@@ -358,22 +420,24 @@ public sealed class SessionHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        if (ConnectionSessions.TryRemove(Context.ConnectionId, out var sessionId))
+        if (ConnectionSessions.TryRemove(Context.ConnectionId, out var connInfo))
         {
-            _batchTrigger.CleanupSession(sessionId);
+            _batchTrigger.CleanupSession(connInfo.SessionId);
             _logger.LogInformation(
                 "Cleaned up batch trigger for session {SessionId} on disconnect",
-                sessionId);
+                connInfo.SessionId);
+
+            if (!HasActiveConnections(connInfo.SessionId))
+            {
+                await connInfo.SttProvider.CloseStreamAsync(connInfo.SessionId);
+                SpeakerCache.TryRemove(connInfo.SessionId, out _);
+            }
         }
 
         if (exception is not null)
-        {
             _logger.LogWarning(exception, "Client {ConnectionId} disconnected with error", Context.ConnectionId);
-        }
         else
-        {
             _logger.LogInformation("Client {ConnectionId} disconnected", Context.ConnectionId);
-        }
 
         await base.OnDisconnectedAsync(exception);
     }

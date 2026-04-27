@@ -11,6 +11,7 @@ using MediTrack.ServiceDefaults;
 using MediTrack.ServiceDefaults.Extensions;
 using MediTrack.Shared.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -61,6 +62,12 @@ builder.Services.AddScoped<IPHIAuditService, PHIAuditService>();
 builder.Services.AddSingleton<IBatchTriggerService, BatchTriggerService>();
 builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<ITranscriptionService, DeepgramService>();
+builder.Services.AddKeyedSingleton<ISttProvider>(SttProviderType.Deepgram, (sp, _) => new DeepgramSttProvider(
+    sp.GetRequiredService<IConfiguration>(),
+    new DeepgramWebSocketFactory(),
+    sp.GetRequiredService<ILogger<DeepgramSttProvider>>()));
+builder.Services.AddKeyedSingleton<ISttProvider, WhisperSttProvider>(SttProviderType.Whisper);
+builder.Services.AddSingleton<ISttProviderFactory, SttProviderFactory>();
 builder.Services.AddScoped<ISpeakerDetectionService, SpeakerDetectionService>();
 
 // AI suggestion services
@@ -83,8 +90,23 @@ builder.Services.AddScoped<IAgentService>(sp =>
 builder.Services.AddScoped<ISuggestionService, SuggestionService>();
 builder.Services.AddScoped<IAgentMemoryService, AgentMemoryService>();
 
+// Asking mode — uses OnDemand (accuracy-optimised) chat client, no live session needed
+builder.Services.AddScoped<IAskService>(sp => new AskService(
+    sp.GetRequiredService<IKnowledgeService>(),
+    sp.GetRequiredService<IPatientContextService>(),
+    sp.GetRequiredKeyedService<IChatClient>(ChatClientKeys.OnDemand),
+    sp.GetRequiredService<ILogger<AskService>>()
+));
+
 // Analytics service (admin reports)
 builder.Services.AddScoped<AnalyticsService>();
+
+// Whisper STT HTTP client (self-hosted faster-whisper OpenAI-compatible API)
+builder.Services.AddHttpClient<WhisperSttProvider>((sp, client) =>
+{
+    var baseUrl = sp.GetRequiredService<IConfiguration>()["AI:Whisper:BaseUrl"] ?? "http://whisper-api:8000";
+    client.BaseAddress = new Uri(baseUrl);
+});
 
 // Infrastructure monitoring services
 builder.Services.AddHttpClient<PrometheusService>(client =>
@@ -193,6 +215,7 @@ app.MapHub<SessionHub>("/sessionHub");
 // Map API endpoints
 app.MapSessionEndpoints();
 app.MapKnowledgeEndpoints();
+app.MapAskEndpoints();
 app.MapAuditEndpoints();
 app.MapAnalyticsEndpoints();
 app.MapSystemHealthEndpoints();

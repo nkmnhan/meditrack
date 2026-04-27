@@ -3,11 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Sparkles, X, Mic, Send, ArrowRight } from "lucide-react";
 import { clsxMerge } from "@/shared/utils/clsxMerge";
 import { useClaraPanel } from "./ClaraPanelContext";
-import {
-  claraSuggestions,
-  mockConversations,
-  type MockMessage,
-} from "@/features/clara/data/clara-suggestions";
+import { claraSuggestions } from "@/features/clara/data/clara-suggestions";
+import { useAskClaraMutation } from "@/features/clara/store/claraApi";
 
 interface ChatMessage {
   readonly role: "user" | "assistant";
@@ -16,7 +13,6 @@ interface ChatMessage {
 
 function formatMessageContent(content: string): React.ReactNode {
   const lines = content.split("\n");
-
   return lines.map((line, lineIndex) => {
     const parts = line.split(/(\*\*[^*]+\*\*)/g);
     const formattedParts = parts.map((part, partIndex) => {
@@ -29,7 +25,6 @@ function formatMessageContent(content: string): React.ReactNode {
       }
       return part;
     });
-
     return (
       <span key={lineIndex}>
         {lineIndex > 0 && "\n"}
@@ -44,36 +39,43 @@ export function ClaraPanel() {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
+  const [isThinking, setIsThinking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [askClara] = useAskClaraMutation();
 
-  const findMockResponse = (userMessage: string): string => {
-    for (const suggestion of claraSuggestions) {
-      if (userMessage === suggestion.prompt) {
-        const conversation = mockConversations[suggestion.id];
-        if (conversation) {
-          const assistantMessage = conversation.find(
-            (message: MockMessage) => message.role === "assistant"
-          );
-          if (assistantMessage) return assistantMessage.content;
-        }
-      }
-    }
-    return "I'm Clara, your AI medical secretary. This is a demo \u2014 in production, I'll connect to your clinical knowledge base and patient records to provide evidence-based assistance. Try clicking one of the suggestion chips above for a sample interaction.";
-  };
-
-  const handleSendMessage = (text: string) => {
+  const handleSendMessage = async (text: string) => {
     const trimmedText = text.trim();
-    if (!trimmedText) return;
+    if (!trimmedText || isThinking) return;
 
-    const userMessage: ChatMessage = { role: "user", content: trimmedText };
-    const assistantResponse: ChatMessage = {
-      role: "assistant",
-      content: findMockResponse(trimmedText),
-    };
-
-    setMessages((previous) => [...previous, userMessage, assistantResponse]);
+    setMessages((previous) => [
+      ...previous,
+      { role: "user", content: trimmedText },
+    ]);
     setInputValue("");
+    setIsThinking(true);
+
+    try {
+      const result = await askClara({
+        question: trimmedText,
+        patientId: pageContext.patientId,
+      }).unwrap();
+      setMessages((previous) => [
+        ...previous,
+        { role: "assistant", content: result.answer },
+      ]);
+    } catch {
+      setMessages((previous) => [
+        ...previous,
+        {
+          role: "assistant",
+          content:
+            "I'm having trouble connecting right now. Please try again in a moment.",
+        },
+      ]);
+    } finally {
+      setIsThinking(false);
+    }
   };
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -102,7 +104,6 @@ export function ClaraPanel() {
     event.stopPropagation();
   };
 
-  // Handle prefill prompt when panel opens
   useEffect(() => {
     if (isOpen && prefillPrompt) {
       handleSendMessage(prefillPrompt);
@@ -114,17 +115,16 @@ export function ClaraPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, prefillPrompt]);
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, isThinking]);
 
-  // Reset messages when panel closes
   useEffect(() => {
     if (!isOpen) {
       const timer = setTimeout(() => {
         setMessages([]);
         setInputValue("");
+        setIsThinking(false);
       }, 300);
       return () => clearTimeout(timer);
     }
@@ -209,49 +209,61 @@ export function ClaraPanel() {
             <ArrowRight className="h-4 w-4 flex-shrink-0" />
           </button>
 
-          {/* Suggestion chips (show only when no messages) */}
-          {messages.length === 0 && (
+          {/* Suggestion chips — shown when no messages and not waiting */}
+          {messages.length === 0 && !isThinking && (
             <div className="space-y-2">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Try asking
               </p>
               {claraSuggestions
-                .filter((suggestion) =>
-                  !suggestion.relevantContexts ||
-                  pageContext.type === "default" ||
-                  suggestion.relevantContexts.includes(pageContext.type)
+                .filter(
+                  (suggestion) =>
+                    !suggestion.relevantContexts ||
+                    pageContext.type === "default" ||
+                    suggestion.relevantContexts.includes(pageContext.type)
                 )
                 .map((suggestion) => {
-                const SuggestionIcon = suggestion.icon;
-                return (
-                  <button
-                    key={suggestion.id}
-                    onClick={() => handleSuggestionClick(suggestion.prompt)}
-                    className={clsxMerge(
-                      "flex w-full items-center gap-3 rounded-lg border border-border p-3",
-                      "bg-card text-left transition-all",
-                      "hover:border-accent-300 hover:shadow-sm"
-                    )}
-                  >
-                    <div
+                  const SuggestionIcon = suggestion.icon;
+                  return (
+                    <button
+                      key={suggestion.id}
+                      onClick={() => handleSuggestionClick(suggestion.prompt)}
+                      disabled={isThinking}
                       className={clsxMerge(
-                        "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg",
-                        "bg-muted text-foreground/80"
+                        "flex w-full items-center gap-3 rounded-lg border border-border p-3",
+                        "bg-card text-left transition-all",
+                        "hover:border-accent-300 hover:shadow-sm",
+                        "disabled:cursor-not-allowed disabled:opacity-50"
                       )}
                     >
-                      <SuggestionIcon className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">
-                        {suggestion.label}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {suggestion.category}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
+                      <div
+                        className={clsxMerge(
+                          "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg",
+                          "bg-muted text-foreground/80"
+                        )}
+                      >
+                        <SuggestionIcon className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {suggestion.label}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {suggestion.category}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+            </div>
+          )}
+
+          {/* Thinking indicator — shown before first message arrives */}
+          {messages.length === 0 && isThinking && (
+            <div className="flex justify-start">
+              <div className="rounded-lg bg-accent-50 px-3 py-2 text-sm text-muted-foreground">
+                Clara is thinking…
+              </div>
             </div>
           )}
 
@@ -278,12 +290,22 @@ export function ClaraPanel() {
                   </div>
                 </div>
               ))}
+
+              {/* Typing indicator — shown after ≥1 message while waiting */}
+              {isThinking && (
+                <div className="flex justify-start">
+                  <div className="rounded-lg bg-accent-50 px-3 py-2 text-sm text-muted-foreground">
+                    Clara is thinking…
+                  </div>
+                </div>
+              )}
+
               <div ref={messagesEndRef} />
             </div>
           )}
         </div>
 
-        {/* Input bar (sticky bottom) */}
+        {/* Input bar */}
         <div className="border-t border-border px-4 py-3">
           <form onSubmit={handleSubmit} className="flex items-center gap-2">
             <input
@@ -291,20 +313,21 @@ export function ClaraPanel() {
               type="text"
               value={inputValue}
               onChange={(event) => setInputValue(event.target.value)}
-              placeholder="Ask Clara anything..."
+              placeholder="Ask Clara anything…"
+              disabled={isThinking}
               className={clsxMerge(
                 "h-10 flex-1 rounded-lg border border-border bg-input text-foreground px-3 text-sm",
                 "placeholder:text-muted-foreground",
-                "focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-500"
+                "focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-500",
+                "disabled:cursor-not-allowed disabled:opacity-50"
               )}
             />
             <button
               type="submit"
-              disabled={!inputValue.trim()}
+              disabled={!inputValue.trim() || isThinking}
               className={clsxMerge(
                 "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg",
-                "bg-accent-500 text-white",
-                "transition-colors hover:bg-accent-700",
+                "bg-accent-500 text-white transition-colors hover:bg-accent-700",
                 "disabled:cursor-not-allowed disabled:opacity-50"
               )}
               aria-label="Send message"

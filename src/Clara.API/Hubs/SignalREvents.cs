@@ -7,6 +7,7 @@ namespace Clara.API.Hubs;
 public static class SignalREvents
 {
     public const string TranscriptLineAdded = "TranscriptLineAdded";
+    public const string TranscriptInterimUpdated = "TranscriptInterimUpdated";
     public const string SuggestionAdded = "SuggestionAdded";
     public const string SessionUpdated = "SessionUpdated";
     public const string SessionJoined = "SessionJoined";

@@ -142,6 +142,7 @@ export function LiveSessionView() {
   const {
     connectionStatus,
     transcriptLines,
+    pendingLine,
     suggestions,
     agentStatus,
     sendAudioChunk,
@@ -514,6 +515,7 @@ export function LiveSessionView() {
           {/* Transcript Panel */}
           <TranscriptPanel
             lines={transcriptLines}
+            pendingLine={pendingLine}
             isRecording={isRecording}
             onToggleRecording={handleToggleRecording}
             onAskClara={handleRequestSuggestions}

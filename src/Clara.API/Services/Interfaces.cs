@@ -83,6 +83,11 @@ public interface IPatientContextService
     Task<PatientContext?> GetPatientContextAsync(string patientId, CancellationToken cancellationToken = default);
 }
 
+public interface IAskService
+{
+    Task<string> AskAsync(string question, string? patientId, CancellationToken cancellationToken = default);
+}
+
 public interface ICorrectiveRagService
 {
     Task<List<KnowledgeSearchResult>> SearchWithGradingAsync(
@@ -112,4 +117,50 @@ internal interface ISuggestionCriticService
         List<SuggestionItem> suggestions,
         string transcript,
         CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// A single transcript result from an STT provider.
+/// IsFinal=false = interim preview (Deepgram only). IsFinal=true = committed phrase.
+/// </summary>
+public sealed record TranscriptChunk(string Transcript, float? Confidence, bool IsFinal);
+
+/// <summary>
+/// Selects which STT provider to use for a session.
+/// </summary>
+public enum SttProviderType { Deepgram, Whisper }
+
+/// <summary>
+/// Resolves the appropriate ISttProvider for a given session.
+/// </summary>
+public interface ISttProviderFactory
+{
+    ISttProvider GetProvider();
+}
+
+/// <summary>
+/// Provides speech-to-text transcription for a session.
+/// Implementations differ in latency and hosting (cloud streaming vs self-hosted batch)
+/// but share the same callback contract: invoke onTranscript for every non-empty result.
+/// </summary>
+public interface ISttProvider
+{
+    /// <summary>
+    /// Prepares the provider for a session. For streaming providers this opens a connection;
+    /// for batch providers this initialises a buffer. No-op if already prepared.
+    /// </summary>
+    Task OpenStreamAsync(
+        string sessionId,
+        Func<TranscriptChunk, Task> onTranscript,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Delivers raw PCM16 audio (16kHz mono) for the session.
+    /// </summary>
+    Task SendAudioAsync(string sessionId, byte[] audioBytes, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Signals end-of-session. Flushes any remaining audio and releases resources.
+    /// </summary>
+    Task CloseStreamAsync(string sessionId);
 }

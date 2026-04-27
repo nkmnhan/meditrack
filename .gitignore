@@ -160,6 +160,10 @@ dev-certs/mkcert.exe
 # .mcp.json is tracked (team-shared, secrets via env vars)
 src/Identity.API/keys/
 
+# Superpowers plans/specs and research docs (local dev artifacts)
+docs/superpowers/
+docs/research/
+
 # Test results
 TestResults/
 **/TestResults/

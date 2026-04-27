@@ -6,6 +6,11 @@ export interface TranscriptLine {
   readonly confidence?: number;
 }
 
+export interface PendingTranscriptLine {
+  readonly speaker: "Doctor" | "Patient";
+  readonly text: string;
+}
+
 export interface Suggestion {
   readonly id: string;
   readonly content: string;
@@ -122,4 +127,13 @@ export interface PrescriptionDraft {
   readonly frequency: string;
   readonly durationDays: string;
   readonly instructions: string;
+}
+
+export interface AskClaraRequest {
+  readonly question: string;
+  readonly patientId?: string;
+}
+
+export interface AskClaraResponse {
+  readonly answer: string;
 }
