@@ -6,12 +6,24 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6.svg)](https://www.typescriptlang.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-336791.svg)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED.svg)](https://docs.docker.com/compose/)
+[![GitHub Sponsors](https://img.shields.io/badge/Sponsor-%E2%9D%A4-%23EA4AAA?logo=github)](https://github.com/sponsors/nkmnhan)
 
 > An **MCP-native EMR platform** with an AI clinical companion (**Clara**) that listens to doctor-patient conversations in real time, transcribes visits, suggests diagnoses, and auto-generates SOAP notes — so doctors can **focus on care, not clicks**.
 
 Built with microservices architecture, MCP (Model Context Protocol), HIPAA-compliant patterns, and modern full-stack technologies.
 
 > **Educational Project**: Personal learning project for full-stack development, AI integration, and healthcare data standards. Not intended for production use with real patient data.
+
+---
+
+<p align="center">
+  <strong>If this project helped you learn something or saved you time — consider sponsoring!</strong><br/>
+  <a href="https://github.com/sponsors/nkmnhan">
+    <img src="https://img.shields.io/badge/Sponsor%20this%20project-%E2%9D%A4-%23EA4AAA?style=for-the-badge&logo=github" alt="Sponsor on GitHub"/>
+  </a>
+</p>
+
+---
 
 ### Links
 
