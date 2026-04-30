@@ -54,5 +54,33 @@ public class PatientResolver : IPatientResolver
         }
     }
 
+    public async Task<bool> IsPatientActiveAsync(Guid patientId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"/api/patients/{patientId}/active", cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Could not determine active status for patient {PatientId}: HTTP {StatusCode}",
+                    patientId, response.StatusCode);
+                return false;
+            }
+
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            var statusData = JsonSerializer.Deserialize<PatientActiveStatusResponse>(content,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            return statusData?.IsActive ?? false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking active status for patient {PatientId}", patientId);
+            return false;
+        }
+    }
+
     private record PatientIdResponse(Guid PatientId);
+
+    private record PatientActiveStatusResponse(bool IsActive);
 }

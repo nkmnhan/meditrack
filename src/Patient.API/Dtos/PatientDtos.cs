@@ -125,3 +125,5 @@ public record PatientListItemResponse(
 public record PatientIdResponse(
     Guid PatientId
 );
+
+public record PatientActiveStatusResponse(bool IsActive);

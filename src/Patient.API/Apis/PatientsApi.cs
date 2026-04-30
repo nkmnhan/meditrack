@@ -70,6 +70,12 @@ public static class PatientsApi
             .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
+        group.MapGet("/{id:guid}/active", GetPatientActiveStatus)
+            .WithName("GetPatientActiveStatus")
+            .WithSummary("Check if a patient is active (internal service use)")
+            .Produces<PatientActiveStatusResponse>()
+            .Produces(StatusCodes.Status404NotFound);
+
         return endpoints;
     }
 
@@ -347,6 +353,17 @@ public static class PatientsApi
         return success
             ? Results.NoContent()
             : Results.NotFound(new { message = $"Patient with ID {id} not found" });
+    }
+
+    private static async Task<IResult> GetPatientActiveStatus(
+        Guid id,
+        IPatientService patientService,
+        CancellationToken cancellationToken)
+    {
+        var patient = await patientService.GetByIdAsync(id, cancellationToken);
+        return patient is null
+            ? Results.NotFound()
+            : Results.Ok(new PatientActiveStatusResponse(patient.IsActive));
     }
 
     /// <summary>
