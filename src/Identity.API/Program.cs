@@ -1,5 +1,5 @@
 using System.Threading.RateLimiting;
-using MediTrack.Identity;
+using Duende.IdentityServer.EntityFramework.DbContexts;
 using MediTrack.Identity.Apis;
 using MediTrack.Identity.Data;
 using MediTrack.Identity.Models;
@@ -65,7 +65,10 @@ builder.Services.AddAuthentication()
 
 builder.Services.AddAuthorization();
 
-// Duende IdentityServer
+// Duende IdentityServer with EF Core configuration and operational stores
+string identityConnectionString = builder.Configuration.GetConnectionString("IdentityDb")
+    ?? throw new InvalidOperationException("IdentityDb connection string is required.");
+
 builder.Services
     .AddIdentityServer(options =>
     {
@@ -75,9 +78,22 @@ builder.Services
         options.Events.RaiseSuccessEvents = true;
         options.EmitStaticAudienceClaim = true;
     })
-    .AddInMemoryIdentityResources(IdentityServerConfig.GetIdentityResources())
-    .AddInMemoryApiScopes(IdentityServerConfig.GetApiScopes())
-    .AddInMemoryClients(IdentityServerConfig.GetClients(builder.Configuration))
+    .AddConfigurationStore(storeOptions =>
+    {
+        storeOptions.ConfigureDbContext = dbContextBuilder =>
+            dbContextBuilder.UseNpgsql(
+                identityConnectionString,
+                npgsqlOptions => npgsqlOptions.MigrationsAssembly("Identity.API"));
+    })
+    .AddOperationalStore(storeOptions =>
+    {
+        storeOptions.ConfigureDbContext = dbContextBuilder =>
+            dbContextBuilder.UseNpgsql(
+                identityConnectionString,
+                npgsqlOptions => npgsqlOptions.MigrationsAssembly("Identity.API"));
+        storeOptions.EnableTokenCleanup = true;
+        storeOptions.TokenCleanupInterval = 3600;
+    })
     .AddAspNetIdentity<ApplicationUser>()
     .AddProfileService<ProfileService>();
 
@@ -132,18 +148,14 @@ WebApplication app = builder.Build();
 // Apply database migrations on startup
 using (IServiceScope scope = app.Services.CreateScope())
 {
-    IServiceProvider services = scope.ServiceProvider;
-    ILogger<Program> logger = services.GetRequiredService<ILogger<Program>>();
+    ApplicationDbContext identityDbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await identityDbContext.Database.MigrateAsync();
 
-    ApplicationDbContext dbContext = services.GetRequiredService<ApplicationDbContext>();
-    await dbContext.Database.MigrateAsync();
+    ConfigurationDbContext configurationDbContext = scope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
+    await configurationDbContext.Database.MigrateAsync();
 
-    // Seed default users and roles
-    UserManager<ApplicationUser> userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-    RoleManager<IdentityRole> roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-    IConfiguration configuration = services.GetRequiredService<IConfiguration>();
-
-    await UsersSeed.SeedAsync(userManager, roleManager, configuration, logger);
+    PersistedGrantDbContext persistedGrantDbContext = scope.ServiceProvider.GetRequiredService<PersistedGrantDbContext>();
+    await persistedGrantDbContext.Database.MigrateAsync();
 }
 
 app.MapDefaultEndpoints();

@@ -5,6 +5,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
+### Changed
+- Migrate IdentityServer from in-memory to PostgreSQL (EF Core) persistence (2026-05-01)
+  - Replaced `AddInMemoryIdentityResources`, `AddInMemoryApiScopes`, `AddInMemoryClients` with `AddConfigurationStore` + `AddOperationalStore` backed by PostgreSQL
+  - Added `Duende.IdentityServer.EntityFramework 7.4.6` package to `Identity.API` and `Simulator`
+  - Added EF migrations for `ConfigurationDbContext` (clients/scopes/resources) and `PersistedGrantDbContext` (tokens/grants) in `Identity.API`
+  - Upgraded EF Core and ASP.NET Core Identity packages to 10.0.0 to match .NET 10 + Duende IS EF requirements
+  - Added design-time factories `ConfigurationDbContextFactory` + `PersistedGrantDbContextFactory`
+  - Deleted `Identity.API/Data/UsersSeed.cs` — Simulator is the single source of seeding
+- `IdentitySeeder` now upsert-style for all data (2026-05-01)
+  - Users: update `FirstName`/`LastName`/`EmailConfirmed` + sync roles on re-run instead of skip
+  - IdentityServer clients, API scopes, and identity resources: seeded from `IdentityServerConfig` into `ConfigurationDbContext` using insert-if-not-exists
+
 ### Security
 - Remove patient FullName/email from log statements — PHI/HIPAA compliance (2026-04-30)
   - `PatientService.cs`: removed `patient.FullName` from 4 `LogInformation` calls (Create, Update, Deactivate, Activate)
