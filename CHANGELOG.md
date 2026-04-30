@@ -5,6 +5,49 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
+### Security
+- Remove patient FullName/email from log statements — PHI/HIPAA compliance (2026-04-30)
+  - `PatientService.cs`: removed `patient.FullName` from 4 `LogInformation` calls (Create, Update, Deactivate, Activate)
+  - `UsersSeed.cs`: removed `email` from user creation log call
+- Fix access token lifetime to 1 hour per BR-S004 (was 8 hours) (2026-04-30)
+  - `IdentityServerConfig.cs`: `AccessTokenLifetime` changed from 28800 to 3600
+- Block Patient role from enumerating provider schedules (OWASP A01 IDOR) (2026-04-30)
+  - `AppointmentsApi.cs` `GetByProviderId`: added staff-only guard
+- Block Patient role from probing provider schedule via conflicts endpoint (OWASP A01 IDOR) (2026-04-30)
+  - `AppointmentsApi.cs` `CheckConflicts`: added staff-only guard
+- Register `clara-api` OAuth2 scope in IdentityServer (2026-04-30)
+  - Added to `GetApiScopes()` and SPA client `AllowedScopes` in `IdentityServerConfig.cs`
+- Remove DevController and MVC scaffolding — IDOR attack surface eliminated (2026-04-30)
+  - Removed `AddControllers()` and `MapControllers()` from `Clara.API/Program.cs`
+  - `DevController.cs` content cleared (dev-only test endpoints removed)
+
+### Fixed
+- Enforce BR-A001: appointment minimum 1-hour advance booking (2026-04-30)
+  - `AppointmentValidators.cs`: fixed static `GreaterThan(DateTime.UtcNow)` capture (FluentValidation gotcha); added `.Must()` delegates with 1-hour minimum to `CreateAppointmentRequestValidator`, `UpdateAppointmentRequestValidator`, and `RescheduleAppointmentRequestValidator`
+- Enforce BR-A010: only active patients can book appointments (2026-04-30)
+  - `Patient.API`: new `GET /api/patients/{id}/active` endpoint + `PatientActiveStatusResponse` DTO
+  - `Appointment.API`: `IPatientResolver.IsPatientActiveAsync` + implementation in `PatientResolver`; guard added in `CreateAppointment` handler
+- Move `PatientRegistered` integration event inside transaction — atomic publish-or-rollback (2026-04-30)
+  - `PatientService.CreateAsync`: event published before `CommitAsync`, consistent with `PatientDeactivated`
+
+### Features
+- Add missing appointment lifecycle integration events (2026-04-30)
+  - `MediTrack.Shared`: 4 new event types — `PatientCheckedInIntegrationEvent`, `AppointmentStartedIntegrationEvent`, `AppointmentCompletedIntegrationEvent`, `AppointmentNoShowIntegrationEvent`
+  - `AppointmentService`: CheckIn, Start, Complete, MarkNoShow now publish events inside transactions
+- New test project: `Appointment.UnitTests` (2026-04-30)
+  - 5 validator tests covering BR-A001 (1-hour advance booking) and the static DateTime capture fix
+
+### Documentation
+- Fix `business-logic.md` doc errors (2026-04-30)
+  - Removed duplicate BR-M007/M008 table rows
+  - Removed malformed duplicate BR-S006/S007/S008 block
+  - Removed duplicate approval section at bottom of file
+  - Fixed lockout note: "5 min" → "15-minute lockout" (matches actual code)
+  - Updated BR-S004 refresh token lifetime: "14 days" → "30-day absolute / 15-day sliding"
+  - Updated implementation notes for access token and refresh token lifetimes
+- Fix `emr-compliance-status.md` dead link to non-existent roadmap file (2026-04-30)
+- Add Clara.API (port 5005) to `observability.md` architecture diagram (2026-04-30)
+
 ### Documentation
 - Claude settings standards sync (2026-04-17) — Anthropic official compliance
   - HTML maintainer comments added to all 15 `.claude/rules/**/*.md` files (zero token cost)
