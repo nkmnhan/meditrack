@@ -162,9 +162,6 @@ builder.Services.AddDefaultCors(builder.Configuration, builder.Environment);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Controllers (for DevController)
-builder.Services.AddControllers();
-
 // SignalR for real-time communication
 // MaximumReceiveMessageSize raised to 1MB: audio chunks (WebM/Opus) can exceed the 32KB default,
 // especially the first chunk which carries the full EBML container header + codec info.
@@ -222,10 +219,6 @@ app.MapSystemHealthEndpoints();
 app.MapInfrastructureEndpoints();
 app.MapDashboardEndpoints();
 app.MapAnalyticsProxyEndpoints();
-
-// Map Controllers (DevController)
-// Note: DevController uses MVC for test/dev endpoints only. All production endpoints use minimal APIs for performance.
-app.MapControllers();
 
 // Health endpoint (basic check)
 app.MapGet("/", () => Results.Ok(new { service = "Clara.API", status = "healthy" }));
