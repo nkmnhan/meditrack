@@ -12,10 +12,13 @@ MediTrack uses **OpenTelemetry** to collect traces, metrics, and logs from all s
 │                                                                          │
 │  ┌─────────────┐  ┌───────────────┐  ┌────────────────┐  ┌───────────┐  │
 │  │ Identity.API│  │ Patient.API   │  │ Appointment.API│  │Records.API│  │
-│  │             │  │               │  │                │  │           │  │
-│  │ OpenTelemetry SDK (.WithTracing + .WithMetrics + Logging)         │  │
 │  └──────┬──────┘  └───────┬───────┘  └───────┬────────┘  └─────┬─────┘  │
-│         └─────────────────┼──────────────────┼──────────────────┘        │
+│         │                 │                   │                  │        │
+│  ┌──────┴─────────────────┴───────────────────┴──────────────────┘        │
+│  │              Clara.API (port 5005)                                     │
+│  └──────────────────────────────────────────────────────────────────┐     │
+│                                                                      │     │
+│         OpenTelemetry SDK (.WithTracing + .WithMetrics + Logging)    │     │
 │                           │ OTLP/gRPC :4317                              │
 └───────────────────────────┼──────────────────────────────────────────────┘
                             ▼

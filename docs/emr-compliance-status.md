@@ -97,4 +97,4 @@
 | FHIR R4 Resources | 11 | 0 | 3 | 8 |
 | Interop Standards | 10 | 0 | 1 | 9 |
 
-**Next milestone**: Tier 1 items from [EMR Compliance Roadmap](../plans/emr-compliance-roadmap.md) — FHIR R4 facade, standard terminologies, PostgreSQL migration.
+**Next milestone**: Tier 1 items — FHIR R4 facade, standard terminologies (SNOMED CT, LOINC, RxNorm). No formal roadmap document exists yet; track via CHANGELOG.md.
