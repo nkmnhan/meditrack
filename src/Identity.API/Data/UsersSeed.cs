@@ -80,7 +80,7 @@ public static class UsersSeed
 
         if (roleResult.Succeeded)
         {
-            logger.LogInformation("Created user {Email} with role {Role}", email, role);
+            logger.LogInformation("Created user with role {Role}", role);
         }
         else
         {

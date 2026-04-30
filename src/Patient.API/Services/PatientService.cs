@@ -184,20 +184,8 @@ public class PatientService : IPatientService
             _dbContext.Patients.Add(patient);
             await _dbContext.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("Created patient {PatientId}: {PatientName}", patient.Id, patient.FullName);
+            _logger.LogInformation("Created patient {PatientId}", patient.Id);
 
-            await createTransaction.CommitAsync(cancellationToken);
-        }
-        catch
-        {
-            await createTransaction.RollbackAsync(CancellationToken.None);
-            throw;
-        }
-
-        // Publish integration event outside the transaction — event bus failure
-        // must never roll back a successful patient creation
-        try
-        {
             var integrationEvent = new PatientRegisteredIntegrationEvent
             {
                 PatientId = patient.Id,
@@ -207,13 +195,13 @@ public class PatientService : IPatientService
                 PhoneNumber = patient.PhoneNumber
             };
             await _eventBus.PublishAsync(integrationEvent, cancellationToken);
+
+            await createTransaction.CommitAsync(cancellationToken);
         }
-        catch (Exception eventBusException)
+        catch
         {
-            _logger.LogWarning(
-                eventBusException,
-                "Failed to publish PatientRegisteredIntegrationEvent for patient {PatientId}. Patient was created successfully.",
-                patient.Id);
+            await createTransaction.RollbackAsync(CancellationToken.None);
+            throw;
         }
 
         return _mapper.Map<PatientResponse>(patient);
@@ -282,7 +270,7 @@ public class PatientService : IPatientService
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("Updated patient {PatientId}: {PatientName}", patient.Id, patient.FullName);
+            _logger.LogInformation("Updated patient {PatientId}", patient.Id);
 
             var integrationEvent = new PatientUpdatedIntegrationEvent
             {
@@ -321,7 +309,7 @@ public class PatientService : IPatientService
             patient.Deactivate();
             await _dbContext.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("Deactivated patient {PatientId}: {PatientName}", patient.Id, patient.FullName);
+            _logger.LogInformation("Deactivated patient {PatientId}", patient.Id);
 
             var integrationEvent = new PatientDeactivatedIntegrationEvent
             {
@@ -357,7 +345,7 @@ public class PatientService : IPatientService
         patient.Activate();
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Activated patient {PatientId}: {PatientName}", patient.Id, patient.FullName);
+        _logger.LogInformation("Activated patient {PatientId}", patient.Id);
 
         return true;
     }
