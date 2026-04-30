@@ -104,7 +104,7 @@ public sealed class SimulatorOrchestrator : BackgroundService
             {
                 var seeder = scope.ServiceProvider.GetRequiredService<AuditSeeder>();
                 var (created, failed) = await seeder.SeedAsync(
-                    _options.AuditLogCount, _options.ClearExisting, ct);
+                    _options.AuditLogCount, _options.ClearExisting, patientIds, ct);
                 return (created, failed);
             }, stoppingToken),
 
@@ -112,7 +112,7 @@ public sealed class SimulatorOrchestrator : BackgroundService
             {
                 var seeder = scope.ServiceProvider.GetRequiredService<SessionSeeder>();
                 var (sessionsCreated, suggestionsCreated) = await seeder.SeedAsync(
-                    _options.ClaraSessionCount, _options.ClearExisting, ct);
+                    _options.ClaraSessionCount, _options.ClearExisting, patientSeedResults, ct);
                 return (sessionsCreated + suggestionsCreated, 0);
             }, stoppingToken),
         };

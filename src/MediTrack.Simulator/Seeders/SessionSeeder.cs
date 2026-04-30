@@ -84,6 +84,7 @@ public sealed class SessionSeeder
     public async Task<(int SessionsCreated, int SuggestionsCreated)> SeedAsync(
         int targetSessions,
         bool clearExisting,
+        IReadOnlyList<PatientSeedResult> patientSeedResults,
         CancellationToken cancellationToken)
     {
         if (clearExisting)
@@ -94,13 +95,35 @@ public sealed class SessionSeeder
             await _dbContext.Sessions.ExecuteDeleteAsync(cancellationToken);
         }
 
-        var random = new Random(42);
+        var random = Random.Shared;
         var now = DateTimeOffset.UtcNow;
+
+        // Delta mode: only generate enough sessions to reach the target count
+        var existingCount = await _dbContext.Sessions.CountAsync(cancellationToken);
+        var delta = targetSessions - existingCount;
+
+        if (delta <= 0)
+        {
+            _logger.LogInformation(
+                "Clara sessions already at target ({Existing}/{Target}), skipping",
+                existingCount, targetSessions);
+            return (0, 0);
+        }
+
+        _logger.LogInformation(
+            "Generating {Delta} session(s) to reach target {Target} (existing: {Existing})",
+            delta, targetSessions, existingCount);
+
+        // Use the provided patient IDs; fall back to the built-in list if none were supplied
+        var resolvedPatientIds = patientSeedResults.Count > 0
+            ? patientSeedResults.Select(patient => patient.Id.ToString()).ToArray()
+            : PatientIds;
+
         var sessions = new List<Session>();
         var suggestions = new List<Suggestion>();
         var sessionCount = 0;
 
-        while (sessionCount < targetSessions)
+        while (sessionCount < delta)
         {
             var daysAgo = (int)(random.NextDouble() * random.NextDouble() * 180);
             var businessHour = 7 + random.Next(0, 10);
@@ -120,7 +143,7 @@ public sealed class SessionSeeder
             var endTimestamp = timestampOffset.AddMinutes(durationMinutes);
 
             var doctor = Doctors[random.Next(Doctors.Length)];
-            var patientId = PatientIds[random.Next(PatientIds.Length)];
+            var patientId = resolvedPatientIds[random.Next(resolvedPatientIds.Length)];
             var sessionType = SessionTypes[random.Next(SessionTypes.Length)];
 
             var statusRoll = random.NextDouble();

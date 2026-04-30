@@ -139,10 +139,7 @@ public sealed class PatientSeeder
 
     private static Faker<CreatePatientRequest> CreatePatientFaker()
     {
-        const int seed = 42;
-
         var addressFaker = new Faker<AddressDto>()
-            .UseSeed(seed)
             .CustomInstantiator(f => new AddressDto(
                 Street: f.Address.StreetAddress(),
                 Street2: f.Random.Bool(0.3f) ? f.Address.SecondaryAddress() : null,
@@ -153,7 +150,6 @@ public sealed class PatientSeeder
             ));
 
         var emergencyContactFaker = new Faker<EmergencyContactDto>()
-            .UseSeed(seed)
             .CustomInstantiator(f => new EmergencyContactDto(
                 Name: f.Name.FullName(),
                 Relationship: f.PickRandom("Spouse", "Parent", "Sibling", "Child", "Friend", "Partner"),
@@ -162,7 +158,6 @@ public sealed class PatientSeeder
             ));
 
         var insuranceFaker = new Faker<InsuranceDto>()
-            .UseSeed(seed)
             .CustomInstantiator(f => new InsuranceDto(
                 Provider: f.PickRandom(
                     "Blue Cross Blue Shield",
@@ -182,7 +177,6 @@ public sealed class PatientSeeder
             ));
 
         return new Faker<CreatePatientRequest>()
-            .UseSeed(seed)
             .CustomInstantiator(f =>
             {
                 var gender = f.PickRandom("Male", "Female", "Non-Binary", "Other", "Prefer not to say");

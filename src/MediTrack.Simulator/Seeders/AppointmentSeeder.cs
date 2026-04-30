@@ -42,13 +42,32 @@ public sealed class AppointmentSeeder
             "Generating {Total} appointments ({PerPatient} per patient, {PatientCount} patients)...",
             totalAppointments, appointmentsPerPatient, patients.Count);
 
-        var faker = new Faker { Random = new Randomizer(42) };
+        var faker = new Faker();
         var createdCount = 0;
         var failedCount = 0;
 
+        // Load existing appointment counts per patient to avoid duplicating on re-runs
+        var patientIdList = patients.Select(patient => patient.Id).ToList();
+        var existingCounts = await _dbContext.Appointments
+            .Where(appointment => patientIdList.Contains(appointment.PatientId))
+            .GroupBy(appointment => appointment.PatientId)
+            .Select(group => new { PatientId = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(row => row.PatientId, row => row.Count, cancellationToken);
+
         foreach (var patient in patients)
         {
-            for (var appointmentIndex = 0; appointmentIndex < appointmentsPerPatient; appointmentIndex++)
+            var existing = existingCounts.GetValueOrDefault(patient.Id, 0);
+            var toCreate = appointmentsPerPatient - existing;
+
+            if (toCreate <= 0)
+            {
+                _logger.LogDebug(
+                    "Skipping patient {PatientId} — already has {Existing} appointments",
+                    patient.Id, existing);
+                continue;
+            }
+
+            for (var appointmentIndex = 0; appointmentIndex < toCreate; appointmentIndex++)
             {
                 try
                 {

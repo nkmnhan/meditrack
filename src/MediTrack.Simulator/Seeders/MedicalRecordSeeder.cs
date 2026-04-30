@@ -41,13 +41,31 @@ public sealed class MedicalRecordSeeder
             "Generating {Total} medical records ({PerPatient} per patient, {PatientCount} patients)...",
             totalRecords, recordsPerPatient, patientIds.Count);
 
-        var faker = new Faker { Random = new Randomizer(42) };
+        var faker = new Faker();
         var createdCount = 0;
         var failedCount = 0;
 
+        // Load existing record counts per patient to avoid duplicating on re-runs
+        var existingCounts = await _dbContext.MedicalRecords
+            .Where(record => patientIds.Contains(record.PatientId))
+            .GroupBy(record => record.PatientId)
+            .Select(group => new { PatientId = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(row => row.PatientId, row => row.Count, cancellationToken);
+
         foreach (var patientId in patientIds)
         {
-            for (var recordIndex = 0; recordIndex < recordsPerPatient; recordIndex++)
+            var existing = existingCounts.GetValueOrDefault(patientId, 0);
+            var toCreate = recordsPerPatient - existing;
+
+            if (toCreate <= 0)
+            {
+                _logger.LogDebug(
+                    "Skipping patient {PatientId} — already has {Existing} medical records",
+                    patientId, existing);
+                continue;
+            }
+
+            for (var recordIndex = 0; recordIndex < toCreate; recordIndex++)
             {
                 try
                 {
