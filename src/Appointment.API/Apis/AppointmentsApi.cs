@@ -188,9 +188,16 @@ public static class AppointmentsApi
 
     private static async Task<IResult> GetByProviderId(
         Guid providerId,
+        ClaimsPrincipal user,
         IAppointmentService appointmentService,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: Only staff can enumerate a provider's schedule (A01)
+        if (!UserRoles.Staff.Any(role => user.IsInRole(role)))
+        {
+            return Results.Forbid();
+        }
+
         var appointments = await appointmentService.GetByProviderIdAsync(providerId, cancellationToken);
         return Results.Ok(appointments);
     }
@@ -216,9 +223,16 @@ public static class AppointmentsApi
         [FromQuery] DateTime startTime,
         [FromQuery] DateTime endTime,
         [FromQuery] Guid? excludeAppointmentId,
+        ClaimsPrincipal user,
         IAppointmentService appointmentService,
         CancellationToken cancellationToken)
     {
+        // IDOR protection: Only staff can check provider conflict slots (A01)
+        if (!UserRoles.Staff.Any(role => user.IsInRole(role)))
+        {
+            return Results.Forbid();
+        }
+
         var hasConflict = await appointmentService.HasConflictAsync(
             providerId,
             startTime,
@@ -251,6 +265,13 @@ public static class AppointmentsApi
             {
                 return Results.Forbid();
             }
+        }
+
+        // BR-A010: Only active patients can book appointments
+        var isActive = await patientResolver.IsPatientActiveAsync(request.PatientId, cancellationToken);
+        if (!isActive)
+        {
+            return Results.BadRequest(new { message = "Appointments cannot be created for inactive patients." });
         }
 
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
