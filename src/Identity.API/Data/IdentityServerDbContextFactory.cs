@@ -14,8 +14,8 @@ public sealed class ConfigurationDbContextFactory : IDesignTimeDbContextFactory<
 {
     public ConfigurationDbContext CreateDbContext(string[] args)
     {
-        const string connectionString =
-            "Host=localhost;Database=identity;Username=postgres;Password=postgres";
+        var connectionString = Environment.GetEnvironmentVariable("IDENTITY_DB_URL")
+            ?? "Host=localhost;Database=identity;Username=postgres;Password=postgres"; // dev-only fallback
 
         var services = new ServiceCollection();
         services.AddSingleton(new ConfigurationStoreOptions());
@@ -37,8 +37,8 @@ public sealed class PersistedGrantDbContextFactory : IDesignTimeDbContextFactory
 {
     public PersistedGrantDbContext CreateDbContext(string[] args)
     {
-        const string connectionString =
-            "Host=localhost;Database=identity;Username=postgres;Password=postgres";
+        var connectionString = Environment.GetEnvironmentVariable("IDENTITY_DB_URL")
+            ?? "Host=localhost;Database=identity;Username=postgres;Password=postgres"; // dev-only fallback
 
         var services = new ServiceCollection();
         services.AddSingleton(new OperationalStoreOptions());

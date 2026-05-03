@@ -36,11 +36,22 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ### Fixed
 - Enforce BR-A001: appointment minimum 1-hour advance booking (2026-04-30)
   - `AppointmentValidators.cs`: fixed static `GreaterThan(DateTime.UtcNow)` capture (FluentValidation gotcha); added `.Must()` delegates with 1-hour minimum to `CreateAppointmentRequestValidator`, `UpdateAppointmentRequestValidator`, and `RescheduleAppointmentRequestValidator`
+  - `AppointmentValidators.cs`: removed redundant `dt > UtcNow` rule (subsumed by the 1-hour rule — was causing double validation errors for past dates)
 - Enforce BR-A010: only active patients can book appointments (2026-04-30)
   - `Patient.API`: new `GET /api/patients/{id}/active` endpoint + `PatientActiveStatusResponse` DTO
-  - `Appointment.API`: `IPatientResolver.IsPatientActiveAsync` + implementation in `PatientResolver`; guard added in `CreateAppointment` handler
-- Move `PatientRegistered` integration event inside transaction — atomic publish-or-rollback (2026-04-30)
-  - `PatientService.CreateAsync`: event published before `CommitAsync`, consistent with `PatientDeactivated`
+  - `Patient.API` `PatientsApi.cs`: endpoint now requires `RequireAdminOrReceptionist` policy (was missing role guard — IDOR fix)
+  - `Appointment.API`: `IPatientResolver.IsPatientActiveAsync` returns `bool?` (null = not found, true/false = active status); guard returns `404` for unknown patient vs `400` for inactive patient
+  - `Appointment.API` `AppointmentsApi.cs`: request validation now runs before cross-service BR-A010 check (avoids wasted HTTP call on invalid requests)
+- Fix event publish ordering in `AppointmentService` — `PublishAsync` moved after `CommitAsync` in all lifecycle methods (Reschedule, Confirm, CheckIn, Start, Complete, Cancel, MarkNoShow): event-bus failure must never rollback a committed DB state (2026-05-03)
+- Fix event publish ordering in `PatientService` — `PublishAsync` moved after `CommitAsync` in `CreateAsync`, `UpdateAsync`, `DeactivateAsync` (2026-05-03)
+- Fix `JsonSerializerOptions` allocation per call in `PatientResolver` — extracted to `static readonly` field (2026-05-03)
+- Rename `PatientCheckedInIntegrationEvent` → `AppointmentCheckedInIntegrationEvent` for naming consistency with siblings (2026-05-03)
+- Fix `GET /api/patients/{id}/active` missing role guard — added `RequireAdminOrReceptionist` (IDOR remediation) (2026-05-03)
+- Remove hardcoded `Password=postgres` from `IdentityServerDbContextFactory` — replaced with `IDENTITY_DB_URL` env var (dev-only fallback retained) (2026-05-03)
+- Fix duplicate `### Documentation` heading in CHANGELOG `[Unreleased]` block (2026-05-03)
+- Fix broken Clara.API ASCII box in `observability.md` — Clara.API now shown as 5th peer service column (2026-05-03)
+- Document `MediTrack.Simulator` hard-dependency for bare Identity.API deployments in `Identity.API/CLAUDE.md` (2026-05-03)
+- Fix test method naming in `Appointment.UnitTests` to follow `MethodName_Scenario_ExpectedResult` convention; add `PatientActiveStatusTests` covering null/false/true resolver responses (2026-05-03)
 
 ### Features
 - Add missing appointment lifecycle integration events (2026-04-30)
@@ -59,8 +70,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
   - Updated implementation notes for access token and refresh token lifetimes
 - Fix `emr-compliance-status.md` dead link to non-existent roadmap file (2026-04-30)
 - Add Clara.API (port 5005) to `observability.md` architecture diagram (2026-04-30)
-
-### Documentation
 - Claude settings standards sync (2026-04-17) — Anthropic official compliance
   - HTML maintainer comments added to all 15 `.claude/rules/**/*.md` files (zero token cost)
   - `InstructionsLoaded` hook: logs per-file which instruction files load, when, and why

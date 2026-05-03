@@ -73,7 +73,9 @@ public static class PatientsApi
         group.MapGet("/{id:guid}/active", GetPatientActiveStatus)
             .WithName("GetPatientActiveStatus")
             .WithSummary("Check if a patient is active (internal service use)")
+            .RequireAuthorization(AuthorizationPolicies.RequireAdminOrReceptionist)
             .Produces<PatientActiveStatusResponse>()
+            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
         return endpoints;

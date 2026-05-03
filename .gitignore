@@ -139,6 +139,9 @@ docker-compose.env
 *~
 *.tmp
 *.bak
+# GitHub Copilot CLI — local session state (plans, artifacts — never committed)
+.copilot/
+
 # Claude Code — keep shared config, ignore personal/local/temp
 .claude/settings.local.json
 .claude/.compact-marker.json

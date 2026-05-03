@@ -267,17 +267,22 @@ public static class AppointmentsApi
             }
         }
 
-        // BR-A010: Only active patients can book appointments
-        var isActive = await patientResolver.IsPatientActiveAsync(request.PatientId, cancellationToken);
-        if (!isActive)
-        {
-            return Results.BadRequest(new { message = "Appointments cannot be created for inactive patients." });
-        }
-
+        // Validate request fields before making any cross-service calls
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
         {
             return Results.ValidationProblem(validationResult.ToDictionary());
+        }
+
+        // BR-A010: Only active patients can book appointments
+        var isActive = await patientResolver.IsPatientActiveAsync(request.PatientId, cancellationToken);
+        if (isActive is null)
+        {
+            return Results.NotFound(new { message = $"Patient {request.PatientId} was not found." });
+        }
+        if (!isActive.Value)
+        {
+            return Results.BadRequest(new { message = "Appointments cannot be created for inactive patients." });
         }
 
         // Check for scheduling conflicts

@@ -13,7 +13,7 @@ public interface IPatientResolver
     Task<Guid?> GetPatientIdByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Returns true if the patient is active, false if inactive or not found.
+    /// Returns true if active, false if inactive, null if patient not found or Patient.API unavailable.
     /// </summary>
-    Task<bool> IsPatientActiveAsync(Guid patientId, CancellationToken cancellationToken = default);
+    Task<bool?> IsPatientActiveAsync(Guid patientId, CancellationToken cancellationToken = default);
 }

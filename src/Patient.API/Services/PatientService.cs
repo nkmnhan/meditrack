@@ -183,19 +183,6 @@ public class PatientService : IPatientService
         {
             _dbContext.Patients.Add(patient);
             await _dbContext.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation("Created patient {PatientId}", patient.Id);
-
-            var integrationEvent = new PatientRegisteredIntegrationEvent
-            {
-                PatientId = patient.Id,
-                FirstName = patient.FirstName,
-                LastName = patient.LastName,
-                Email = patient.Email,
-                PhoneNumber = patient.PhoneNumber
-            };
-            await _eventBus.PublishAsync(integrationEvent, cancellationToken);
-
             await createTransaction.CommitAsync(cancellationToken);
         }
         catch
@@ -203,6 +190,19 @@ public class PatientService : IPatientService
             await createTransaction.RollbackAsync(CancellationToken.None);
             throw;
         }
+
+        // Publish after committed — event-bus failure must never rollback committed state
+        _logger.LogInformation("Created patient {PatientId}", patient.Id);
+
+        var integrationEvent = new PatientRegisteredIntegrationEvent
+        {
+            PatientId = patient.Id,
+            FirstName = patient.FirstName,
+            LastName = patient.LastName,
+            Email = patient.Email,
+            PhoneNumber = patient.PhoneNumber
+        };
+        await _eventBus.PublishAsync(integrationEvent, cancellationToken);
 
         return _mapper.Map<PatientResponse>(patient);
     }
@@ -269,19 +269,6 @@ public class PatientService : IPatientService
         try
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation("Updated patient {PatientId}", patient.Id);
-
-            var integrationEvent = new PatientUpdatedIntegrationEvent
-            {
-                PatientId = patient.Id,
-                FirstName = patient.FirstName,
-                LastName = patient.LastName,
-                Email = patient.Email,
-                PhoneNumber = patient.PhoneNumber
-            };
-            await _eventBus.PublishAsync(integrationEvent, cancellationToken);
-
             await updateTransaction.CommitAsync(cancellationToken);
         }
         catch
@@ -289,6 +276,19 @@ public class PatientService : IPatientService
             await updateTransaction.RollbackAsync(CancellationToken.None);
             throw;
         }
+
+        // Publish after committed — event-bus failure must never rollback committed state
+        _logger.LogInformation("Updated patient {PatientId}", patient.Id);
+
+        var integrationEvent = new PatientUpdatedIntegrationEvent
+        {
+            PatientId = patient.Id,
+            FirstName = patient.FirstName,
+            LastName = patient.LastName,
+            Email = patient.Email,
+            PhoneNumber = patient.PhoneNumber
+        };
+        await _eventBus.PublishAsync(integrationEvent, cancellationToken);
 
         return _mapper.Map<PatientResponse>(patient);
     }
@@ -308,19 +308,6 @@ public class PatientService : IPatientService
         {
             patient.Deactivate();
             await _dbContext.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation("Deactivated patient {PatientId}", patient.Id);
-
-            var integrationEvent = new PatientDeactivatedIntegrationEvent
-            {
-                PatientId = patient.Id,
-                FirstName = patient.FirstName,
-                LastName = patient.LastName,
-                MedicalRecordNumber = patient.MedicalRecordNumber,
-                DeactivatedAt = DateTime.UtcNow
-            };
-            await _eventBus.PublishAsync(integrationEvent, cancellationToken);
-
             await deactivateTransaction.CommitAsync(cancellationToken);
         }
         catch
@@ -328,6 +315,19 @@ public class PatientService : IPatientService
             await deactivateTransaction.RollbackAsync(CancellationToken.None);
             throw;
         }
+
+        // Publish after committed — event-bus failure must never rollback committed state
+        _logger.LogInformation("Deactivated patient {PatientId}", patient.Id);
+
+        var integrationEvent = new PatientDeactivatedIntegrationEvent
+        {
+            PatientId = patient.Id,
+            FirstName = patient.FirstName,
+            LastName = patient.LastName,
+            MedicalRecordNumber = patient.MedicalRecordNumber,
+            DeactivatedAt = DateTime.UtcNow
+        };
+        await _eventBus.PublishAsync(integrationEvent, cancellationToken);
 
         return true;
     }

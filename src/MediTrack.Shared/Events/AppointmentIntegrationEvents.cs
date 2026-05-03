@@ -78,7 +78,7 @@ public sealed record AppointmentReminderIntegrationEvent : IntegrationEvent
 /// <summary>
 /// Integration event raised when a patient checks in for an appointment.
 /// </summary>
-public sealed record PatientCheckedInIntegrationEvent : IntegrationEvent
+public sealed record AppointmentCheckedInIntegrationEvent : IntegrationEvent
 {
     public required Guid AppointmentId { get; init; }
     public required Guid PatientId { get; init; }
