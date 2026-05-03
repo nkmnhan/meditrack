@@ -8,11 +8,6 @@
       "type": "http",
       "url": "https://api.githubcopilot.com/mcp/"
     },
-    "postgres": {
-      "type": "stdio",
-      "command": "cmd",
-      "args": ["/c", "npx", "-y", "@bytebase/dbhub", "--dsn", "${MEDITRACK_DB_URL}"]
-    },
     "playwright": {
       "type": "stdio",
       "command": "cmd",
@@ -22,6 +17,11 @@
       "type": "stdio",
       "command": "cmd",
       "args": ["/c", "npx", "-y", "@upstash/context7-mcp@latest"]
+    },
+    "fetch": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-fetch"]
     }
   }
 }
