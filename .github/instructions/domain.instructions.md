@@ -2,6 +2,8 @@
 applyTo: "src/**,design/**,docs/**"
 ---
 
+Follow all rules in `.claude/rules/business/domain.md` and `.claude/rules/business/aliases.md`.
+
 # Business Domain — MediTrack
 
 ## Service Ownership

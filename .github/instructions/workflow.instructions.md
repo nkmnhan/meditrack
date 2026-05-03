@@ -2,6 +2,8 @@
 applyTo: "**"
 ---
 
+Follow all rules in `.claude/rules/workflow.md` and `.claude/rules/critical-rules.md`.
+
 # Development Workflow
 
 ## For Non-Trivial Work
