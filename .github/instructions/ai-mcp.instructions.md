@@ -2,6 +2,8 @@
 applyTo: "src/Clara.API/**,skills/**,tests/Clara.*/**"
 ---
 
+Follow all rules in `.claude/rules/backend/clara.md`.
+
 # Clara AI / MCP Rules
 
 ## Architecture

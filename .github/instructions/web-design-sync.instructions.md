@@ -2,6 +2,8 @@
 applyTo: "src/MediTrack.Web/src/shared/**,src/MediTrack.Web/src/features/*/components/**,src/MediTrack.Web/tailwind.config.ts,design/src/**,design/tailwind.config.ts"
 ---
 
+Follow all rules in `.claude/rules/frontend/design-sync.md`.
+
 # Web ↔ Design Sync Rule (MANDATORY)
 
 Two projects share components and **must stay in sync**:

@@ -17,7 +17,8 @@ public static class IdentityServerConfig
     [
         new ApiScope("patient-api", "Patient API") { UserClaims = { JwtClaimTypes.Role } },
         new ApiScope("appointment-api", "Appointment API") { UserClaims = { JwtClaimTypes.Role } },
-        new ApiScope("medicalrecords-api", "Medical Records API") { UserClaims = { JwtClaimTypes.Role } }
+        new ApiScope("medicalrecords-api", "Medical Records API") { UserClaims = { JwtClaimTypes.Role } },
+        new ApiScope("clara-api", "Clara AI API") { UserClaims = { JwtClaimTypes.Role } }
     ];
 
     public static IEnumerable<Client> GetClients(IConfiguration configuration)
@@ -43,9 +44,8 @@ public static class IdentityServerConfig
                 AllowedCorsOrigins = [webClientUrl],
                 AllowOfflineAccess = true,
                 AlwaysIncludeUserClaimsInIdToken = true,
-                // 8 hours — long enough to outlast any dev/E2E test session.
-                // Tokens expire naturally; monitorSession is disabled on the SPA.
-                AccessTokenLifetime = 28800,
+                // 1 hour — per BR-S004 security policy. oidc-client-ts handles silent renew.
+                AccessTokenLifetime = 3600,
                 AllowedScopes =
                 [
                     IdentityServerConstants.StandardScopes.OpenId,
@@ -54,7 +54,8 @@ public static class IdentityServerConfig
                     "roles",
                     "patient-api",
                     "appointment-api",
-                    "medicalrecords-api"
+                    "medicalrecords-api",
+                    "clara-api"
                 ]
             },
 

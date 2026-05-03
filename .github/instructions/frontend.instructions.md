@@ -2,6 +2,8 @@
 applyTo: "src/MediTrack.Web/src/**/*.{ts,tsx},design/src/**/*.{ts,tsx}"
 ---
 
+Follow all rules in `.claude/rules/frontend.md`, `.claude/rules/frontend/patterns.md`, and `.claude/rules/frontend/styling.md`.
+
 # Frontend Rules — React 19 + TypeScript
 
 ## Patterns

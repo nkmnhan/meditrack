@@ -246,25 +246,6 @@ public sealed class AppointmentService : IAppointmentService
         try
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation(
-                "Rescheduled appointment {OldAppointmentId} to {NewAppointmentId}",
-                id,
-                newAppointment.Id);
-
-            var integrationEvent = new AppointmentRescheduledIntegrationEvent
-            {
-                AppointmentId = newAppointment.Id,
-                PatientId = appointment.PatientId,
-                PatientName = appointment.PatientName,
-                PatientEmail = appointment.PatientEmail,
-                OriginalScheduledAt = originalScheduledAt,
-                NewScheduledAt = new DateTimeOffset(newAppointment.ScheduledDateTime, TimeSpan.Zero),
-                ProviderName = appointment.ProviderName,
-                RescheduleReason = null
-            };
-            await _eventBus.PublishAsync(integrationEvent, cancellationToken);
-
             await transaction.CommitAsync(cancellationToken);
         }
         catch
@@ -272,6 +253,25 @@ public sealed class AppointmentService : IAppointmentService
             await transaction.RollbackAsync(CancellationToken.None);
             throw;
         }
+
+        // Publish after committed — event-bus failure must never rollback committed state
+        _logger.LogInformation(
+            "Rescheduled appointment {OldAppointmentId} to {NewAppointmentId}",
+            id,
+            newAppointment.Id);
+
+        var integrationEvent = new AppointmentRescheduledIntegrationEvent
+        {
+            AppointmentId = newAppointment.Id,
+            PatientId = appointment.PatientId,
+            PatientName = appointment.PatientName,
+            PatientEmail = appointment.PatientEmail,
+            OriginalScheduledAt = originalScheduledAt,
+            NewScheduledAt = new DateTimeOffset(newAppointment.ScheduledDateTime, TimeSpan.Zero),
+            ProviderName = appointment.ProviderName,
+            RescheduleReason = null
+        };
+        await _eventBus.PublishAsync(integrationEvent, cancellationToken);
 
         return _mapper.Map<AppointmentResponse>(newAppointment);
     }
@@ -294,20 +294,6 @@ public sealed class AppointmentService : IAppointmentService
         try
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation("Confirmed appointment {AppointmentId}", id);
-
-            var integrationEvent = new AppointmentConfirmedIntegrationEvent
-            {
-                AppointmentId = appointment.Id,
-                PatientId = appointment.PatientId,
-                PatientName = appointment.PatientName,
-                PatientEmail = appointment.PatientEmail,
-                ScheduledAt = new DateTimeOffset(appointment.ScheduledDateTime, TimeSpan.Zero),
-                ProviderName = appointment.ProviderName
-            };
-            await _eventBus.PublishAsync(integrationEvent, cancellationToken);
-
             await transaction.CommitAsync(cancellationToken);
         }
         catch
@@ -315,6 +301,20 @@ public sealed class AppointmentService : IAppointmentService
             await transaction.RollbackAsync(CancellationToken.None);
             throw;
         }
+
+        // Publish after committed — event-bus failure must never rollback committed state
+        _logger.LogInformation("Confirmed appointment {AppointmentId}", id);
+
+        var integrationEvent = new AppointmentConfirmedIntegrationEvent
+        {
+            AppointmentId = appointment.Id,
+            PatientId = appointment.PatientId,
+            PatientName = appointment.PatientName,
+            PatientEmail = appointment.PatientEmail,
+            ScheduledAt = new DateTimeOffset(appointment.ScheduledDateTime, TimeSpan.Zero),
+            ProviderName = appointment.ProviderName
+        };
+        await _eventBus.PublishAsync(integrationEvent, cancellationToken);
 
         return _mapper.Map<AppointmentResponse>(appointment);
     }
@@ -332,9 +332,33 @@ public sealed class AppointmentService : IAppointmentService
         }
 
         appointment.CheckIn();
-        await _dbContext.SaveChangesAsync(cancellationToken);
 
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(CancellationToken.None);
+            throw;
+        }
+
+        // Publish after committed — event-bus failure must never rollback committed state
         _logger.LogInformation("Patient checked in for appointment {AppointmentId}", id);
+
+        var integrationEvent = new AppointmentCheckedInIntegrationEvent
+        {
+            AppointmentId = appointment.Id,
+            PatientId = appointment.PatientId,
+            PatientName = appointment.PatientName,
+            PatientEmail = appointment.PatientEmail,
+            ScheduledAt = new DateTimeOffset(appointment.ScheduledDateTime, TimeSpan.Zero),
+            ProviderName = appointment.ProviderName,
+            CheckedInAt = DateTimeOffset.UtcNow
+        };
+        await _eventBus.PublishAsync(integrationEvent, cancellationToken);
 
         return _mapper.Map<AppointmentResponse>(appointment);
     }
@@ -352,9 +376,30 @@ public sealed class AppointmentService : IAppointmentService
         }
 
         appointment.Start();
-        await _dbContext.SaveChangesAsync(cancellationToken);
 
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(CancellationToken.None);
+            throw;
+        }
+
+        // Publish after committed — event-bus failure must never rollback committed state
         _logger.LogInformation("Started appointment {AppointmentId}", id);
+
+        var integrationEvent = new AppointmentStartedIntegrationEvent
+        {
+            AppointmentId = appointment.Id,
+            PatientId = appointment.PatientId,
+            ScheduledAt = new DateTimeOffset(appointment.ScheduledDateTime, TimeSpan.Zero),
+            StartedAt = DateTimeOffset.UtcNow
+        };
+        await _eventBus.PublishAsync(integrationEvent, cancellationToken);
 
         return _mapper.Map<AppointmentResponse>(appointment);
     }
@@ -373,9 +418,33 @@ public sealed class AppointmentService : IAppointmentService
         }
 
         appointment.Complete(request.Notes);
-        await _dbContext.SaveChangesAsync(cancellationToken);
 
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(CancellationToken.None);
+            throw;
+        }
+
+        // Publish after committed — event-bus failure must never rollback committed state
         _logger.LogInformation("Completed appointment {AppointmentId}", id);
+
+        var integrationEvent = new AppointmentCompletedIntegrationEvent
+        {
+            AppointmentId = appointment.Id,
+            PatientId = appointment.PatientId,
+            PatientName = appointment.PatientName,
+            PatientEmail = appointment.PatientEmail,
+            ScheduledAt = new DateTimeOffset(appointment.ScheduledDateTime, TimeSpan.Zero),
+            ProviderName = appointment.ProviderName,
+            CompletedAt = DateTimeOffset.UtcNow
+        };
+        await _eventBus.PublishAsync(integrationEvent, cancellationToken);
 
         return _mapper.Map<AppointmentResponse>(appointment);
     }
@@ -399,24 +468,6 @@ public sealed class AppointmentService : IAppointmentService
         try
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation(
-                "Cancelled appointment {AppointmentId}. Reason: {Reason}",
-                id,
-                request.Reason);
-
-            var integrationEvent = new AppointmentCancelledIntegrationEvent
-            {
-                AppointmentId = appointment.Id,
-                PatientId = appointment.PatientId,
-                PatientName = appointment.PatientName,
-                PatientEmail = appointment.PatientEmail,
-                ScheduledAt = new DateTimeOffset(appointment.ScheduledDateTime, TimeSpan.Zero),
-                ProviderName = appointment.ProviderName,
-                CancellationReason = appointment.CancellationReason
-            };
-            await _eventBus.PublishAsync(integrationEvent, cancellationToken);
-
             await transaction.CommitAsync(cancellationToken);
         }
         catch
@@ -424,6 +475,24 @@ public sealed class AppointmentService : IAppointmentService
             await transaction.RollbackAsync(CancellationToken.None);
             throw;
         }
+
+        // Publish after committed — event-bus failure must never rollback committed state
+        _logger.LogInformation(
+            "Cancelled appointment {AppointmentId}. Reason: {Reason}",
+            id,
+            request.Reason);
+
+        var integrationEvent = new AppointmentCancelledIntegrationEvent
+        {
+            AppointmentId = appointment.Id,
+            PatientId = appointment.PatientId,
+            PatientName = appointment.PatientName,
+            PatientEmail = appointment.PatientEmail,
+            ScheduledAt = new DateTimeOffset(appointment.ScheduledDateTime, TimeSpan.Zero),
+            ProviderName = appointment.ProviderName,
+            CancellationReason = appointment.CancellationReason
+        };
+        await _eventBus.PublishAsync(integrationEvent, cancellationToken);
 
         return _mapper.Map<AppointmentResponse>(appointment);
     }
@@ -441,9 +510,32 @@ public sealed class AppointmentService : IAppointmentService
         }
 
         appointment.MarkNoShow();
-        await _dbContext.SaveChangesAsync(cancellationToken);
 
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(CancellationToken.None);
+            throw;
+        }
+
+        // Publish after committed — event-bus failure must never rollback committed state
         _logger.LogInformation("Marked appointment {AppointmentId} as no-show", id);
+
+        var integrationEvent = new AppointmentNoShowIntegrationEvent
+        {
+            AppointmentId = appointment.Id,
+            PatientId = appointment.PatientId,
+            PatientName = appointment.PatientName,
+            PatientEmail = appointment.PatientEmail,
+            ScheduledAt = new DateTimeOffset(appointment.ScheduledDateTime, TimeSpan.Zero),
+            ProviderName = appointment.ProviderName
+        };
+        await _eventBus.PublishAsync(integrationEvent, cancellationToken);
 
         return _mapper.Map<AppointmentResponse>(appointment);
     }

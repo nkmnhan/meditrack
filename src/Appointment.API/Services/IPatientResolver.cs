@@ -11,4 +11,9 @@ public interface IPatientResolver
     /// Returns null if no patient record exists for this user.
     /// </summary>
     Task<Guid?> GetPatientIdByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns true if active, false if inactive, null if patient not found or Patient.API unavailable.
+    /// </summary>
+    Task<bool?> IsPatientActiveAsync(Guid patientId, CancellationToken cancellationToken = default);
 }

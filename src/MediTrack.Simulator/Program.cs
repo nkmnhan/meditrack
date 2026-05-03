@@ -1,5 +1,7 @@
 using Appointment.API.Infrastructure;
 using Clara.API.Data;
+using Duende.IdentityServer.EntityFramework.DbContexts;
+using Duende.IdentityServer.EntityFramework.Options;
 using MediTrack.Identity.Data;
 using MediTrack.Identity.Models;
 using MediTrack.MedicalRecords.Infrastructure;
@@ -20,6 +22,15 @@ builder.AddServiceDefaults("simulator");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("IdentityDb")));
+
+// IdentityServer configuration store (clients, scopes, resources)
+string identityConnectionString = builder.Configuration.GetConnectionString("IdentityDb")
+    ?? throw new InvalidOperationException("IdentityDb connection string is required.");
+
+builder.Services.AddSingleton(new ConfigurationStoreOptions());
+builder.Services.AddDbContext<ConfigurationDbContext>(options =>
+    options.UseNpgsql(identityConnectionString,
+        npgsqlOptions => npgsqlOptions.MigrationsAssembly("Identity.API")));
 
 builder.Services.AddDbContext<PatientDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("PatientDb")));

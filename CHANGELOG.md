@@ -5,7 +5,71 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
+### Changed
+- Migrate IdentityServer from in-memory to PostgreSQL (EF Core) persistence (2026-05-01)
+  - Replaced `AddInMemoryIdentityResources`, `AddInMemoryApiScopes`, `AddInMemoryClients` with `AddConfigurationStore` + `AddOperationalStore` backed by PostgreSQL
+  - Added `Duende.IdentityServer.EntityFramework 7.4.6` package to `Identity.API` and `Simulator`
+  - Added EF migrations for `ConfigurationDbContext` (clients/scopes/resources) and `PersistedGrantDbContext` (tokens/grants) in `Identity.API`
+  - Upgraded EF Core and ASP.NET Core Identity packages to 10.0.0 to match .NET 10 + Duende IS EF requirements
+  - Added design-time factories `ConfigurationDbContextFactory` + `PersistedGrantDbContextFactory`
+  - Deleted `Identity.API/Data/UsersSeed.cs` — Simulator is the single source of seeding
+- `IdentitySeeder` now upsert-style for all data (2026-05-01)
+  - Users: update `FirstName`/`LastName`/`EmailConfirmed` + sync roles on re-run instead of skip
+  - IdentityServer clients, API scopes, and identity resources: seeded from `IdentityServerConfig` into `ConfigurationDbContext` using insert-if-not-exists
+
+### Security
+- Remove patient FullName/email from log statements — PHI/HIPAA compliance (2026-04-30)
+  - `PatientService.cs`: removed `patient.FullName` from 4 `LogInformation` calls (Create, Update, Deactivate, Activate)
+  - `UsersSeed.cs`: removed `email` from user creation log call
+- Fix access token lifetime to 1 hour per BR-S004 (was 8 hours) (2026-04-30)
+  - `IdentityServerConfig.cs`: `AccessTokenLifetime` changed from 28800 to 3600
+- Block Patient role from enumerating provider schedules (OWASP A01 IDOR) (2026-04-30)
+  - `AppointmentsApi.cs` `GetByProviderId`: added staff-only guard
+- Block Patient role from probing provider schedule via conflicts endpoint (OWASP A01 IDOR) (2026-04-30)
+  - `AppointmentsApi.cs` `CheckConflicts`: added staff-only guard
+- Register `clara-api` OAuth2 scope in IdentityServer (2026-04-30)
+  - Added to `GetApiScopes()` and SPA client `AllowedScopes` in `IdentityServerConfig.cs`
+- Remove DevController and MVC scaffolding — IDOR attack surface eliminated (2026-04-30)
+  - Removed `AddControllers()` and `MapControllers()` from `Clara.API/Program.cs`
+  - `DevController.cs` content cleared (dev-only test endpoints removed)
+
+### Fixed
+- Enforce BR-A001: appointment minimum 1-hour advance booking (2026-04-30)
+  - `AppointmentValidators.cs`: fixed static `GreaterThan(DateTime.UtcNow)` capture (FluentValidation gotcha); added `.Must()` delegates with 1-hour minimum to `CreateAppointmentRequestValidator`, `UpdateAppointmentRequestValidator`, and `RescheduleAppointmentRequestValidator`
+  - `AppointmentValidators.cs`: removed redundant `dt > UtcNow` rule (subsumed by the 1-hour rule — was causing double validation errors for past dates)
+- Enforce BR-A010: only active patients can book appointments (2026-04-30)
+  - `Patient.API`: new `GET /api/patients/{id}/active` endpoint + `PatientActiveStatusResponse` DTO
+  - `Patient.API` `PatientsApi.cs`: endpoint now requires `RequireAdminOrReceptionist` policy (was missing role guard — IDOR fix)
+  - `Appointment.API`: `IPatientResolver.IsPatientActiveAsync` returns `bool?` (null = not found, true/false = active status); guard returns `404` for unknown patient vs `400` for inactive patient
+  - `Appointment.API` `AppointmentsApi.cs`: request validation now runs before cross-service BR-A010 check (avoids wasted HTTP call on invalid requests)
+- Fix event publish ordering in `AppointmentService` — `PublishAsync` moved after `CommitAsync` in all lifecycle methods (Reschedule, Confirm, CheckIn, Start, Complete, Cancel, MarkNoShow): event-bus failure must never rollback a committed DB state (2026-05-03)
+- Fix event publish ordering in `PatientService` — `PublishAsync` moved after `CommitAsync` in `CreateAsync`, `UpdateAsync`, `DeactivateAsync` (2026-05-03)
+- Fix `JsonSerializerOptions` allocation per call in `PatientResolver` — extracted to `static readonly` field (2026-05-03)
+- Rename `PatientCheckedInIntegrationEvent` → `AppointmentCheckedInIntegrationEvent` for naming consistency with siblings (2026-05-03)
+- Fix `GET /api/patients/{id}/active` missing role guard — added `RequireAdminOrReceptionist` (IDOR remediation) (2026-05-03)
+- Remove hardcoded `Password=postgres` from `IdentityServerDbContextFactory` — replaced with `IDENTITY_DB_URL` env var (dev-only fallback retained) (2026-05-03)
+- Fix duplicate `### Documentation` heading in CHANGELOG `[Unreleased]` block (2026-05-03)
+- Fix broken Clara.API ASCII box in `observability.md` — Clara.API now shown as 5th peer service column (2026-05-03)
+- Document `MediTrack.Simulator` hard-dependency for bare Identity.API deployments in `Identity.API/CLAUDE.md` (2026-05-03)
+- Fix test method naming in `Appointment.UnitTests` to follow `MethodName_Scenario_ExpectedResult` convention; add `PatientActiveStatusTests` covering null/false/true resolver responses (2026-05-03)
+
+### Features
+- Add missing appointment lifecycle integration events (2026-04-30)
+  - `MediTrack.Shared`: 4 new event types — `PatientCheckedInIntegrationEvent`, `AppointmentStartedIntegrationEvent`, `AppointmentCompletedIntegrationEvent`, `AppointmentNoShowIntegrationEvent`
+  - `AppointmentService`: CheckIn, Start, Complete, MarkNoShow now publish events inside transactions
+- New test project: `Appointment.UnitTests` (2026-04-30)
+  - 5 validator tests covering BR-A001 (1-hour advance booking) and the static DateTime capture fix
+
 ### Documentation
+- Fix `business-logic.md` doc errors (2026-04-30)
+  - Removed duplicate BR-M007/M008 table rows
+  - Removed malformed duplicate BR-S006/S007/S008 block
+  - Removed duplicate approval section at bottom of file
+  - Fixed lockout note: "5 min" → "15-minute lockout" (matches actual code)
+  - Updated BR-S004 refresh token lifetime: "14 days" → "30-day absolute / 15-day sliding"
+  - Updated implementation notes for access token and refresh token lifetimes
+- Fix `emr-compliance-status.md` dead link to non-existent roadmap file (2026-04-30)
+- Add Clara.API (port 5005) to `observability.md` architecture diagram (2026-04-30)
 - Claude settings standards sync (2026-04-17) — Anthropic official compliance
   - HTML maintainer comments added to all 15 `.claude/rules/**/*.md` files (zero token cost)
   - `InstructionsLoaded` hook: logs per-file which instruction files load, when, and why

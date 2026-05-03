@@ -2,6 +2,8 @@
 applyTo: "**/*.cs,src/MediTrack.Web/src/**/*.{ts,tsx},design/src/**/*.{ts,tsx},docker-compose*.yml"
 ---
 
+Follow all rules in `.claude/rules/security.md` and `.claude/rules/business/compliance.md`.
+
 # Security Rules — OWASP Top 10:2025
 
 ## Access Control (A01)

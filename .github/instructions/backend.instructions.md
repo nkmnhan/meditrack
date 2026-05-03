@@ -2,6 +2,8 @@
 applyTo: "**/*.cs,**/*.csproj"
 ---
 
+Follow all rules in `.claude/rules/backend/architecture.md` and `.claude/rules/backend/data.md`.
+
 # Backend Rules — .NET 10
 
 ## Clean Architecture (eShop Pattern)

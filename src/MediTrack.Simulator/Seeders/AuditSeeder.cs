@@ -71,6 +71,7 @@ public sealed class AuditSeeder
     public async Task<(int Created, int Failed)> SeedAsync(
         int targetCount,
         bool clearExisting,
+        IReadOnlyList<Guid> patientIds,
         CancellationToken cancellationToken)
     {
         if (clearExisting)
@@ -81,9 +82,30 @@ public sealed class AuditSeeder
             await _dbContext.BreachIncidents.ExecuteDeleteAsync(cancellationToken);
         }
 
-        var random = new Random(42);
+        var random = Random.Shared;
         var now = DateTimeOffset.UtcNow;
         var cutoffDate = now.AddMonths(-12);
+
+        // Delta mode: only generate enough to reach the target count
+        var existingHotCount = await _dbContext.AuditLogs.CountAsync(cancellationToken);
+        var existingArchivedCount = await _dbContext.ArchivedAuditLogs.CountAsync(cancellationToken);
+        var existingTotal = existingHotCount + existingArchivedCount;
+        var delta = targetCount - existingTotal;
+
+        if (delta <= 0)
+        {
+            _logger.LogInformation(
+                "Audit logs already at target ({Existing}/{Target}), skipping",
+                existingTotal, targetCount);
+            return (0, 0);
+        }
+
+        _logger.LogInformation(
+            "Generating {Delta} audit log(s) to reach target {Target} (existing: {Existing})",
+            delta, targetCount, existingTotal);
+
+        // Use the provided patient IDs; fall back to the built-in set if none were supplied
+        var resolvedPatientIds = patientIds.Count > 0 ? patientIds : [.. PatientIds];
 
         var hotLogs = new List<PHIAuditLog>();
         var archivedLogs = new List<ArchivedPHIAuditLog>();
@@ -91,7 +113,7 @@ public sealed class AuditSeeder
 
         var weightedActions = BuildWeightedActionIndex();
 
-        for (var recordIndex = 0; recordIndex < targetCount; recordIndex++)
+        for (var recordIndex = 0; recordIndex < delta; recordIndex++)
         {
             var daysAgo = (int)(random.NextDouble() * random.NextDouble() * 548);
             var hoursOffset = random.Next(0, 14);
@@ -102,7 +124,7 @@ public sealed class AuditSeeder
                 .AddMinutes(-minutesOffset);
 
             var user = Users[random.Next(Users.Length)];
-            var patientId = PatientIds[random.Next(PatientIds.Length)];
+            var patientId = resolvedPatientIds[random.Next(resolvedPatientIds.Count)];
             var action = weightedActions[random.Next(weightedActions.Length)];
             var resourceType = ResourceTypes[random.Next(ResourceTypes.Length)];
 

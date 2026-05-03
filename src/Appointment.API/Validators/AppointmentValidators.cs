@@ -41,8 +41,8 @@ public sealed class CreateAppointmentRequestValidator : AbstractValidator<Create
         RuleFor(request => request.ScheduledDateTime)
             .NotEmpty()
             .WithMessage("Scheduled date and time is required.")
-            .GreaterThan(DateTime.UtcNow)
-            .WithMessage("Scheduled date and time must be in the future.");
+            .Must(dt => dt > DateTime.UtcNow.AddHours(1))
+            .WithMessage("Appointments must be scheduled at least 1 hour in advance.");
 
         RuleFor(request => request.DurationMinutes)
             .GreaterThan(0)
@@ -80,8 +80,8 @@ public sealed class UpdateAppointmentRequestValidator : AbstractValidator<Update
     public UpdateAppointmentRequestValidator()
     {
         RuleFor(request => request.ScheduledDateTime)
-            .GreaterThan(DateTime.UtcNow)
-            .WithMessage("Scheduled date and time must be in the future.")
+            .Must(dt => dt > DateTime.UtcNow.AddHours(1))
+            .WithMessage("Appointments must be scheduled at least 1 hour in advance.")
             .When(request => request.ScheduledDateTime.HasValue);
 
         RuleFor(request => request.DurationMinutes)
@@ -125,8 +125,8 @@ public sealed class RescheduleAppointmentRequestValidator : AbstractValidator<Re
         RuleFor(request => request.NewDateTime)
             .NotEmpty()
             .WithMessage("New date and time is required.")
-            .GreaterThan(DateTime.UtcNow)
-            .WithMessage("New date and time must be in the future.");
+            .Must(dt => dt > DateTime.UtcNow.AddHours(1))
+            .WithMessage("Rescheduled appointments must be at least 1 hour in advance.");
 
         RuleFor(request => request.NewLocation)
             .MaximumLength(200)

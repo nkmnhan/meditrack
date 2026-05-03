@@ -203,21 +203,16 @@ MediTrack is a comprehensive healthcare management platform designed to streamli
 | BR-M006 | Amendments require reason and approver signature | Audit trail integrity | ⏳ Future (Phase 7) |
 | BR-M007 | Sensitive records can be flagged for additional access control | Privacy for mental health, substance abuse, etc. | ⏳ Future (Phase 8+) |
 | BR-M008 | Lab results auto-attach to medical record | Workflow efficiency | ⏳ Future (Phase 8+)integrity |
-| BR-M007 | Sensitive records can be flagged for additional access control | Privacy for mental health, substance abuse, etc. |
-| BR-M008 | Lab results auto-attach to medical record | Workflow efficiency |
 
-### Security & Access Control Status |
-|---------|------|-----------|--------|
+### Security & Access Control
 | BR-S001 | Users must have MFA enabled after 7 days | Security compliance | ⏳ Future (MFA design complete, implementation Phase 6) |
 | BR-S002 | Failed login attempts (5+) lock account for 15 minutes | Prevent brute force attacks | ✓ Implemented (IdentityServer config) |
 | BR-S003 | Password must be 12+ chars with complexity requirements | Industry best practice | ✓ Implemented (Identity.API) |
-| BR-S004 | Access tokens expire after 1 hour, refresh tokens after 14 days | Balance security and user experience | ✓ Implemented (IdentityServer config) |
+| BR-S004 | Access tokens expire after 1 hour, refresh tokens after 30 days (absolute) / 15 days (sliding) | Balance security and user experience | ✓ Implemented (IdentityServer config) |
 | BR-S005 | Users automatically logged out after 30 minutes of inactivity | Prevent unauthorized access on shared terminals | ⏳ Future (Phase 6 - frontend implementation) |
 | BR-S006 | Role changes require Admin approval | Prevent privilege escalation | 📋 Planned (simple role assignment exists) |
 | BR-S007 | All data access logged with IP address and device info | Forensic capability | ✓ Implemented (Audit infrastructure Phase 4) |
-| BR-S008 | Sharing login credentials is immediate termination | Accountability and compliance | Policy (not system-enforced)
-| BR-S007 | All data access logged with IP address and device info | Forensic capability |
-| BR-S008 | Sharing login credentials is immediate termination | Accountability and compliance |
+| BR-S008 | Sharing login credentials is immediate termination | Accountability and compliance | Policy (not system-enforced) |
 
 ---
 
@@ -1028,10 +1023,10 @@ flowchart TD
 **Identity & Auth (Phase 4)**:
 - ✓ User registration with email + password
 - ✓ Role-based authorization (Patient, Doctor, Nurse, Receptionist, Admin)
-- ✓ JWT access tokens (1-hour expiry)
-- ✓ Refresh tokens (14-day expiry)
+- ✓ JWT access tokens (1-hour expiry, configured in `Identity.API/IdentityServerConfig.cs`)
+- ✓ Refresh tokens (30-day absolute / 15-day sliding expiry, Duende IdentityServer defaults)
 - ✓ Password complexity requirements (12+ chars)
-- ✓ Failed login attempt lockout (IdentityServer default: 5 attempts = 5 min lockout)
+- ✓ Failed login attempt lockout (5 failed attempts = 15-minute lockout, configured in `Identity.API/Program.cs`)
 - ⚠️ Email verification deliberately skipped (auto sign-in after registration)
 
 **Frontend (Phase 5)**:
@@ -1113,9 +1108,3 @@ When implementing new business rules:
 2. Move the rule from "Known Gaps" to "What's Actually Implemented"
 3. Add test evidence (unit test references or integration test scenarios)
 4. Update the version number and changelog in Document Control
-**Approval**:
-- Product Owner: ___________________
-- Compliance Officer: ___________________
-- Medical Director: ___________________
-
-**Next Review Date**: 2026-05-24 (Quarterly)

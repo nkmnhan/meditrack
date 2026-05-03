@@ -2,6 +2,8 @@
 applyTo: "**/*.csproj,**/package.json,Directory.Packages.props"
 ---
 
+Follow all rules in `.claude/rules/critical-rules.md` and `.claude/rules/backend/architecture.md` (Central Package Management section).
+
 # Dependency Rules
 
 ## Selection Criteria
